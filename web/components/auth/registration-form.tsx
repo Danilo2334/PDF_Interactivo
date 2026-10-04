@@ -1,7 +1,7 @@
 "use client";
 
 import { type FormEvent, useState, useTransition } from "react";
-import { validateRegistrationAction } from "@/app/actions/register";
+import { registerOwnerAction } from "@/app/actions/register";
 import {
   getRegistrationFieldErrors,
   registrationSchema,
@@ -65,7 +65,7 @@ export function RegistrationForm() {
 
     startTransition(async () => {
       try {
-        const serverResult = await validateRegistrationAction(values);
+        const serverResult = await registerOwnerAction(values);
 
         setErrors(serverResult.errors);
         setFeedback({
@@ -75,7 +75,7 @@ export function RegistrationForm() {
       } catch {
         setFeedback({
           type: "error",
-          text: "No fue posible validar la información. Inténtalo nuevamente.",
+          text: "No fue posible crear la cuenta. Inténtalo nuevamente.",
         });
       }
     });
@@ -198,7 +198,7 @@ export function RegistrationForm() {
           />
         )}
 
-        {isPending ? "Validando..." : "Registrarse"}
+        {isPending ? "Creando cuenta..." : "Registrarse"}
       </button>
 
       {feedback && (
