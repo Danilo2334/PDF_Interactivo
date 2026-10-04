@@ -6,7 +6,16 @@ export const metadata: Metadata = {
   description: "Accede de forma segura a tus proyectos de PDF interactivos.",
 };
 
-export default function LoginPage() {
+type LoginPageProps = {
+  searchParams: Promise<{
+    logout?: string | string[];
+  }>;
+};
+
+export default async function LoginPage({ searchParams }: LoginPageProps) {
+  const { logout } = await searchParams;
+  const sessionClosed = logout === "success";
+
   return (
     <main className="min-h-screen bg-slate-100 lg:grid lg:grid-cols-2">
       <section className="hidden bg-gradient-to-br from-blue-950 via-blue-800 to-cyan-600 p-12 text-white lg:flex lg:flex-col lg:justify-between">
@@ -40,6 +49,14 @@ export default function LoginPage() {
               Ingresa con el correo y la contraseña de tu cuenta.
             </p>
           </div>
+          {sessionClosed && (
+            <p
+              className="mb-5 rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700"
+              role="status"
+            >
+              Cerraste sesión correctamente.
+            </p>
+          )}
           <LoginForm />
         </div>
       </section>
