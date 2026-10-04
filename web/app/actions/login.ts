@@ -1,5 +1,6 @@
 "use server";
 
+import { createClient } from "@/lib/supabase/server";
 import {
   getLoginFieldErrors,
   loginSchema,
@@ -26,9 +27,35 @@ export async function loginAction(
     };
   }
 
+  const supabase = await createClient();
+
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email: result.data.email,
+    password: result.data.password,
+  });
+
+  if (error || !data.user || !data.session) {
+    if (
+      error?.code === "over_request_rate_limit" ||
+      error?.status === 429
+    ) {
+      return {
+        success: false,
+        message: "Se realizaron demasiados intentos. Espera unos minutos.",
+        errors: {},
+      };
+    }
+
+    return {
+      success: false,
+      message: "Correo o contraseña incorrectos.",
+      errors: {},
+    };
+  }
+
   return {
-    success: false,
-    message: "El servicio de autenticación aún no está disponible.",
+    success: true,
+    message: "Inicio de sesión exitoso.",
     errors: {},
   };
 }
