@@ -1,26 +1,84 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { type FormEvent, useState, useTransition } from "react";
+import { validateRegistrationAction } from "@/app/actions/register";
+import {
+  getRegistrationFieldErrors,
+  registrationSchema,
+  type RegistrationFieldErrors,
+  type RegistrationInput,
+} from "@/lib/validations/register";
 
-type FieldErrors = {
-  fullName?: string;
-  email?: string;
-  password?: string;
-};
+type Feedback = {
+  type: "success" | "error";
+  text: string;
+} | null;
+
+function inputClass(hasError: boolean) {
+  return [
+    "w-full rounded-xl border px-4 py-3 outline-none transition",
+    hasError
+      ? "border-red-500 bg-red-50 focus:ring-4 focus:ring-red-100"
+      : "border-slate-300 focus:border-blue-600 focus:ring-4 focus:ring-blue-100",
+  ].join(" ");
+}
 
 export function RegistrationForm() {
   const [showPassword, setShowPassword] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errors] = useState<FieldErrors>({});
+  const [errors, setErrors] = useState<RegistrationFieldErrors>({});
+  const [feedback, setFeedback] = useState<Feedback>(null);
+  const [isPending, startTransition] = useTransition();
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  function clearFieldError(field: keyof RegistrationInput) {
+    setErrors((current) => ({
+      ...current,
+      [field]: undefined,
+    }));
+
+    setFeedback(null);
+  }
+
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setIsSubmitting(true);
+    setFeedback(null);
 
-    // Temporal: SCRUM-153 reemplazará esto por el registro real.
-    await new Promise((resolve) => setTimeout(resolve, 700));
+    const formData = new FormData(event.currentTarget);
 
-    setIsSubmitting(false);
+    const values: RegistrationInput = {
+      fullName: String(formData.get("fullName") ?? ""),
+      email: String(formData.get("email") ?? ""),
+      password: String(formData.get("password") ?? ""),
+    };
+
+    const clientResult = registrationSchema.safeParse(values);
+
+    if (!clientResult.success) {
+      setErrors(getRegistrationFieldErrors(clientResult.error));
+      setFeedback({
+        type: "error",
+        text: "Revisa los datos marcados.",
+      });
+      return;
+    }
+
+    setErrors({});
+
+    startTransition(async () => {
+      try {
+        const serverResult = await validateRegistrationAction(values);
+
+        setErrors(serverResult.errors);
+        setFeedback({
+          type: serverResult.success ? "success" : "error",
+          text: serverResult.message,
+        });
+      } catch {
+        setFeedback({
+          type: "error",
+          text: "No fue posible validar la información. Inténtalo nuevamente.",
+        });
+      }
+    });
   }
 
   return (
@@ -36,12 +94,13 @@ export function RegistrationForm() {
         <input
           aria-describedby="fullName-help fullName-error"
           aria-invalid={Boolean(errors.fullName)}
-          className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
+          className={inputClass(Boolean(errors.fullName))}
           id="fullName"
           name="fullName"
           placeholder="Ingresa tu nombre completo"
           type="text"
           autoComplete="name"
+          onChange={() => clearFieldError("fullName")}
         />
 
         <p className="mt-1 text-xs text-slate-500" id="fullName-help">
@@ -66,12 +125,13 @@ export function RegistrationForm() {
         <input
           aria-describedby="email-help email-error"
           aria-invalid={Boolean(errors.email)}
-          className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
+          className={inputClass(Boolean(errors.email))}
           id="email"
           name="email"
           placeholder="ejemplo@correo.com"
           type="email"
           autoComplete="email"
+          onChange={() => clearFieldError("email")}
         />
 
         <p className="mt-1 text-xs text-slate-500" id="email-help">
@@ -97,12 +157,13 @@ export function RegistrationForm() {
           <input
             aria-describedby="password-help password-error"
             aria-invalid={Boolean(errors.password)}
-            className="w-full rounded-xl border border-slate-300 px-4 py-3 pr-24 outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
+            className={`${inputClass(Boolean(errors.password))} pr-24`}
             id="password"
             name="password"
             placeholder="Crea una contraseña segura"
             type={showPassword ? "text" : "password"}
             autoComplete="new-password"
+            onChange={() => clearFieldError("password")}
           />
 
           <button
@@ -127,18 +188,31 @@ export function RegistrationForm() {
 
       <button
         className="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-700 px-4 py-3 font-semibold text-white transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:bg-blue-400"
-        disabled={isSubmitting}
+        disabled={isPending}
         type="submit"
       >
-        {isSubmitting && (
+        {isPending && (
           <span
             aria-hidden="true"
             className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent"
           />
         )}
 
-        {isSubmitting ? "Creando cuenta..." : "Registrarse"}
+        {isPending ? "Validando..." : "Registrarse"}
       </button>
+
+      {feedback && (
+        <p
+          className={`rounded-xl px-4 py-3 text-sm ${
+            feedback.type === "success"
+              ? "bg-emerald-50 text-emerald-700"
+              : "bg-red-50 text-red-700"
+          }`}
+          role="status"
+        >
+          {feedback.text}
+        </p>
+      )}
 
       <p className="text-center text-sm text-slate-600">
         ¿Ya tienes una cuenta?{" "}
