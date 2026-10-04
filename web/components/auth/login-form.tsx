@@ -2,6 +2,7 @@
 
 import { type FormEvent, useState, useTransition } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { loginAction } from "@/app/actions/login";
 import {
   getLoginFieldErrors,
@@ -25,6 +26,7 @@ function inputClass(hasError: boolean) {
 }
 
 export function LoginForm() {
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<LoginFieldErrors>({});
   const [feedback, setFeedback] = useState<Feedback>(null);
@@ -69,6 +71,11 @@ export function LoginForm() {
           type: serverResult.success ? "success" : "error",
           text: serverResult.message,
         });
+
+        if (serverResult.success) {
+          router.replace("/dashboard");
+          router.refresh();
+        }
       } catch {
         setFeedback({
           type: "error",
