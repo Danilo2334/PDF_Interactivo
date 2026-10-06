@@ -1,5 +1,6 @@
 "use server";
 
+import { createClient } from "@/lib/supabase/server";
 import {
   getPasswordRecoveryFieldErrors,
   passwordRecoverySchema,
@@ -23,6 +24,27 @@ export async function requestPasswordRecoveryAction(
       success: false,
       message: "Revisa el correo ingresado.",
       errors: getPasswordRecoveryFieldErrors(result.error),
+    };
+  }
+
+  const siteUrl = (
+    process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"
+  ).replace(/\/+$/, "");
+  const supabase = await createClient();
+
+  const { error } = await supabase.auth.resetPasswordForEmail(
+    result.data.email,
+    {
+      redirectTo: `${siteUrl}/auth/callback?next=/reset-password`,
+    },
+  );
+
+  if (error) {
+    return {
+      success: false,
+      message:
+        "No fue posible procesar la solicitud. Inténtalo nuevamente en unos minutos.",
+      errors: {},
     };
   }
 
