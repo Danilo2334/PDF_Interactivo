@@ -1,22 +1,28 @@
 import type { Metadata } from "next";
-import { PasswordRecoveryForm } from "@/components/auth/password-recovery-form";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import { ResetPasswordForm } from "@/components/auth/reset-password-form";
+import { PASSWORD_RECOVERY_COOKIE } from "@/lib/auth/password-recovery";
+import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
-  title: "Recuperar contraseña | PDF Interactivo",
-  description: "Solicita instrucciones para recuperar el acceso a tu cuenta.",
+  title: "Nueva contraseña | PDF Interactivo",
+  description: "Establece una nueva contraseña para recuperar tu cuenta.",
 };
 
-type ForgotPasswordPageProps = {
-  searchParams: Promise<{
-    error?: string | string[];
-  }>;
-};
+export default async function ResetPasswordPage() {
+  const cookieStore = await cookies();
 
-export default async function ForgotPasswordPage({
-  searchParams,
-}: ForgotPasswordPageProps) {
-  const { error } = await searchParams;
-  const invalidLink = error === "invalid-link";
+  if (cookieStore.get(PASSWORD_RECOVERY_COOKIE)?.value !== "verified") {
+    redirect("/forgot-password?error=invalid-link");
+  }
+
+  const supabase = await createClient();
+  const { data } = await supabase.auth.getClaims();
+
+  if (!data?.claims?.sub) {
+    redirect("/forgot-password?error=invalid-link");
+  }
 
   return (
     <main className="min-h-screen bg-slate-100 lg:grid lg:grid-cols-2">
@@ -24,17 +30,17 @@ export default async function ForgotPasswordPage({
         <p className="text-xl font-bold">PDF Interactivo</p>
         <div className="max-w-xl">
           <p className="mb-4 text-sm font-semibold uppercase tracking-[0.3em] text-cyan-200">
-            Recupera el acceso
+            Protege tu cuenta
           </p>
           <h1 className="text-5xl font-bold leading-tight">
-            Vuelve a gestionar tus documentos interactivos.
+            Crea una nueva contraseña segura.
           </h1>
           <p className="mt-6 text-lg leading-8 text-blue-100">
-            Solicita las instrucciones utilizando el correo asociado con tu cuenta.
+            El acceso de recuperación es temporal y se cerrará al guardar el cambio.
           </p>
         </div>
         <p className="text-sm text-blue-200">
-          Por seguridad, la plataforma no confirma si una cuenta existe.
+          No compartas el enlace de recuperación con otras personas.
         </p>
       </section>
 
@@ -45,21 +51,13 @@ export default async function ForgotPasswordPage({
               PDF Interactivo
             </p>
             <h2 className="text-3xl font-bold text-slate-900">
-              Recuperar contraseña
+              Nueva contraseña
             </h2>
             <p className="mt-2 text-slate-600">
-              Te indicaremos cómo recuperar el acceso de forma segura.
+              Escribe y confirma la contraseña que utilizarás desde ahora.
             </p>
           </div>
-          {invalidLink && (
-            <p
-              className="mb-5 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700"
-              role="alert"
-            >
-              El enlace es inválido o expiró. Solicita uno nuevo.
-            </p>
-          )}
-          <PasswordRecoveryForm />
+          <ResetPasswordForm />
         </div>
       </section>
     </main>

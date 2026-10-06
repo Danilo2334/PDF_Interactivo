@@ -9,12 +9,14 @@ export const metadata: Metadata = {
 type LoginPageProps = {
   searchParams: Promise<{
     logout?: string | string[];
+    "password-reset"?: string | string[];
   }>;
 };
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
-  const { logout } = await searchParams;
+  const { logout, "password-reset": passwordReset } = await searchParams;
   const sessionClosed = logout === "success";
+  const passwordUpdated = passwordReset === "success";
 
   return (
     <main className="min-h-screen bg-slate-100 lg:grid lg:grid-cols-2">
@@ -55,6 +57,14 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
               role="status"
             >
               Cerraste sesión correctamente.
+            </p>
+          )}
+          {passwordUpdated && (
+            <p
+              className="mb-5 rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700"
+              role="status"
+            >
+              Contraseña actualizada. Inicia sesión con tu nueva contraseña.
             </p>
           )}
           <LoginForm />
