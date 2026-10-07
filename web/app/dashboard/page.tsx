@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { LogoutButton } from "@/components/auth/logout-button";
 import { createClient } from "@/lib/supabase/server";
@@ -28,6 +29,12 @@ export default async function DashboardPage() {
           <p className="text-xl font-bold text-blue-900">PDF Interactivo</p>
           <div className="flex items-center gap-4">
             <p className="hidden text-sm text-slate-600 sm:block">{email}</p>
+            <Link
+              className="rounded-xl border border-blue-200 px-4 py-2 text-sm font-semibold text-blue-700 transition hover:bg-blue-50"
+              href="/profile"
+            >
+              Mi perfil
+            </Link>
             <LogoutButton />
           </div>
         </div>
