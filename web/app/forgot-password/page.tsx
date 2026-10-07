@@ -1,22 +1,22 @@
 import type { Metadata } from "next";
-import { LoginForm } from "@/components/auth/login-form";
+import { PasswordRecoveryForm } from "@/components/auth/password-recovery-form";
 
 export const metadata: Metadata = {
-  title: "Iniciar sesión | PDF Interactivo",
-  description: "Accede de forma segura a tus proyectos de PDF interactivos.",
+  title: "Recuperar contraseña | PDF Interactivo",
+  description: "Solicita instrucciones para recuperar el acceso a tu cuenta.",
 };
 
-type LoginPageProps = {
+type ForgotPasswordPageProps = {
   searchParams: Promise<{
-    logout?: string | string[];
-    "password-reset"?: string | string[];
+    error?: string | string[];
   }>;
 };
 
-export default async function LoginPage({ searchParams }: LoginPageProps) {
-  const { logout, "password-reset": passwordReset } = await searchParams;
-  const sessionClosed = logout === "success";
-  const passwordUpdated = passwordReset === "success";
+export default async function ForgotPasswordPage({
+  searchParams,
+}: ForgotPasswordPageProps) {
+  const { error } = await searchParams;
+  const invalidLink = error === "invalid-link";
 
   return (
     <main className="min-h-screen bg-slate-100 lg:grid lg:grid-cols-2">
@@ -24,17 +24,17 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         <p className="text-xl font-bold">PDF Interactivo</p>
         <div className="max-w-xl">
           <p className="mb-4 text-sm font-semibold uppercase tracking-[0.3em] text-cyan-200">
-            Continúa creando
+            Recupera el acceso
           </p>
           <h1 className="text-5xl font-bold leading-tight">
-            Vuelve a tus documentos y refuerzos interactivos.
+            Vuelve a gestionar tus documentos interactivos.
           </h1>
           <p className="mt-6 text-lg leading-8 text-blue-100">
-            Accede de forma segura para gestionar tus PDF y acompañar a tus lectores.
+            Solicita las instrucciones utilizando el correo asociado con tu cuenta.
           </p>
         </div>
         <p className="text-sm text-blue-200">
-          Tu sesión se mantiene protegida mediante Supabase Auth.
+          Por seguridad, la plataforma no confirma si una cuenta existe.
         </p>
       </section>
 
@@ -45,29 +45,21 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
               PDF Interactivo
             </p>
             <h2 className="text-3xl font-bold text-slate-900">
-              Iniciar sesión
+              Recuperar contraseña
             </h2>
             <p className="mt-2 text-slate-600">
-              Ingresa con el correo y la contraseña de tu cuenta.
+              Te indicaremos cómo recuperar el acceso de forma segura.
             </p>
           </div>
-          {sessionClosed && (
+          {invalidLink && (
             <p
-              className="mb-5 rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700"
-              role="status"
+              className="mb-5 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700"
+              role="alert"
             >
-              Cerraste sesión correctamente.
+              El enlace es inválido o expiró. Solicita uno nuevo.
             </p>
           )}
-          {passwordUpdated && (
-            <p
-              className="mb-5 rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700"
-              role="status"
-            >
-              Contraseña actualizada. Inicia sesión con tu nueva contraseña.
-            </p>
-          )}
-          <LoginForm />
+          <PasswordRecoveryForm />
         </div>
       </section>
     </main>

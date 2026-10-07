@@ -2,14 +2,13 @@
 
 import { type FormEvent, useState, useTransition } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { loginAction } from "@/app/actions/login";
+import { requestPasswordRecoveryAction } from "@/app/actions/request-password-recovery";
 import {
-  getLoginFieldErrors,
-  loginSchema,
-  type LoginFieldErrors,
-  type LoginInput,
-} from "@/lib/validations/login";
+  getPasswordRecoveryFieldErrors,
+  passwordRecoverySchema,
+  type PasswordRecoveryFieldErrors,
+  type PasswordRecoveryInput,
+} from "@/lib/validations/password-recovery";
 
 type Feedback = {
   type: "success" | "error";
@@ -25,38 +24,27 @@ function inputClass(hasError: boolean) {
   ].join(" ");
 }
 
-export function LoginForm() {
-  const router = useRouter();
-  const [showPassword, setShowPassword] = useState(false);
-  const [errors, setErrors] = useState<LoginFieldErrors>({});
+export function PasswordRecoveryForm() {
+  const [errors, setErrors] = useState<PasswordRecoveryFieldErrors>({});
   const [feedback, setFeedback] = useState<Feedback>(null);
   const [isPending, startTransition] = useTransition();
-
-  function clearFieldError(field: keyof LoginInput) {
-    setErrors((current) => ({
-      ...current,
-      [field]: undefined,
-    }));
-    setFeedback(null);
-  }
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setFeedback(null);
 
     const formData = new FormData(event.currentTarget);
-    const values: LoginInput = {
+    const values: PasswordRecoveryInput = {
       email: String(formData.get("email") ?? ""),
-      password: String(formData.get("password") ?? ""),
     };
 
-    const clientResult = loginSchema.safeParse(values);
+    const clientResult = passwordRecoverySchema.safeParse(values);
 
     if (!clientResult.success) {
-      setErrors(getLoginFieldErrors(clientResult.error));
+      setErrors(getPasswordRecoveryFieldErrors(clientResult.error));
       setFeedback({
         type: "error",
-        text: "Revisa los datos marcados.",
+        text: "Revisa el correo ingresado.",
       });
       return;
     }
@@ -65,21 +53,16 @@ export function LoginForm() {
 
     startTransition(async () => {
       try {
-        const serverResult = await loginAction(values);
+        const serverResult = await requestPasswordRecoveryAction(values);
         setErrors(serverResult.errors);
         setFeedback({
           type: serverResult.success ? "success" : "error",
           text: serverResult.message,
         });
-
-        if (serverResult.success) {
-          router.replace("/dashboard");
-          router.refresh();
-        }
       } catch {
         setFeedback({
           type: "error",
-          text: "No fue posible iniciar sesión. Inténtalo nuevamente.",
+          text: "No fue posible procesar la solicitud. Inténtalo nuevamente.",
         });
       }
     });
@@ -101,7 +84,10 @@ export function LoginForm() {
           className={inputClass(Boolean(errors.email))}
           id="email"
           name="email"
-          onChange={() => clearFieldError("email")}
+          onChange={() => {
+            setErrors({});
+            setFeedback(null);
+          }}
           placeholder="ejemplo@correo.com"
           type="email"
         />
@@ -115,52 +101,6 @@ export function LoginForm() {
         )}
       </div>
 
-      <div>
-        <label
-          className="mb-2 block text-sm font-semibold text-slate-700"
-          htmlFor="password"
-        >
-          Contraseña
-        </label>
-        <div className="relative">
-          <input
-            aria-describedby="password-error"
-            aria-invalid={Boolean(errors.password)}
-            autoComplete="current-password"
-            className={`${inputClass(Boolean(errors.password))} pr-24`}
-            id="password"
-            name="password"
-            onChange={() => clearFieldError("password")}
-            placeholder="Ingresa tu contraseña"
-            type={showPassword ? "text" : "password"}
-          />
-          <button
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-sm font-semibold text-blue-700 hover:text-blue-900"
-            type="button"
-            onClick={() => setShowPassword((current) => !current)}
-          >
-            {showPassword ? "Ocultar" : "Mostrar"}
-          </button>
-        </div>
-        {errors.password && (
-          <p
-            className="mt-1 text-sm text-red-600"
-            id="password-error"
-            role="alert"
-          >
-            {errors.password}
-          </p>
-        )}
-        <div className="mt-2 text-right">
-          <Link
-            className="text-sm font-semibold text-blue-700 hover:underline"
-            href="/forgot-password"
-          >
-            ¿Olvidaste tu contraseña?
-          </Link>
-        </div>
-      </div>
-
       <button
         className="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-700 px-4 py-3 font-semibold text-white transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:bg-blue-400"
         disabled={isPending}
@@ -172,7 +112,7 @@ export function LoginForm() {
             className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent"
           />
         )}
-        {isPending ? "Iniciando sesión..." : "Iniciar sesión"}
+        {isPending ? "Procesando solicitud..." : "Recuperar contraseña"}
       </button>
 
       {feedback && (
@@ -182,16 +122,16 @@ export function LoginForm() {
               ? "bg-emerald-50 text-emerald-700"
               : "bg-red-50 text-red-700"
           }`}
-          role="status"
+          role={feedback.type === "error" ? "alert" : "status"}
         >
           {feedback.text}
         </p>
       )}
 
       <p className="text-center text-sm text-slate-600">
-        ¿Todavía no tienes cuenta?{" "}
-        <Link className="font-semibold text-blue-700 hover:underline" href="/">
-          Regístrate
+        ¿Recordaste tu contraseña?{" "}
+        <Link className="font-semibold text-blue-700 hover:underline" href="/login">
+          Volver al inicio de sesión
         </Link>
       </p>
     </form>
