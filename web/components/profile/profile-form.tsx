@@ -19,23 +19,32 @@ type Feedback = {
   text: string;
 } | null;
 
-function inputClass(hasError: boolean) {
+function inputClass(hasError: boolean, isReadOnly = false) {
   return [
     "w-full rounded-xl border px-4 py-3 outline-none transition",
     hasError
       ? "border-red-500 bg-red-50 focus:ring-4 focus:ring-red-100"
+      : isReadOnly
+        ? "cursor-not-allowed border-slate-200 bg-slate-100 text-slate-600"
       : "border-slate-300 focus:border-blue-600 focus:ring-4 focus:ring-blue-100",
   ].join(" ");
 }
 
 export function ProfileForm({ email, initialFullName }: ProfileFormProps) {
+  const [savedFullName, setSavedFullName] = useState(initialFullName);
   const [fullName, setFullName] = useState(initialFullName);
+  const [isEditing, setIsEditing] = useState(false);
   const [errors, setErrors] = useState<ProfileFieldErrors>({});
   const [feedback, setFeedback] = useState<Feedback>(null);
   const [isPending, startTransition] = useTransition();
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    if (!isEditing) {
+      return;
+    }
+
     setFeedback(null);
 
     const values: ProfileInput = { fullName };
@@ -63,6 +72,8 @@ export function ProfileForm({ email, initialFullName }: ProfileFormProps) {
 
         if (serverResult.success) {
           setFullName(clientResult.data.fullName);
+          setSavedFullName(clientResult.data.fullName);
+          setIsEditing(false);
         }
       } catch {
         setFeedback({
@@ -71,6 +82,13 @@ export function ProfileForm({ email, initialFullName }: ProfileFormProps) {
         });
       }
     });
+  }
+
+  function handleCancel() {
+    setFullName(savedFullName);
+    setErrors({});
+    setFeedback(null);
+    setIsEditing(false);
   }
 
   return (
@@ -86,7 +104,7 @@ export function ProfileForm({ email, initialFullName }: ProfileFormProps) {
           aria-describedby="fullName-help fullName-error"
           aria-invalid={Boolean(errors.fullName)}
           autoComplete="name"
-          className={inputClass(Boolean(errors.fullName))}
+          className={inputClass(Boolean(errors.fullName), !isEditing)}
           id="fullName"
           maxLength={100}
           name="fullName"
@@ -96,6 +114,7 @@ export function ProfileForm({ email, initialFullName }: ProfileFormProps) {
             setFeedback(null);
           }}
           placeholder="Ingresa tu nombre completo"
+          readOnly={!isEditing}
           type="text"
           value={fullName}
         />
@@ -134,19 +153,42 @@ export function ProfileForm({ email, initialFullName }: ProfileFormProps) {
         </p>
       </div>
 
-      <button
-        className="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-700 px-4 py-3 font-semibold text-white transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:bg-blue-400"
-        disabled={isPending}
-        type="submit"
-      >
-        {isPending && (
-          <span
-            aria-hidden="true"
-            className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent"
-          />
-        )}
-        {isPending ? "Guardando cambios..." : "Guardar cambios"}
-      </button>
+      {isEditing ? (
+        <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+          <button
+            className="rounded-xl border border-slate-300 px-5 py-3 font-semibold text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
+            disabled={isPending}
+            onClick={handleCancel}
+            type="button"
+          >
+            Cancelar
+          </button>
+          <button
+            className="flex items-center justify-center gap-2 rounded-xl bg-blue-700 px-5 py-3 font-semibold text-white transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:bg-blue-400"
+            disabled={isPending}
+            type="submit"
+          >
+            {isPending && (
+              <span
+                aria-hidden="true"
+                className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent"
+              />
+            )}
+            {isPending ? "Guardando cambios..." : "Guardar cambios"}
+          </button>
+        </div>
+      ) : (
+        <button
+          className="w-full rounded-xl bg-blue-700 px-5 py-3 font-semibold text-white transition hover:bg-blue-800"
+          onClick={() => {
+            setFeedback(null);
+            setIsEditing(true);
+          }}
+          type="button"
+        >
+          Editar perfil
+        </button>
+      )}
 
       {feedback && (
         <p
