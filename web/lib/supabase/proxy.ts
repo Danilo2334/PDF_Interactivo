@@ -41,8 +41,10 @@ export async function updateSession(request: NextRequest) {
   const { data } = await supabase.auth.getClaims();
   const isAuthenticated = Boolean(data?.claims?.sub);
   const pathname = request.nextUrl.pathname;
+  const isPrivateRoute =
+    pathname.startsWith("/dashboard") || pathname.startsWith("/profile");
 
-  if (!isAuthenticated && pathname.startsWith("/dashboard")) {
+  if (!isAuthenticated && isPrivateRoute) {
     const loginUrl = new URL("/login", request.url);
     return copyCookies(
       supabaseResponse,
