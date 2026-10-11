@@ -95,6 +95,9 @@ export function PdfFileSelector() {
           <p className="mt-1 break-all text-sm text-green-700">
             {selectedFile.name}
           </p>
+          <p className="mt-1 text-sm text-green-700">
+            Tamaño: {(selectedFile.size / (1024 * 1024)).toFixed(2)} MB
+          </p>
         </div>
       )}
 
