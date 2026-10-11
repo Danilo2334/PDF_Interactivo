@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import {
   ChangeEvent,
   DragEvent,
@@ -19,6 +20,9 @@ export function PdfFileSelector() {
     useState<UploadStatus>("idle");
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadMessage, setUploadMessage] = useState("");
+  const [createdProjectId, setCreatedProjectId] = useState<string | null>(
+    null,
+  );
 
   function selectFile(file?: File) {
     if (!file || uploadStatus === "uploading") return;
@@ -38,6 +42,7 @@ export function PdfFileSelector() {
     setUploadStatus("idle");
     setUploadProgress(0);
     setUploadMessage("");
+    setCreatedProjectId(null);
   }
 
   function handleInputChange(event: ChangeEvent<HTMLInputElement>) {
@@ -85,7 +90,12 @@ export function PdfFileSelector() {
     };
 
     request.onload = () => {
-      let response: { message?: string } = {};
+      let response: {
+        message?: string;
+        project?: {
+          id: string;
+        };
+      } = {};
 
       try {
         response = JSON.parse(request.responseText);
@@ -99,6 +109,7 @@ export function PdfFileSelector() {
         setUploadMessage(
           response.message ?? "Transferencia completada correctamente.",
         );
+        setCreatedProjectId(response.project?.id ?? null);
         return;
       }
 
@@ -214,9 +225,18 @@ export function PdfFileSelector() {
       )}
 
       {uploadStatus === "success" && (
-        <p className="mt-4 rounded-lg border border-green-200 bg-green-50 p-4 text-sm text-green-700">
-          {uploadMessage}
-        </p>
+        <div className="mt-4 rounded-lg border border-green-200 bg-green-50 p-4">
+          <p className="text-sm text-green-700">{uploadMessage}</p>
+
+          {createdProjectId && (
+            <Link
+              href={`/projects/${createdProjectId}`}
+              className="mt-4 inline-block rounded-lg bg-green-700 px-5 py-2.5 text-sm font-semibold text-white"
+            >
+              Abrir proyecto
+            </Link>
+          )}
+        </div>
       )}
 
       {(fileError || uploadStatus === "error") && (

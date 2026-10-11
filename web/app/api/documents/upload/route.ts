@@ -102,13 +102,53 @@ export async function POST(request: Request) {
     );
   }
 
+  const projectId = crypto.randomUUID();
+  const projectName =
+    file.name.replace(/\.pdf$/i, "").trim() || "Proyecto sin título";
+
+  const { error: projectError } = await supabase
+    .from("projects")
+    .insert({
+      id: projectId,
+      owner_id: user.id,
+      document_id: documentId,
+      name: projectName,
+      status: "pending",
+    });
+
+  if (projectError) {
+    console.error("Error creando proyecto:", projectError);
+
+    await supabase
+      .from("documents")
+      .delete()
+      .eq("id", documentId);
+
+    await supabase.storage
+      .from(STORAGE_BUCKET)
+      .remove([uploadedFile.path]);
+
+    return NextResponse.json(
+      {
+        message:
+          "No fue posible crear el proyecto. El documento relacionado fue eliminado.",
+      },
+      { status: 500 },
+    );
+  }
+
   return NextResponse.json({
-    message: "Documento almacenado de forma segura.",
+    message: "Proyecto creado correctamente.",
     document: {
       id: documentId,
       name: file.name,
       size: file.size,
       path: uploadedFile.path,
+    },
+    project: {
+      id: projectId,
+      name: projectName,
+      status: "pending",
     },
   });
 }
