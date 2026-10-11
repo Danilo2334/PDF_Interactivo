@@ -2,9 +2,11 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
 const MAX_FILE_SIZE = 20 * 1024 * 1024;
+const STORAGE_BUCKET = "pdf-documents";
 
 export async function POST(request: Request) {
   const supabase = await createClient();
+
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -51,13 +53,62 @@ export async function POST(request: Request) {
     );
   }
 
-  await file.arrayBuffer();
+  const documentId = crypto.randomUUID();
+  const storagePath = `${user.id}/${documentId}.pdf`;
+  const fileBuffer = await file.arrayBuffer();
+
+  const { data: uploadedFile, error: uploadError } =
+    await supabase.storage
+      .from(STORAGE_BUCKET)
+      .upload(storagePath, fileBuffer, {
+        contentType: "application/pdf",
+        upsert: false,
+      });
+
+  if (uploadError) {
+    console.error("Error almacenando PDF:", uploadError);
+
+    return NextResponse.json(
+      { message: "No fue posible almacenar el documento." },
+      { status: 500 },
+    );
+  }
+
+  const { error: documentError } = await supabase
+    .from("documents")
+    .insert({
+      id: documentId,
+      owner_id: user.id,
+      original_name: file.name,
+      storage_path: uploadedFile.path,
+      size_bytes: file.size,
+      mime_type: "application/pdf",
+      status: "uploaded",
+    });
+
+  if (documentError) {
+    console.error("Error registrando documento:", documentError);
+
+    await supabase.storage
+      .from(STORAGE_BUCKET)
+      .remove([uploadedFile.path]);
+
+    return NextResponse.json(
+      {
+        message:
+          "No fue posible registrar el documento. El archivo parcial fue eliminado.",
+      },
+      { status: 500 },
+    );
+  }
 
   return NextResponse.json({
-    message: "Transferencia completada correctamente.",
-    file: {
+    message: "Documento almacenado de forma segura.",
+    document: {
+      id: documentId,
       name: file.name,
       size: file.size,
+      path: uploadedFile.path,
     },
   });
 }
