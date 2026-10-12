@@ -245,12 +245,27 @@ export function PdfFileSelector() {
       )}
 
       {(fileError || uploadStatus === "error") && (
-        <p
+        <div
           role="alert"
-          className="mt-4 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700"
+          className="mt-4 rounded-lg border border-red-200 bg-red-50 p-4"
         >
-          {fileError || uploadMessage}
-        </p>
+          <p className="font-semibold text-red-800">
+            No se pudo aceptar el archivo
+          </p>
+
+          <p className="mt-1 text-sm text-red-700">
+            {fileError || uploadMessage}
+          </p>
+
+          <button
+            type="button"
+            onClick={() => inputRef.current?.click()}
+            disabled={uploadStatus === "uploading"}
+            className="mt-4 rounded-lg border border-red-300 bg-white px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            Seleccionar otro PDF
+          </button>
+        </div>
       )}
     </section>
   );
