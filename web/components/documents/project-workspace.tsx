@@ -56,7 +56,9 @@ export function ProjectWorkspace({
         id={`${workspaceId}-pdf`}
         hidden={activeSection !== "pdf"}
       >
-        <PdfViewer projectId={projectId} />
+        {activeSection === "pdf" && (
+          <PdfViewer key={projectId} projectId={projectId} />
+        )}
       </div>
 
       <section

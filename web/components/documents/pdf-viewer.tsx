@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import type { PDFDocumentLoadingTask, RenderTask } from "pdfjs-dist";
+import type { PDFDocumentLoadingTask } from "pdfjs-dist";
+import { renderVisiblePages } from "@/lib/pdf/render-visible-pages";
 
 type ViewerProps = {
   projectId: string;
@@ -28,7 +29,6 @@ function PdfPages({
   const containerRef = useRef<HTMLDivElement>(null);
   const [status, setStatus] = useState<ViewerStatus>("loading");
   const [totalPages, setTotalPages] = useState(0);
-  const [renderedPages, setRenderedPages] = useState(0);
   const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
@@ -38,7 +38,7 @@ function PdfPages({
     const controller = new AbortController();
     let active = true;
     let loadingTask: PDFDocumentLoadingTask | null = null;
-    let renderTask: RenderTask | null = null;
+    let disposePages: (() => void) | null = null;
 
     async function loadPages() {
       let failureMessage =
@@ -90,57 +90,26 @@ function PdfPages({
 
         setTotalPages(pdf.numPages);
 
-        for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
-          if (!active) return;
+        disposePages = renderVisiblePages(
+          pdf,
+          container!,
+          () => {
+            if (active) setStatus("ready");
+          },
+          (error) => {
+            if (!active) return;
 
-          const page = await pdf.getPage(pageNumber);
-          if (!active) return;
+            console.error("Error renderizando página:", error);
+            disposePages?.();
 
-          const viewport = page.getViewport({ scale: 1.5 });
-          const outputScale = Math.min(window.devicePixelRatio || 1, 2);
+            setErrorMessage(
+              "No fue posible visualizar una página. Inténtalo nuevamente.",
+            );
+            setStatus("error");
 
-          const figure = document.createElement("figure");
-          figure.className = "min-w-0";
-          figure.dataset.pageNumber = String(pageNumber);
-
-          const caption = document.createElement("figcaption");
-          caption.className = "mb-2 text-center text-sm text-slate-600";
-          caption.textContent =
-            `Página ${pageNumber} de ${pdf.numPages}`;
-
-          const canvas = document.createElement("canvas");
-          canvas.width = Math.ceil(viewport.width * outputScale);
-          canvas.height = Math.ceil(viewport.height * outputScale);
-          canvas.className =
-            "mx-auto block rounded border border-slate-200 bg-white";
-          canvas.style.width = "100%";
-          canvas.style.height = "auto";
-          canvas.style.maxWidth = `${viewport.width}px`;
-          canvas.setAttribute("role", "img");
-          canvas.setAttribute(
-            "aria-label",
-            `Página ${pageNumber} del PDF original`,
-          );
-
-          figure.append(caption, canvas);
-          container!.append(figure);
-
-          renderTask = page.render({
-            canvas,
-            viewport,
-            transform: [outputScale, 0, 0, outputScale, 0, 0],
-          });
-
-          await renderTask.promise;
-          renderTask = null;
-
-          if (!active) return;
-
-          page.cleanup();
-          setRenderedPages(pageNumber);
-        }
-
-        if (active) setStatus("ready");
+            void loadingTask?.destroy().catch(() => {});
+          },
+        );
       } catch (error) {
         if (!active) return;
 
@@ -155,7 +124,7 @@ function PdfPages({
     return () => {
       active = false;
       controller.abort();
-      renderTask?.cancel();
+      disposePages?.();
 
       if (loadingTask) {
         void loadingTask.destroy().catch(() => {});
@@ -184,7 +153,7 @@ function PdfPages({
         <p role="status" className="my-4 text-sm text-slate-600">
           {totalPages === 0
             ? "Cargando PDF..."
-            : `Renderizando páginas: ${renderedPages} de ${totalPages}...`}
+            : "Preparando la primera página..."}
         </p>
       )}
 
@@ -213,7 +182,7 @@ function PdfPages({
 
       {status === "ready" && (
         <p role="status" className="mt-4 text-sm text-green-700">
-          Se visualizaron las {totalPages} páginas correctamente.
+          PDF disponible. Desplázate para consultar sus páginas.
         </p>
       )}
     </section>
