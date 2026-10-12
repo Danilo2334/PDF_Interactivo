@@ -68,7 +68,10 @@ export default async function ProjectPage({
           Proyecto creado
         </p>
 
-        <h1 className="mt-2 text-3xl font-bold text-slate-900">
+        <h1
+          className="mt-2 text-2xl font-bold leading-tight text-slate-900 sm:text-3xl"
+          style={{ overflowWrap: "anywhere" }}
+        >
           {project.name}
         </h1>
 
