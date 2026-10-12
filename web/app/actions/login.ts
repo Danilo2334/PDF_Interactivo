@@ -1,5 +1,6 @@
 "use server";
 
+import { getCurrentAccess } from "@/lib/auth/access";
 import { createClient } from "@/lib/supabase/server";
 import {
   getLoginFieldErrors,
@@ -35,6 +36,14 @@ export async function loginAction(
   });
 
   if (error || !data.user || !data.session) {
+    if (error?.message.includes("ACCOUNT_DISABLED")) {
+      return {
+        success: false,
+        message: "Tu cuenta está bloqueada. Contacta al administrador.",
+        errors: {},
+      };
+    }
+
     if (
       error?.code === "over_request_rate_limit" ||
       error?.status === 429
@@ -49,6 +58,18 @@ export async function loginAction(
     return {
       success: false,
       message: "Correo o contraseña incorrectos.",
+      errors: {},
+    };
+  }
+
+  const access = await getCurrentAccess();
+
+  if (!access.ok) {
+    await supabase.auth.signOut({ scope: "local" });
+
+    return {
+      success: false,
+      message: access.message,
       errors: {},
     };
   }

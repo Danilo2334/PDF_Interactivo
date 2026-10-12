@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { setUserStatusAction } from "@/app/actions/set-user-status";
 import { redirect } from "next/navigation";
 import { checkPermission } from "@/lib/auth/access";
 import { createClient } from "@/lib/supabase/server";
@@ -17,6 +18,7 @@ type AdminPageProps = {
   searchParams: Promise<{
     q?: string | string[];
     page?: string | string[];
+    result?: string | string[];
   }>;
 };
 
@@ -61,6 +63,19 @@ export default async function AdminPage({
   }
 
   const params = await searchParams;
+  const notices: Record<string, string> = {
+    activated: "Cuenta reactivada correctamente.",
+    blocked: "Cuenta bloqueada correctamente.",
+    invalid: "Los datos enviados no son válidos.",
+    self: "No puedes cambiar el estado de tu propia cuenta.",
+    error: "No fue posible cambiar el estado. Intenta nuevamente.",
+  };
+
+  const notice =
+    typeof params.result === "string"
+      ? notices[params.result]
+      : undefined;
+
   const query =
     typeof params.q === "string" ? params.q.trim().slice(0, 100) : "";
 
@@ -111,6 +126,15 @@ export default async function AdminPage({
         <p className="mt-3 text-slate-600">
           Consulta los usuarios registrados, sus roles y el estado de sus cuentas.
         </p>
+
+        {notice && (
+          <p
+            role="status"
+            className="mt-5 rounded-lg bg-blue-50 p-4 text-blue-900"
+          >
+            {notice}
+          </p>
+        )}
 
         <form action="/admin" method="get" className="mt-6">
           <label
@@ -174,6 +198,9 @@ export default async function AdminPage({
                   <th scope="col" className="px-4 py-3">Correo</th>
                   <th scope="col" className="px-4 py-3">Rol</th>
                   <th scope="col" className="px-4 py-3">Estado</th>
+                  <th scope="col" className="px-4 py-3">
+                    Acciones
+                  </th>
                 </tr>
               </thead>
 
@@ -199,6 +226,32 @@ export default async function AdminPage({
                       >
                         {user.is_active ? "Activa" : "Inactiva"}
                       </span>
+                    </td>
+                    <td className="px-4 py-4">
+                      {user.id === access.userId ? (
+                        <span className="text-slate-500">Tu cuenta</span>
+                      ) : (
+                        <form action={setUserStatusAction}>
+                          <input type="hidden" name="userId" value={user.id} />
+                          <input
+                            type="hidden"
+                            name="isActive"
+                            value={user.is_active ? "false" : "true"}
+                          />
+
+                          <button
+                            type="submit"
+                            aria-label={`${user.is_active ? "Bloquear" : "Reactivar"} cuenta de ${user.email}`}
+                            className={`rounded-lg px-4 py-2 font-semibold text-white ${
+                              user.is_active
+                                ? "bg-red-700 hover:bg-red-800"
+                                : "bg-green-700 hover:bg-green-800"
+                            }`}
+                          >
+                            {user.is_active ? "Bloquear" : "Reactivar"}
+                          </button>
+                        </form>
+                      )}
                     </td>
                   </tr>
                 ))}

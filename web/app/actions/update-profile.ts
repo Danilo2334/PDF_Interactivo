@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { getCurrentAccess } from "@/lib/auth/access";
 import { createClient } from "@/lib/supabase/server";
 import {
   getProfileFieldErrors,
@@ -38,6 +39,16 @@ export async function updateProfileAction(
     return {
       success: false,
       message: "Tu sesión no es válida. Inicia sesión nuevamente.",
+      errors: {},
+    };
+  }
+
+  const access = await getCurrentAccess();
+
+  if (!access.ok) {
+    return {
+      success: false,
+      message: access.message,
       errors: {},
     };
   }

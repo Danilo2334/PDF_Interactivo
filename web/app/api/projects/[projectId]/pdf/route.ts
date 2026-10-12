@@ -1,10 +1,23 @@
 import { NextResponse } from "next/server";
+import { getCurrentAccess } from "@/lib/auth/access";
 import { createClient } from "@/lib/supabase/server";
 
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ projectId: string }> },
 ) {
+  const access = await getCurrentAccess();
+
+  if (!access.ok) {
+    return NextResponse.json(
+      { message: access.message },
+      {
+        status: access.status,
+        headers: { "Cache-Control": "private, no-store" },
+      },
+    );
+  }
+
   const { projectId } = await params;
 
   const supabase = await createClient();

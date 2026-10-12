@@ -39,27 +39,65 @@ export async function updateSession(request: NextRequest) {
   });
 
   const { data } = await supabase.auth.getClaims();
-  const isAuthenticated = Boolean(data?.claims?.sub);
+  const userId = data?.claims?.sub;
   const pathname = request.nextUrl.pathname;
-  const isPrivateRoute =
-    pathname.startsWith("/dashboard") || pathname.startsWith("/profile");
 
-  if (!isAuthenticated && isPrivateRoute) {
-    const loginUrl = new URL("/login", request.url);
+  const privatePaths = [
+    "/dashboard",
+    "/profile",
+    "/documents",
+    "/projects",
+    "/admin",
+    "/reset-password",
+  ];
+
+  const isPrivateRoute = privatePaths.some(
+    (path) => pathname === path || pathname.startsWith(`${path}/`),
+  );
+
+  if (!userId && isPrivateRoute) {
     return copyCookies(
       supabaseResponse,
-      NextResponse.redirect(loginUrl),
+      NextResponse.redirect(new URL("/login", request.url)),
     );
   }
 
-  if (
-    isAuthenticated &&
-    (pathname === "/" || pathname === "/login")
-  ) {
-    const dashboardUrl = new URL("/dashboard", request.url);
+  let isActive = false;
+
+  if (userId) {
+    const { data: profile, error } = await supabase
+      .from("profiles")
+      .select("is_active")
+      .eq("id", userId)
+      .maybeSingle();
+
+    if (error) {
+      return copyCookies(
+        supabaseResponse,
+        new NextResponse(
+          "No fue posible verificar el estado de tu cuenta. Intenta nuevamente.",
+          {
+            status: 503,
+            headers: { "Cache-Control": "private, no-store" },
+          },
+        ),
+      );
+    }
+
+    isActive = profile?.is_active === true;
+
+    if (!isActive && isPrivateRoute) {
+      return copyCookies(
+        supabaseResponse,
+        NextResponse.redirect(new URL("/blocked", request.url)),
+      );
+    }
+  }
+
+  if (isActive && (pathname === "/" || pathname === "/login")) {
     return copyCookies(
       supabaseResponse,
-      NextResponse.redirect(dashboardUrl),
+      NextResponse.redirect(new URL("/dashboard", request.url)),
     );
   }
 
