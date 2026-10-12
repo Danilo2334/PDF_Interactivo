@@ -20,6 +20,14 @@ export default async function ProjectPage({
 }: ProjectPageProps) {
   const { projectId } = await params;
   const { userId } = await requireActiveUser();
+
+  const uuidPattern =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+  if (!uuidPattern.test(projectId)) {
+    notFound();
+  }
+
   const supabase = await createClient();
 
   const { data: project } = await supabase

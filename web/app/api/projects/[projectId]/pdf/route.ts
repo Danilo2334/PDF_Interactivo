@@ -2,6 +2,19 @@ import { NextResponse } from "next/server";
 import { getCurrentAccess } from "@/lib/auth/access";
 import { createClient } from "@/lib/supabase/server";
 
+function projectNotFoundResponse() {
+  return NextResponse.json(
+    { message: "Proyecto no encontrado." },
+    {
+      status: 404,
+      headers: {
+        "Cache-Control": "private, no-store",
+        "X-Content-Type-Options": "nosniff",
+      },
+    },
+  );
+}
+
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ projectId: string }> },
@@ -36,10 +49,7 @@ export async function GET(
     /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
   if (!uuidPattern.test(projectId)) {
-    return NextResponse.json(
-      { message: "Proyecto no encontrado." },
-      { status: 404 },
-    );
+    return projectNotFoundResponse();
   }
 
   const { data: project, error: projectError } = await supabase
@@ -58,10 +68,7 @@ export async function GET(
   }
 
   if (!project) {
-    return NextResponse.json(
-      { message: "Proyecto no encontrado." },
-      { status: 404 },
-    );
+    return projectNotFoundResponse();
   }
 
   const { data: document, error: documentError } = await supabase
@@ -80,10 +87,7 @@ export async function GET(
   }
 
   if (!document) {
-    return NextResponse.json(
-      { message: "Documento no encontrado." },
-      { status: 404 },
-    );
+    return projectNotFoundResponse();
   }
 
   const { data: file, error: downloadError } = await supabase.storage
