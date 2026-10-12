@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
+import { PDFDocument } from "pdf-lib";
 import { createClient } from "@/lib/supabase/server";
+import { validatePdfFile } from "@/lib/validations/pdf-file";
 
-const MAX_FILE_SIZE = 20 * 1024 * 1024;
 const STORAGE_BUCKET = "pdf-documents";
 
 export async function POST(request: Request) {
@@ -28,34 +29,66 @@ export async function POST(request: Request) {
     );
   }
 
-  const isPdf =
-    file.type === "application/pdf" ||
-    file.name.toLowerCase().endsWith(".pdf");
+  const validation = await validatePdfFile(file);
 
-  if (!isPdf) {
+  if (!validation.valid) {
+    const statusByError = {
+      EMPTY_FILE: 400,
+      INVALID_EXTENSION: 415,
+      INVALID_MIME_TYPE: 415,
+      FILE_TOO_LARGE: 413,
+      INVALID_SIGNATURE: 415,
+      READ_ERROR: 400,
+    } as const;
+
     return NextResponse.json(
-      { message: "El archivo debe estar en formato PDF." },
-      { status: 415 },
+      {
+        message: validation.message,
+        code: validation.code,
+      },
+      {
+        status: statusByError[validation.code],
+      },
     );
   }
 
-  if (file.size === 0) {
-    return NextResponse.json(
-      { message: "El archivo PDF está vacío." },
-      { status: 400 },
-    );
-  }
+  const fileBuffer = await file.arrayBuffer();
 
-  if (file.size > MAX_FILE_SIZE) {
+  let pageCount: number;
+
+  try {
+    const pdfDocument = await PDFDocument.load(fileBuffer, {
+      ignoreEncryption: false,
+      updateMetadata: false,
+      throwOnInvalidObject: true,
+    });
+
+    pageCount = pdfDocument.getPageCount();
+
+    if (pageCount < 1) {
+      return NextResponse.json(
+        {
+          message: "El documento PDF no contiene páginas válidas.",
+          code: "PDF_WITHOUT_PAGES",
+        },
+        { status: 422 },
+      );
+    }
+  } catch (error) {
+    console.error("Error leyendo la estructura del PDF:", error);
+
     return NextResponse.json(
-      { message: "El archivo no puede superar los 20 MB." },
-      { status: 413 },
+      {
+        message:
+          "El archivo PDF está dañado, incompleto o no puede ser leído.",
+        code: "INVALID_PDF_STRUCTURE",
+      },
+      { status: 422 },
     );
   }
 
   const documentId = crypto.randomUUID();
   const storagePath = `${user.id}/${documentId}.pdf`;
-  const fileBuffer = await file.arrayBuffer();
 
   const { data: uploadedFile, error: uploadError } =
     await supabase.storage
@@ -144,6 +177,7 @@ export async function POST(request: Request) {
       name: file.name,
       size: file.size,
       path: uploadedFile.path,
+      pageCount,
     },
     project: {
       id: projectId,
