@@ -10,10 +10,16 @@ import {
   useState,
 } from "react";
 
-type UploadStatus = "idle" | "uploading" | "success" | "error";
+type UploadStatus =
+  | "idle"
+  | "uploading"
+  | "processing"
+  | "success"
+  | "error";
 
 export function PdfFileSelector() {
   const inputRef = useRef<HTMLInputElement>(null);
+  const uploadInFlightRef = useRef(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [fileError, setFileError] = useState("");
@@ -25,8 +31,12 @@ export function PdfFileSelector() {
     null,
   );
 
+  const isBusy =
+    uploadStatus === "uploading" ||
+    uploadStatus === "processing";
+
   async function selectFile(file?: File) {
-    if (!file || uploadStatus === "uploading") return;
+    if (!file || isBusy) return;
 
     setSelectedFile(null);
     setFileError("");
@@ -62,7 +72,7 @@ export function PdfFileSelector() {
 
   function handleKeyDown(event: KeyboardEvent<HTMLDivElement>) {
     if (
-      uploadStatus !== "uploading" &&
+      !isBusy &&
       (event.key === "Enter" || event.key === " ")
     ) {
       event.preventDefault();
@@ -71,67 +81,116 @@ export function PdfFileSelector() {
   }
 
   function uploadFile() {
-    if (!selectedFile || uploadStatus === "uploading") return;
+    if (
+      !selectedFile ||
+      uploadInFlightRef.current ||
+      uploadStatus === "success"
+    ) {
+      return;
+    }
 
     const formData = new FormData();
     formData.append("file", selectedFile);
 
     const request = new XMLHttpRequest();
 
+    // Bloquea inmediatamente un segundo envío por doble clic.
+    uploadInFlightRef.current = true;
+
+    setFileError("");
+    setCreatedProjectId(null);
     setUploadStatus("uploading");
     setUploadProgress(0);
     setUploadMessage("Transfiriendo archivo...");
 
-    request.open("POST", "/api/documents/upload");
+    function finishWithError(message: string) {
+      uploadInFlightRef.current = false;
+      setUploadStatus("error");
+      setUploadMessage(message);
+    }
 
     request.upload.onprogress = (event) => {
-      if (event.lengthComputable) {
-        const percentage = Math.round(
-          (event.loaded / event.total) * 100,
+      if (event.lengthComputable && event.total > 0) {
+        setUploadProgress(
+          Math.min(
+            100,
+            Math.floor((event.loaded / event.total) * 100),
+          ),
         );
-
-        setUploadProgress(percentage);
       }
+    };
+
+    request.upload.onload = () => {
+      if (!uploadInFlightRef.current) return;
+
+      setUploadProgress(100);
+      setUploadStatus("processing");
+      setUploadMessage(
+        "Archivo enviado. Validando y guardando el PDF...",
+      );
     };
 
     request.onload = () => {
       let response: {
         message?: string;
-        project?: {
-          id: string;
-        };
+        project?: { id?: string };
       } = {};
 
       try {
-        response = JSON.parse(request.responseText);
+        const parsed = JSON.parse(request.responseText);
+
+        if (parsed && typeof parsed === "object") {
+          response = parsed;
+        }
       } catch {
         response = {};
       }
 
-      if (request.status >= 200 && request.status < 300) {
+      const projectId = response.project?.id;
+
+      if (
+        request.status >= 200 &&
+        request.status < 300 &&
+        typeof projectId === "string" &&
+        projectId.length > 0
+      ) {
+        uploadInFlightRef.current = false;
         setUploadStatus("success");
         setUploadProgress(100);
         setUploadMessage(
-          response.message ?? "Transferencia completada correctamente.",
+          response.message ?? "Proyecto creado correctamente.",
         );
-        setCreatedProjectId(response.project?.id ?? null);
+        setCreatedProjectId(projectId);
         return;
       }
 
-      setUploadStatus("error");
-      setUploadMessage(
-        response.message ?? "No fue posible transferir el archivo.",
+      finishWithError(
+        typeof response.message === "string"
+          ? response.message
+          : "No se pudo confirmar la carga. Revisa Mis documentos antes de reintentar.",
       );
     };
 
     request.onerror = () => {
-      setUploadStatus("error");
-      setUploadMessage(
-        "Se perdió la conexión durante la transferencia.",
+      finishWithError(
+        "Se perdió la conexión. Revisa Mis documentos antes de reintentar la carga.",
       );
     };
 
-    request.send(formData);
+    request.onabort = () => {
+      finishWithError(
+        "La transferencia se interrumpió. Revisa Mis documentos antes de reintentar.",
+      );
+    };
+
+    try {
+      request.open("POST", "/api/documents/upload");
+      request.send(formData);
+    } catch {
+      finishWithError(
+        "No fue posible iniciar la transferencia. Inténtalo nuevamente.",
+      );
+    }
   }
 
   return (
@@ -140,7 +199,7 @@ export function PdfFileSelector() {
         role="button"
         tabIndex={0}
         onClick={() => {
-          if (uploadStatus !== "uploading") {
+          if (!isBusy) {
             inputRef.current?.click();
           }
         }}
@@ -153,7 +212,7 @@ export function PdfFileSelector() {
         onDragLeave={() => setIsDragging(false)}
         onDrop={handleDrop}
         className={`rounded-xl border-2 border-dashed p-10 text-center transition ${
-          uploadStatus === "uploading"
+          isBusy
             ? "cursor-not-allowed border-slate-300 bg-slate-100"
             : isDragging
               ? "cursor-pointer border-blue-600 bg-blue-50"
@@ -165,7 +224,7 @@ export function PdfFileSelector() {
           type="file"
           accept="application/pdf,.pdf"
           onChange={handleInputChange}
-          disabled={uploadStatus === "uploading"}
+          disabled={isBusy}
           className="hidden"
         />
 
@@ -197,34 +256,45 @@ export function PdfFileSelector() {
           <button
             type="button"
             onClick={uploadFile}
-            disabled={
-              uploadStatus === "uploading" ||
-              uploadStatus === "success"
-            }
+            disabled={isBusy || uploadStatus === "success"}
             className="mt-4 rounded-lg bg-blue-700 px-5 py-2.5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:bg-slate-400"
           >
-            {uploadStatus === "uploading"
-              ? "Transfiriendo..."
-              : uploadStatus === "error"
-                ? "Reintentar transferencia"
-                : uploadStatus === "success"
-                  ? "Transferencia completada"
-                  : "Cargar PDF"}
+            {uploadStatus === "processing"
+              ? "Procesando PDF..."
+              : uploadStatus === "uploading"
+                ? "Transfiriendo..."
+                : uploadStatus === "error"
+                  ? "Reintentar transferencia"
+                  : uploadStatus === "success"
+                    ? "Carga completada"
+                    : "Cargar PDF"}
           </button>
         </div>
       )}
 
-      {uploadStatus === "uploading" && (
-        <div className="mt-4">
-          <div className="h-3 overflow-hidden rounded-full bg-slate-200">
-            <div
-              className="h-full bg-blue-700 transition-all"
-              style={{ width: `${uploadProgress}%` }}
-            />
-          </div>
+      {isBusy && (
+        <div className="mt-4" role="status" aria-live="polite">
+          {uploadStatus === "uploading" ? (
+            <>
+              <progress
+                value={uploadProgress}
+                max={100}
+                aria-label="Progreso de transferencia del PDF"
+                className="h-3 w-full accent-blue-700"
+              />
+
+              <p className="mt-2 text-sm text-slate-700">
+                {uploadProgress}% transferido
+              </p>
+            </>
+          ) : (
+            <p className="font-medium text-blue-800">
+              Transferencia terminada. Procesando PDF...
+            </p>
+          )}
 
           <p className="mt-2 text-sm text-slate-700">
-            {uploadProgress}% — {uploadMessage}
+            {uploadMessage}
           </p>
         </div>
       )}
@@ -260,7 +330,7 @@ export function PdfFileSelector() {
           <button
             type="button"
             onClick={() => inputRef.current?.click()}
-            disabled={uploadStatus === "uploading"}
+            disabled={isBusy}
             className="mt-4 rounded-lg border border-red-300 bg-white px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-60"
           >
             Seleccionar otro PDF
