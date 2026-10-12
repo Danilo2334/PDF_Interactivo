@@ -1,5 +1,6 @@
 import "server-only";
 
+import { requireActiveUser } from "@/lib/auth/require-active-user";
 import { createClient } from "@/lib/supabase/server";
 
 export type OwnerProject = {
@@ -11,20 +12,13 @@ export type OwnerProject = {
 };
 
 export async function getOwnerProjects(): Promise<OwnerProject[]> {
+  const { userId } = await requireActiveUser();
   const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return [];
-  }
 
   const { data, error } = await supabase
     .from("projects")
     .select("id, name, status, created_at, updated_at")
-    .eq("owner_id", user.id)
+    .eq("owner_id", userId)
     .order("updated_at", { ascending: false });
 
   if (error) {

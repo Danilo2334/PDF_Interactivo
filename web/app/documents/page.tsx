@@ -1,10 +1,9 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
+import { requireActiveUser } from "@/lib/auth/require-active-user";
 import {
   getOwnerProjects,
   type OwnerProject,
 } from "@/lib/data/projects";
-import { createClient } from "@/lib/supabase/server";
 
 const projectStates = {
   pending: {
@@ -37,15 +36,7 @@ function formatDate(value: string) {
 }
 
 export default async function DocumentsPage() {
-  const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    redirect("/login");
-  }
+  await requireActiveUser();
 
   let projects: OwnerProject[] = [];
   let loadError = false;
