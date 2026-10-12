@@ -6,6 +6,7 @@ import type {
 
 type PageSlot = {
   figure: HTMLElement;
+  caption: HTMLElement;
   body: HTMLDivElement;
   canvas: HTMLCanvasElement | null;
 };
@@ -33,6 +34,9 @@ export function renderVisiblePages(
     }
 
     slot.figure.dataset.renderState = "waiting";
+    slot.figure.setAttribute("aria-busy", "false");
+    slot.caption.textContent =
+      `Página ${slot.figure.dataset.pdfPage} de ${pdf.numPages}`;
   }
 
   // Reservar espacio no implica leer ni dibujar todas las páginas.
@@ -55,7 +59,7 @@ export function renderVisiblePages(
     figure.append(caption, body);
     container.append(figure);
 
-    slots.set(number, { figure, body, canvas: null });
+    slots.set(number, { figure, caption, body, canvas: null });
   }
 
   const observer = new IntersectionObserver(
@@ -106,6 +110,9 @@ export function renderVisiblePages(
 
         renderingPage = number;
         slot.figure.dataset.renderState = "rendering";
+        slot.figure.setAttribute("aria-busy", "true");
+        slot.caption.textContent =
+          `Página ${number} de ${pdf.numPages} — Preparando página...`;
 
         try {
           page = await pdf.getPage(number);
@@ -144,6 +151,9 @@ export function renderVisiblePages(
 
           completed = true;
           slot.figure.dataset.renderState = "ready";
+          slot.figure.setAttribute("aria-busy", "false");
+          slot.caption.textContent =
+            `Página ${number} de ${pdf.numPages}`;
           onReady();
         } catch (error) {
           if (stopped) break;

@@ -320,7 +320,9 @@ export function PdfFileSelector() {
           className="mt-4 rounded-lg border border-red-200 bg-red-50 p-4"
         >
           <p className="font-semibold text-red-800">
-            No se pudo aceptar el archivo
+            {fileError
+              ? "Archivo no válido"
+              : "No se pudo completar la carga"}
           </p>
 
           <p className="mt-1 text-sm text-red-700">

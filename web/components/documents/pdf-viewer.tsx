@@ -8,7 +8,19 @@ type ViewerProps = {
   projectId: string;
 };
 
-type ViewerStatus = "loading" | "ready" | "error";
+type ViewerStatus =
+  | "downloading"
+  | "processing"
+  | "rendering"
+  | "ready"
+  | "error";
+
+const viewerMessages = {
+  downloading: "Descargando PDF...",
+  processing: "Procesando el documento...",
+  rendering: "Preparando la primera página...",
+  ready: "PDF disponible. Desplázate para consultar sus páginas.",
+};
 
 export function PdfViewer({ projectId }: ViewerProps) {
   const [attempt, setAttempt] = useState(0);
@@ -27,9 +39,14 @@ function PdfPages({
   onRetry,
 }: ViewerProps & { onRetry: () => void }) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [status, setStatus] = useState<ViewerStatus>("loading");
+  const [status, setStatus] = useState<ViewerStatus>("downloading");
   const [totalPages, setTotalPages] = useState(0);
   const [errorMessage, setErrorMessage] = useState("");
+
+  const isLoading =
+    status === "downloading" ||
+    status === "processing" ||
+    status === "rendering";
 
   useEffect(() => {
     const container = containerRef.current;
@@ -71,6 +88,8 @@ function PdfPages({
         const bytes = new Uint8Array(await response.arrayBuffer());
         if (!active) return;
 
+        setStatus("processing");
+
         loadingTask = pdfjs.getDocument({
           data: bytes,
           cMapUrl: `${window.location.origin}/pdfjs/cmaps/`,
@@ -89,6 +108,7 @@ function PdfPages({
         }
 
         setTotalPages(pdf.numPages);
+        setStatus("rendering");
 
         disposePages = renderVisiblePages(
           pdf,
@@ -136,7 +156,7 @@ function PdfPages({
 
   return (
     <section
-      aria-busy={status === "loading"}
+      data-viewer-state={status}
       className="mt-8 min-w-0 rounded-xl border border-slate-200 bg-slate-50 p-4 sm:p-5"
     >
       <h2 className="text-xl font-semibold text-slate-900">
@@ -149,11 +169,16 @@ function PdfPages({
         </p>
       )}
 
-      {status === "loading" && (
-        <p role="status" className="my-4 text-sm text-slate-600">
-          {totalPages === 0
-            ? "Cargando PDF..."
-            : "Preparando la primera página..."}
+      {status !== "error" && (
+        <p
+          role="status"
+          aria-live="polite"
+          aria-atomic="true"
+          className={`my-4 text-sm ${
+            status === "ready" ? "text-green-700" : "text-slate-600"
+          }`}
+        >
+          {viewerMessages[status]}
         </p>
       )}
 
@@ -175,16 +200,12 @@ function PdfPages({
 
       <div
         ref={containerRef}
+        aria-busy={isLoading}
         className={
           status === "error" ? "hidden" : "mt-4 space-y-6"
         }
       />
 
-      {status === "ready" && (
-        <p role="status" className="mt-4 text-sm text-green-700">
-          PDF disponible. Desplázate para consultar sus páginas.
-        </p>
-      )}
     </section>
   );
 }
