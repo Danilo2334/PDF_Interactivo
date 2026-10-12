@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { validatePdfFile } from "@/lib/validations/pdf-file";
 
-const MAX_FILE_SIZE = 20 * 1024 * 1024;
 const STORAGE_BUCKET = "pdf-documents";
 
 export async function POST(request: Request) {
@@ -28,28 +28,26 @@ export async function POST(request: Request) {
     );
   }
 
-  const isPdf =
-    file.type === "application/pdf" ||
-    file.name.toLowerCase().endsWith(".pdf");
+  const validation = await validatePdfFile(file);
 
-  if (!isPdf) {
-    return NextResponse.json(
-      { message: "El archivo debe estar en formato PDF." },
-      { status: 415 },
-    );
-  }
+  if (!validation.valid) {
+    const statusByError = {
+      EMPTY_FILE: 400,
+      INVALID_EXTENSION: 415,
+      INVALID_MIME_TYPE: 415,
+      FILE_TOO_LARGE: 413,
+      INVALID_SIGNATURE: 415,
+      READ_ERROR: 400,
+    } as const;
 
-  if (file.size === 0) {
     return NextResponse.json(
-      { message: "El archivo PDF está vacío." },
-      { status: 400 },
-    );
-  }
-
-  if (file.size > MAX_FILE_SIZE) {
-    return NextResponse.json(
-      { message: "El archivo no puede superar los 20 MB." },
-      { status: 413 },
+      {
+        message: validation.message,
+        code: validation.code,
+      },
+      {
+        status: statusByError[validation.code],
+      },
     );
   }
 

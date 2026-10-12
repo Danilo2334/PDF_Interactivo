@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { validatePdfFile } from "@/lib/validations/pdf-file";
 import {
   ChangeEvent,
   DragEvent,
@@ -24,35 +25,39 @@ export function PdfFileSelector() {
     null,
   );
 
-  function selectFile(file?: File) {
+  async function selectFile(file?: File) {
     if (!file || uploadStatus === "uploading") return;
 
-    const isPdf =
-      file.type === "application/pdf" ||
-      file.name.toLowerCase().endsWith(".pdf");
-
-    if (!isPdf) {
-      setSelectedFile(null);
-      setFileError("Solo se permiten archivos en formato PDF.");
-      return;
-    }
-
-    setSelectedFile(file);
+    setSelectedFile(null);
     setFileError("");
     setUploadStatus("idle");
     setUploadProgress(0);
     setUploadMessage("");
     setCreatedProjectId(null);
+
+    const validation = await validatePdfFile(file);
+
+    if (!validation.valid) {
+      setFileError(validation.message);
+
+      if (inputRef.current) {
+        inputRef.current.value = "";
+      }
+
+      return;
+    }
+
+    setSelectedFile(file);
   }
 
   function handleInputChange(event: ChangeEvent<HTMLInputElement>) {
-    selectFile(event.target.files?.[0]);
+    void selectFile(event.target.files?.[0]);
   }
 
   function handleDrop(event: DragEvent<HTMLDivElement>) {
     event.preventDefault();
     setIsDragging(false);
-    selectFile(event.dataTransfer.files?.[0]);
+    void selectFile(event.dataTransfer.files?.[0]);
   }
 
   function handleKeyDown(event: KeyboardEvent<HTMLDivElement>) {
