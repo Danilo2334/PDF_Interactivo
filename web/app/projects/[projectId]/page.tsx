@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
+import { ProjectWorkspace } from "@/components/documents/project-workspace";
+import type { Reinforcement } from "@/lib/types/reinforcement";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
@@ -44,6 +46,21 @@ export default async function ProjectPage({
     .eq("owner_id", user.id)
     .single();
 
+  const { data: reinforcementRows, error: reinforcementsError } =
+    await supabase
+      .from("reinforcements")
+      .select("id, document_id, page_number, title, content")
+      .eq("document_id", project.document_id)
+      .order("page_number", { ascending: true })
+      .order("created_at", { ascending: true });
+
+  if (reinforcementsError) {
+    console.error("Error consultando refuerzos:", reinforcementsError);
+  }
+
+  const reinforcements =
+    (reinforcementRows ?? []) as Reinforcement[];
+
   return (
     <main className="min-h-screen bg-slate-50 px-6 py-12">
       <div className="mx-auto max-w-4xl rounded-xl border border-slate-200 bg-white p-8">
@@ -51,7 +68,10 @@ export default async function ProjectPage({
           Proyecto creado
         </p>
 
-        <h1 className="mt-2 text-3xl font-bold text-slate-900">
+        <h1
+          className="mt-2 text-2xl font-bold leading-tight text-slate-900 sm:text-3xl"
+          style={{ overflowWrap: "anywhere" }}
+        >
           {project.name}
         </h1>
 
@@ -83,6 +103,12 @@ export default async function ProjectPage({
             </dd>
           </div>
         </dl>
+        <ProjectWorkspace
+          projectId={project.id}
+          documentId={project.document_id}
+          reinforcements={reinforcements}
+          reinforcementsError={Boolean(reinforcementsError)}
+        />
       </div>
     </main>
   );
