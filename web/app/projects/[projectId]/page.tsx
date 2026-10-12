@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
+import { requireActiveUser } from "@/lib/auth/require-active-user";
 import { ProjectWorkspace } from "@/components/documents/project-workspace";
 import type { Reinforcement } from "@/lib/types/reinforcement";
 import { createClient } from "@/lib/supabase/server";
@@ -18,21 +19,22 @@ export default async function ProjectPage({
   params,
 }: ProjectPageProps) {
   const { projectId } = await params;
-  const supabase = await createClient();
+  const { userId } = await requireActiveUser();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const uuidPattern =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-  if (!user) {
-    redirect("/login");
+  if (!uuidPattern.test(projectId)) {
+    notFound();
   }
+
+  const supabase = await createClient();
 
   const { data: project } = await supabase
     .from("projects")
     .select("id, document_id, name, status, created_at")
     .eq("id", projectId)
-    .eq("owner_id", user.id)
+    .eq("owner_id", userId)
     .single();
 
   if (!project) {
@@ -43,8 +45,12 @@ export default async function ProjectPage({
     .from("documents")
     .select("original_name, size_bytes, status")
     .eq("id", project.document_id)
-    .eq("owner_id", user.id)
+    .eq("owner_id", userId)
     .single();
+
+  if (!document) {
+    notFound();
+  }
 
   const { data: reinforcementRows, error: reinforcementsError } =
     await supabase
