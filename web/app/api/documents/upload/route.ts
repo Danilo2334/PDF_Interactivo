@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { PDFDocument } from "pdf-lib";
 import { createClient } from "@/lib/supabase/server";
 import { validatePdfFile } from "@/lib/validations/pdf-file";
 
@@ -51,9 +52,43 @@ export async function POST(request: Request) {
     );
   }
 
+  const fileBuffer = await file.arrayBuffer();
+
+  let pageCount: number;
+
+  try {
+    const pdfDocument = await PDFDocument.load(fileBuffer, {
+      ignoreEncryption: false,
+      updateMetadata: false,
+      throwOnInvalidObject: true,
+    });
+
+    pageCount = pdfDocument.getPageCount();
+
+    if (pageCount < 1) {
+      return NextResponse.json(
+        {
+          message: "El documento PDF no contiene páginas válidas.",
+          code: "PDF_WITHOUT_PAGES",
+        },
+        { status: 422 },
+      );
+    }
+  } catch (error) {
+    console.error("Error leyendo la estructura del PDF:", error);
+
+    return NextResponse.json(
+      {
+        message:
+          "El archivo PDF está dañado, incompleto o no puede ser leído.",
+        code: "INVALID_PDF_STRUCTURE",
+      },
+      { status: 422 },
+    );
+  }
+
   const documentId = crypto.randomUUID();
   const storagePath = `${user.id}/${documentId}.pdf`;
-  const fileBuffer = await file.arrayBuffer();
 
   const { data: uploadedFile, error: uploadError } =
     await supabase.storage
@@ -142,6 +177,7 @@ export async function POST(request: Request) {
       name: file.name,
       size: file.size,
       path: uploadedFile.path,
+      pageCount,
     },
     project: {
       id: projectId,
