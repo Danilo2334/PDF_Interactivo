@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { checkPermission } from "@/lib/auth/access";
 import { redirect } from "next/navigation";
 import { LogoutButton } from "@/components/auth/logout-button";
 import { createClient } from "@/lib/supabase/server";
@@ -21,6 +22,8 @@ export default async function DashboardPage() {
     typeof data.claims.email === "string"
       ? data.claims.email
       : "usuario registrado";
+
+  const adminAccess = await checkPermission("users.read");
 
   return (
     <main className="min-h-screen bg-slate-100">
@@ -67,6 +70,15 @@ export default async function DashboardPage() {
           >
             Cargar PDF
           </Link>
+          {adminAccess.ok && (
+            <Link
+              href="/admin"
+              prefetch={false}
+              className="rounded-lg bg-slate-900 px-5 py-3 font-semibold text-white hover:bg-slate-700"
+            >
+              Administración
+            </Link>
+          )}
         </nav>
       </section>
     </main>

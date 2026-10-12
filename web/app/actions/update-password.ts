@@ -1,6 +1,7 @@
 "use server";
 
 import { cookies } from "next/headers";
+import { getCurrentAccess } from "@/lib/auth/access";
 import { PASSWORD_RECOVERY_COOKIE } from "@/lib/auth/password-recovery";
 import { createClient } from "@/lib/supabase/server";
 import {
@@ -48,6 +49,16 @@ export async function updatePasswordAction(
     return {
       success: false,
       message: "El enlace de recuperación es inválido o expiró.",
+      errors: {},
+    };
+  }
+
+  const access = await getCurrentAccess();
+
+  if (!access.ok) {
+    return {
+      success: false,
+      message: access.message,
       errors: {},
     };
   }

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getCurrentAccess } from "@/lib/auth/access";
 import { PDFDocument } from "pdf-lib";
 import { createClient } from "@/lib/supabase/server";
 import { validatePdfFile } from "@/lib/validations/pdf-file";
@@ -6,6 +7,18 @@ import { validatePdfFile } from "@/lib/validations/pdf-file";
 const STORAGE_BUCKET = "pdf-documents";
 
 export async function POST(request: Request) {
+  const access = await getCurrentAccess();
+
+  if (!access.ok) {
+    return NextResponse.json(
+      { message: access.message },
+      {
+        status: access.status,
+        headers: { "Cache-Control": "private, no-store" },
+      },
+    );
+  }
+
   const supabase = await createClient();
 
   const {
