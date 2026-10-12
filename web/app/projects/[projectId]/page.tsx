@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
+import { PdfViewer } from "@/components/documents/pdf-viewer";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
@@ -83,6 +84,7 @@ export default async function ProjectPage({
             </dd>
           </div>
         </dl>
+        <PdfViewer key={project.id} projectId={project.id} />
       </div>
     </main>
   );
