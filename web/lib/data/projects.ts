@@ -29,7 +29,7 @@ export async function getOwnerProjects(): Promise<OwnerProject[]> {
 
   if (error) {
     console.error("Error consultando proyectos:", error);
-    return [];
+    throw new Error("No fue posible consultar los proyectos.");
   }
 
   return (data ?? []) as OwnerProject[];
