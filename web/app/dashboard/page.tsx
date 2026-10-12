@@ -50,14 +50,24 @@ export default async function DashboardPage() {
           enriquecer tus documentos PDF.
         </p>
 
-        <div className="mt-10 rounded-3xl border border-dashed border-slate-300 bg-white p-10 text-center shadow-sm">
-          <h2 className="text-xl font-bold text-slate-900">
-            Aún no tienes documentos
-          </h2>
-          <p className="mt-2 text-slate-600">
-            La carga de archivos se incorporará en la siguiente épica del producto.
-          </p>
-        </div>
+        <nav
+          aria-label="Gestión de documentos"
+          className="mt-6 flex flex-wrap gap-3"
+        >
+          <Link
+            href="/documents"
+            className="rounded-lg bg-blue-700 px-5 py-3 font-semibold text-white hover:bg-blue-800"
+          >
+            Mis documentos
+          </Link>
+
+          <Link
+            href="/documents/upload"
+            className="rounded-lg border border-blue-300 bg-white px-5 py-3 font-semibold text-blue-700 hover:bg-blue-50"
+          >
+            Cargar PDF
+          </Link>
+        </nav>
       </section>
     </main>
   );

@@ -83,6 +83,23 @@ export default async function DocumentsPage() {
           >
             No fue posible cargar tus documentos. Inténtalo nuevamente.
           </p>
+        ) : projects.length === 0 ? (
+          <section className="rounded-xl border border-dashed border-slate-300 bg-white p-8 text-center">
+            <h2 className="text-xl font-semibold text-slate-900">
+              Aún no tienes documentos
+            </h2>
+
+            <p className="mt-2 text-slate-600">
+              Carga tu primer PDF para crear un proyecto y comenzar.
+            </p>
+
+            <Link
+              href="/documents/upload"
+              className="mt-5 inline-block rounded-lg bg-blue-700 px-5 py-3 font-semibold text-white hover:bg-blue-800"
+            >
+              Cargar mi primer PDF
+            </Link>
+          </section>
         ) : (
           <>
             <p className="mb-4 text-sm text-slate-600">
@@ -131,6 +148,13 @@ export default async function DocumentsPage() {
                         </dd>
                       </div>
                     </dl>
+                    <Link
+                      href={`/projects/${project.id}`}
+                      aria-label={`Abrir proyecto: ${project.name}`}
+                      className="mt-5 inline-block rounded-lg bg-blue-700 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700"
+                    >
+                      Abrir proyecto
+                    </Link>
                   </li>
                 );
               })}
