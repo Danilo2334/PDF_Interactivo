@@ -52,7 +52,10 @@ export async function updateSession(request: NextRequest) {
     );
   }
 
-  if (isAuthenticated && pathname === "/login") {
+  if (
+    isAuthenticated &&
+    (pathname === "/" || pathname === "/login")
+  ) {
     const dashboardUrl = new URL("/dashboard", request.url);
     return copyCookies(
       supabaseResponse,
