@@ -1,0 +1,89 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import { checkPermission } from "@/lib/auth/access";
+import { requireActiveUser } from "@/lib/auth/require-active-user";
+import { redirect } from "next/navigation";
+import { LogoutButton } from "@/components/auth/logout-button";
+import { createClient } from "@/lib/supabase/server";
+
+export const metadata: Metadata = {
+  title: "Panel | PDF Interactivo",
+  description: "Panel privado para gestionar documentos interactivos.",
+};
+
+export default async function DashboardPage() {
+  await requireActiveUser();
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.auth.getClaims();
+
+  if (error || !data?.claims?.sub) {
+    redirect("/login");
+  }
+
+  const email =
+    typeof data.claims.email === "string"
+      ? data.claims.email
+      : "usuario registrado";
+
+  const adminAccess = await checkPermission("users.read");
+
+  return (
+    <main className="min-h-screen bg-slate-100">
+      <header className="border-b border-slate-200 bg-white">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
+          <p className="text-xl font-bold text-blue-900">PDF Interactivo</p>
+          <div className="flex items-center gap-4">
+            <p className="hidden text-sm text-slate-600 sm:block">{email}</p>
+            <Link
+              className="rounded-xl border border-blue-200 px-4 py-2 text-sm font-semibold text-blue-700 transition hover:bg-blue-50"
+              href="/profile"
+            >
+              Mi perfil
+            </Link>
+            <LogoutButton />
+          </div>
+        </div>
+      </header>
+
+      <section className="mx-auto max-w-6xl px-6 py-12">
+        <p className="font-semibold text-blue-700">Panel del propietario</p>
+        <h1 className="mt-2 text-4xl font-bold text-slate-900">
+          Bienvenido a tus proyectos
+        </h1>
+        <p className="mt-4 max-w-2xl text-lg text-slate-600">
+          Tu sesión está activa. Desde este panel podrás cargar, gestionar y
+          enriquecer tus documentos PDF.
+        </p>
+
+        <nav
+          aria-label="Gestión de documentos"
+          className="mt-6 flex flex-wrap gap-3"
+        >
+          <Link
+            href="/documents"
+            className="rounded-lg bg-blue-700 px-5 py-3 font-semibold text-white hover:bg-blue-800"
+          >
+            Mis documentos
+          </Link>
+
+          <Link
+            href="/documents/upload"
+            className="rounded-lg border border-blue-300 bg-white px-5 py-3 font-semibold text-blue-700 hover:bg-blue-50"
+          >
+            Cargar PDF
+          </Link>
+          {adminAccess.ok && (
+            <Link
+              href="/admin"
+              prefetch={false}
+              className="rounded-lg bg-slate-900 px-5 py-3 font-semibold text-white hover:bg-slate-700"
+            >
+              Administración
+            </Link>
+          )}
+        </nav>
+      </section>
+    </main>
+  );
+}
