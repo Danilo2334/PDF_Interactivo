@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { checkPermission } from "@/lib/auth/access";
+import { requireActiveUser } from "@/lib/auth/require-active-user";
 import { redirect } from "next/navigation";
 import { LogoutButton } from "@/components/auth/logout-button";
 import { createClient } from "@/lib/supabase/server";
@@ -11,6 +12,8 @@ export const metadata: Metadata = {
 };
 
 export default async function DashboardPage() {
+  await requireActiveUser();
+
   const supabase = await createClient();
   const { data, error } = await supabase.auth.getClaims();
 

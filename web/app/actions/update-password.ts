@@ -2,6 +2,7 @@
 
 import { cookies } from "next/headers";
 import { getCurrentAccess } from "@/lib/auth/access";
+import { clearLoginSession } from "@/lib/auth/login-session";
 import { PASSWORD_RECOVERY_COOKIE } from "@/lib/auth/password-recovery";
 import { createClient } from "@/lib/supabase/server";
 import {
@@ -84,6 +85,7 @@ export async function updatePasswordAction(
   }
 
   cookieStore.delete(PASSWORD_RECOVERY_COOKIE);
+  await clearLoginSession();
   await supabase.auth.signOut({ scope: "local" });
 
   return {

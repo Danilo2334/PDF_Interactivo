@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { LOGIN_SESSION_COOKIE, loginSessionValue } from "@/lib/auth/login-session";
 
 function copyCookies(source: NextResponse, target: NextResponse) {
   source.cookies.getAll().forEach((cookie) => {
@@ -10,6 +11,20 @@ function copyCookies(source: NextResponse, target: NextResponse) {
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
+  const pathname = request.nextUrl.pathname;
+
+  // La entrada y el formulario de login siempre permanecen públicos.
+  if (pathname === "/" || pathname === "/login") {
+    const isPrefetch =
+      request.headers.has("next-router-prefetch") ||
+      request.headers.get("purpose") === "prefetch";
+
+    if (request.method === "GET" && !isPrefetch) {
+      supabaseResponse.cookies.delete(LOGIN_SESSION_COOKIE);
+    }
+
+    return supabaseResponse;
+  }
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseKey =
@@ -40,7 +55,6 @@ export async function updateSession(request: NextRequest) {
 
   const { data } = await supabase.auth.getClaims();
   const userId = data?.claims?.sub;
-  const pathname = request.nextUrl.pathname;
 
   const privatePaths = [
     "/dashboard",
@@ -55,7 +69,9 @@ export async function updateSession(request: NextRequest) {
     (path) => pathname === path || pathname.startsWith(`${path}/`),
   );
 
-  if (!userId && isPrivateRoute) {
+  const loginUserId = request.cookies.get(LOGIN_SESSION_COOKIE)?.value;
+
+  if (isPrivateRoute && (!userId || loginUserId !== loginSessionValue(userId))) {
     return copyCookies(
       supabaseResponse,
       NextResponse.redirect(new URL("/login", request.url)),
@@ -92,13 +108,6 @@ export async function updateSession(request: NextRequest) {
         NextResponse.redirect(new URL("/blocked", request.url)),
       );
     }
-  }
-
-  if (isActive && (pathname === "/" || pathname === "/login")) {
-    return copyCookies(
-      supabaseResponse,
-      NextResponse.redirect(new URL("/dashboard", request.url)),
-    );
   }
 
   return supabaseResponse;

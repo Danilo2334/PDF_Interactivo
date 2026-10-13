@@ -1,5 +1,6 @@
 import "server-only";
 
+import { hasLoginSession } from "@/lib/auth/login-session";
 import { createClient } from "@/lib/supabase/server";
 import {
   hasPermission,
@@ -33,6 +34,14 @@ export async function getCurrentAccess(): Promise<AccessResult> {
       ok: false,
       status: 401,
       message: "Debes iniciar sesión.",
+    };
+  }
+
+  if (!(await hasLoginSession(user.id))) {
+    return {
+      ok: false,
+      status: 401,
+      message: "Debes iniciar sesión nuevamente.",
     };
   }
 

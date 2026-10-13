@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ViewTiming } from "@/components/diagnostics/view-timing";
 import { requireActiveUser } from "@/lib/auth/require-active-user";
 import {
   getOwnerProjects,
@@ -66,6 +67,10 @@ export default async function DocumentsPage() {
             Proyectos ordenados por su última modificación.
           </p>
         </header>
+
+        {!loadError && (
+          <ViewTiming metric="listado" items={projects.length} />
+        )}
 
         {loadError ? (
           <p
