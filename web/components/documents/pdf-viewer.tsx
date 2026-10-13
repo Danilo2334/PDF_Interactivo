@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { PDFDocumentLoadingTask } from "pdfjs-dist";
 import { renderVisiblePages } from "@/lib/pdf/render-visible-pages";
+import { ViewTiming } from "@/components/diagnostics/view-timing";
 
 type ViewerProps = {
   projectId: string;
@@ -159,6 +160,10 @@ function PdfPages({
       data-viewer-state={status}
       className="mt-8 min-w-0 rounded-xl border border-slate-200 bg-slate-50 p-4 sm:p-5"
     >
+      {status === "ready" && (
+        <ViewTiming metric="primera-pagina-pdf" items={totalPages} />
+      )}
+
       <h2 className="text-xl font-semibold text-slate-900">
         PDF original
       </h2>
