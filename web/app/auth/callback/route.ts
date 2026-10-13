@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import { NextResponse, type NextRequest } from "next/server";
+import { createLoginSession } from "@/lib/auth/login-session";
 import {
   PASSWORD_RECOVERY_COOKIE,
   PASSWORD_RECOVERY_MAX_AGE_SECONDS,
@@ -19,14 +20,15 @@ export async function GET(request: NextRequest) {
   }
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.exchangeCodeForSession(code);
+  const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
-  if (error) {
+  if (error || !data.user || !data.session) {
     return NextResponse.redirect(
       new URL("/forgot-password?error=invalid-link", request.url),
     );
   }
 
+  await createLoginSession(data.user.id);
   const cookieStore = await cookies();
   cookieStore.set(PASSWORD_RECOVERY_COOKIE, "verified", {
     httpOnly: true,

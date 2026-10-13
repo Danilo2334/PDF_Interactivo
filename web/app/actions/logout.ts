@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { clearLoginSession } from "@/lib/auth/login-session";
 import { createClient } from "@/lib/supabase/server";
 import type { LogoutActionState } from "@/lib/auth/logout-state";
 
@@ -17,6 +18,8 @@ export async function logoutAction(
 
     if (error) {
       failureMessage = "No fue posible cerrar la sesión. Inténtalo nuevamente.";
+    } else {
+      await clearLoginSession();
     }
   } catch {
     failureMessage = "No fue posible cerrar la sesión. Inténtalo nuevamente.";

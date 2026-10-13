@@ -1,11 +1,14 @@
 import type { Metadata } from "next";
 import { PdfFileSelector } from "@/components/documents/pdf-file-selector";
+import { requireActiveUser } from "@/lib/auth/require-active-user";
 
 export const metadata: Metadata = {
   title: "Cargar PDF | PDF Interactivo",
 };
 
-export default function UploadPdfPage() {
+export default async function UploadPdfPage() {
+  await requireActiveUser();
+
   return (
     <main className="min-h-screen bg-slate-50 px-6 py-12">
       <div className="mx-auto max-w-4xl">

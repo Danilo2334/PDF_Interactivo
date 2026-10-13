@@ -1,6 +1,7 @@
 "use server";
 
 import { getCurrentAccess } from "@/lib/auth/access";
+import { clearLoginSession, createLoginSession } from "@/lib/auth/login-session";
 import { createClient } from "@/lib/supabase/server";
 import {
   getLoginFieldErrors,
@@ -29,6 +30,7 @@ export async function loginAction(
   }
 
   const supabase = await createClient();
+  await clearLoginSession();
 
   const { data, error } = await supabase.auth.signInWithPassword({
     email: result.data.email,
@@ -62,9 +64,11 @@ export async function loginAction(
     };
   }
 
+  await createLoginSession(data.user.id);
   const access = await getCurrentAccess();
 
   if (!access.ok) {
+    await clearLoginSession();
     await supabase.auth.signOut({ scope: "local" });
 
     return {
