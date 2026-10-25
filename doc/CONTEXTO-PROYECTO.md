@@ -1,6 +1,6 @@
 # Continuidad de PDF_Interactivo
 
-Actualizado: 23/10/2026. Mantener este único documento al continuar.
+Actualizado: 25/10/2026. Mantener este único documento al continuar.
 
 ## Contexto proporcionado por el usuario
 
@@ -13,9 +13,9 @@ Actualizado: 23/10/2026. Mantener este único documento al continuar.
 - Sprint 3: administrar/navegar el PDF, seleccionar página y fragmento/zona,
   registrar dificultad, extraer texto y crear una solicitud (SCRUM-22 a SCRUM-28).
 - Una rama por historia, commits asociados a tareas y PR hacia `develop`.
-  El 23/10 se autorizó preparar commits, publicar la rama y abrir el PR de HU010,
-  marcar actividades verificadas y pasar SCRUM-22 a «En revisión».
-  No hacer merge, cerrar HU010 ni avanzar a otra historia.
+  El 25/10 el usuario aprobó integrar el PR #14, finalizar HU010 e iniciar la
+  primera subtarea real de HU011 desde develop actualizado. Conservar el stash
+  de autenticación sin aplicarlo ni eliminarlo. No avanzar más allá de SCRUM-79.
 - En Jira: conservar las capturas y un único comentario breve por subtarea;
   editarlo preservando imágenes si hace falta. No duplicar evidencias ni crear
   informes adicionales. El usuario introduce sus credenciales personalmente.
@@ -78,9 +78,10 @@ Actualizado: 23/10/2026. Mantener este único documento al continuar.
 - Rama: `feature/scrum-22-hu010-navegacion-zoom`.
   Commit funcional `0ae9169` agrupa SCRUM-77, SCRUM-171, SCRUM-172 y SCRUM-78,
   porque el visor y su controlador comparten los cambios.
-- [PR #14](https://github.com/Danilo2334/PDF_Interactivo/pull/14) abierto hacia
-  `develop`, vinculado mediante enlaces web en SCRUM-22 y sus cuatro subtareas.
-  SCRUM-22 está «En revisión»; las subtareas siguen «Finalizado».
+- [PR #14](https://github.com/Danilo2334/PDF_Interactivo/pull/14) integrado en
+  `develop` el 25/10 mediante merge `407d57b`. Se verificó que incluye los commits
+  `0ae9169` y `302747a`. SCRUM-22 y sus cuatro subtareas están «Finalizado».
+  SCRUM-22 tiene un único comentario breve de cierre (`10083`) con el enlace al PR.
   Se marcaron únicamente actividades/resultados respaldados y evidencias
   existentes; no se añadieron comentarios.
 - Se conservan 13 capturas y los comentarios: SCRUM-77 `10079` (6),
@@ -90,6 +91,71 @@ Actualizado: 23/10/2026. Mantener este único documento al continuar.
   autenticación, ajenos a HU010, se conservaron en el stash local `d6406e0`
   («Fuera de HU010: diagnostico de autenticacion 2026-10-23»). No están en el PR.
   No se modificaron valores de entorno ni se guardaron secretos en la entrega.
-- Pendiente: revisión del PR y entrega separada de los ajustes de autenticación.
-  HU010 permanece abierta y sin merge. Las otras historias del Sprint 3 y la
-  generación IA esperan su alcance correspondiente.
+
+## HU011: SCRUM-79 finalizado
+
+- Rama `feature/scrum-23-hu011-actualizacion-eliminacion-documentos`, creada desde
+  develop actualizado en `407d57b`. HU011 / SCRUM-23 sigue «En curso»;
+  SCRUM-79 está «Finalizado» desde el 25/10, con sus criterios marcados y evidencias.
+- Subtareas leídas en Jira: SCRUM-79 (nombre), SCRUM-173 (reemplazo), SCRUM-174
+  (eliminación confirmada), SCRUM-175 (accesos), SCRUM-144 (limpieza de datos) y
+  SCRUM-80 (pruebas conjuntas). SCRUM-144 se integra antes de SCRUM-80 y comparte
+  la operación de eliminación de SCRUM-174. Solo se está implementando SCRUM-79.
+- Se añadió edición del título actual en listado y proyecto mediante
+  `web/components/documents/rename-document-form.tsx`. La acción
+  `web/app/actions/rename-document.ts` exige `documents.manage.own`, valida UUID
+  y nombre, filtra por propietario y actualiza solo `projects.name`.
+  Reutiliza el trigger `projects_set_updated_at` y revalida listado/proyecto.
+  `documents.original_name`, identidades, referencias y PDF permanecen intactos.
+- `web/lib/validations/rename-document.ts`: elimina espacios en los extremos y
+  rechaza vacío/no texto; límite de implementación de 255 caracteres.
+  `web/tests/rename-document.test.mjs` aporta seis pruebas de permisos, validación,
+  filtro por propietario, datos no disponibles y fallo de base de datos.
+- 25/10: 42/42 pruebas automatizadas aprobadas; lint, build/TypeScript y
+  git diff --check correctos. Commit funcional local `27300a6`
+  (`27300a621f064ab0a7ab127cca763396a74f86d7`):
+  «SCRUM-79 feat: permitir renombrar documentos propios». Sin push ni merge.
+- Pruebas reales ejecutadas el 25/10 en el navegador integrado de la aplicación,
+  con inicio de sesión personal confirmado por el usuario y Supabase real.
+  Se reutilizó localhost:3000. Se usó solamente el proyecto sintético de 16 páginas
+  `557c6125-d5ca-401b-b105-31a051699371`; los documentos personales no se editaron.
+- Aprobados: título precargado, Cancelar, vacío y espacios rechazados sin cambiar
+  título/fecha, nombre válido con extremos recortados, actualización inmediata
+  del listado/fecha/orden y persistencia tras recargar y abrir el proyecto.
+  `updated_at` pasó de `2026-10-21T03:34:13.779265+00:00` a
+  `2026-10-25T18:16:32.601047+00:00` durante la prueba del listado.
+  También se renombró desde el proyecto manteniendo el visor listo, zoom 125 %
+  y miniaturas abiertas. El nombre del archivo original se conservó.
+  No se probaron otras cuentas.
+- Desconexión/reintento aprobados el 25/10: proxy temporal de pruebas enlazado
+  solo a loopback, `localhost:3001` → servidor existente `localhost:3000`.
+  Se cortó el socket del POST de renombrado del proyecto sintético antes de
+  reenviarlo. Fue una interrupción real de transporte, sin desactivar la red del
+  equipo ni usar la emulación Offline del navegador. La UI mostró el error de
+  conexión, mantuvo el borrador y habilitó reintentar. Otra pestaña recargada en
+  el servidor original confirmó título/fecha intactos:
+  `updated_at = 2026-10-25T18:17:58.610854+00:00` antes y después del fallo.
+  Al restaurar el transporte y reenviar el mismo nombre, se guardó correctamente,
+  persistió en el listado y la fecha pasó a `2026-10-25T18:53:36.238762+00:00`.
+  Se conservaron visor listo, zoom 125 % y miniaturas; se verificó navegación por
+  Enter hasta la página 4. No hicieron falta correcciones adicionales de código.
+  Título de prueba dejado: «SCRUM-79 — Recuperación de conexión verificada».
+- Jira: único comentario de resultados `10084`; editar ese mismo comentario
+  conservando su cuerpo HTML y sus imágenes. Capturas reales ya vinculadas:
+  `01-validacion-espacios.jpg` (`10250`), `02-listado-actualizado.jpg` (`10249`),
+  `03-conexion-interrumpida.jpg` (`10251`), `04-reintento-y-visor.jpg` (`10253`) y
+  `05-visor-tras-reintento.jpg` (`10252`). Las dos iniciales se conservaron al
+  editar el comentario en HTML y añadir las tres restantes. El comentario incluye
+  resultados y hash funcional. No volver a subirlas ni crear otro comentario.
+- El usuario confirmó activar Enable full CDP access, pero la conexión renovada
+  de esta sesión no expuso una API de control de red. El control nativo de Chrome
+  también había rechazado operar por no poder verificar la URL. Las pruebas se
+  completaron en el navegador integrado con el proxy de pruebas descrito arriba.
+  El proxy quedó detenido; el navegador volvió al proyecto en localhost:3000 y el
+  servidor original sigue activo. Los recursos temporales están fuera del repo,
+  en la carpeta de visualizaciones de esta sesión; no se incluyeron en el commit.
+- Entrega detenida en SCRUM-79. No se inició otra subtarea ni se hizo merge.
+  Este documento registra la entrega en un commit de documentación adicional.
+  Mantener sin aplicar ni eliminar el stash `d6406e0`, dejar VS Code y el servidor
+  abiertos. No guardar tokens de carga en comentarios, documentos ni resúmenes;
+  para las nuevas evidencias se prepararon credenciales temporales nuevas.
