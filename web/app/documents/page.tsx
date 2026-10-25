@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { ViewTiming } from "@/components/diagnostics/view-timing";
 import { requireActiveUser } from "@/lib/auth/require-active-user";
+import { hasPermission } from "@/lib/auth/permissions";
+import { RenameDocumentForm } from "@/components/documents/rename-document-form";
 import {
   getOwnerProjects,
   type OwnerProject,
@@ -37,7 +39,8 @@ function formatDate(value: string) {
 }
 
 export default async function DocumentsPage() {
-  await requireActiveUser();
+  const { role } = await requireActiveUser();
+  const canRename = hasPermission(role, "documents.manage.own");
 
   let projects: OwnerProject[] = [];
   let loadError = false;
@@ -151,6 +154,9 @@ export default async function DocumentsPage() {
                     >
                       Abrir proyecto
                     </Link>
+                    {canRename && (
+                      <RenameDocumentForm projectId={project.id} currentName={project.name} />
+                    )}
                   </li>
                 );
               })}
