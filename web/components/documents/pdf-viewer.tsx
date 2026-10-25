@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import type { PDFDocumentLoadingTask } from "pdfjs-dist";
+import { useEffect, useId, useRef, useState } from "react";
+import type { PDFDocumentLoadingTask, PDFDocumentProxy } from "pdfjs-dist";
 import { renderVisiblePages } from "@/lib/pdf/render-visible-pages";
+import type { PageRenderer } from "@/lib/pdf/render-visible-pages";
 import { ViewTiming } from "@/components/diagnostics/view-timing";
+import { PdfThumbnails } from "@/components/documents/pdf-thumbnails";
 
 type ViewerProps = {
   projectId: string;
@@ -20,7 +22,7 @@ const viewerMessages = {
   downloading: "Descargando PDF...",
   processing: "Procesando el documento...",
   rendering: "Preparando la primera página...",
-  ready: "PDF disponible. Desplázate para consultar sus páginas.",
+  ready: "PDF disponible. Usa los controles o desplázate para consultar sus páginas.",
 };
 
 export function PdfViewer({ projectId }: ViewerProps) {
@@ -40,14 +42,47 @@ function PdfPages({
   onRetry,
 }: ViewerProps & { onRetry: () => void }) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const navigationRef = useRef<HTMLDivElement>(null);
+  const rendererRef = useRef<PageRenderer | null>(null);
+  const pageInputId = useId();
   const [status, setStatus] = useState<ViewerStatus>("downloading");
   const [totalPages, setTotalPages] = useState(0);
+  const [pdfDocument, setPdfDocument] = useState<PDFDocumentProxy | null>(null);
+  const [showThumbnails, setShowThumbnails] = useState(false);
+  const [zoom, setZoom] = useState(100);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageInput, setPageInput] = useState("1");
+  const [pageInputError, setPageInputError] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
 
   const isLoading =
     status === "downloading" ||
     status === "processing" ||
     status === "rendering";
+
+  function navigateToPage(number: number) {
+    if (status !== "ready" || !rendererRef.current?.goToPage(number)) return;
+    setPageInput(String(number));
+    setPageInputError("");
+  }
+
+  function changeZoom(percentage: number) {
+    if (status !== "ready" || !rendererRef.current?.setZoom(percentage)) return;
+    setZoom(percentage);
+  }
+
+  function submitPage(event: React.SubmitEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const input = pageInput.trim();
+    const number = Number(input);
+
+    if (!/^\d+$/.test(input) || !Number.isInteger(number) || number < 1 || number > totalPages) {
+      setPageInputError(`Introduce un número entero entre 1 y ${totalPages}.`);
+      return;
+    }
+
+    navigateToPage(number);
+  }
 
   useEffect(() => {
     const container = containerRef.current;
@@ -56,7 +91,7 @@ function PdfPages({
     const controller = new AbortController();
     let active = true;
     let loadingTask: PDFDocumentLoadingTask | null = null;
-    let disposePages: (() => void) | null = null;
+    let renderer: PageRenderer | null = null;
 
     async function loadPages() {
       let failureMessage =
@@ -109,9 +144,10 @@ function PdfPages({
         }
 
         setTotalPages(pdf.numPages);
+        setPdfDocument(pdf);
         setStatus("rendering");
 
-        disposePages = renderVisiblePages(
+        renderer = renderVisiblePages(
           pdf,
           container!,
           () => {
@@ -121,7 +157,8 @@ function PdfPages({
             if (!active) return;
 
             console.error("Error renderizando página:", error);
-            disposePages?.();
+            renderer?.dispose();
+            rendererRef.current = null;
 
             setErrorMessage(
               "No fue posible visualizar una página. Inténtalo nuevamente.",
@@ -130,7 +167,15 @@ function PdfPages({
 
             void loadingTask?.destroy().catch(() => {});
           },
+          (number) => {
+            if (!active) return;
+            setCurrentPage(number);
+            setPageInput(String(number));
+            setPageInputError("");
+          },
+          () => navigationRef.current?.getBoundingClientRect().height ?? 0,
         );
+        rendererRef.current = renderer;
       } catch (error) {
         if (!active) return;
 
@@ -145,7 +190,8 @@ function PdfPages({
     return () => {
       active = false;
       controller.abort();
-      disposePages?.();
+      rendererRef.current = null;
+      renderer?.dispose();
 
       if (loadingTask) {
         void loadingTask.destroy().catch(() => {});
@@ -200,6 +246,107 @@ function PdfPages({
           >
             Reintentar
           </button>
+        </div>
+      )}
+
+      {totalPages > 0 && (
+        <div
+          ref={navigationRef}
+          role="group"
+          aria-label="Navegación por páginas del PDF"
+          className="sticky top-0 z-10 mt-4 rounded-lg border border-slate-200 bg-white p-3 shadow-sm"
+        >
+          <div className="flex flex-wrap items-center gap-3">
+            <p role="status" aria-live="polite" aria-atomic="true" className="text-sm font-semibold text-slate-900">
+              Página {currentPage} de {totalPages}
+            </p>
+            <button
+              type="button"
+              disabled={status !== "ready" || currentPage <= 1}
+              onClick={() => navigateToPage(currentPage - 1)}
+              className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Anterior
+            </button>
+            <button
+              type="button"
+              disabled={status !== "ready" || currentPage >= totalPages}
+              onClick={() => navigateToPage(currentPage + 1)}
+              className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Siguiente
+            </button>
+            <form onSubmit={submitPage} noValidate className="flex flex-wrap items-center gap-2">
+              <label htmlFor={pageInputId} className="text-sm text-slate-700">
+                Ir a página
+              </label>
+              <input
+                id={pageInputId}
+                type="text"
+                inputMode="numeric"
+                autoComplete="off"
+                value={pageInput}
+                disabled={status !== "ready"}
+                aria-invalid={Boolean(pageInputError)}
+                aria-describedby={pageInputError ? `${pageInputId}-error` : undefined}
+                onChange={(event) => {
+                  setPageInput(event.target.value);
+                  setPageInputError("");
+                }}
+                className="w-20 rounded-lg border border-slate-300 px-2 py-2 text-sm text-slate-900 disabled:opacity-50"
+              />
+              <button
+                type="submit"
+                disabled={status !== "ready"}
+                className="rounded-lg bg-blue-700 px-3 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Ir
+              </button>
+            </form>
+            <button
+              type="button"
+              disabled={status !== "ready"}
+              aria-expanded={showThumbnails}
+              aria-controls={`${pageInputId}-thumbnails`}
+              onClick={() => setShowThumbnails((value) => !value)}
+              className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 disabled:opacity-50"
+            >
+              {showThumbnails ? "Ocultar miniaturas" : "Mostrar miniaturas"}
+            </button>
+            <div role="group" aria-label="Zoom del PDF" className="flex items-center gap-2">
+              <button
+                type="button"
+                aria-label="Reducir zoom"
+                disabled={status !== "ready" || zoom <= 50}
+                onClick={() => changeZoom(zoom - 25)}
+                className="rounded-lg border border-slate-300 px-3 py-2 font-semibold text-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                −
+              </button>
+              <output aria-label="Porcentaje de zoom" className="min-w-14 text-center text-sm font-semibold text-slate-900">
+                {zoom} %
+              </output>
+              <button
+                type="button"
+                aria-label="Aumentar zoom"
+                disabled={status !== "ready" || zoom >= 200}
+                onClick={() => changeZoom(zoom + 25)}
+                className="rounded-lg border border-slate-300 px-3 py-2 font-semibold text-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                +
+              </button>
+            </div>
+          </div>
+          {pageInputError && (
+            <p id={`${pageInputId}-error`} role="alert" className="mt-2 text-sm text-red-700">
+              {pageInputError}
+            </p>
+          )}
+          {showThumbnails && status === "ready" && pdfDocument && (
+            <div id={`${pageInputId}-thumbnails`}>
+              <PdfThumbnails pdf={pdfDocument} currentPage={currentPage} onNavigate={navigateToPage} />
+            </div>
+          )}
         </div>
       )}
 
