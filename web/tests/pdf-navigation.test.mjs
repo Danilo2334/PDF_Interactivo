@@ -51,6 +51,7 @@ function rendererFixture({ count = 20, heights = {}, held = [], fail = [], viewp
     replaceChildren() { this.children = []; }
     remove() { this.parent.children = this.parent.children.filter((child) => child !== this); }
     setAttribute(name, value) { this.attributes[name] = value; }
+    removeAttribute(name) { delete this.attributes[name]; }
     querySelectorAll() { return this.children.filter((child) => child.dataset.thumbnailPage); }
     getBoundingClientRect() {
       const number = Number(this.dataset.pdfPage || this.dataset.thumbnailPage);
@@ -331,8 +332,8 @@ test("a render error is reported and can be retried with a fresh renderer", asyn
 
 // Ejercitar los eventos reales del componente con estado y efectos controlados,
 // sin sustituir las pruebas visuales del navegador ni necesitar credenciales.
-function viewerFixture(total = 20) {
-  const states = [], refs = [], effects = [], calls = [], requests = [], zooms = [];
+function viewerFixture(total = 20, initialPage = 1) {
+  const states = [], refs = [], effects = [], calls = [], requests = [], zooms = [], selections = [];
   let cursor = 0, refCursor = 0, effectStarted = false, callbacks, tree;
   const dependencies = {
     react: {
@@ -358,7 +359,7 @@ function viewerFixture(total = 20) {
     "@/components/documents/pdf-thumbnails": { PdfThumbnails: () => null },
     "@/lib/pdf/render-visible-pages": {
       renderVisiblePages(_pdf, _container, ready, error, changed) {
-        callbacks = { ready, error, changed }; ready();
+        callbacks = { ready, error, changed }; void Promise.resolve().then(ready);
         return { dispose() {}, goToPage(number) { calls.push(number); changed(number); return true; }, setZoom(value) { zooms.push(value); return true; } };
       },
     },
@@ -371,7 +372,7 @@ function viewerFixture(total = 20) {
     },
     console: { error() {} },
   });
-  const outer = PdfViewer({ projectId: "test-project" });
+  const outer = PdfViewer({ projectId: "test-project", initialPage, onPageSelect: page => selections.push(page) });
   states.length = 0;
   const Pages = outer.type;
   function nodes(node) {
@@ -389,7 +390,7 @@ function viewerFixture(total = 20) {
   }
   render(); const cleanups = effects.map((effect) => effect()); effectStarted = true;
   return {
-    calls, requests, zooms, render,
+    calls, requests, zooms, selections, render,
     get callbacks() { return callbacks; },
     button(label) { return nodes(tree).find((node) => node.type === "button" && node.props.children === label); },
     labelled(label) { return nodes(tree).find((node) => node.props?.["aria-label"] === label); },
@@ -454,4 +455,32 @@ test("both viewer direction buttons are disabled for a single-page PDF", async (
   assert.equal(f.counter(), "Página 1 de 1");
   assert.equal(f.button("Anterior").props.disabled, true);
   assert.equal(f.button("Siguiente").props.disabled, true);
+});
+
+test("only the current page has the visible border and accessibility indicator after navigation, scroll and zoom", async (t) => {
+  const f = rendererFixture({ count: 4 }); t.after(() => f.renderer.dispose()); await settle();
+  const selected = () => f.container.children.filter(page => page.dataset.activePage === 'true');
+  assert.equal(selected().length, 1); assert.equal(f.page(1).attributes['aria-current'], 'page');
+  f.renderer.goToPage(3); f.flush(); await settle();
+  assert.equal(selected().length, 1); assert.equal(selected()[0], f.page(3));
+  assert.equal(f.page(1).attributes['aria-current'], undefined);
+  assert.match(f.page(3).children[1].className, /ring-2 ring-blue-700/);
+  assert.doesNotMatch(f.page(1).children[1].className, /ring-2/);
+  f.renderer.setZoom(125); f.flush(); await settle();
+  assert.equal(selected()[0], f.page(3));
+  f.scrollToPage(2); f.flush(); await settle();
+  assert.equal(selected().length, 1); assert.equal(selected()[0], f.page(2));
+});
+
+test("viewer publishes the chosen page, restores a saved page on remount and clears selection after failure", async (t) => {
+  const f = viewerFixture(4, 3); t.after(() => f.dispose()); await settle(); f.render();
+  assert.equal(f.counter(), 'Página 3 de 4'); assert.deepEqual(f.selections, [3]);
+  f.callbacks.changed(2); f.render(); assert.equal(f.selections.at(-1), 2);
+  f.callbacks.error(new Error('render failed')); f.render(); assert.equal(f.selections.at(-1), null);
+  assert.equal(f.button('Siguiente').props.disabled, true);
+});
+
+test("a saved page outside the new PDF bounds falls back to its first page", async (t) => {
+  const f = viewerFixture(2, 4); t.after(() => f.dispose()); await settle(); f.render();
+  assert.equal(f.counter(), 'Página 1 de 2'); assert.deepEqual(f.selections, [1]);
 });

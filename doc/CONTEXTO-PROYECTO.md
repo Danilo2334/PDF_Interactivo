@@ -2,6 +2,12 @@
 
 Actualizado: 25/10/2026. Mantener este único documento al continuar.
 
+Estado actual: PR #15 / HU011 integrado en develop (`8dc5b1e`). HU012 / SCRUM-24
+y sus tres subtareas finalizados con 74/74 pruebas y 11 capturas reales; entrega
+en [PR #16](https://github.com/Danilo2334/PDF_Interactivo/pull/16), en borrador,
+sin merge. Rama actual `codex/scrum-24-hu012-seleccion-pagina`. HU013 no iniciado.
+Stash `d6406e0` intacto. Ver el cierre de HU012 al final para retomar.
+
 ## Contexto proporcionado por el usuario
 
 - El propietario carga y consulta su PDF. El original permanece intacto; los
@@ -18,7 +24,8 @@ Actualizado: 25/10/2026. Mantener este único documento al continuar.
   de autenticación sin aplicarlo ni eliminarlo. El límite inicial de SCRUM-79 se
   amplió después: el usuario autorizó avanzar las subtareas pendientes de HU011,
   probar, documentar, actualizar Jira, hacer commits/push y preparar PR mientras
-  está ausente. No se ha autorizado ni realizado el merge de HU011.
+  está ausente. Más tarde autorizó expresamente revisar e integrar PR #15 y
+  continuar con la siguiente historia; el merge de HU011 ya está realizado.
 - En Jira: conservar las capturas y un único comentario breve por subtarea;
   editarlo preservando imágenes si hace falta. No duplicar evidencias ni crear
   informes adicionales. El usuario introduce sus credenciales personalmente.
@@ -199,9 +206,10 @@ Actualizado: 25/10/2026. Mantener este único documento al continuar.
 
 ## HU011: cierre conjunto de SCRUM-174, SCRUM-144, SCRUM-175 y SCRUM-80
 
-- HU011 / SCRUM-23 y sus seis subtareas están «Finalizado». PR en borrador
+- HU011 / SCRUM-23 y sus seis subtareas están «Finalizado». Entrega inicial en PR en borrador
   [#15](https://github.com/Danilo2334/PDF_Interactivo/pull/15) hacia `develop`,
-  con la rama subida. No se hizo merge ni se avanzó a otra historia. El stash
+  con la rama subida. En esa fase no se hizo merge ni se avanzó a otra historia;
+  después se autorizó e integró PR #15, como se registra al final. El stash
   `d6406e0cdbc464c1c0301c058024b10dd27c4515` permanece sin aplicar ni eliminar.
 - Commit `b46c9317a989ef9fbc1bcb012d73e55535dc13f1`: eliminación confirmada,
   limpieza central y bloqueo de accesos (SCRUM-174 / SCRUM-144 / SCRUM-175).
@@ -323,3 +331,126 @@ Actualizado: 25/10/2026. Mantener este único documento al continuar.
 - Servidor original de localhost:3000 conservado; proxy de desconexión detenido.
   Navegador dejado en login tras cerrar la sesión sintética. No aplicar el stash,
   hacer merge ni iniciar otra historia sin nueva indicación del usuario.
+
+## Revisión de HU011 y cierre autorizado de HU012
+
+- El usuario autorizó revisar PR #15, integrarlo en develop si cumplía y continuar
+  con la siguiente historia. Revisión del commit `efe36ff`: sin fallos bloqueantes
+  en el alcance, 63/63 pruebas, lint y build/TypeScript aprobados de nuevo. GitHub
+  no tenía comentarios pendientes ni checks/statuses CI configurados; no se
+  atribuyen verificaciones de CI que no existían. Ambas migraciones constan aplicadas.
+- PR #15 integrado mediante merge, con comprobación del head revisado:
+  `8dc5b1eb714ea2fbadbc47ed25f96b3f410230c0`. develop local se actualizó por
+  fast-forward. El comentario único 10090 de SCRUM-23 registra revisión y merge.
+- Siguiente historia por Rank del Sprint 3: SCRUM-24 / HU012, selección de página
+  a reforzar. Subtareas SCRUM-81 (captura), SCRUM-176 (resaltado) y SCRUM-82
+  (borrador compartido). Historia y subtareas «Finalizado», en rama independiente
+  `codex/scrum-24-hu012-seleccion-pagina`, creada desde el merge de HU011.
+- HU012 conserva documento/página en el borrador dentro del proyecto. El registro
+  definitivo en servidor corresponde a HU016 / SCRUM-89; no dar por implementado
+  ese envío. Pruebas de navegador y evidencias de HU012 completadas; entrega en
+  [PR #16](https://github.com/Danilo2334/PDF_Interactivo/pull/16), en borrador hacia
+  develop. Sin merge de HU012 ni avance a HU013.
+- Stash de autenticación `d6406e0` conservado, sin aplicar ni eliminar.
+
+### Implementación y commits de HU012
+
+- `a4f4ddb75d6899cb891b04d4c89926d8cb836eb2`: SCRUM-81 / SCRUM-176 / SCRUM-82.
+  El visor comunica la página activa al estado compartido de ProjectWorkspace.
+  El borrador contiene documentId/pageNumber y solo admite la identidad vigente;
+  cambiar de documento reinicia el componente del formulario. Cada nueva página
+  sustituye la anterior. Un error de carga/render invalida la selección.
+- El renderizador añade un borde/anillo azul y aria-current únicamente a la
+  figura activa, retirándolo de la anterior. Reutiliza las miniaturas de HU010,
+  preserva su indicador y mantiene el renderizado bajo demanda y la liberación
+  de canvases. Scroll, controles, teclado y miniaturas comparten la misma página.
+- El borrador abre desde los controles fijos mediante un diálogo nativo accesible.
+  Cerrar/reabrir y Escape conservan página/documento dentro del proyecto.
+  No se promete persistencia tras recargar o cerrar la página, ni se guarda una
+  solicitud definitiva: el envío al servidor corresponde a HU016 / SCRUM-89.
+  El control solo se ofrece al rol con documents.manage.own, dentro de un proyecto
+  cuya propiedad comprueba el servidor. No se creó una ruta pública de solicitudes.
+- Regresión detectada en el navegador: el primer formulario expandía el panel
+  fijo y cambiaba la altura visible del PDF; cerrar/reabrir podía cambiar la
+  selección 4 → 3. Se conservó la captura del fallo y se corrigió usando el
+  diálogo fuera del flujo. El caso real se repitió con página 4 conservada.
+- `727f437aba7596fb65c977fc433f545a6ee62102`: corrección adicional de un fallo
+  previo de SSR encontrado durante la prueba de privacidad. El ejecutor cerró
+  globalmente una sesión sintética y revocó la del navegador; al abrir el proyecto,
+  Supabase intentó limpiar cookies desde un Server Component y Next arrojó 500.
+  El cliente de `web/lib/supabase/server.ts` tolera exclusivamente el error conocido
+  de cookies de solo lectura, preservando el resultado de getUser. Otros errores
+  se propagan; Actions/Routes siguen escribiendo cookies. No se aplicó el stash.
+  Tres regresiones verifican revocación, contexto mutable y error inesperado.
+  Referencias consultadas: guía local cookies.md de Next 16 y
+  [cliente SSR oficial](https://supabase.com/docs/guides/auth/server-side/creating-a-client).
+- Se repitió el acceso real con la misma sesión revocada: redirigió a login.
+  Tras autenticarse nuevamente, la segunda cuenta obtuvo «Documento no disponible»
+  para el proyecto ajeno. El ejecutor ahora cierra solo su sesión SDK local para
+  no revocar otras sesiones de la misma cuenta durante pruebas independientes.
+- `2f1e2b6bd7b720fe25acdada6d95ca120c99080d`: ejecutor HTTP/SDK optativo
+  `web/tests/hu012-live.mjs`. No utiliza cookies del navegador ni credenciales
+  del usuario. Usa inicio de sesión normal con cuentas sintéticas y sesiones
+  en memoria. No se añadieron dependencias ni migraciones para HU012.
+
+### Pruebas y datos reales de HU012
+
+- **74/74 pruebas automatizadas**, lint, build/TypeScript y git diff --check
+  aprobados tras las correcciones. Desde web: npm test, npm run lint y
+  npm run build. No se atribuyen resultados de CI: no hay checks configurados.
+  Revisión React: estado por documento, callbacks estables, etiquetas accesibles,
+  diálogo nativo, permisos en servidor y conservación del renderizado diferido.
+- Se reutilizó localhost:3000 y el navegador integrado. Se cargaron mediante la
+  UI dos PDFs sintéticos válidos, de 4 y 2 páginas. Proyecto de 4 páginas:
+  `2f9b0c2b-dc51-4a67-8a7e-631d41824cbe`, documento
+  `3f72032d-d3a3-4e03-a287-8001672eb35b`. Proyecto de 2 páginas:
+  `655017a3-5da1-42c5-ae70-689a41623b22`, documento
+  `0b2c6ba3-7436-4f10-94f0-5334b519eb68`.
+- Navegador: miniaturas 3 → 4; navegación por teclado a 3; scroll manual a 4;
+  destino 0 rechazado conservando la página 2; una sola figura y una sola miniatura
+  con aria-current coincidente; zoom 125 % conservando la 4; apertura, cierre,
+  reapertura y Escape con página 4; otro documento con página 1 y nueva identidad;
+  rechazo del proyecto privado desde una segunda cuenta mientras aún existía.
+  Los atributos documentId/página y los indicadores se leyeron del DOM real.
+- HTTP/SDK reales: ambos PDFs coincidieron byte a byte mediante SHA-256 con sus
+  archivos fuente; la API devolvió 404 a otra cuenta y RLS no expuso el proyecto;
+  sin sesión, API PDF 401. SQL confirmó created_at = updated_at: seleccionar y
+  abrir el borrador no modificó los proyectos ni guardó solicitudes en servidor.
+- Reproducción del ejecutor: preparar dos propietarios desechables con correos
+  hu012-1/2-UUID@example.invalid y JSON externo `{users:[{id,email,password},...]}`.
+  La primera cuenta debe tener exactamente los proyectos HU012-4-paginas y
+  HU012-2-paginas, sin renombrarlos; guardar sus PDFs originales con extensión
+  .pdf en la misma carpeta del JSON. Ejecutar desde web:
+  `node tests/hu012-live.mjs ACCOUNTS_FILE check`, y después `cleanup` cuando
+  proceda eliminar esas muestras. Se comprueban cuenta, propietario, nombres,
+  identidad y fecha antes de borrar. No ejecutar sobre cuentas o archivos reales.
+- Ambos modos pasaron. cleanup eliminó los dos proyectos y PDFs mediante la API
+  confirmada de HU011. Después se purgaron solo las cuentas sintéticas
+  `c8a21707-a29b-4ecf-a525-9b140cc0e5ea` y
+  `7b1103c4-fae7-4678-8e49-b734c4bf2627`, con filtro por UUID/correo exactos y
+  guardas de ausencia de proyectos/archivos. SQL final: **0 usuarios Auth,
+  identidades, sesiones, refresh tokens, perfiles, proyectos, documentos,
+  trabajos de limpieza y archivos** para ambas cuentas. Sesión del navegador
+  cerrada; test-accounts.json y script de carga con credenciales eliminados.
+
+### Jira y evidencias de HU012
+
+| Tarea | Comentario único | Adjuntos reales |
+| --- | --- | --- |
+| SCRUM-81 | 10091 | 10267 selección 3; 10268 destino 0 rechazado con selección 2 |
+| SCRUM-176 | 10092 | 10270 resaltado único; 10269 scroll manual |
+| SCRUM-82 | 10093 | 10274 fallo 4 → 3; 10271 reapertura corregida en 4; 10275 otro documento; 10273 segunda cuenta; 10272 acceso ajeno denegado |
+| SCRUM-24 | 10094 | 10277 error previo con sesión revocada; 10276 redirección segura a login |
+
+- 11 capturas auténticas, con los errores identificados como errores y los casos
+  corregidos repetidos. Ninguna imagen es una plantilla ni una reconstrucción.
+  Los resultados distinguen navegador de HTTP/SDK/SQL. Se verificaron adjuntos y
+  nombres de imágenes en el HTML renderizado: un comentario por tarea, sin
+  duplicar adjuntos. Conservar esos comentarios y bloques HTML al editarlos.
+- Casillas y estados finalizados después de verificar los criterios. PR #16
+  enlazado en los cuatro comentarios. El documento de continuidad se entrega en
+  un commit adicional; los commits funcionales y pruebas están identificados arriba.
+- Estado para retomar: revisar PR #16 antes de autorizar su merge. No iniciar
+  HU013 ni aplicar/eliminar el stash. Servidor original conservado y navegador
+  en login después de cerrar las cuentas sintéticas. No quedan datos de prueba
+  pendientes de limpiar ni credenciales de esas cuentas en disco.

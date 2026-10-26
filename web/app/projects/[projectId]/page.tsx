@@ -122,6 +122,8 @@ export default async function ProjectPage({
         <ProjectWorkspace
           projectId={project.id}
           documentId={project.document_id}
+          documentName={document.original_name}
+          canRequestReinforcement={canRename}
           reinforcements={reinforcements}
           reinforcementsError={Boolean(reinforcementsError)}
         />

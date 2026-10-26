@@ -21,9 +21,15 @@ export async function createClient() {
       },
 
       setAll(cookiesToSet) {
-        cookiesToSet.forEach(({ name, value, options }) => {
-          cookieStore.set(name, value, options);
-        });
+        try {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            cookieStore.set(name, value, options);
+          });
+        } catch (error) {
+          // Server Components are read-only; Proxy/Actions persist auth cookies.
+          // Keep the auth result (including revocation) and propagate other errors.
+          if (!(error instanceof Error) || !error.message.startsWith("Cookies can only be modified")) throw error;
+        }
       },
     },
   });

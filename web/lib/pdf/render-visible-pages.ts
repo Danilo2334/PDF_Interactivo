@@ -88,8 +88,25 @@ export function renderVisiblePages(
 
   function reportCurrentPage(number: number) {
     if (currentPage === number) return;
+    highlightPage(number);
     currentPage = number;
     onPageChange(number);
+  }
+
+  const pageBodyClass = "mx-auto w-full overflow-hidden rounded border bg-white";
+  function highlightPage(number: number) {
+    const previous = slots.get(currentPage);
+    if (previous) {
+      previous.figure.dataset.activePage = "false";
+      previous.figure.removeAttribute("aria-current");
+      previous.body.className = `${pageBodyClass} border-slate-200`;
+    }
+    const selected = slots.get(number);
+    if (selected) {
+      selected.figure.dataset.activePage = "true";
+      selected.figure.setAttribute("aria-current", "page");
+      selected.body.className = `${pageBodyClass} border-blue-700 ring-2 ring-blue-700`;
+    }
   }
 
   function updateCurrentPage() {
@@ -168,7 +185,7 @@ export function renderVisiblePages(
 
     const body = document.createElement("div");
     body.className =
-      "mx-auto w-full overflow-hidden rounded border border-slate-200 bg-white";
+      `${pageBodyClass} border-slate-200`;
     body.style.maxWidth = "900px";
     body.style.aspectRatio = "210 / 297";
 
@@ -179,6 +196,7 @@ export function renderVisiblePages(
     slots.set(number, slot);
     sizeSlot(slot);
   }
+  highlightPage(1);
 
   const observer = new IntersectionObserver(
     (entries) => {
