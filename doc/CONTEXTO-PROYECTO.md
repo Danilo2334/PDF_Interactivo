@@ -21,8 +21,16 @@ La implementación de HU016 / SCRUM-28 también está preparada en la rama
 SCRUM-28, SCRUM-89, SCRUM-180 y SCRUM-90 están En curso. La migración aditiva
 de solicitudes ya está aplicada en Supabase. Antes de probar en casa, configurar
 el secreto de servidor indicado en el apartado HU016, sin publicarlo.
-Orden de revisión/integración: HU014 → HU015 → HU016, siempre hacia develop
-después de ajustar la base de cada PR. No cerrar Sprint 3 hasta verificar todo.
+HU016 está publicada en [PR #20](https://github.com/Danilo2334/PDF_Interactivo/pull/20), en borrador.
+HU017 / SCRUM-29 está preparada en `codex/scrum-29-hu017-estado-solicitudes`,
+basada en el commit `3a7bc80` de HU016. **149/149 pruebas, lint y build correctos.**
+SCRUM-29, SCRUM-91, SCRUM-181 y SCRUM-92 están En curso. Listado, filtros,
+restauración de selección e historial implementados; faltan validación visual y
+la integración de transiciones reales con HU018–HU024. No confundir contrato
+probado en PostgreSQL aislado con resultados reales de IA.
+Orden de revisión/integración: HU014 → HU015 → HU016 → HU017, hacia develop
+tras ajustar la base de cada PR. HU017 tiene como base provisional la rama HU016.
+No cerrar historias ni sprints mientras falten sus criterios integrados.
 
 ## Contexto proporcionado por el usuario
 
@@ -920,3 +928,110 @@ trabajo ni modificar sus restricciones, para que Codex continúe en casa.
    su PR sin duplicar pantallazos. No cerrar Sprint 3 hasta validar pendientes
    HU014/HU015/HU016 y revisar los PR en orden. HU017/generación IA no está
    implementada en esta entrega.
+
+
+## HU017 / SCRUM-29 — avance en nube del 26/10/2026
+
+Rama: `codex/scrum-29-hu017-estado-solicitudes`, creada desde `3a7bc80` de
+`codex/scrum-28-hu016-solicitud-refuerzo`. Publicación en un PR borrador con esa
+base provisional. Buscar el PR por su rama de origen. **No integrar HU017 en la
+rama de HU016:** integrar primero los predecesores y cambiar su base a develop.
+No se accedió al navegador, archivos o restricciones del PC de la empresa ni al
+PC doméstico. El stash doméstico `d6406e0` continúa fuera de este entorno.
+
+### Implementación por subtarea
+
+- SCRUM-91: pestaña Solicitudes del documento activo; listado paginado de 20 con
+  página, fecha, propietario (sesión actual), estado y etapa; detalle con texto y
+  necesidad originales; mensajes de carga, error y vacío. Consultas sin caché
+  y actualización cada 10 segundos mientras la pestaña de la aplicación está
+  activa y el navegador visible. En proceso muestra un indicador indeterminado,
+  sin inventar porcentajes. Se puede volver al PDF durante la espera.
+- SCRUM-181: filtros pendiente, en proceso, error, generada y aprobada; todos los
+  estados y restablecimiento; conservan proyecto/documento. El filtro, página y
+  detalle seleccionado se mantienen al volver del PDF dentro del proyecto.
+  Cambiar de documento reinicia el panel. Respuestas antiguas no pisan una
+  consulta nueva o un panel desmontado.
+- SCRUM-92: abrir la página y restaurar zona/texto usando coordenadas
+  proporcionales guardadas; conserva el texto confirmado aunque fuera una
+  transcripción manual. El PDF original no se modifica. Consultar una solicitud
+  no confirma ni envía otra. Historial paginado con estado y etapa anterior/nueva,
+  actor (propietario/sistema/migración) y fecha. Las solicitudes previas a la
+  migración reciben una línea de base honesta, no un historial inventado.
+
+### Base de datos y contrato pendiente de integración
+
+La migración `supabase/migrations/20261026215447_track_reinforcement_request_states.sql`
+está aplicada en el proyecto existente. Se creó inicialmente con Supabase CLI y
+se alineó el nombre de archivo con la versión real asignada por apply_migration,
+para evitar una segunda aplicación en futuros despliegues. No volver a ejecutarla.
+Se conservaron los datos existentes y se agregaron estado/etapa, fecha de cambio,
+error, aprobación explícita e historial RLS. Los usuarios autenticados pueden
+leer sus filas autorizadas; no tienen INSERT/UPDATE/DELETE directo del historial
+ni UPDATE directo de solicitudes. Las funciones de trigger están en private y
+sin permiso de ejecución para los roles cliente.
+
+Contrato para HU018–HU024, **aún sin worker ni RPC de transición pública**:
+
+- pending/queued → processing/analyzing.
+- processing/analyzing → pending/choosing tras el análisis.
+- pending/choosing → processing/generating cuando el propietario elija.
+- processing → error/failed con un mensaje seguro; reintento → processing.
+- processing → generated/review al persistir el resultado real.
+- generated → approved/approved solo mediante la futura decisión HU024 del
+  propietario activo. Esa transacción validada debe establecer localmente
+  `pdf_interactivo.owner_approval` con el ID de solicitud y guardar approved_by
+  y approved_at. Ningún endpoint actual concede esa aprobación.
+- generated puede volver a processing para regenerar; approved es terminal.
+
+La integración futura debe actualizar estado/etapa en el mismo proceso que
+persiste el resultado o fallo, comprobar versión/propietario vigente y conservar
+el historial automático. No escribir estados de demostración en el proyecto real
+para producir capturas. No conectar un proveedor ni generar costes sin su
+configuración autorizada. Los parámetros de contexto se implementan en HU018.
+
+### Verificaciones realizadas y límites
+
+- `npm --prefix web run test`: **149/149**. Incluye las pruebas previas y pruebas
+  nuevas de consulta/autorización, paginación, filtros, carreras de respuestas,
+  restauración y presentación de estados. Las pruebas de interfaz usan fixtures
+  y renderizado de componentes: no equivalen a una revisión visual de navegador.
+- Dos migraciones reales ejecutadas en PostgreSQL/PGlite aislado para comprobar
+  creación/idempotencia, estados, transacciones, auditoría, aprobación explícita,
+  RLS, usuario inactivo, otro propietario y cascadas de eliminación. Los registros
+  ficticios existen solo allí; no se crearon usuarios ni solicitudes de prueba
+  en Supabase remoto.
+- lint, build/TypeScript y diff-check correctos. Servidor de producción arrancado
+  en la nube; GET de listado y detalle sin sesión devuelve 401 y private,no-store.
+- Supabase remoto: RLS activo, triggers INSERT/UPDATE presentes, clientes sin
+  permisos directos de cambio de estado/escritura de historial. El asesor no
+  señaló tablas/funciones nuevas de HU017. Persisten avisos anteriores sobre
+  RPC SECURITY DEFINER existentes y protección de contraseñas filtradas.
+  Referencias: https://supabase.com/docs/guides/database/database-linter?lint=0028_anon_security_definer_function_executable
+  y https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection.
+  La tabla private de secretos sin políticas RLS es deliberadamente inaccesible
+  al cliente; no abrirla para eliminar el aviso informativo.
+
+### Continuación en el equipo personal
+
+1. Leer git status/rama y preservar cambios locales y stash d6406e0. Obtener la
+   rama HU017 sin sobrescribir trabajo. Instalar el lockfile si hace falta.
+2. Verificar configuración de servidor HU016 descrita arriba (secreto privado
+   sin mostrarlo en chat ni versionarlo). La migración HU017 ya está aplicada.
+3. Iniciar sesión personalmente; abrir un documento propio sin solicitudes y
+   comprobar el vacío. Crear una solicitud real HU016 con texto o zona y necesidad
+   confirmados. Abrir Solicitudes: página, fecha y estado pendiente/cola correctos.
+4. Filtrar pendiente y restablecer. Un filtro sin filas debe mostrar vacío. Abrir
+   detalle/historial; debe existir el evento de creación. Volver al PDF restaura
+   página y selección, también con zoom o página lejana; volver a Solicitudes
+   conserva filtro/detalle. Repetir con texto y área y revisar en móvil.
+5. Refrescar y cambiar de proyecto: conservar solo datos del documento vigente.
+   Comprobar rechazo sin sesión, otra cuenta e inactiva. Revisar error/reintento
+   de red y que una respuesta anterior no sobrescribe el filtro actual.
+6. Los estados processing/error/generated/approved y sus filtros finales deben
+   probarse visualmente con operaciones reales de HU018–HU024 cuando existan.
+   Las pruebas aisladas actuales no autorizan marcar ese requisito finalizado.
+7. Adjuntar únicamente capturas reales y un comentario breve por subtarea con
+   alcance verificado y pendientes. Mantener historia/subtareas En curso hasta
+   completar criterios. El PR queda vinculado como enlace nativo, sin reportes
+   adicionales ni capturas simuladas. No cerrar Sprint 4 ni Sprint 3 por este avance.

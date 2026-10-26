@@ -1,6 +1,7 @@
 import { z } from "zod";
 import type { DifficultyDraft } from "@/lib/validations/difficulty";
 import type { SelectionTextDraft } from "@/lib/pdf/selection-text-draft";
+import { REQUEST_STATUSES, type RequestStatus } from "@/lib/reinforcements/state";
 
 export const MAX_REQUEST_TEXT = 20_000;
 const uuid = z.string().uuid();
@@ -27,8 +28,8 @@ export const reinforcementContentSchema = z.object({
 
 export const reinforcementRequestSchema = z.object({ content: reinforcementContentSchema, idempotencyKey: uuid }).strict();
 export type ReinforcementContent = z.infer<typeof reinforcementContentSchema>;
-export type ReinforcementReceipt = { id: string; status: "pending"; createdAt: string };
-export const reinforcementReceiptSchema = z.object({ id: uuid, status: z.literal("pending"), createdAt: z.string().datetime({ offset: true }) });
+export type ReinforcementReceipt = { id: string; status: RequestStatus; createdAt: string };
+export const reinforcementReceiptSchema = z.object({ id: uuid, status: z.enum(REQUEST_STATUSES), createdAt: z.string().datetime({ offset: true }) });
 
 export function contentFromDraft(difficulty: DifficultyDraft | null, text: SelectionTextDraft | null):
   { content: ReinforcementContent | null; missing: string[] } {

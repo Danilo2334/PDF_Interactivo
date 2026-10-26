@@ -72,6 +72,7 @@ function fixture(options = {}) {
     'pdf-lib': { PDFDocument }, '@/lib/auth/access': { checkPermission: async () => options.access ?? { ok: true, userId: owner } },
     '@/lib/documents/mutation-request': load('lib/documents/mutation-request.ts'), '@/lib/supabase/server': { createClient: async () => client },
     '@/lib/validations/reinforcement-request': validation, '@/lib/reinforcements/request-proof': proof,
+    '@/lib/reinforcements/read-requests': { readRequests() { throw Error('GET not used by POST'); } },
   });
   const run = ({ data = { content, idempotencyKey }, origin = 'http://localhost:3000' } = {}) => route.POST(new Request(
     `http://localhost:3000/api/projects/${projectId}/reinforcement-requests`, { method: 'POST', headers: { Origin: origin }, body: JSON.stringify(data) }), { params: Promise.resolve({ projectId }) });

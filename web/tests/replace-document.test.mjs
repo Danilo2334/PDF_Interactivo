@@ -145,6 +145,7 @@ test('changing PDF identity remounts the viewer even when the project ID stays t
   const { ProjectWorkspace } = load('components/documents/project-workspace.tsx', {
     react: { useId: () => 'workspace', useState: initial => [initial, () => {}], useCallback: callback => callback, useRef: initial => ({ current: initial }) },
     '@/components/documents/pdf-viewer': { PdfViewer: viewer },
+    '@/components/documents/request-list-panel': { RequestListPanel: () => null },
     '@/components/documents/reinforcement-request-draft': { ReinforcementRequestDraft: () => null },
     '@/lib/validations/difficulty': difficultyValidation,
     '@/lib/pdf/extract-selection-text': load('lib/pdf/extract-selection-text.ts', {}),

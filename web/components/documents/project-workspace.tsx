@@ -11,6 +11,8 @@ import { extractSelectionText } from "@/lib/pdf/extract-selection-text";
 import { beginTextExtraction, confirmSelectionText, editSelectionText, finishTextExtraction, selectionTextKey, type SelectionTextDraft } from "@/lib/pdf/selection-text-draft";
 import { contentFromDraft, requestContentKey } from "@/lib/validations/reinforcement-request";
 import { createSubmissionController, IDLE_SUBMISSION, type SubmissionState } from "@/lib/reinforcements/submission";
+import { RequestListPanel } from "@/components/documents/request-list-panel";
+import type { RequestRecord } from "@/lib/validations/request-list";
 
 type WorkspaceProps = {
   projectId: string;
@@ -23,6 +25,7 @@ type WorkspaceProps = {
 
 const sections = [
   { id: "pdf", label: "PDF original" },
+  { id: "requests", label: "Solicitudes" },
   { id: "reinforcements", label: "Refuerzos" },
 ] as const;
 
@@ -35,7 +38,7 @@ export function ProjectWorkspace({
   reinforcementsError,
 }: WorkspaceProps) {
   const [activeSection, setActiveSection] =
-    useState<"pdf" | "reinforcements">("pdf");
+    useState<"pdf" | "requests" | "reinforcements">("pdf");
 
   const workspaceId = useId();
   const [selection, setSelection] = useState<PageSelection | null>(null);
@@ -47,6 +50,7 @@ export function ProjectWorkspace({
   const textRequestId = useRef(0);
   const pdfSource = useRef<{ documentId: string; pdf: PDFDocumentProxy } | null>(null);
   const [submission, setSubmission] = useState<SubmissionState>(IDLE_SUBMISSION);
+  const [openedRequest, setOpenedRequest] = useState<RequestRecord | null>(null);
   const senderRef = useRef<ReturnType<typeof createSubmissionController> | null>(null);
   const draft = selection?.documentId === documentId ? selection : null;
   const currentFragment = fragment?.documentId === documentId && fragment.pageNumber === draft?.pageNumber ? fragment : null;
@@ -67,6 +71,16 @@ export function ProjectWorkspace({
     senderRef.current?.reset();
     setDifficultyDraft(null);
     setSelectionText(previous => previous ? { ...previous, confirmed: false } : null);
+  }
+  function openRequest(request: RequestRecord) {
+    if (!canRequestReinforcement || request.project_id !== projectId || request.document_id !== documentId) return;
+    setSelection({ documentId, pageNumber: request.page_number });
+    setFragment(request.selection);
+    setDifficultyInput(null);
+    setDifficultyDraft(null);
+    setSelectionText(null);
+    setOpenedRequest(request);
+    setActiveSection("pdf");
   }
   const receiveTextSource = useCallback((pdf: PDFDocumentProxy | null) => {
     if (pdf) pdfSource.current = { documentId, pdf };
@@ -122,7 +136,7 @@ export function ProjectWorkspace({
         aria-label="Secciones del proyecto"
         className="flex flex-wrap gap-2 border-b border-slate-200 pb-3"
       >
-        {sections.map((section) => (
+        {sections.filter(section => section.id !== "requests" || canRequestReinforcement).map((section) => (
           <button
             key={section.id}
             type="button"
@@ -144,9 +158,18 @@ export function ProjectWorkspace({
         id={`${workspaceId}-pdf`}
         hidden={activeSection !== "pdf"}
       >
+        {activeSection === "pdf" && openedRequest?.document_id === documentId && <aside className="mt-4 space-y-2 rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm text-slate-800">
+          <p className="font-semibold">Solicitud consultada · Página {openedRequest.page_number}</p>
+          <p className="break-all">{openedRequest.id}</p>
+          <details><summary className="cursor-pointer font-medium">Ver texto y necesidad guardados</summary>
+            <p className="mt-2 max-h-40 overflow-y-auto whitespace-pre-wrap break-words">{openedRequest.selected_text}</p>
+            <p className="mt-2 break-words">{openedRequest.need}</p>
+          </details>
+          <button type="button" onClick={() => setActiveSection("requests")} className="rounded-lg bg-blue-700 px-3 py-2 font-semibold text-white">Volver a solicitudes</button>
+        </aside>}
         {activeSection === "pdf" && (
           <PdfViewer key={`${projectId}-${documentId}`} projectId={projectId}
-            initialPage={draft?.pageNumber ?? 1} onPageSelect={canRequestReinforcement ? selectPage : undefined}
+            initialPage={draft?.pageNumber ?? 1} initialFragment={currentFragment} onPageSelect={canRequestReinforcement ? selectPage : undefined}
             onFragmentSelect={canRequestReinforcement ? selectFragment : undefined} fragmentResetKey={fragmentResetKey}
             onTextSourceChange={canRequestReinforcement ? receiveTextSource : undefined}
             requestDraft={canRequestReinforcement ? <ReinforcementRequestDraft
@@ -159,6 +182,11 @@ export function ProjectWorkspace({
             /> : null} />
         )}
       </div>
+
+      {canRequestReinforcement && <section id={`${workspaceId}-requests`} hidden={activeSection !== "requests"}>
+        <RequestListPanel key={`${projectId}-${documentId}`} projectId={projectId} documentId={documentId}
+          active={activeSection === "requests"} onOpen={openRequest} />
+      </section>}
 
       <section
         id={`${workspaceId}-reinforcements`}

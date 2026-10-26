@@ -12,6 +12,7 @@ import type { FragmentSelection } from "@/lib/pdf/fragment-selection";
 type ViewerProps = {
   projectId: string;
   initialPage?: number;
+  initialFragment?: FragmentSelection | null;
   onPageSelect?: (number: number | null) => void;
   requestDraft?: ReactNode;
   onFragmentSelect?: (value: FragmentSelection | null) => void;
@@ -33,16 +34,18 @@ const viewerMessages = {
   ready: "PDF disponible. Usa los controles o desplázate para consultar sus páginas.",
 };
 
-export function PdfViewer({ projectId, initialPage = 1, onPageSelect, requestDraft, onFragmentSelect, fragmentResetKey, onTextSourceChange }: ViewerProps) {
+export function PdfViewer({ projectId, initialPage = 1, initialFragment = null, onPageSelect, requestDraft, onFragmentSelect, fragmentResetKey, onTextSourceChange }: ViewerProps) {
   const [attempt, setAttempt] = useState(0);
   // Only restore on mount; changing the selection must not reload the PDF.
   const [startingPage] = useState(initialPage);
+  const [startingFragment] = useState(initialFragment);
 
   return (
     <PdfPages
       key={`${projectId}-${attempt}`}
       projectId={projectId}
       initialPage={startingPage}
+      initialFragment={startingFragment}
       onPageSelect={onPageSelect}
       requestDraft={requestDraft}
       onFragmentSelect={onFragmentSelect}
@@ -56,6 +59,7 @@ export function PdfViewer({ projectId, initialPage = 1, onPageSelect, requestDra
 function PdfPages({
   projectId,
   initialPage = 1,
+  initialFragment = null,
   onPageSelect,
   requestDraft,
   onFragmentSelect,
@@ -194,6 +198,9 @@ function PdfPages({
               const page = Number.isInteger(initialPage) && initialPage >= 1 && initialPage <= pdf.numPages ? initialPage : 1;
               if (page === 1) onPageSelect?.(1);
               else renderer?.goToPage(page);
+              if (initialFragment?.pageNumber === page && fragments?.restore(initialFragment)) {
+                setSelectionMode(initialFragment.kind);
+              }
             }
           },
           (error) => {
@@ -253,7 +260,7 @@ function PdfPages({
 
       container.replaceChildren();
     };
-  }, [projectId, initialPage, onPageSelect, onFragmentSelect, onTextSourceChange]);
+  }, [projectId, initialPage, initialFragment, onPageSelect, onFragmentSelect, onTextSourceChange]);
 
   return (
     <section
