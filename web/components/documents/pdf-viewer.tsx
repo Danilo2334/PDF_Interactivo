@@ -6,12 +6,16 @@ import { renderVisiblePages } from "@/lib/pdf/render-visible-pages";
 import type { PageRenderer } from "@/lib/pdf/render-visible-pages";
 import { ViewTiming } from "@/components/diagnostics/view-timing";
 import { PdfThumbnails } from "@/components/documents/pdf-thumbnails";
+import { createPageFragments, type PageFragments } from "@/lib/pdf/page-fragments";
+import type { FragmentSelection } from "@/lib/pdf/fragment-selection";
 
 type ViewerProps = {
   projectId: string;
   initialPage?: number;
   onPageSelect?: (number: number | null) => void;
   requestDraft?: ReactNode;
+  onFragmentSelect?: (value: FragmentSelection | null) => void;
+  fragmentResetKey?: number;
 };
 
 type ViewerStatus =
@@ -28,7 +32,7 @@ const viewerMessages = {
   ready: "PDF disponible. Usa los controles o desplázate para consultar sus páginas.",
 };
 
-export function PdfViewer({ projectId, initialPage = 1, onPageSelect, requestDraft }: ViewerProps) {
+export function PdfViewer({ projectId, initialPage = 1, onPageSelect, requestDraft, onFragmentSelect, fragmentResetKey }: ViewerProps) {
   const [attempt, setAttempt] = useState(0);
   // Only restore on mount; changing the selection must not reload the PDF.
   const [startingPage] = useState(initialPage);
@@ -40,6 +44,8 @@ export function PdfViewer({ projectId, initialPage = 1, onPageSelect, requestDra
       initialPage={startingPage}
       onPageSelect={onPageSelect}
       requestDraft={requestDraft}
+      onFragmentSelect={onFragmentSelect}
+      fragmentResetKey={fragmentResetKey}
       onRetry={() => setAttempt((value) => value + 1)}
     />
   );
@@ -50,11 +56,14 @@ function PdfPages({
   initialPage = 1,
   onPageSelect,
   requestDraft,
+  onFragmentSelect,
+  fragmentResetKey,
   onRetry,
 }: ViewerProps & { onRetry: () => void }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const navigationRef = useRef<HTMLDivElement>(null);
   const rendererRef = useRef<PageRenderer | null>(null);
+  const fragmentsRef = useRef<PageFragments | null>(null);
   const pageInputId = useId();
   const [status, setStatus] = useState<ViewerStatus>("downloading");
   const [totalPages, setTotalPages] = useState(0);
@@ -65,6 +74,9 @@ function PdfPages({
   const [pageInput, setPageInput] = useState("1");
   const [pageInputError, setPageInputError] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [selectionMode, setSelectionMode] = useState<"text" | "area">("text");
+  const [hasFragment, setHasFragment] = useState(false);
+  useEffect(() => { fragmentsRef.current?.clear(); }, [fragmentResetKey]);
 
   const isLoading =
     status === "downloading" ||
@@ -159,6 +171,14 @@ function PdfPages({
         setPdfDocument(pdf);
         setStatus("rendering");
 
+        const fragments = onFragmentSelect ? createPageFragments(pdfjs.TextLayer, value => {
+          if (!active) return;
+          setHasFragment(value !== null);
+          if (value) renderer?.goToPage(value.pageNumber);
+          onFragmentSelect(value);
+        }) : null;
+        fragmentsRef.current = fragments;
+
         renderer = renderVisiblePages(
           pdf,
           container!,
@@ -184,6 +204,7 @@ function PdfPages({
             );
             setStatus("error");
             onPageSelect?.(null);
+            fragments?.clear();
 
             void loadingTask?.destroy().catch(() => {});
           },
@@ -192,9 +213,11 @@ function PdfPages({
             setCurrentPage(number);
             setPageInput(String(number));
             setPageInputError("");
+            fragments?.clearOtherPage(number);
             onPageSelect?.(number);
           },
           () => navigationRef.current?.getBoundingClientRect().height ?? 0,
+          fragments?.decorate,
         );
         rendererRef.current = renderer;
       } catch (error) {
@@ -214,6 +237,8 @@ function PdfPages({
       controller.abort();
       rendererRef.current = null;
       renderer?.dispose();
+      fragmentsRef.current?.dispose();
+      fragmentsRef.current = null;
 
       if (loadingTask) {
         void loadingTask.destroy().catch(() => {});
@@ -221,7 +246,7 @@ function PdfPages({
 
       container.replaceChildren();
     };
-  }, [projectId, initialPage, onPageSelect]);
+  }, [projectId, initialPage, onPageSelect, onFragmentSelect]);
 
   return (
     <section
@@ -360,6 +385,18 @@ function PdfPages({
             </div>
           </div>
           {requestDraft}
+          {onFragmentSelect && <div role="group" aria-label="Selección de fragmento" className="mt-3 border-t border-slate-200 pt-3">
+            <div className="flex flex-wrap gap-2">
+              {(["text", "area"] as const).map(mode => <button key={mode} type="button" disabled={status !== "ready"}
+                aria-pressed={selectionMode === mode} onClick={() => { setSelectionMode(mode); fragmentsRef.current?.setMode(mode); }}
+                className={`rounded-lg border px-3 py-2 text-sm font-semibold ${selectionMode === mode ? "border-blue-700 bg-blue-50 text-blue-900" : "border-slate-300 text-slate-700"}`}>
+                {mode === "text" ? "Seleccionar texto" : "Marcar zona"}
+              </button>)}
+              <button type="button" disabled={!hasFragment} onClick={() => fragmentsRef.current?.clear()}
+                className="rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-800 disabled:opacity-50">Cancelar selección</button>
+            </div>
+            <p className="mt-2 text-xs text-slate-600">Selecciona texto o arrastra una zona. En una zona: flechas para mover; Mayús+flechas para cambiar tamaño. Enter crea una zona con teclado.</p>
+          </div>}
           {pageInputError && (
             <p id={`${pageInputId}-error`} role="alert" className="mt-2 text-sm text-red-700">
               {pageInputError}

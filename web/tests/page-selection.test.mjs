@@ -95,3 +95,32 @@ test('Escape closes the draft and reopening retains the selection without replac
   assert.equal(f.find(n => n.type === 'form'), undefined);
   open(); assert.equal(f.find(n => n.type === 'input' && n.props.name === 'pageNumber').props.value, 4);
 });
+
+test('shared fragment follows its page and document and a new document cannot inherit text or coordinates',()=>{
+  const f=fixture('components/documents/project-workspace.tsx','ProjectWorkspace',props);
+  let v=f.find(n=>n.type===viewer);
+  v.props.onPageSelect(3); f.render();v=f.find(n=>n.type===viewer);
+  v.props.onFragmentSelect({kind:'area',pageNumber:3,rect:{x:.1,y:.2,width:.3,height:.4}});f.render();
+  assert.equal(f.find(n=>n.type===draftForm).props.fragment.documentId,props.documentId);
+  f.render({...props,documentId:'another-document'});
+  assert.equal(f.find(n=>n.type===draftForm).props.fragment,null);
+});
+test('clearing the shared draft discards its fragment and tells the viewer to clear temporary marks',()=>{
+  const f=fixture('components/documents/project-workspace.tsx','ProjectWorkspace',props);
+  f.find(n=>n.type===viewer).props.onPageSelect(2); f.render();
+  f.find(n=>n.type===viewer).props.onFragmentSelect({kind:'text',pageNumber:2,text:'Original text',range:{start:0,end:13},rects:[]});f.render();
+  const before=f.find(n=>n.type===viewer).props.fragmentResetKey;
+  f.find(n=>n.type===draftForm).props.onClearSelection();f.render();
+  assert.equal(f.find(n=>n.type===draftForm).props.fragment,null);
+  assert.equal(f.find(n=>n.type===viewer).props.fragmentResetKey,before+1);
+});
+test('draft preview carries selected text and range and becomes empty after cancellation',()=>{
+  const initial={...props,selection:{documentId:props.documentId,pageNumber:2},fragment:{documentId:props.documentId,kind:'text',pageNumber:2,text:'First line\nSecond line',range:{start:0,end:22},rects:[]}};
+  const f=fixture('components/documents/reinforcement-request-draft.tsx','ReinforcementRequestDraft',initial);
+  f.find(n=>n.type==='button').props.onClick();f.render();
+  assert.equal(f.find(n=>n.type==='blockquote').props.children,'First line\nSecond line');
+  assert.ok(f.find(n=>n.type==='input'&&n.props.name==='fragment').props.value.includes('range'));
+  f.render({...initial,fragment:null});
+  assert.equal(f.find(n=>n.type==='blockquote'),undefined);
+  assert.equal(f.find(n=>n.type==='input'&&n.props.name==='fragment').props.value,'');
+});
