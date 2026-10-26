@@ -183,9 +183,9 @@ Actualizado: 25/10/2026. Mantener este único documento al continuar.
   pruebas, sin modificar contraseñas ni datos del usuario: propietarios temporales
   `fc58247b-ff4d-40ee-96bf-f2524e6123c1` y `88b1cfb9-875d-4506-983a-d89c5601a638`.
   Al concluir se eliminaron sus proyectos/archivos y las credenciales locales,
-  y se cerró la sesión del navegador. Ambas cuentas quedaron inactivas y con
-  acceso bloqueado; su purga definitiva falló en el conector. Ver la incidencia
-  administrativa y sus identidades en el cierre conjunto.
+  y se cerró la sesión del navegador. Ambas cuentas se bloquearon inicialmente;
+  tras reconectar Supabase se completó su purga definitiva. Ver las identidades
+  y la comprobación administrativa en el cierre conjunto.
 - Proyecto sintético nuevo `adaf19d4-d3b1-44b0-91e9-2951d5bd1bd1`, nombre
   `SCRUM-173-original`. PDF anterior de 3 páginas: `fe5beddd-a0aa-4898-81e5-39a455033fb6`;
   vigente de 2 páginas: `ff6e1174-4399-433a-9ab8-05950b53a487`.
@@ -299,12 +299,14 @@ Actualizado: 25/10/2026. Mantener este único documento al continuar.
 ### Observaciones y estado para retomar
 
 - Las dos cuentas sintéticas `fc58247b-ff4d-40ee-96bf-f2524e6123c1` y
-  `88b1cfb9-875d-4506-983a-d89c5601a638` quedaron con `is_active=false` y acceso
-  bloqueado en Auth hasta 2036. La purga definitiva por el conector devolvió dos
-  veces `Invalid or expired requestState`; no se confirmó su eliminación.
-  Pendiente administrativo: purgar únicamente esas dos cuentas sintéticas cuando
-  el conector permita completar la operación. No tienen proyectos ni archivos.
-  Se cerró su sesión y se borró `test-accounts.json` fuera del repositorio.
+  `88b1cfb9-875d-4506-983a-d89c5601a638` se bloquearon inicialmente porque el
+  conector devolvía `Invalid or expired requestState`. Tras reconectar Supabase,
+  el 25/10 se completó la purga definitiva con filtro por esos UUID y sus correos
+  sintéticos exactos, además de verificar que no poseían proyectos ni archivos.
+  La consulta posterior confirmó **0 usuarios Auth, 0 identidades, 0 sesiones,
+  0 refresh tokens, 0 perfiles, 0 proyectos, 0 documentos, 0 trabajos de limpieza
+  y 0 archivos** para ambas cuentas. Incidencia administrativa resuelta.
+  Se había cerrado su sesión y borrado `test-accounts.json` fuera del repositorio.
 - Las cargas usaron credenciales temporales nuevas. El script temporal que las
   contenía fue eliminado al finalizar. No se incluyeron tokens en Jira, Git ni
   este documento. Los JPG auténticos se conservan fuera del repo, en los recursos
