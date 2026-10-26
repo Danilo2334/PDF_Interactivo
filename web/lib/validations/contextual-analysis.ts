@@ -20,7 +20,7 @@ export const analysisContextSchema = z.object({
 export type AnalysisContext = z.infer<typeof analysisContextSchema>;
 export const diagnosisSchema = z.object({
   sufficient: z.boolean(), topic: z.string().max(200), concepts: z.array(z.string().min(1).max(120)).max(8),
-  scope: z.string().max(2000), reason: z.string().max(700), quotes: z.array(z.string().min(8).max(500)).max(3),
+  scope: z.string().max(2000), reason: z.string().max(700), quotes: z.array(z.string().trim().min(8).max(500)).max(3),
 }).strict().refine(d => d.sufficient
   ? d.topic.trim().length >= 3 && d.scope.trim().length >= 20 && d.concepts.length > 0 && d.quotes.length > 0 && d.reason === ""
   : d.topic === "" && d.scope === "" && d.concepts.length === 0 && d.quotes.length === 0 && d.reason.trim().length >= 10);
@@ -40,7 +40,7 @@ export function validateDiagnosis(value: unknown, context: AnalysisContext): Con
   const diagnosis = diagnosisSchema.parse(value);
   const normalize = (text: string) => text.normalize("NFC").replace(/\s+/g, " ").trim();
   const sources = [context.selectedText, context.nearbyText].map(normalize);
-  if (diagnosis.sufficient && diagnosis.quotes.some(quote => !sources.some(source => source.includes(normalize(quote)))))
+  if (diagnosis.sufficient && diagnosis.quotes.some(quote => normalize(quote).length < 8 || !sources.some(source => source.includes(normalize(quote)))))
     throw new Error("Diagnosis quotes are not present in the supplied context");
   return diagnosis;
 }

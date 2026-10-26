@@ -61,6 +61,7 @@ test('provider sends minimal document data as untrusted input, with strict outpu
 test('invented quotes, incompatible diagnosis, malformed/incomplete responses and refusals cannot be saved as ready', async () => {
   for (const [reply, code] of [
     [response({ ...diagnosis, quotes: ['Cita totalmente inventada'] }), 'invalid_diagnosis'],
+    [response({ ...diagnosis, quotes: ['        '] }), 'invalid_diagnosis'],
     [response({ ...diagnosis, topic: '' }), 'invalid_diagnosis'],
     [response(diagnosis, { status: 'incomplete' }), 'invalid_diagnosis'],
     [response(diagnosis, { output: [null] }), 'invalid_diagnosis'],

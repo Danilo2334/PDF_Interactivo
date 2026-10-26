@@ -28,7 +28,7 @@ SCRUM-29, SCRUM-91, SCRUM-181 y SCRUM-92 están En curso. Listado, filtros,
 restauración de selección e historial implementados; faltan validación visual y
 la integración de transiciones reales con HU018–HU024. No confundir contrato
 probado en PostgreSQL aislado con resultados reales de IA.
-Orden de revisión/integración: HU014 → HU015 → HU016 → HU017 → HU018, hacia develop
+Orden de revisión/integración: HU014 → HU015 → HU016 → HU017 → HU018 → HU019, hacia develop
 tras ajustar la base de cada PR. HU017 tiene como base provisional la rama HU016.
 No cerrar historias ni sprints mientras falten sus criterios integrados.
 
@@ -42,6 +42,17 @@ validación visual con capturas. No se hizo ninguna llamada de IA real.**
 La base provisional del PR de HU018 es la rama de HU017; integrar primero #21
 (y sus antecesores) y después cambiar su base a develop. No fusionar una
 historia posterior en la rama de una anterior.
+
+HU019 / SCRUM-31 está preparada en `codex/scrum-31-hu019-recomendacion-refuerzo`,
+basada en HU018 (`0c9e078`, [PR #22](https://github.com/Danilo2334/PDF_Interactivo/pull/22)).
+**197/197 pruebas, lint y build correctos.** SCRUM-31, SCRUM-95, SCRUM-183 y
+SCRUM-96 están En curso. Se implementaron recomendaciones estructuradas,
+filtro/orden por tema y dificultad, presentación y elección explícita guardada.
+La migración `20261026230234_reinforcement_recommendations.sql` ya está aplicada.
+**Pendientes: configurar IA, probar su respuesta real, validación visual y capturas.**
+El PR de HU019 debe conservarse en borrador con base provisional HU018; integrar
+primero los antecesores, retargetear a develop y revisar antes de cualquier merge.
+Continuar desde la rama de HU019 para no perder las dependencias pendientes.
 
 ## Contexto proporcionado por el usuario
 
@@ -1173,3 +1184,109 @@ Documentación oficial consultada para el adaptador:
 [Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs),
 [Responses](https://developers.openai.com/api/docs/guides/migrate-to-responses),
 [PDF.js en Node](https://github.com/mozilla/pdf.js/blob/master/examples/node/getinfo.mjs).
+
+## HU019 / SCRUM-31 — avance en la nube del 26/10/2026
+
+La historia y sus tres subtareas se leyeron directamente en Jira. Rama:
+`codex/scrum-31-hu019-recomendacion-refuerzo`, desde HU018 `0c9e078`.
+La base provisional del PR es `codex/scrum-30-hu018-analisis-contextual` (#22).
+No hacer merge en esa rama: integrar los antecesores por orden, actualizar
+la base hacia develop y revisar entonces HU019. No se tocó ningún PC ni el
+stash de casa `d6406e0`.
+
+### Implementación y alcance
+
+- **SCRUM-95:** contrato estricto para explicación, ejemplo, resumen, imagen
+  e interacción. Adaptador de Responses API con salida JSON estructurada,
+  sin persistencia del proveedor, límite temporal y respuestas controladas
+  ante rechazo, formato inválido, interrupción o servicio no configurado.
+  Usa el diagnóstico suficiente de HU018; no fabrica alternativas locales.
+- **SCRUM-183:** cada candidato se contrasta con el tema/conceptos, una cita
+  del fragmento o página y otra de la dificultad. Solo pasan candidatos
+  pertinentes en ambos ejes (valor ordinal 2 o 3). Orden: suma de pertinencia,
+  dificultad y orden estable del catálogo como desempate. Las puntuaciones
+  no representan probabilidades ni garantizan calidad pedagógica; esa calidad
+  debe revisarse con un proveedor real. No se fuerzan los cinco formatos.
+- **SCRUM-96:** panel de opciones ordenadas, justificación breve y selección
+  por radio sin preselección. Guardado explícito de tipo y razón en la solicitud;
+  el servidor copia la razón persistida, nunca la enviada por el navegador.
+  El control de versión impide sobrescribir otra elección desde una pestaña
+  antigua. Un reintento idéntico devuelve el recibo ya guardado.
+- La elección mantiene `pending/choosing`. No genera contenido, no aprueba
+  automáticamente y no modifica el PDF original. HU020 y las historias
+  posteriores deben utilizar la elección persistida y la versión del documento.
+- La extracción de autorización/JSON acotado a `request-service.ts` se comparte
+  con HU018 y conserva sus comprobaciones. Se corrigió además en SCRUM-182
+  el rechazo de citas formadas solo por espacios, con prueba de regresión.
+
+### Persistencia y seguridad
+
+Migración **ya aplicada**: `20261026230234_reinforcement_recommendations.sql`.
+No volver a ejecutarla manualmente ni aplicar otra copia con distinto nombre.
+Las tablas `reinforcement_recommendations` y `reinforcement_recommendation_runs`
+son privadas por propietario con RLS, SELECT autenticado y sin escritura directa
+ni lectura anónima. Las RPC públicas usan SECURITY INVOKER y rechazan anon.
+Las transacciones privadas verifican sesión/rol activo, propiedad, documento
+actual, diagnóstico e intento. El resultado del proveedor exige la firma de
+servidor HU016 con dominio `reinforcement-recommendations`; no usa service_role.
+Lease de 120 segundos, llamada con límite de 45 segundos, máximo dos intentos
+activos y diez inicios reales en cinco minutos por cuenta. Repetir un resultado
+listo o un intento activo no inicia otra llamada. Los resultados tardíos o de un
+PDF reemplazado se rechazan antes de guardar. La eliminación elimina los hijos.
+
+Campos para HU020: `recommended_type`, `recommendation_reason`,
+`recommendation_attempt_id`, `recommendation_selected_at`,
+`recommendation_selected_by`, `recommendation_choice_version` en
+`reinforcement_requests`. Una vez iniciada la generación no se permite otra
+selección; el reintento de una elección idéntica sigue siendo idempotente.
+
+API: GET/POST
+`/api/projects/[projectId]/reinforcement-requests/[requestId]/recommendations`.
+GET recibe `documentId`. POST acepta `action: "recommend"` o `action: "choose"`.
+La elección también requiere `attemptId`, `type`, `expectedVersion`.
+Origen ajeno → 403, sin sesión → 401, cambio concurrente/documento → 409,
+cuota → 429, configuración/infraestructura no disponible → 503.
+
+### Verificación efectuada
+
+- Suite completa: **197/197**, con 24 pruebas nuevas que incluyen PostgreSQL
+  aislado (PGlite), API/proveedor simulados y renderizado HTML del formulario.
+- Lint y build de producción, incluido TypeScript, correctos.
+- Servidor de producción en la nube: login 200, GET/POST anónimos 401 y POST
+  de otro origen 403. No hubo llamadas reales al proveedor ni sesiones de prueba
+  creadas en producción; los datos de prueba de base de datos fueron aislados.
+- Metadatos del Supabase real: RLS activa en ambas tablas, escritura directa
+  autenticada denegada, lectura y RPC anónimas denegadas. El asesor de seguridad
+  no añadió hallazgos sobre HU019; persisten los avisos anteriores documentados
+  en HU018. No se cambiaron políticas o funciones ajenas a esta historia.
+
+### Pendientes para Codex de escritorio
+
+1. Conservar los cambios locales y `d6406e0`. Traer esta rama tras revisar el
+   estado de Git, sin reset forzado ni merge automático de los PR apilados.
+2. Configurar de forma segura las variables **de servidor** `OPENAI_API_KEY` y
+   `OPENAI_ANALYSIS_MODEL` descritas en HU018. Reutilizar
+   `REINFORCEMENT_REQUEST_SECRET`; nunca publicarlo ni añadir NEXT_PUBLIC a esos
+   secretos. La nube no tenía clave ni modelo configurados y no consumió IA.
+3. Iniciar sesión personalmente, abrir un PDF propio, registrar una solicitud
+   con fragmento y dificultad concretos y completar un diagnóstico suficiente
+   de HU018. Abrir el detalle y pulsar «Obtener recomendaciones».
+4. Comprobar opciones justificadas y ordenadas, sin selección automática.
+   La explicación debe guardar relación real con el tema y la dificultad;
+   no afirmar que un tipo siempre debe aparecer. Si el contexto no basta,
+   debe impedirse la recomendación; si ninguna aporta, debe avisarlo.
+5. Seleccionar una opción y «Guardar elección». Recargar o volver al proyecto:
+   tipo y justificación deben seguir guardados. La solicitud sigue pendiente
+   de generación y el PDF original conserva su contenido.
+6. Con dos pestañas, guardar una opción en A y otra en B antes de que B recargue
+   su versión. B debe recibir conflicto o actualizar sus opciones sin pisar A.
+   Volver a seleccionar tras actualizar debe funcionar mientras no se genere.
+   Verificar también otra cuenta y una sesión cerrada, además de escritorio/móvil.
+7. Adjuntar solo capturas auténticas y un único comentario breve por subtarea,
+   preservando las evidencias anteriores. Solo entonces cerrar lo que esté
+   efectivamente aprobado. SCRUM-31/95/183/96 permanecen En curso; no hay
+   evidencias visuales nuevas de esta implementación en la nube.
+
+La implementación y las pruebas automatizadas están preparadas. Las capturas,
+la autenticación de prueba real y la calidad de recomendaciones reales todavía
+no están verificadas. No presentar mocks como respuestas del proveedor.

@@ -21,7 +21,12 @@ function fixture(options = {}) {
       : { data: { disposition: 'saved', analysis: { ...analysis, status: input.status, attempt_id: input.attemptId,
         context: input.context, diagnosis: input.diagnosis, model: input.model, error_code: input.errorCode, finished_at: new Date().toISOString() } } };
   } };
+  const requestService = load('lib/reinforcements/request-service.ts', {
+    '@/lib/auth/access': { checkPermission: async () => options.access ?? { ok: true, userId: owner } },
+    '@/lib/supabase/server': { createClient: async () => client }, '@/lib/validations/request-list': requestSchemas,
+  });
   const service = load('lib/reinforcements/run-analysis.ts', {
+    '@/lib/reinforcements/request-service': requestService,
     '@/lib/auth/access': { checkPermission: async () => options.access ?? { ok: true, userId: owner } },
     '@/lib/supabase/server': { createClient: async () => client }, '@/lib/documents/mutation-request': load('lib/documents/mutation-request.ts'),
     '@/lib/validations/request-list': requestSchemas, '@/lib/validations/contextual-analysis': schemas,
