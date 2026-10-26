@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { runInNewContext } from 'node:vm';
 import ts from 'typescript';
 import { PDFDocument } from 'pdf-lib';
+import { validation as requestValidation, submission as requestSubmission } from './reinforcement-test-helpers.mjs';
 
 const require = createRequire(import.meta.url);
 function load(relative, dependencies) {
@@ -148,6 +149,8 @@ test('changing PDF identity remounts the viewer even when the project ID stays t
     '@/lib/validations/difficulty': difficultyValidation,
     '@/lib/pdf/extract-selection-text': load('lib/pdf/extract-selection-text.ts', {}),
     '@/lib/pdf/selection-text-draft': load('lib/pdf/selection-text-draft.ts', {}),
+    '@/lib/validations/reinforcement-request': requestValidation,
+    '@/lib/reinforcements/submission': requestSubmission,
   });
   function find(node) {
     if (!node || typeof node !== 'object') return null;

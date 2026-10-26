@@ -4,19 +4,22 @@ import { useEffect, useId, useRef, useState } from "react";
 import type { DocumentFragmentSelection } from "@/lib/pdf/fragment-selection";
 import type { SelectionTextDraft } from "@/lib/pdf/selection-text-draft";
 import { SelectionTextEditor } from "@/components/documents/selection-text-editor";
+import { ReinforcementSubmit } from "@/components/documents/reinforcement-submit";
+import type { SubmissionState } from "@/lib/reinforcements/submission";
 import { DIFFICULTY_CATEGORIES, DIFFICULTY_MIN_LENGTH, DIFFICULTY_MAX_LENGTH, EMPTY_DIFFICULTY_INPUT, validateDifficulty, type DifficultyDraft, type DifficultyInput } from "@/lib/validations/difficulty";
 
 export type PageSelection = { documentId: string; pageNumber: number };
 
 export function ReinforcementRequestDraft({ documentId, documentName, selection, fragment, onClearSelection,
   difficultyInput = EMPTY_DIFFICULTY_INPUT, difficultyDraft, onDifficultyChange, onConfirmDifficulty,
-  selectionText, onExtractText, onTextChange, onConfirmText }: {
+  selectionText, onExtractText, onTextChange, onConfirmText, submission, missing, onSend, onResetRequest }: {
   documentId: string; documentName: string; selection: PageSelection | null;
   fragment?: DocumentFragmentSelection | null; onClearSelection?: () => void;
   difficultyInput?: DifficultyInput; difficultyDraft?: DifficultyDraft | null;
   onDifficultyChange?: (value: DifficultyInput) => void; onConfirmDifficulty?: () => void;
   selectionText?: SelectionTextDraft | null; onExtractText?: () => void;
   onTextChange?: (text: string) => void; onConfirmText?: () => void;
+  submission?: SubmissionState; missing?: string[]; onSend?: () => void; onResetRequest?: () => void;
 }) {
   const id = useId();
   const [open, setOpen] = useState(false);
@@ -49,7 +52,7 @@ export function ReinforcementRequestDraft({ documentId, documentName, selection,
       if (page && validation.success) onConfirmDifficulty?.();
     }}
       className="mt-4 space-y-3" data-document-id={documentId} data-page-number={page ?? ""}>
-      <h3 id={`${id}-title`} className="text-lg font-semibold text-slate-900">Solicitud de refuerzo — borrador</h3>
+      <h3 id={`${id}-title`} className="text-lg font-semibold text-slate-900">Solicitud de refuerzo</h3>
       <input type="hidden" name="documentId" value={documentId} />
       <input type="hidden" name="fragment" value={currentFragment ? JSON.stringify(currentFragment) : ""} />
       <input type="hidden" name="difficulty" value={confirmed ? JSON.stringify(confirmed) : ""} />
@@ -95,7 +98,8 @@ export function ReinforcementRequestDraft({ documentId, documentName, selection,
         <p>Página {confirmed.pageNumber} · {DIFFICULTY_CATEGORIES.find(item => item.value === confirmed.category)?.label} · {confirmed.fragment ? confirmed.fragment.kind === "text" ? "Texto seleccionado" : "Zona seleccionada" : "Página completa"}</p>
         <p className="mt-1 whitespace-pre-wrap break-words">{confirmed.observation}</p>
       </section>}
-      <p className="text-sm text-slate-700">Este borrador es temporal y todavía no se ha enviado. Se conserva al cerrar y reabrir el formulario; al recargar o salir del proyecto se descarta.</p>
+      {submission && onSend && onResetRequest && <ReinforcementSubmit state={submission} missing={missing ?? []} onSend={onSend} onReset={onResetRequest} />}
+      <p className="text-sm text-slate-700">Los cambios sin enviar son temporales: se conservan al cerrar el formulario y se descartan al recargar o salir del proyecto. Una solicitud confirmada queda guardada.</p>
       <button type="button" autoFocus onClick={() => setOpen(false)}
         className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-800">Cerrar borrador</button>
     </form>}

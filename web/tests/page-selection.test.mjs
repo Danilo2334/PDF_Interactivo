@@ -4,6 +4,7 @@ import { createRequire } from 'node:module';
 import test from 'node:test';
 import { runInNewContext } from 'node:vm';
 import ts from 'typescript';
+import { validation as requestValidation, submission as requestSubmission } from './reinforcement-test-helpers.mjs';
 
 const require = createRequire(import.meta.url);
 const viewer = () => null, draftForm = () => null;
@@ -52,6 +53,9 @@ function fixture(path, exportedName, initialProps) {
     if (name === '@/lib/pdf/selection-text-draft') return textDraft;
     if (name === '@/lib/pdf/extract-selection-text') return textExtraction;
     if (name === '@/components/documents/selection-text-editor') return { SelectionTextEditor: textEditor };
+    if (name === '@/components/documents/reinforcement-submit') return { ReinforcementSubmit: () => null };
+    if (name === '@/lib/validations/reinforcement-request') return requestValidation;
+    if (name === '@/lib/reinforcements/submission') return requestSubmission;
     throw Error(`Unexpected dependency ${name}`);
   } });
   function nodes(node) {
