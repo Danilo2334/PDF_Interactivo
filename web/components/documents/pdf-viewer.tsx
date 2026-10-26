@@ -16,6 +16,7 @@ type ViewerProps = {
   requestDraft?: ReactNode;
   onFragmentSelect?: (value: FragmentSelection | null) => void;
   fragmentResetKey?: number;
+  onTextSourceChange?: (pdf: PDFDocumentProxy | null) => void;
 };
 
 type ViewerStatus =
@@ -32,7 +33,7 @@ const viewerMessages = {
   ready: "PDF disponible. Usa los controles o desplázate para consultar sus páginas.",
 };
 
-export function PdfViewer({ projectId, initialPage = 1, onPageSelect, requestDraft, onFragmentSelect, fragmentResetKey }: ViewerProps) {
+export function PdfViewer({ projectId, initialPage = 1, onPageSelect, requestDraft, onFragmentSelect, fragmentResetKey, onTextSourceChange }: ViewerProps) {
   const [attempt, setAttempt] = useState(0);
   // Only restore on mount; changing the selection must not reload the PDF.
   const [startingPage] = useState(initialPage);
@@ -46,6 +47,7 @@ export function PdfViewer({ projectId, initialPage = 1, onPageSelect, requestDra
       requestDraft={requestDraft}
       onFragmentSelect={onFragmentSelect}
       fragmentResetKey={fragmentResetKey}
+      onTextSourceChange={onTextSourceChange}
       onRetry={() => setAttempt((value) => value + 1)}
     />
   );
@@ -58,6 +60,7 @@ function PdfPages({
   requestDraft,
   onFragmentSelect,
   fragmentResetKey,
+  onTextSourceChange,
   onRetry,
 }: ViewerProps & { onRetry: () => void }) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -169,6 +172,7 @@ function PdfPages({
 
         setTotalPages(pdf.numPages);
         setPdfDocument(pdf);
+        onTextSourceChange?.(pdf);
         setStatus("rendering");
 
         const fragments = onFragmentSelect ? createPageFragments(pdfjs.TextLayer, value => {
@@ -204,6 +208,7 @@ function PdfPages({
             );
             setStatus("error");
             onPageSelect?.(null);
+            onTextSourceChange?.(null);
             fragments?.clear();
 
             void loadingTask?.destroy().catch(() => {});
@@ -227,6 +232,7 @@ function PdfPages({
         setErrorMessage(failureMessage);
         setStatus("error");
         onPageSelect?.(null);
+        onTextSourceChange?.(null);
       }
     }
 
@@ -235,6 +241,7 @@ function PdfPages({
     return () => {
       active = false;
       controller.abort();
+      onTextSourceChange?.(null);
       rendererRef.current = null;
       renderer?.dispose();
       fragmentsRef.current?.dispose();
@@ -246,7 +253,7 @@ function PdfPages({
 
       container.replaceChildren();
     };
-  }, [projectId, initialPage, onPageSelect, onFragmentSelect]);
+  }, [projectId, initialPage, onPageSelect, onFragmentSelect, onTextSourceChange]);
 
   return (
     <section

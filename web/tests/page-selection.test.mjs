@@ -12,11 +12,22 @@ const difficultyCode = ts.transpileModule(readFileSync(new URL('../lib/validatio
 }).outputText;
 const difficulty = {};
 runInNewContext(difficultyCode, { exports: difficulty, structuredClone });
+function loadTextModule(path) {
+  const exports = {};
+  const { outputText } = ts.transpileModule(readFileSync(new URL(`../lib/pdf/${path}.ts`, import.meta.url), 'utf8'), {
+    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
+  });
+  runInNewContext(outputText, { exports, structuredClone });
+  return exports;
+}
+const textDraft = loadTextModule('selection-text-draft');
+const textExtraction = loadTextModule('extract-selection-text');
+const textEditor = () => null;
 function fixture(path, exportedName, initialProps) {
-  const states = [], callbacks = []; let cursor = 0, callbackCursor = 0, props = initialProps, tree;
+  const states = [], callbacks = [], refs = []; let cursor = 0, callbackCursor = 0, refCursor = 0, props = initialProps, tree;
   const react = {
     useId: () => 'draft-page',
-    useRef: () => ({ current: null }),
+    useRef(initial) { const index = refCursor++; return refs[index] ??= { current: initial }; },
     useEffect: () => {},
     useState(initial) {
       const index = cursor++; if (!(index in states)) states[index] = initial;
@@ -38,13 +49,16 @@ function fixture(path, exportedName, initialProps) {
     if (name === '@/components/documents/pdf-viewer') return { PdfViewer: viewer };
     if (name === '@/components/documents/reinforcement-request-draft') return { ReinforcementRequestDraft: draftForm };
     if (name === '@/lib/validations/difficulty') return difficulty;
+    if (name === '@/lib/pdf/selection-text-draft') return textDraft;
+    if (name === '@/lib/pdf/extract-selection-text') return textExtraction;
+    if (name === '@/components/documents/selection-text-editor') return { SelectionTextEditor: textEditor };
     throw Error(`Unexpected dependency ${name}`);
   } });
   function nodes(node) {
     if (!node || typeof node !== 'object') return [];
     return [node, ...[node.props?.children, node.props?.requestDraft].flat(Infinity).flatMap(nodes)];
   }
-  const render = (nextProps = props) => { props = nextProps; cursor = 0; callbackCursor = 0; tree = exports[exportedName](props); };
+  const render = (nextProps = props) => { props = nextProps; cursor = 0; callbackCursor = 0; refCursor = 0; tree = exports[exportedName](props); };
   render();
   return { render, find: predicate => nodes(tree).find(predicate), get props() { return props; } };
 }
@@ -217,4 +231,90 @@ test('the draft payload includes the document, page and selected fragment and re
   assert.equal(f.find(n=>n.type==='input'&&n.props.name==='difficulty').props.value,'');
   f.render({...initial,documentId:'another-document'});
   assert.equal(f.find(n=>n.type==='input'&&n.props.name==='difficulty').props.value,'');
+});
+
+test('extracted native text can be edited and confirmed in the shared workspace without changing the fragment', async () => {
+  const f = fixture('components/documents/project-workspace.tsx', 'ProjectWorkspace', props);
+  const v = () => f.find(n => n.type === viewer).props;
+  const form = () => f.find(n => n.type === draftForm).props;
+  const sourceCallback = v().onTextSourceChange;
+  v().onPageSelect(2); f.render();
+  const fragment = { kind: 'text', pageNumber: 2, text: 'Texto original', range: { start: 0, end: 14 }, rects: [] };
+  v().onFragmentSelect(fragment); f.render();
+  await form().onExtractText(); f.render();
+  assert.equal(form().selectionText.text, 'Texto original');
+  form().onTextChange('  Texto corregido\nSegunda línea.  '); f.render();
+  form().onConfirmText(); f.render();
+  assert.equal(form().selectionText.text, 'Texto corregido\nSegunda línea.');
+  assert.equal(form().selectionText.confirmed, true);
+  assert.equal(form().fragment.text, 'Texto original');
+  assert.equal(v().onTextSourceChange, sourceCallback);
+  // Selecting the same range again must not destroy an already edited draft.
+  v().onFragmentSelect(fragment); f.render();
+  assert.equal(form().selectionText.confirmed, true);
+  f.find(n => n.type === 'button' && n.props.children === 'Refuerzos').props.onClick(); f.render();
+  f.find(n => n.type === 'button' && n.props.children === 'PDF original').props.onClick(); f.render();
+  assert.equal(form().selectionText.text, 'Texto corregido\nSegunda línea.');
+  form().onTextChange('Otra corrección'); f.render();
+  assert.equal(form().selectionText.confirmed, false);
+  v().onPageSelect(3); f.render(); assert.equal(form().selectionText, null);
+  v().onPageSelect(2); f.render(); assert.equal(form().selectionText, null);
+});
+
+test('an obsolete async extraction cannot overwrite manual input, a new zone or another document', async () => {
+  const f = fixture('components/documents/project-workspace.tsx', 'ProjectWorkspace', props);
+  const v = () => f.find(n => n.type === viewer).props;
+  const form = () => f.find(n => n.type === draftForm).props;
+  let finish;
+  v().onTextSourceChange({ numPages: 3, getPage: () => new Promise(resolve => { finish = resolve; }) });
+  v().onPageSelect(2); f.render();
+  const pending = form().onExtractText(); f.render();
+  form().onTextChange('Escrito mientras se extrae'); f.render();
+  finish({ getTextContent: async () => ({ items: [], styles: {} }), getViewport: () => ({}) });
+  await pending; f.render();
+  assert.equal(form().selectionText.text, 'Escrito mientras se extrae');
+  form().onConfirmText(); f.render(); assert.equal(form().selectionText.source, 'manual');
+  v().onFragmentSelect({ kind: 'area', pageNumber: 2, rect: { x: 0, y: 0, width: .4, height: .2 } }); f.render();
+  assert.equal(form().selectionText, null);
+  const anotherPending = form().onExtractText(); f.render();
+  v().onPageSelect(3); f.render();
+  finish({ getTextContent: async () => { throw Error('unreadable'); } });
+  await anotherPending; f.render(); assert.equal(form().selectionText, null);
+  form().onTextChange('Texto de la página 3'); f.render();
+  f.render({ ...props, documentId: 'document-b' });
+  assert.equal(form().selectionText, null);
+});
+
+test('failed extraction preserves the zone, supports manual confirmation and clearing removes the content', async () => {
+  const f = fixture('components/documents/project-workspace.tsx', 'ProjectWorkspace', props);
+  const v = () => f.find(n => n.type === viewer).props;
+  const form = () => f.find(n => n.type === draftForm).props;
+  v().onPageSelect(2); f.render();
+  v().onFragmentSelect({ kind: 'area', pageNumber: 2, rect: { x: .1, y: .2, width: .3, height: .4 } }); f.render();
+  await form().onExtractText(); f.render();
+  assert.equal(form().selectionText.status, 'error');
+  assert.equal(form().fragment.rect.x, .1);
+  form().onTextChange('Transcripción de la zona escaneada.'); f.render();
+  form().onConfirmText(); f.render();
+  assert.equal(form().selectionText.documentId, props.documentId);
+  assert.equal(form().selectionText.pageNumber, 2);
+  assert.equal(form().selectionText.fragment.rect.width, .3);
+  assert.equal(form().selectionText.confirmed, true);
+  form().onClearSelection(); f.render(); assert.equal(form().selectionText, null);
+});
+
+test('the real text editor disables empty confirmation and serializes only a confirmed snapshot', () => {
+  const context = { documentId: props.documentId, pageNumber: 2, fragment: null };
+  const initial = { draft: null, hasPage: true, onExtract() {}, onChange() {}, onConfirm() {} };
+  const f = fixture('components/documents/selection-text-editor.tsx', 'SelectionTextEditor', initial);
+  const confirmation = () => f.find(n => n.type === 'button' && n.props.children === 'Confirmar texto en borrador');
+  assert.equal(confirmation().props.disabled, true);
+  const draft = textDraft.editSelectionText(context, null, 'Texto manual.');
+  f.render({ ...initial, draft });
+  assert.equal(confirmation().props.disabled, false);
+  assert.equal(f.find(n => n.type === 'input').props.value, '');
+  f.render({ ...initial, draft: textDraft.confirmSelectionText(draft) });
+  const saved = JSON.parse(f.find(n => n.type === 'input').props.value);
+  assert.equal(saved.text, 'Texto manual.'); assert.equal(saved.source, 'manual');
+  assert.equal(saved.documentId, context.documentId); assert.equal(saved.pageNumber, 2);
 });

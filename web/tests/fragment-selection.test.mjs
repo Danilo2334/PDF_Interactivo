@@ -57,7 +57,7 @@ test('cross-page, collapsed and whitespace selections cannot leak a foreign rang
   }
 });
 
-function controllerFixture(){
+function controllerFixture({ failRead = false, failRender = false } = {}){
   class Element{
     children=[];dataset={};style={setProperty(){}};attributes={};captures=new Set();
     append(...children){for(const child of children){child.parent=this;this.children.push(child);}}
@@ -71,14 +71,14 @@ function controllerFixture(){
     focus(){}
   }
   const listeners=new Map(),changes=[],cancelled=[];let cleared=0;
-  class TextLayer{constructor({container}){this.container=container;}async render(){}cancel(){cancelled.push(this);}}
+  class TextLayer{constructor({container}){this.container=container;}async render(){if(failRender)throw Error('text render unavailable');}cancel(){cancelled.push(this);}}
   const {createPageFragments}=load('lib/pdf/page-fragments.ts',{'./fragment-selection':math},{
     document:{createElement:()=>new Element(),addEventListener:(n,f)=>listeners.set(n,f),removeEventListener:n=>listeners.delete(n)},
     window:{getSelection:()=>({removeAllRanges(){cleared++;}})},
   });
   const controller=createPageFragments(TextLayer,value=>changes.push(value));const body=new Element();
   const event=(x,y,target=new Element())=>({button:0,pointerId:1,clientX:x,clientY:y,target,preventDefault(){}});
-  return {controller,body,changes,listeners,cancelled,event,get cleared(){return cleared;},async ready(){await controller.decorate({pageNumber:2,getTextContent:async()=>({items:[]})},body,{scale:1});return body.children[1];}};
+  return {controller,body,changes,listeners,cancelled,event,get cleared(){return cleared;},async ready(){await controller.decorate({pageNumber:2,getTextContent:async()=>{if(failRead)throw Error('unreadable text');return {items:[]};}},body,{scale:1});return body.children[1];}};
 }
 test('a real controller gesture draws, moves and resizes one area then cancellation removes temporary data',async()=>{
   const f=controllerFixture(),surface=await f.ready();f.controller.setMode('area');
@@ -100,4 +100,15 @@ test('keyboard area creation, correction and changing page obey the same single-
   key('ArrowRight');assert.equal(f.changes.at(-1).rect.x,.26);
   key('ArrowDown',true);assert.equal(f.changes.at(-1).rect.height,.26);
   f.controller.clearOtherPage(3);assert.equal(f.changes.at(-1),null);f.controller.dispose();
+});
+test('a text read/render failure keeps the page and area selection available for manual transcription', async () => {
+  for (const options of [{ failRead: true }, { failRender: true }]) {
+    const f = controllerFixture(options), surface = await f.ready();
+    assert.equal(f.body.children[0].dataset.textUnavailable, 'true');
+    f.controller.setMode('area');
+    surface.onkeydown({ key: 'Enter', target: surface, preventDefault() {} });
+    assert.equal(f.changes.at(-1).kind, 'area');
+    assert.equal(f.changes.at(-1).pageNumber, 2);
+    f.controller.dispose(); assert.equal(f.listeners.size, 0);
+  }
 });

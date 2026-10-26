@@ -58,12 +58,19 @@ export function createPageFragments(TextLayer: typeof PdfTextLayer, onSelect: (v
       body.style.position = "relative";
       body.style.setProperty("--total-scale-factor", String(viewport.scale));
       surface.append(marks); body.append(layer, surface);
-      const textLayer = new TextLayer({ textContentSource: await page.getTextContent(), container: layer, viewport });
-      layers.add(textLayer);
-      try { await textLayer.render(); } catch (error) {
-        textLayer.cancel(); layers.delete(textLayer); layer.remove(); surface.remove(); throw error;
+      let textLayer: PdfTextLayer | null = null;
+      try {
+        textLayer = new TextLayer({ textContentSource: await page.getTextContent(), container: layer, viewport });
+        layers.add(textLayer);
+        await textLayer.render();
+      } catch {
+        if (textLayer) { textLayer.cancel(); layers.delete(textLayer); }
+        textLayer = null;
+        layer.replaceChildren();
+        // An unreadable text layer must not remove the PDF, its area tools or the manual fallback.
+        layer.dataset.textUnavailable = "true";
       }
-      if (disposed) { textLayer.cancel(); layers.delete(textLayer); layer.remove(); surface.remove(); return () => {}; }
+      if (disposed) { if (textLayer) { textLayer.cancel(); layers.delete(textLayer); } layer.remove(); surface.remove(); return () => {}; }
       pages.set(page.pageNumber, { layer, surface, marks }); paint();
       surface.onpointerdown = event => {
         if (mode !== "area" || event.button !== 0) return;
@@ -102,7 +109,7 @@ export function createPageFragments(TextLayer: typeof PdfTextLayer, onSelect: (v
         emit({ kind: "area", pageNumber: page.pageNumber, rect: resize ? resizeRect(own, dx, dy) : moveRect(own, dx, dy) });
         marks.querySelector<HTMLElement>(resize ? "[data-resize-handle]" : "[data-selected-zone]")?.focus({ preventScroll: true });
       };
-      return () => { if (drag?.page === page.pageNumber) drag = null; pages.delete(page.pageNumber); textLayer.cancel(); layers.delete(textLayer); layer.remove(); surface.remove(); };
+      return () => { if (drag?.page === page.pageNumber) drag = null; pages.delete(page.pageNumber); if (textLayer) { textLayer.cancel(); layers.delete(textLayer); } layer.remove(); surface.remove(); };
     },
     dispose() { disposed = true; document.removeEventListener("pointerup", captureText); document.removeEventListener("keyup", captureText); for (const layer of layers) layer.cancel(); layers.clear(); pages.clear(); drag = null; selected = null; },
   };
