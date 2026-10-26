@@ -72,4 +72,3 @@ if(mode==='check'){
  console.log('PASS: both disposable projects and documents deleted through the confirmed application API.');
 }
 await owner.client.auth.signOut({ scope: 'local' });
-
