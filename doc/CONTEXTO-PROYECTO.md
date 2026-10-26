@@ -15,7 +15,10 @@ Actualizado: 25/10/2026. Mantener este único documento al continuar.
 - Una rama por historia, commits asociados a tareas y PR hacia `develop`.
   El 25/10 el usuario aprobó integrar el PR #14, finalizar HU010 e iniciar la
   primera subtarea real de HU011 desde develop actualizado. Conservar el stash
-  de autenticación sin aplicarlo ni eliminarlo. No avanzar más allá de SCRUM-79.
+  de autenticación sin aplicarlo ni eliminarlo. El límite inicial de SCRUM-79 se
+  amplió después: el usuario autorizó avanzar las subtareas pendientes de HU011,
+  probar, documentar, actualizar Jira, hacer commits/push y preparar PR mientras
+  está ausente. No se ha autorizado ni realizado el merge de HU011.
 - En Jira: conservar las capturas y un único comentario breve por subtarea;
   editarlo preservando imágenes si hace falta. No duplicar evidencias ni crear
   informes adicionales. El usuario introduce sus credenciales personalmente.
@@ -95,12 +98,13 @@ Actualizado: 25/10/2026. Mantener este único documento al continuar.
 ## HU011: SCRUM-79 finalizado
 
 - Rama `feature/scrum-23-hu011-actualizacion-eliminacion-documentos`, creada desde
-  develop actualizado en `407d57b`. HU011 / SCRUM-23 sigue «En curso»;
-  SCRUM-79 está «Finalizado» desde el 25/10, con sus criterios marcados y evidencias.
+  develop actualizado en `407d57b`. SCRUM-79 está «Finalizado» desde el 25/10,
+  con criterios y evidencias. HU011 / SCRUM-23 también quedó «Finalizado» al
+  concluir las demás subtareas; ver el cierre conjunto al final del documento.
 - Subtareas leídas en Jira: SCRUM-79 (nombre), SCRUM-173 (reemplazo), SCRUM-174
   (eliminación confirmada), SCRUM-175 (accesos), SCRUM-144 (limpieza de datos) y
   SCRUM-80 (pruebas conjuntas). SCRUM-144 se integra antes de SCRUM-80 y comparte
-  la operación de eliminación de SCRUM-174. Solo se está implementando SCRUM-79.
+  la operación de eliminación de SCRUM-174.
 - Se añadió edición del título actual en listado y proyecto mediante
   `web/components/documents/rename-document-form.tsx`. La acción
   `web/app/actions/rename-document.ts` exige `documents.manage.own`, valida UUID
@@ -114,7 +118,8 @@ Actualizado: 25/10/2026. Mantener este único documento al continuar.
 - 25/10: 42/42 pruebas automatizadas aprobadas; lint, build/TypeScript y
   git diff --check correctos. Commit funcional local `27300a6`
   (`27300a621f064ab0a7ab127cca763396a74f86d7`):
-  «SCRUM-79 feat: permitir renombrar documentos propios». Sin push ni merge.
+  «SCRUM-79 feat: permitir renombrar documentos propios». En ese cierre inicial
+  no se había hecho push; después se subió con la entrega conjunta. Sin merge.
 - Pruebas reales ejecutadas el 25/10 en el navegador integrado de la aplicación,
   con inicio de sesión personal confirmado por el usuario y Supabase real.
   Se reutilizó localhost:3000. Se usó solamente el proyecto sintético de 16 páginas
@@ -126,7 +131,7 @@ Actualizado: 25/10/2026. Mantener este único documento al continuar.
   `2026-10-25T18:16:32.601047+00:00` durante la prueba del listado.
   También se renombró desde el proyecto manteniendo el visor listo, zoom 125 %
   y miniaturas abiertas. El nombre del archivo original se conservó.
-  No se probaron otras cuentas.
+  En esta primera fase no se probaron otras cuentas; se verificaron en SCRUM-80.
 - Desconexión/reintento aprobados el 25/10: proxy temporal de pruebas enlazado
   solo a loopback, `localhost:3001` → servidor existente `localhost:3000`.
   Se cortó el socket del POST de renombrado del proyecto sintético antes de
@@ -154,8 +159,165 @@ Actualizado: 25/10/2026. Mantener este único documento al continuar.
   El proxy quedó detenido; el navegador volvió al proyecto en localhost:3000 y el
   servidor original sigue activo. Los recursos temporales están fuera del repo,
   en la carpeta de visualizaciones de esta sesión; no se incluyeron en el commit.
-- Entrega detenida en SCRUM-79. No se inició otra subtarea ni se hizo merge.
+- La entrega inicial se detuvo en SCRUM-79; posteriormente el usuario amplió
+  el alcance y se retomaron las subtareas siguientes. No se hizo merge.
   Este documento registra la entrega en un commit de documentación adicional.
   Mantener sin aplicar ni eliminar el stash `d6406e0`, dejar VS Code y el servidor
   abiertos. No guardar tokens de carga en comentarios, documentos ni resúmenes;
   para las nuevas evidencias se prepararon credenciales temporales nuevas.
+
+## HU011: continuación autorizada y SCRUM-173
+
+- Supabase conectado: proyecto `zqodybtzssvqozrckfgw`, coincidente con el entorno
+  local. Se inspeccionaron tablas, políticas y funciones antes de la migración.
+  La lista remota de migraciones previas estaba vacía aunque el esquema existía.
+- SCRUM-173 «Finalizado»: commit `661ca04`, 52/52 pruebas, lint y build/TypeScript
+  correctos. La migración `add_project_document_versions` se aplicó al proyecto;
+  su fuente está en `supabase/migrations/20261025190000_add_project_document_versions.sql`.
+  La RPC exige propietario activo con permiso, bloquea la fila del proyecto,
+  compara la identidad vigente y registra documentos/versiones en una transacción
+  posterior al almacenamiento. El visor se monta de nuevo cuando cambia el PDF.
+  Los errores de resultado ambiguo no eliminan un archivo que pudiera haberse
+  convertido ya en la versión vigente.
+- La sesión personal anterior expiró. Se crearon dos cuentas sintéticas para las
+  pruebas, sin modificar contraseñas ni datos del usuario: propietarios temporales
+  `fc58247b-ff4d-40ee-96bf-f2524e6123c1` y `88b1cfb9-875d-4506-983a-d89c5601a638`.
+  Al concluir se eliminaron sus proyectos/archivos y las credenciales locales,
+  y se cerró la sesión del navegador. Ambas cuentas quedaron inactivas y con
+  acceso bloqueado; su purga definitiva falló en el conector. Ver la incidencia
+  administrativa y sus identidades en el cierre conjunto.
+- Proyecto sintético nuevo `adaf19d4-d3b1-44b0-91e9-2951d5bd1bd1`, nombre
+  `SCRUM-173-original`. PDF anterior de 3 páginas: `fe5beddd-a0aa-4898-81e5-39a455033fb6`;
+  vigente de 2 páginas: `ff6e1174-4399-433a-9ab8-05950b53a487`.
+  Refuerzo sintético anterior `f236fa79-aa83-4c77-ae0b-23236379ba43` conservado.
+  Cancelar y PDF inválido no alteraron archivo, identidad ni referencia. El caso
+  válido conservó proyecto/propietario/nombre y dos archivos/versiones. El refuerzo
+  no apareció sobre el PDF nuevo. Se comprobó persistencia, nuevo visor de 2 páginas
+  y rechazo en SQL autenticado de otro propietario y de una identidad desactualizada.
+- Jira SCRUM-173: comentario único `10085`, cuatro capturas reales insertadas.
+  Conservarlo y editarlo en HTML si hay que agregar el enlace al PR.
+
+## HU011: cierre conjunto de SCRUM-174, SCRUM-144, SCRUM-175 y SCRUM-80
+
+- HU011 / SCRUM-23 y sus seis subtareas están «Finalizado». PR en borrador
+  [#15](https://github.com/Danilo2334/PDF_Interactivo/pull/15) hacia `develop`,
+  con la rama subida. No se hizo merge ni se avanzó a otra historia. El stash
+  `d6406e0cdbc464c1c0301c058024b10dd27c4515` permanece sin aplicar ni eliminar.
+- Commit `b46c9317a989ef9fbc1bcb012d73e55535dc13f1`: eliminación confirmada,
+  limpieza central y bloqueo de accesos (SCRUM-174 / SCRUM-144 / SCRUM-175).
+  Commit `e4a9017190af90ebed09761a4ae7bb112cd49bf3`: ejecutor de integración real
+  SCRUM-80. Se incluyen también `27300a6`, `9dfd185` y `661ca04` de las fases previas.
+- Migración `add_recoverable_project_deletion` aplicada al Supabase conectado;
+  fuente: `supabase/migrations/20261025200000_add_recoverable_project_deletion.sql`.
+  `project_deletions` conserva un manifiesto privado mínimo para bloquear acceso
+  y reintentar sin duplicar efectos; no guarda contenido, título ni refuerzos.
+  Las RPC comprueban propietario activo/rol, fijan search_path vacío, bloquean
+  filas y comparan la versión confirmada. Las escrituras directas al manifiesto
+  no están concedidas al cliente. Los manifiestos completed se conservan para
+  reconocer reintentos; no equivalen a documentos o archivos pendientes.
+- `web/lib/documents/delete-project.ts` es la operación compartida por la ruta
+  `/api/projects/[projectId]/delete` y los reintentos. Secuencia: manifiesto,
+  borrado de Storage por lotes de 100 y transacción final de registros. Un fallo
+  registra etapa/fecha, devuelve 503 y mantiene el contenido bloqueado. La fase
+  final comprueba que no quedan objetos; no informa éxito antes de concluir.
+  Un reintento de un trabajo completado devuelve éxito sin repetir el borrado.
+- `delete-document-form.tsx` muestra consecuencias y confirmación explícita,
+  permite cancelar y ofrece reintentar desde el listado. Las confirmaciones de
+  eliminación y reemplazo se vinculan al documentId vigente: un cambio de PDF
+  exige confirmar otra vez. Se añadió una regresión que interactúa con ambos
+  formularios y comprueba casilla desmarcada/botón deshabilitado al cambiar versión.
+- La página de proyecto no disponible está en
+  `web/app/projects/[projectId]/not-found.tsx`. RLS bloquea documentos y referencias
+  desde el inicio de la limpieza; Storage bloquea lectura conservando el permiso
+  necesario para borrar objetos propios. El bucket `pdf-documents` sigue privado.
+  Se revalidan listado y proyecto tras la operación.
+- Extensión de limpieza: cada nueva relación de documento (selecciones, quiz,
+  respuestas o métricas) debe añadir FK ON DELETE CASCADE o limpieza explícita
+  dentro de `finish_project_deletion`, más una prueba de integración. Hoy existen
+  documentos, proyectos, historial de versiones y refuerzos. Una FK restrictiva
+  aborta la transacción completa; el punto de extensión está comentado en SQL.
+
+### Verificación real y regresión
+
+- Resultado final: **63/63 pruebas**, lint, build/TypeScript y git diff --check
+  correctos. Desde `web/`: `npm test`, `npm run lint`, `npm run build`.
+  También se pasó ESLint sobre `tests/hu011-live.mjs` después de ampliar sus modos.
+- Se reutilizó el servidor existente en localhost:3000. La UI se probó en el
+  navegador integrado y las operaciones finales de eliminación/autorización se
+  ejecutaron por HTTP autenticado y SDK contra la aplicación y Supabase reales.
+  Las capturas muestran estados reales de UI; no son plantillas ni salidas
+  reconstruidas. Los comentarios de Jira distinguen cada medio de comprobación.
+- El proyecto sintético descrito en SCRUM-173 tenía PDF anterior de 3 páginas,
+  PDF nuevo de 2 páginas y un refuerzo anterior. Cancelar y PDF inválido conservaron
+  versión/refuerzo; el reemplazo válido conservó propietario/proyecto/título,
+  mantuvo las dos versiones y no mostró el refuerzo sobre las páginas nuevas.
+- La segunda cuenta fue rechazada al renombrar, reemplazar, eliminar y descargar
+  el documento ajeno. Se creó otra muestra por la API normal de carga para
+  comprobar en navegador el rechazo a un proyecto que todavía existía, y luego
+  se eliminó por la API confirmada. Sin sesión, la API PDF devolvió 401; con otra
+  cuenta o tras iniciar eliminación, 404.
+- Fallo parcial real: se inició el manifiesto y se intentó finalizar antes de
+  eliminar los objetos. Supabase respondió 55006 y no confirmó el borrado.
+  Se registró etapa `records` y fecha; el listado mostró pendiente/reintentar.
+  Mientras tanto, las consultas RLS a proyecto/refuerzo y las descargas de ambos
+  PDFs fueron rechazadas. El reintento confirmado por HTTP borró los dos archivos
+  y completó los registros. Repetirlo devolvió 200 sin duplicar efectos.
+- SQL administrativo posterior confirmó 0 proyectos, 0 documentos, 0 referencias,
+  0 versiones y 0 objetos de esa muestra. La consulta final por ambos propietarios
+  confirmó 0 proyectos/documentos/archivos y 0 limpiezas pendientes. Las rutas de
+  proyecto/PDF continuaron inaccesibles después; el navegador mostró las respuestas.
+- Ejecutor optativo: `node tests/hu011-live.mjs ACCOUNTS_FILE FIXTURE_FILE MODE`.
+  Se aprobaron en orden `authorize`, `begin`, `finish`, `access`, `access-cleanup`.
+  Requiere dos cuentas nuevas desechables con correo hu011-1/2-UUID@example.invalid,
+  objeto externo `{users:[{id,email,password},...]}`, y fixture externa con
+  `ownerId`, `projectId`, `documentId`, `oldDocumentId`, `fixtureDirectory`.
+  Preparar antes dos versiones reales y el refuerzo; la carpeta debe contener
+  `SCRUM-173-reemplazo.pdf`. Verificar siempre que son datos sintéticos antes de
+  ejecutar `begin`/`finish`, que eliminan datos. El ejecutor comprueba propietario,
+  nombre/identidad e historial antes de mutar. Usa el inicio de sesión normal de
+  la aplicación; las sesiones quedan en memoria. Las cuentas/fixtures ya usadas
+  no se pueden reutilizar después de la limpieza. No guardar claves en Git.
+
+### Jira y evidencias conservadas
+
+| Tarea | Comentario único | Capturas reales |
+| --- | --- | --- |
+| SCRUM-79 | 10084 | 5 originales conservadas; IDs 10249–10253 |
+| SCRUM-173 | 10085 | 4 conservadas; IDs 10254–10257 |
+| SCRUM-174 | 10086 | acciones y confirmación de reintento; 10258, 10259 |
+| SCRUM-144 | 10087 | limpieza pendiente y listado limpio; 10260, 10261 |
+| SCRUM-175 | 10088 | bloqueo pendiente, tras borrado y API PDF; 10264, 10262, 10263 |
+| SCRUM-80 | 10089 | segunda cuenta y proyecto ajeno rechazado; 10265, 10266 |
+
+- 18 capturas reales vinculadas en total. Se comprobaron nombres en adjuntos y
+  etiquetas de imágenes del HTML renderizado; los comentarios 10084 y 10085 se
+  editaron en HTML conservando sus bloques de medios. No duplicar comentarios
+  ni volver a subir esas imágenes. Todos incluyen resultados y PR #15.
+- SCRUM-23: comentario de cierre `10090`, con enlaces/resultados conjuntos.
+  Las casillas de las subtareas se marcaron únicamente tras verificar sus casos.
+
+### Observaciones y estado para retomar
+
+- Las dos cuentas sintéticas `fc58247b-ff4d-40ee-96bf-f2524e6123c1` y
+  `88b1cfb9-875d-4506-983a-d89c5601a638` quedaron con `is_active=false` y acceso
+  bloqueado en Auth hasta 2036. La purga definitiva por el conector devolvió dos
+  veces `Invalid or expired requestState`; no se confirmó su eliminación.
+  Pendiente administrativo: purgar únicamente esas dos cuentas sintéticas cuando
+  el conector permita completar la operación. No tienen proyectos ni archivos.
+  Se cerró su sesión y se borró `test-accounts.json` fuera del repositorio.
+- Las cargas usaron credenciales temporales nuevas. El script temporal que las
+  contenía fue eliminado al finalizar. No se incluyeron tokens en Jira, Git ni
+  este documento. Los JPG auténticos se conservan fuera del repo, en los recursos
+  HU011 de visualizaciones de esta sesión.
+- Asesor de seguridad consultado: avisos previos de `handle_new_user`/funciones
+  administrativas SECURITY DEFINER y protección contra contraseñas filtradas
+  desactivada. Las nuevas RPC intencionalmente ejecutables por authenticated
+  también producen el aviso genérico; tienen validación de propietario activo,
+  search_path vacío y rechazo real desde otra cuenta. No se alteraron ajustes de
+  autenticación fuera de HU011. Referencias oficiales:
+  [funciones anon](https://supabase.com/docs/guides/database/database-linter?lint=0028_anon_security_definer_function_executable),
+  [funciones authenticated](https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable),
+  [contraseñas filtradas](https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection).
+- Servidor original de localhost:3000 conservado; proxy de desconexión detenido.
+  Navegador dejado en login tras cerrar la sesión sintética. No aplicar el stash,
+  hacer merge ni iniciar otra historia sin nueva indicación del usuario.
