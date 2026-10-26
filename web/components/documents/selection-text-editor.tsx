@@ -13,6 +13,7 @@ export function SelectionTextEditor({ draft, hasPage, onExtract, onChange, onCon
   const id = useId();
   const loading = draft?.status === "loading";
   const message = loading ? "Extrayendo texto de la selección…"
+    : draft?.status === "manual" ? "Texto escrito manualmente. Revísalo antes de confirmarlo."
     : draft?.status === "error" ? "No fue posible extraer el texto. Puedes reintentar o escribirlo manualmente; se conserva tu página y selección."
     : draft?.status === "empty" ? "No se encontró texto digital completo en la selección. Amplía la zona o escribe el contenido manualmente. Las imágenes y los PDF escaneados necesitan entrada manual."
     : draft?.status === "ready" ? "Texto extraído. Revisa el orden, los espacios y los caracteres antes de confirmarlo."

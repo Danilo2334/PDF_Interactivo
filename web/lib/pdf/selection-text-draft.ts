@@ -8,7 +8,7 @@ export type SelectionTextContext = {
 };
 export type SelectionTextDraft = SelectionTextContext & {
   requestId: number | null;
-  status: "loading" | TextExtractionResult["status"];
+  status: "loading" | "manual" | TextExtractionResult["status"];
   source: "digital" | "manual";
   originalText: string;
   text: string;
@@ -31,8 +31,8 @@ export function finishTextExtraction(previous: SelectionTextDraft | null, reques
 
 export function editSelectionText(context: SelectionTextContext, previous: SelectionTextDraft | null, text: string): SelectionTextDraft {
   const draft = previous && selectionTextKey(previous) === selectionTextKey(context)
-    ? previous : { ...beginTextExtraction(context, 0), status: "empty" as const, source: "manual" as const };
-  return { ...draft, requestId: null, status: draft.status === "loading" ? "empty" : draft.status,
+    ? previous : { ...beginTextExtraction(context, 0), status: "manual" as const, source: "manual" as const };
+  return { ...draft, requestId: null, status: draft.status === "loading" ? "manual" : draft.status,
     source: draft.originalText ? "digital" : "manual", text, confirmed: false };
 }
 

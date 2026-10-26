@@ -2,12 +2,18 @@
 
 Actualizado: 26/10/2026. Mantener este único documento al continuar.
 
-Estado actual: PR #17 / HU013 revisado e integrado en develop (`99e7c08`).
-HU014 / SCRUM-26 y sus tres subtareas finalizados con 96/96 pruebas, lint,
-build y 16 capturas reales verificadas en Jira. Entrega en
-[PR #18](https://github.com/Danilo2334/PDF_Interactivo/pull/18), en borrador,
-sin merge. Rama `codex/scrum-26-hu014-dificultad`; commit funcional `5909abc`.
-HU015 no iniciado. Stash `d6406e0` intacto. Ver cierre de HU014 al final.
+Estado actual: develop continúa en HU013 (`99e7c08`). HU014 está entregada en
+[PR #18](https://github.com/Danilo2334/PDF_Interactivo/pull/18), todavía en
+borrador y sin merge; sus evidencias anteriores se conservan.
+HU015 / SCRUM-27 se implementó en la nube en la rama
+`codex/scrum-27-hu015-extraccion-texto`, commit funcional `99816ba`,
+[PR #19](https://github.com/Danilo2334/PDF_Interactivo/pull/19) en borrador.
+**111/111 pruebas, lint y build correctos; faltan pruebas visuales y capturas.**
+SCRUM-27, SCRUM-87, SCRUM-179 y SCRUM-88 están En curso, no finalizados.
+PR #19 depende de #18; su base provisional es la rama de HU014. Integrar #18
+primero y cambiar después la base de #19 a develop antes de integrar HU015.
+No se accedió al PC de la empresa ni al equipo de casa. Conservar el stash
+local `d6406e0` sin aplicarlo ni eliminarlo. Ver continuidad de HU015 al final.
 
 ## Contexto proporcionado por el usuario
 
@@ -680,3 +686,108 @@ HU015 no iniciado. Stash `d6406e0` intacto. Ver cierre de HU014 al final.
   en login y stash `d6406e0` intacto.
 - Próximo paso: revisar PR #18 antes de autorizar su integración en develop y
   consultar HU015. No se inició otra historia ni se hizo merge del PR #18.
+
+## 26/10/2026 — HU015 preparada en la nube; validación visual pendiente
+
+Este apartado actualiza el próximo paso del cierre anterior de HU014. El usuario
+autorizó avanzar código, pruebas y entrega desde la nube, sin acceder a su PC de
+trabajo ni modificar sus restricciones, para que Codex continúe en casa.
+
+### Entrega y dependencia
+
+- Rama: `codex/scrum-27-hu015-extraccion-texto`.
+- Base exacta: `8f84af95af857006b63bb949f4e4de3cad7171c4`, cabecera de PR #18.
+- Commit funcional: `99816ba577c0ffa49335474c89ec3642e1e8f7fd`, asociado a
+  SCRUM-87, SCRUM-179 y SCRUM-88.
+- [PR #19](https://github.com/Danilo2334/PDF_Interactivo/pull/19) es borrador y
+  apunta provisionalmente a `codex/scrum-26-hu014-dificultad` para mostrar solo
+  los cambios de HU015. **No hacer merge en esa rama.** Revisar/integrar #18,
+  cambiar la base de #19 a `develop`, resolver cualquier diferencia y revisar
+  las pruebas antes de integrar #19. No se modificaron main ni develop.
+- HU016 / SCRUM-28 no se implementó; será el siguiente trabajo después de
+  validar esta historia. La solicitud todavía no se registra en servidor.
+
+### Implementación comprobada
+
+- SCRUM-87: `web/lib/pdf/extract-selection-text.ts` reutiliza el PDF abierto.
+  Para texto nativo conserva exactamente el rango capturado por HU013. Para una
+  zona o una página obtiene los elementos digitales, calcula posiciones con la
+  rotación/recorte del visor y ordena por líneas y ubicación. Incluye únicamente
+  elementos completos dentro de la zona; si una zona corta una línea, ampliarla
+  o seleccionar texto nativo para obtener palabras exactas. La lectura de
+  columnas o composiciones complejas debe revisarse en el campo editable.
+- SCRUM-179: `selection-text-editor.tsx` ofrece extracción, edición de espacios,
+  saltos y caracteres, y confirmación temporal. El estado vive en
+  `ProjectWorkspace`; `selection-text-draft.ts` conserva documento, página,
+  fragmento, texto original, texto editado y origen digital/manual. Una edición
+  invalida la confirmación. Al cerrar/reabrir el formulario el borrador permanece;
+  al cambiar la página, el documento o la selección no se hereda contenido viejo.
+  Un resultado asíncrono anterior no puede reemplazar una edición manual ni una
+  extracción más reciente. Repetir la extracción reemplaza la edición, con aviso.
+- SCRUM-88: extracción vacía o fallida muestra la alternativa manual sin perder
+  el contexto. No hay OCR. El fallo de lectura/renderizado de la capa de texto
+  mantiene el canvas y las herramientas de zona disponibles. La confirmación
+  rechaza texto vacío o solo espacios. Cambios en `page-fragments.ts` están
+  cubiertos por pruebas de error y limpieza.
+- No hay nuevas dependencias, migraciones, llamadas IA ni cambios de permisos,
+  roles, autenticación o almacenamiento. El original no se escribe. El objeto
+  PDF y su ciclo de vida siguen perteneciendo al visor.
+
+### Verificación ejecutada y límites
+
+- En la copia cloud, Node 24.22.1 / npm 11.9.0:
+  `npm --prefix web test` → **111/111** (15 nuevas respecto a las 96 anteriores).
+  `npm --prefix web run lint`, `npm --prefix web run build` (incluye TypeScript)
+  y `git diff --check` → correctos.
+- Pruebas con PDF.js real y archivos generados en memoria: PDF digital con
+  elementos fuera de orden, filtrado de zona, rotaciones 0/90/180/270 con CropBox,
+  PDF de solo imagen sin texto y SHA-256 de la fuente igual antes/después de
+  extraer. Se verifica Unicode/RTL, recortes y escala, fallos, edición y resultados
+  atrasados. Las pruebas del componente/estado usan simulaciones; **no equivalen
+  a una prueba visual autenticada**.
+- No se ejecutó el navegador sobre esta entrega. El navegador cloud y el
+  servidor de ejecución están en redes separadas; no se intentó saltar esa
+  restricción ni se accedió al navegador del PC de la empresa. No se crearon
+  capturas para HU015 ni se registraron pruebas visuales como aprobadas.
+- SCRUM-27 y sus tres subtareas se pasaron a **En curso**. No se cambiaron las
+  descripciones, casillas, comentarios ni adjuntos anteriores. Mantener el flujo
+  acordado: capturas reales y un único comentario breve por subtarea al validar.
+
+### Continuación para Codex de escritorio
+
+1. En casa, revisar `git status -sb` y `git stash list` antes de cambiar nada.
+   Preservar cambios locales y `d6406e0`. Hacer fetch de la rama HU015 y leer
+   este apartado en esa rama. Si hay trabajo local pendiente, usar un worktree
+   separado; no hacer reset forzado, descartar archivos ni aplicar el stash.
+2. Usar las variables locales autorizadas del proyecto, sin copiarlas al chat
+   ni a Git. Instalar con `npm.cmd --prefix web ci`, iniciar con
+   `npm.cmd --prefix web run dev` y abrir el navegador de pruebas autorizado.
+   El usuario introduce sus credenciales cuando sea necesario.
+3. SCRUM-87: abrir un PDF propio digital de al menos dos páginas. Seleccionar
+   un fragmento que incluya parte de una palabra y dos líneas, abrir la solicitud
+   y pulsar **Extraer texto**. Comprobar coincidencia exacta en **Texto para el
+   asistente**. Después marcar una zona que encierre dos líneas completas y deje
+   otra fuera; extraer y comprobar exclusión y orden. Repetir tras cambiar zoom.
+   Capturar selección y resultado visible. Verificar en Red que extraer no
+   vuelve a descargar el PDF ni envía el texto al servidor.
+4. SCRUM-179: corregir espacios, saltos y caracteres, **Confirmar texto en
+   borrador**, cerrar con Escape y reabrir. Verificar mismo texto, documento,
+   página y zona. Editar de nuevo: la confirmación anterior debe desaparecer.
+   Cambiar de página, zona o proyecto: no debe aparecer el texto anterior.
+   Capturar la edición confirmada y el cambio de contexto limpio.
+5. SCRUM-88: abrir un PDF de solo imagen o escaneado sin capa de texto; marcar
+   una zona y extraer. Debe aparecer el aviso de entrada manual manteniendo la
+   página y zona. Escribir una transcripción, corregirla y confirmarla; cerrar
+   y reabrir para verificar conservación. Solo espacios debe deshabilitar la
+   confirmación. Capturar aviso y texto manual confirmado con su contexto.
+6. Comprobar escritorio y móvil, cierre/Escape, zoom, reapertura, ausencia de
+   errores de consola y un nuevo intento de extracción. Si aparece un fallo,
+   corregirlo en esta misma rama con commit asociado a la subtarea y verificar
+   el caso concreto; no declarar todas las pruebas aprobadas por anticipado.
+7. Adjuntar las capturas reales y un único comentario breve de resultados en
+   cada subtarea. Finalizar solo lo verificado. Resumir la historia y enlazar
+   PR #19; no duplicar capturas innecesariamente en la historia madre.
+8. Resolver primero la revisión/integración pendiente de PR #18. Cambiar la
+   base de #19 a develop y revisar su diff y las pruebas antes del merge.
+   Actualizar este documento con resultados reales y continuar HU016 cuando
+   corresponda. No reimplementar HU015 desde develop viejo.

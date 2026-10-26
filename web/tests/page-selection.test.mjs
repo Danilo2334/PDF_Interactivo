@@ -311,6 +311,7 @@ test('the real text editor disables empty confirmation and serializes only a con
   assert.equal(confirmation().props.disabled, true);
   const draft = textDraft.editSelectionText(context, null, 'Texto manual.');
   f.render({ ...initial, draft });
+  assert.ok(f.find(n => n.type === 'p' && n.props.children === 'Texto escrito manualmente. Revísalo antes de confirmarlo.'));
   assert.equal(confirmation().props.disabled, false);
   assert.equal(f.find(n => n.type === 'input').props.value, '');
   f.render({ ...initial, draft: textDraft.confirmSelectionText(draft) });
