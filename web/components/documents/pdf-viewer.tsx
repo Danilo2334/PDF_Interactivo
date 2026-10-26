@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import type { PDFDocumentLoadingTask, PDFDocumentProxy } from "pdfjs-dist";
 import { renderVisiblePages } from "@/lib/pdf/render-visible-pages";
 import type { PageRenderer } from "@/lib/pdf/render-visible-pages";
@@ -9,6 +9,9 @@ import { PdfThumbnails } from "@/components/documents/pdf-thumbnails";
 
 type ViewerProps = {
   projectId: string;
+  initialPage?: number;
+  onPageSelect?: (number: number | null) => void;
+  requestDraft?: ReactNode;
 };
 
 type ViewerStatus =
@@ -25,13 +28,18 @@ const viewerMessages = {
   ready: "PDF disponible. Usa los controles o desplázate para consultar sus páginas.",
 };
 
-export function PdfViewer({ projectId }: ViewerProps) {
+export function PdfViewer({ projectId, initialPage = 1, onPageSelect, requestDraft }: ViewerProps) {
   const [attempt, setAttempt] = useState(0);
+  // Only restore on mount; changing the selection must not reload the PDF.
+  const [startingPage] = useState(initialPage);
 
   return (
     <PdfPages
       key={`${projectId}-${attempt}`}
       projectId={projectId}
+      initialPage={startingPage}
+      onPageSelect={onPageSelect}
+      requestDraft={requestDraft}
       onRetry={() => setAttempt((value) => value + 1)}
     />
   );
@@ -39,6 +47,9 @@ export function PdfViewer({ projectId }: ViewerProps) {
 
 function PdfPages({
   projectId,
+  initialPage = 1,
+  onPageSelect,
+  requestDraft,
   onRetry,
 }: ViewerProps & { onRetry: () => void }) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -92,6 +103,7 @@ function PdfPages({
     let active = true;
     let loadingTask: PDFDocumentLoadingTask | null = null;
     let renderer: PageRenderer | null = null;
+    let restoredSelection = false;
 
     async function loadPages() {
       let failureMessage =
@@ -151,7 +163,14 @@ function PdfPages({
           pdf,
           container!,
           () => {
-            if (active) setStatus("ready");
+            if (!active) return;
+            setStatus("ready");
+            if (!restoredSelection) {
+              restoredSelection = true;
+              const page = Number.isInteger(initialPage) && initialPage >= 1 && initialPage <= pdf.numPages ? initialPage : 1;
+              if (page === 1) onPageSelect?.(1);
+              else renderer?.goToPage(page);
+            }
           },
           (error) => {
             if (!active) return;
@@ -164,6 +183,7 @@ function PdfPages({
               "No fue posible visualizar una página. Inténtalo nuevamente.",
             );
             setStatus("error");
+            onPageSelect?.(null);
 
             void loadingTask?.destroy().catch(() => {});
           },
@@ -172,6 +192,7 @@ function PdfPages({
             setCurrentPage(number);
             setPageInput(String(number));
             setPageInputError("");
+            onPageSelect?.(number);
           },
           () => navigationRef.current?.getBoundingClientRect().height ?? 0,
         );
@@ -182,6 +203,7 @@ function PdfPages({
         console.error("Error visualizando PDF:", error);
         setErrorMessage(failureMessage);
         setStatus("error");
+        onPageSelect?.(null);
       }
     }
 
@@ -199,7 +221,7 @@ function PdfPages({
 
       container.replaceChildren();
     };
-  }, [projectId]);
+  }, [projectId, initialPage, onPageSelect]);
 
   return (
     <section
@@ -337,6 +359,7 @@ function PdfPages({
               </button>
             </div>
           </div>
+          {requestDraft}
           {pageInputError && (
             <p id={`${pageInputId}-error`} role="alert" className="mt-2 text-sm text-red-700">
               {pageInputError}

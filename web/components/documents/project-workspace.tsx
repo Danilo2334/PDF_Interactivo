@@ -1,12 +1,15 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useCallback, useId, useState } from "react";
 import { PdfViewer } from "@/components/documents/pdf-viewer";
+import { ReinforcementRequestDraft, type PageSelection } from "@/components/documents/reinforcement-request-draft";
 import type { Reinforcement } from "@/lib/types/reinforcement";
 
 type WorkspaceProps = {
   projectId: string;
   documentId: string;
+  documentName: string;
+  canRequestReinforcement: boolean;
   reinforcements: Reinforcement[];
   reinforcementsError: boolean;
 };
@@ -19,6 +22,8 @@ const sections = [
 export function ProjectWorkspace({
   projectId,
   documentId,
+  documentName,
+  canRequestReinforcement,
   reinforcements,
   reinforcementsError,
 }: WorkspaceProps) {
@@ -26,6 +31,16 @@ export function ProjectWorkspace({
     useState<"pdf" | "reinforcements">("pdf");
 
   const workspaceId = useId();
+  const [selection, setSelection] = useState<PageSelection | null>(null);
+  const draft = selection?.documentId === documentId ? selection : null;
+  const selectPage = useCallback((pageNumber: number | null) => {
+    setSelection(previous => {
+      if (pageNumber === null) return null;
+      if (!Number.isInteger(pageNumber) || pageNumber < 1) return previous;
+      if (previous?.documentId === documentId && previous.pageNumber === pageNumber) return previous;
+      return { documentId, pageNumber };
+    });
+  }, [documentId]);
 
   return (
     <div className="mt-8 min-w-0">
@@ -57,7 +72,11 @@ export function ProjectWorkspace({
         hidden={activeSection !== "pdf"}
       >
         {activeSection === "pdf" && (
-          <PdfViewer key={`${projectId}-${documentId}`} projectId={projectId} />
+          <PdfViewer key={`${projectId}-${documentId}`} projectId={projectId}
+            initialPage={draft?.pageNumber ?? 1} onPageSelect={canRequestReinforcement ? selectPage : undefined}
+            requestDraft={canRequestReinforcement ? <ReinforcementRequestDraft
+              key={documentId} documentId={documentId} documentName={documentName} selection={draft}
+            /> : null} />
         )}
       </div>
 
