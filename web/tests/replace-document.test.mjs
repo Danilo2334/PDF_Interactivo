@@ -156,3 +156,34 @@ test('changing PDF identity remounts the viewer even when the project ID stays t
   assert.ok(before && after); assert.notEqual(before.key, after.key);
   assert.equal(after.props.projectId, projectId);
 });
+
+test('replacement and deletion confirmations apply only to the PDF version the user confirmed', () => {
+  for (const [path, exportName] of [
+    ['components/documents/replace-document-form.tsx', 'ReplaceDocumentForm'],
+    ['components/documents/delete-document-form.tsx', 'DeleteDocumentForm'],
+  ]) {
+    const states = []; let cursor = 0;
+    const component = load(path, {
+      react: { useId: () => 'test', useRef: value => ({ current: value }), useState(initial) {
+        const index = cursor++; if (!(index in states)) states[index] = initial;
+        return [states[index], value => { states[index] = value; }];
+      } },
+      'next/navigation': { useRouter: () => ({ refresh() {}, push() {} }) },
+      '@/lib/validations/pdf-file': validation,
+    })[exportName];
+    const render = documentId => { cursor = 0; return component({ projectId, documentId, name: 'Test' }); };
+    function find(node, predicate) {
+      if (!node || typeof node !== 'object') return null;
+      if (predicate(node)) return node;
+      for (const child of [node.props?.children].flat(Infinity)) { const match = find(child, predicate); if (match) return match; }
+      return null;
+    }
+    let tree = render(oldId);
+    find(tree, node => node.type === 'button').props.onClick();
+    tree = render(oldId);
+    find(tree, node => node.type === 'input' && node.props.type === 'checkbox').props.onChange({ target: { checked: true } });
+    assert.equal(find(render(oldId), node => node.type === 'input' && node.props.type === 'checkbox').props.checked, true);
+    assert.equal(find(render(newId), node => node.type === 'input' && node.props.type === 'checkbox').props.checked, false);
+    assert.equal(find(render(newId), node => node.type === 'button' && node.props.type === 'submit').props.disabled, true);
+  }
+});

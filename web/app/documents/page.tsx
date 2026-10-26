@@ -3,8 +3,11 @@ import { ViewTiming } from "@/components/diagnostics/view-timing";
 import { requireActiveUser } from "@/lib/auth/require-active-user";
 import { hasPermission } from "@/lib/auth/permissions";
 import { RenameDocumentForm } from "@/components/documents/rename-document-form";
+import { DeleteDocumentForm } from "@/components/documents/delete-document-form";
 import {
   getOwnerProjects,
+  getPendingProjectDeletions,
+  type PendingProjectDeletion,
   type OwnerProject,
 } from "@/lib/data/projects";
 
@@ -25,6 +28,7 @@ const projectStates = {
     label: "Error",
     style: "bg-red-100 text-red-800",
   },
+  deleting: { label: "Eliminación pendiente", style: "bg-red-100 text-red-800" },
 } satisfies Record<
   OwnerProject["status"],
   { label: string; style: string }
@@ -43,10 +47,11 @@ export default async function DocumentsPage() {
   const canRename = hasPermission(role, "documents.manage.own");
 
   let projects: OwnerProject[] = [];
+  let pendingDeletions: PendingProjectDeletion[] = [];
   let loadError = false;
 
   try {
-    projects = await getOwnerProjects();
+    [projects, pendingDeletions] = await Promise.all([getOwnerProjects(), getPendingProjectDeletions()]);
   } catch {
     loadError = true;
   }
@@ -75,6 +80,14 @@ export default async function DocumentsPage() {
           <ViewTiming metric="listado" items={projects.length} />
         )}
 
+        {!loadError && pendingDeletions.length > 0 && <section aria-label="Eliminaciones pendientes" className="mb-6 space-y-3">
+          {pendingDeletions.map(job => <div key={job.project_id} role="alert" className="rounded-xl border border-red-200 bg-red-50 p-5">
+            <h2 className="font-semibold text-red-900">Eliminación pendiente de limpieza</h2>
+            <p className="mt-2 text-sm text-red-800">El contenido ya no está disponible. Reintenta para terminar de eliminar los archivos y datos vinculados.</p>
+            {canRename && <DeleteDocumentForm projectId={job.project_id} documentId={job.document_id} name="Eliminación pendiente" retry />}
+          </div>)}
+        </section>}
+
         {loadError ? (
           <p
             role="alert"
@@ -85,11 +98,11 @@ export default async function DocumentsPage() {
         ) : projects.length === 0 ? (
           <section className="rounded-xl border border-dashed border-slate-300 bg-white p-8 text-center">
             <h2 className="text-xl font-semibold text-slate-900">
-              Aún no tienes documentos
+              {pendingDeletions.length ? "No hay documentos disponibles" : "Aún no tienes documentos"}
             </h2>
 
             <p className="mt-2 text-slate-600">
-              Carga tu primer PDF para crear un proyecto y comenzar.
+              {pendingDeletions.length ? "Completa las limpiezas pendientes indicadas arriba o carga un nuevo PDF." : "Carga tu primer PDF para crear un proyecto y comenzar."}
             </p>
 
             <Link
@@ -157,6 +170,7 @@ export default async function DocumentsPage() {
                     {canRename && (
                       <RenameDocumentForm projectId={project.id} currentName={project.name} />
                     )}
+                    {canRename && <DeleteDocumentForm projectId={project.id} documentId={project.document_id} name={project.name} />}
                   </li>
                 );
               })}
