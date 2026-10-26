@@ -4,6 +4,7 @@ import { useCallback, useId, useState } from "react";
 import { PdfViewer } from "@/components/documents/pdf-viewer";
 import { ReinforcementRequestDraft, type PageSelection } from "@/components/documents/reinforcement-request-draft";
 import type { Reinforcement } from "@/lib/types/reinforcement";
+import type { DocumentFragmentSelection, FragmentSelection } from "@/lib/pdf/fragment-selection";
 
 type WorkspaceProps = {
   projectId: string;
@@ -32,8 +33,12 @@ export function ProjectWorkspace({
 
   const workspaceId = useId();
   const [selection, setSelection] = useState<PageSelection | null>(null);
+  const [fragment, setFragment] = useState<DocumentFragmentSelection | null>(null);
+  const [fragmentResetKey, setFragmentResetKey] = useState(0);
   const draft = selection?.documentId === documentId ? selection : null;
+  const currentFragment = fragment?.documentId === documentId && fragment.pageNumber === draft?.pageNumber ? fragment : null;
   const selectPage = useCallback((pageNumber: number | null) => {
+    setFragment(previous => previous?.pageNumber === pageNumber ? previous : null);
     setSelection(previous => {
       if (pageNumber === null) return null;
       if (!Number.isInteger(pageNumber) || pageNumber < 1) return previous;
@@ -41,6 +46,10 @@ export function ProjectWorkspace({
       return { documentId, pageNumber };
     });
   }, [documentId]);
+  const selectFragment = useCallback((value: FragmentSelection | null) => {
+    setFragment(value ? { ...value, documentId } : null);
+  }, [documentId]);
+  const clearFragment = useCallback(() => { setFragment(null); setFragmentResetKey(value => value + 1); }, []);
 
   return (
     <div className="mt-8 min-w-0">
@@ -74,8 +83,10 @@ export function ProjectWorkspace({
         {activeSection === "pdf" && (
           <PdfViewer key={`${projectId}-${documentId}`} projectId={projectId}
             initialPage={draft?.pageNumber ?? 1} onPageSelect={canRequestReinforcement ? selectPage : undefined}
+            onFragmentSelect={canRequestReinforcement ? selectFragment : undefined} fragmentResetKey={fragmentResetKey}
             requestDraft={canRequestReinforcement ? <ReinforcementRequestDraft
               key={documentId} documentId={documentId} documentName={documentName} selection={draft}
+              fragment={currentFragment} onClearSelection={clearFragment}
             /> : null} />
         )}
       </div>

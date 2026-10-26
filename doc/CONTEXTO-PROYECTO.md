@@ -1,12 +1,13 @@
 # Continuidad de PDF_Interactivo
 
-Actualizado: 25/10/2026. Mantener este único documento al continuar.
+Actualizado: 26/10/2026. Mantener este único documento al continuar.
 
-Estado actual: PR #15 / HU011 integrado en develop (`8dc5b1e`). HU012 / SCRUM-24
-y sus tres subtareas finalizados con 74/74 pruebas y 11 capturas reales; entrega
-en [PR #16](https://github.com/Danilo2334/PDF_Interactivo/pull/16), en borrador,
-sin merge. Rama actual `codex/scrum-24-hu012-seleccion-pagina`. HU013 no iniciado.
-Stash `d6406e0` intacto. Ver el cierre de HU012 al final para retomar.
+Estado actual: PR #16 / HU012 revisado e integrado en develop (`319b7e2`).
+HU013 / SCRUM-25 y sus tres subtareas finalizados con 86/86 pruebas, lint,
+build y 14 capturas reales verificadas en Jira. Entrega en
+[PR #17](https://github.com/Danilo2334/PDF_Interactivo/pull/17), en borrador,
+sin merge. Rama `codex/scrum-25-hu013-seleccion-fragmento`; commit funcional
+`cbe149a`. HU014 no iniciado. Stash `d6406e0` intacto. Ver cierre de HU013 al final.
 
 ## Contexto proporcionado por el usuario
 
@@ -450,7 +451,112 @@ Stash `d6406e0` intacto. Ver el cierre de HU012 al final para retomar.
 - Casillas y estados finalizados después de verificar los criterios. PR #16
   enlazado en los cuatro comentarios. El documento de continuidad se entrega en
   un commit adicional; los commits funcionales y pruebas están identificados arriba.
-- Estado para retomar: revisar PR #16 antes de autorizar su merge. No iniciar
-  HU013 ni aplicar/eliminar el stash. Servidor original conservado y navegador
+- Estado al cierre de HU012: PR #16 pendiente de revisión y autorización de merge.
+  El usuario autorizó después su revisión/merge y HU013, como se registra abajo.
+  Servidor original conservado y navegador
   en login después de cerrar las cuentas sintéticas. No quedan datos de prueba
   pendientes de limpiar ni credenciales de esas cuentas en disco.
+
+## Revisión de HU012 e inicio autorizado de HU013
+
+- El 26/10 el usuario autorizó revisar PR #16, integrarlo si cumplía y continuar
+  con HU013. Head bbc9caf revisado sin fallos bloqueantes: 74/74 pruebas, lint y
+  build/TypeScript correctos; sin comentarios pendientes ni checks CI configurados.
+  PR #16 integrado en develop mediante `319b7e227da9509385394e5e67d6f1c05255718e`.
+  Se actualizó el comentario único 10094 de SCRUM-24 conservando sus imágenes.
+- Rama actual `codex/scrum-25-hu013-seleccion-fragmento`, desde develop actualizado.
+  HU013 / SCRUM-25 y subtareas SCRUM-83 (texto), SCRUM-177 (zona proporcional) y
+  SCRUM-84 (corregir/cancelar) pasaron a «En curso» y, después de comprobar los
+  criterios y las evidencias, a «Finalizado». Se implementó TextLayer de PDF.js,
+  geometría proporcional, edición y borrado temporal sobre el borrador compartido.
+- Stash d6406e0 intacto. Reutilizar localhost:3000. No modificar el PDF original;
+  el registro definitivo continúa en HU016, sin adelantar HU014/HU015.
+
+## HU013: implementación y cierre verificado
+
+- Commit funcional `cbe149a0061fd967b011d630e11a4e501233da1c`, asociado a
+  SCRUM-25, SCRUM-83, SCRUM-177 y SCRUM-84. Los cambios comparten el controlador
+  del visor y el borrador. Se subió la rama y se creó PR #17 hacia develop.
+- `web/lib/pdf/fragment-selection.ts`: unión texto/zona, rango serializado y
+  geometría normalizada [0,1]. El texto usa la selección nativa para respetar
+  los saltos de línea; el rango usa offsets del contenido de la capa. Rechaza
+  selección vacía, fuera de capa o entre páginas. Recorta rectángulos a la página.
+- `web/lib/pdf/page-fragments.ts`: TextLayer con el mismo viewport del canvas,
+  marcas proporcionales, arrastre, movimiento y tamaño. Enter crea una zona;
+  flechas mueven; Mayús/flechas o el tirador cambian tamaño; Escape limpia.
+  Cancela/libera capas y manejadores junto con el renderizado diferido.
+- El renderizador acepta un decorador asíncrono y libera resultados obsoletos
+  después de zoom/salida. CSS de texto aislado en globals.css. Workspace/borrador
+  reciben un único FragmentSelection con documentId y página; los callbacks son
+  estables. Cambiar de PDF remonta el visor y no expone el fragmento anterior.
+  La vista previa conserva texto/rango para reutilizarlos en HU015. Cerrar el
+  diálogo conserva el borrador; cancelar explícitamente borra el fragmento.
+- No hay persistencia definitiva ni generación IA en esta entrega: HU016 registrará
+  solicitudes. No se añadieron dependencias ni migraciones, ni se cambiaron RLS
+  o permisos. El selector se ofrece al propietario autenticado con permiso.
+
+### Pruebas reales y automatizadas de HU013
+
+- **86/86 pruebas automatizadas**, lint, build/TypeScript y git diff --check
+  aprobados. Desde web: npm test, npm run lint y npm run build. Se añadieron
+  12 regresiones: 7 de fragmento/geometría/controlador, 3 de borrador por identidad
+  y cancelación y 2 de liberación de decoraciones asíncronas. Estas pruebas
+  unitarias usan dobles; las capturas y los casos siguientes provienen de la UI real.
+- Se reutilizó localhost:3000 y el navegador integrado. Dos propietarios
+  desechables con correos hu013-1/2-UUID@example.invalid y dos PDFs sintéticos
+  válidos se autenticaron/cargaron por la UI. PDF de 4 páginas: proyecto
+  `ee0da799-5ea9-4dda-bdee-79d4c017eb41`, documento
+  `1aecd142-2dab-46cb-baa4-a03bee1b9aaa`. PDF de 2 páginas: proyecto
+  `1e22080f-55ad-4ebb-b898-703cca5644dc`, documento
+  `329ac5de-bd7e-4cad-928e-77e4231e5266`. No se editaron datos personales.
+- Texto: arrastre nativo sobre dos líneas, orden y salto de línea conservados,
+  vista previa con rango [39,127) en página 1 y dos rectángulos. Zoom 50 → 75 %
+  mantuvo exactamente texto, rango y geometría del borrador. Limpiar dejó fragmento
+  vacío, selección nativa vacía y cero marcas.
+- Zona: dibujo, movimiento y redimensionado con puntero. Tras mover, ancho/alto
+  iguales; tras cambiar tamaño, x/y iguales. Rectángulo final:
+  x=0.1349712464, y=0.3191001687, ancho=0.6700702109, alto=0.2850768511.
+  Zoom 75 % y 125 % conservaron los cuatro valores exactos. La ubicación DOM
+  respecto a la página difirió menos de 0.00003 en proporción, menos de 1 píxel
+  CSS por redondeo. Cancelar vació fragmento y marcas. Enter, derecha y
+  Mayús/abajo dieron x=0.26, y=0.25, ancho=0.5, alto=0.26.
+- Cambio de documento en ambas direcciones: el PDF de 2 páginas no heredó la zona
+  del de 4; después de marcar texto en el de 2, el de 4 tampoco heredó ese texto.
+  Se comprobaron vista previa ausente, campo fragmento vacío y cero marcas.
+- Privacidad: la segunda cuenta abrió el proyecto ajeno mientras existía y vio
+  «Documento no disponible». HTTP/SDK comprobó ambos originales por SHA-256,
+  API ajena 404, RLS sin filas y API sin sesión 401. SQL confirmó
+  created_at = updated_at: seleccionar y abrir el borrador no actualizó proyectos.
+- `web/tests/hu013-live.mjs` pasó en modos check y cleanup. Reproducción desde web:
+  `node tests/hu013-live.mjs ACCOUNTS_FILE check`; después `cleanup` únicamente
+  para esas muestras desechables. Preparar JSON externo con users:[{id,email,password}]
+  para dos propietarios hu013-1/2-UUID@example.invalid; el primero debe tener
+  exactamente HU013-4-paginas y HU013-2-paginas, con sus PDFs fuente junto al JSON.
+  Usa login normal y sesiones propias en memoria; no lee cookies del navegador.
+- Cleanup eliminó ambos proyectos/documentos/archivos mediante la API confirmada.
+  Después se purgaron solo las cuentas `759f96d3-5859-4ae5-8b9d-c54bef99fe6e` y
+  `9b22a0d8-ea34-49a4-adbb-386762c24b9f`, con guardas por UUID/correo y ausencia
+  de proyectos/archivos. SQL final: **0 usuarios Auth, identidades, sesiones,
+  refresh tokens, perfiles, proyectos, documentos, trabajos de limpieza y archivos**.
+  Sesión de navegador cerrada; test-accounts.json y script temporal de carga
+  eliminados. Las credenciales de carga nunca se incluyeron en Jira, Git o este documento.
+
+### Jira y entrega de HU013
+
+| Tarea | Estado | Comentario único | Adjuntos reales |
+| --- | --- | --- | --- |
+| SCRUM-83 | Finalizado | 10095 | 10278 texto/rango; 10279 texto tras zoom |
+| SCRUM-177 | Finalizado | 10096 | 10281 zona inicial; 10282 zoom 75; 10280 zoom 125 |
+| SCRUM-84 | Finalizado | 10097 | 10283 cancelar texto; 10286 mover; 10288 tamaño; 10287 cancelar zona; 10289 teclado; 10284 documento sin zona; 10285 documento sin texto |
+| SCRUM-25 | Finalizado | 10098 | 10291 segunda cuenta; 10290 acceso ajeno denegado |
+
+- **14 capturas auténticas**, sin plantillas ni reconstrucciones. Se verificaron
+  nombres, cantidades, ausencia de duplicados e imágenes en el HTML renderizado
+  de los cuatro comentarios. Cada subtarea conserva un único comentario con
+  resultados, capturas y enlaces al commit/PR. Preservar sus figuras al editar.
+- PR #17 queda en borrador, sin merge, para revisión. El commit adicional de
+  continuidad forma parte de la misma rama. No se inició HU014 ni otra historia.
+  Servidor existente conservado; navegador en login sin cuentas de prueba.
+- Próximo paso: revisar PR #17 antes de autorizar su integración; después consultar
+  HU014 en Jira y sus dependencias. Conservar sin aplicar ni eliminar el stash
+  `d6406e0cdbc464c1c0301c058024b10dd27c4515`.

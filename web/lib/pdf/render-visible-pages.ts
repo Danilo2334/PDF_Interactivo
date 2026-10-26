@@ -10,6 +10,7 @@ type PageSlot = {
   body: HTMLDivElement;
   canvas: HTMLCanvasElement | null;
   naturalWidth: number;
+  cleanupDecoration?: () => void;
 };
 
 export type PageRenderer = {
@@ -25,6 +26,7 @@ export function renderVisiblePages(
   onError: (error: unknown) => void,
   onPageChange: (number: number) => void,
   getViewportTop: () => number = () => 0,
+  decoratePage?: (page: PDFPageProxy, body: HTMLElement, viewport: ReturnType<PDFPageProxy["getViewport"]>) => Promise<() => void>,
 ): PageRenderer {
   const slots = new Map<number, PageSlot>();
   const requested = new Set<number>([1]);
@@ -158,6 +160,8 @@ export function renderVisiblePages(
   }
 
   function release(slot: PageSlot) {
+    slot.cleanupDecoration?.();
+    slot.cleanupDecoration = undefined;
     if (slot.canvas) {
       slot.canvas.remove();
       slot.canvas.width = 0;
@@ -303,6 +307,10 @@ export function renderVisiblePages(
           await renderTask.promise;
 
           if (stopped || !requested.has(number) || renderRevision !== revision) continue;
+
+          const cleanupDecoration = await decoratePage?.(page, slot.body, viewport);
+          if (stopped || !requested.has(number) || renderRevision !== revision) { cleanupDecoration?.(); continue; }
+          slot.cleanupDecoration = cleanupDecoration;
 
           completed = true;
           slot.figure.dataset.renderState = "ready";

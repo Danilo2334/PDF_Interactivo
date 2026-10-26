@@ -31,7 +31,7 @@ function loadModule(path, dependencies = {}, globals = {}) {
 
 const settle = () => new Promise((resolve) => setImmediate(resolve));
 
-function rendererFixture({ count = 20, heights = {}, held = [], fail = [], viewportHeight = 800, viewportTop = 70, roundScroll = false, thumbnails = false } = {}) {
+function rendererFixture({ count = 20, heights = {}, held = [], fail = [], viewportHeight = 800, viewportTop = 70, roundScroll = false, thumbnails = false, decorate } = {}) {
   const reads = [], cleanups = [], changes = [], errors = [], canvases = [];
   const frames = new Map(), listeners = new Map(), pending = new Map();
   let nextFrame = 0, renderer, intersection, resize;
@@ -110,6 +110,7 @@ function rendererFixture({ count = 20, heights = {}, held = [], fail = [], viewp
     async getPage(number) {
       reads.push(number);
       return {
+        pageNumber: number,
         getViewport: ({ scale }) => ({ width: 600 * scale, height: pageHeight(number) * scale / 1.5 }),
         cleanup: () => cleanups.push(number),
         render() {
@@ -132,7 +133,7 @@ function rendererFixture({ count = 20, heights = {}, held = [], fail = [], viewp
   renderer = thumbnails ? { dispose: renderThumbnails(pdf, container, () => errors.push(new Error("thumbnail render failed"))) } : renderVisiblePages(pdf, container, () => {}, (error) => {
     errors.push(error);
     renderer.dispose();
-  }, (number) => changes.push(number), () => viewportTop);
+  }, (number) => changes.push(number), () => viewportTop, decorate);
 
   return {
     renderer, container, reads, cleanups, changes, errors, canvases, pending, browser,
@@ -357,6 +358,7 @@ function viewerFixture(total = 20, initialPage = 1) {
     },
     "@/components/diagnostics/view-timing": { ViewTiming: () => null },
     "@/components/documents/pdf-thumbnails": { PdfThumbnails: () => null },
+    "@/lib/pdf/page-fragments": {},
     "@/lib/pdf/render-visible-pages": {
       renderVisiblePages(_pdf, _container, ready, error, changed) {
         callbacks = { ready, error, changed }; void Promise.resolve().then(ready);
@@ -483,4 +485,19 @@ test("viewer publishes the chosen page, restores a saved page on remount and cle
 test("a saved page outside the new PDF bounds falls back to its first page", async (t) => {
   const f = viewerFixture(2, 4); t.after(() => f.dispose()); await settle(); f.render();
   assert.equal(f.counter(), 'Página 1 de 2'); assert.deepEqual(f.selections, [1]);
+});
+
+test('page decorations are recreated at the new zoom and released when pages leave memory',async()=>{
+  const decorated=[],released=[];
+  const f=rendererFixture({decorate:async(page,_body,viewport)=>{decorated.push([page.pageNumber,viewport.width]);return()=>released.push(page.pageNumber);}});
+  await settle();assert.equal(decorated[0][0],1);
+  f.renderer.setZoom(125);await settle();assert.ok(released.includes(1));assert.ok(decorated.length>=2);
+  f.renderer.goToPage(15);f.flush();await settle();f.renderer.dispose();
+  assert.equal(released.length,decorated.length);
+});
+test('disposing during pending text decoration releases a late result without resurrecting a page',async()=>{
+  let finish, released=0;
+  const f=rendererFixture({decorate:()=>new Promise(resolve=>{finish=()=>resolve(()=>released++);})});
+  await settle();f.renderer.dispose();finish();await settle();
+  assert.equal(released,1);assert.equal(f.container.children.length,0);assert.equal(f.listeners.size,0);
 });
