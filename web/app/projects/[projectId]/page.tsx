@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { requireActiveUser } from "@/lib/auth/require-active-user";
+import { hasPermission } from "@/lib/auth/permissions";
+import { RenameDocumentForm } from "@/components/documents/rename-document-form";
+import { ReplaceDocumentForm } from "@/components/documents/replace-document-form";
+import { DeleteDocumentForm } from "@/components/documents/delete-document-form";
 import { ProjectWorkspace } from "@/components/documents/project-workspace";
 import type { Reinforcement } from "@/lib/types/reinforcement";
 import { createClient } from "@/lib/supabase/server";
@@ -19,7 +23,8 @@ export default async function ProjectPage({
   params,
 }: ProjectPageProps) {
   const { projectId } = await params;
-  const { userId } = await requireActiveUser();
+  const { userId, role } = await requireActiveUser();
+  const canRename = hasPermission(role, "documents.manage.own");
 
   const uuidPattern =
     /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -80,6 +85,11 @@ export default async function ProjectPage({
         >
           {project.name}
         </h1>
+        {canRename && (
+          <RenameDocumentForm projectId={project.id} currentName={project.name} />
+        )}
+        {canRename && <ReplaceDocumentForm projectId={project.id} documentId={project.document_id} />}
+        {canRename && <DeleteDocumentForm projectId={project.id} documentId={project.document_id} name={project.name} />}
 
         <dl className="mt-8 space-y-4">
           <div>
