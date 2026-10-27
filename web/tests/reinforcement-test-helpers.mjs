@@ -10,7 +10,7 @@ export function load(relative, dependencies = {}) {
     compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.ReactJSX },
   });
   const exports = {};
-  runInNewContext(outputText, { exports, Request, Response, URL, AbortSignal, AbortController, fetch, crypto, process, Date, Error, structuredClone,
+  runInNewContext(outputText, { exports, Request, Response, URL, AbortSignal, AbortController, fetch, crypto, process, Date, Error, structuredClone, Uint8Array, TextDecoder, setTimeout, clearTimeout,
     require(name) {
       if (name in dependencies) return dependencies[name];
       if (name === 'server-only') return {};

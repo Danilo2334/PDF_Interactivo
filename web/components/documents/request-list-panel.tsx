@@ -1,30 +1,11 @@
 "use client";
 
-import { useEffect, useId, useState } from "react";
+import { useId, useState } from "react";
 import { REQUEST_STATUSES, REQUEST_STATUS_LABELS, REQUEST_STAGE_LABELS } from "@/lib/reinforcements/state";
-import { createRequestResource, type RequestResource } from "@/lib/reinforcements/request-resource";
+import { useRequestResource } from "@/lib/reinforcements/use-request-resource";
+import { ContextualAnalysisPanel } from "@/components/documents/contextual-analysis-panel";
 import { requestListSchema, requestDetailSchema, type RequestFilter, type RequestRecord, type RequestSummary } from "@/lib/validations/request-list";
 
-function useRequestResource<T>(url: string, active: boolean, parse: (body: unknown) => T) {
-  const [refresh, setRefresh] = useState(0);
-  const key = `${url}:${refresh}`;
-  const [state, setState] = useState<{ key: string; result: RequestResource<T> } | null>(null);
-  useEffect(() => {
-    if (!active) return;
-    const reader = createRequestResource(url, parse, result => setState({ key, result }));
-    let cancelled = false;
-    let timer: number | undefined;
-    async function poll() {
-      if (document.visibilityState === "visible") await reader.load();
-      // Wait for the response before scheduling: slow requests must not be
-      // aborted repeatedly by the refresh interval.
-      if (!cancelled) timer = window.setTimeout(() => { void poll(); }, 10_000);
-    }
-    void poll();
-    return () => { cancelled = true; window.clearTimeout(timer); reader.dispose(); };
-  }, [url, key, active, parse]);
-  return { result: state?.key === key ? state.result : null, refresh: () => setRefresh(value => value + 1) };
-}
 const parseList = (body: unknown) => requestListSchema.parse(body);
 const parseDetail = (body: unknown) => requestDetailSchema.parse(body);
 const date = (value: string) => new Date(value).toLocaleString("es-CO");
@@ -64,6 +45,7 @@ function RequestDetailPanel({ projectId, documentId, requestId, active, onOpen }
       <blockquote className="max-h-52 overflow-y-auto whitespace-pre-wrap break-words rounded-lg bg-white p-3 text-sm text-slate-800">{detail.request.selected_text}</blockquote>
       <p className="text-sm text-slate-800"><strong>Necesidad: </strong>{detail.request.need}</p>
       <button type="button" onClick={() => onOpen(detail.request)} className={buttonClass}>Ver selección en el PDF</button>
+      <ContextualAnalysisPanel key={`${documentId}:${requestId}`} request={detail.request} active={active} onChanged={resource.refresh} />
       <h4 className="font-semibold text-slate-900">Cambios registrados</h4>
       {detail.events.length === 0 ? <p className="text-sm">No hay eventos en esta página del historial.</p> : <ol className="space-y-3">
         {detail.events.map(event => <li key={event.id} className="rounded-lg bg-white p-3 text-sm text-slate-800">

@@ -28,9 +28,20 @@ SCRUM-29, SCRUM-91, SCRUM-181 y SCRUM-92 están En curso. Listado, filtros,
 restauración de selección e historial implementados; faltan validación visual y
 la integración de transiciones reales con HU018–HU024. No confundir contrato
 probado en PostgreSQL aislado con resultados reales de IA.
-Orden de revisión/integración: HU014 → HU015 → HU016 → HU017, hacia develop
+Orden de revisión/integración: HU014 → HU015 → HU016 → HU017 → HU018, hacia develop
 tras ajustar la base de cada PR. HU017 tiene como base provisional la rama HU016.
 No cerrar historias ni sprints mientras falten sus criterios integrados.
+
+HU018 / SCRUM-30 está preparada en `codex/scrum-30-hu018-analisis-contextual`,
+basada en HU017 (`09dcc29`). **173/173 pruebas, lint y build correctos.**
+SCRUM-30, SCRUM-93, SCRUM-182 y SCRUM-94 están En curso. Se implementaron
+preparación del contexto, adaptador de IA, guardado privado del diagnóstico,
+reintentos y avisos de contexto insuficiente. La migración está aplicada.
+**Faltan clave/modelo de IA de servidor, una prueba real con ese proveedor y
+validación visual con capturas. No se hizo ninguna llamada de IA real.**
+La base provisional del PR de HU018 es la rama de HU017; integrar primero #21
+(y sus antecesores) y después cambiar su base a develop. No fusionar una
+historia posterior en la rama de una anterior.
 
 ## Contexto proporcionado por el usuario
 
@@ -1035,3 +1046,130 @@ configuración autorizada. Los parámetros de contexto se implementan en HU018.
    alcance verificado y pendientes. Mantener historia/subtareas En curso hasta
    completar criterios. El PR queda vinculado como enlace nativo, sin reportes
    adicionales ni capturas simuladas. No cerrar Sprint 4 ni Sprint 3 por este avance.
+
+
+## HU018 / SCRUM-30: análisis contextual preparado en la nube, 26/10/2026
+
+### Alcance realizado y límites
+
+- SCRUM-93: lectura en servidor del original privado mediante PDF.js. Reúne la
+  selección guardada, página, texto cercano (máximo 6000 caracteres), categoría
+  y dificultad. Prioriza el área seleccionada para desambiguar frases repetidas;
+  si no se localiza el fragmento, identifica explícitamente el respaldo de texto
+  de la misma página. No incorpora otras páginas, correos, títulos de proyectos
+  ni documentos ajenos. Una transcripción manual conserva su procedencia.
+- SCRUM-182: adaptador OpenAI Responses con salida JSON estructurada: tema,
+  conceptos, alcance y citas breves verificables en el contexto. El contenido
+  del PDF se trata como datos; no hay herramientas externas. `store: false`;
+  nunca se registran claves o respuestas del proveedor en logs. El diagnóstico
+  se almacena en `reinforcement_analyses`, vinculado a la solicitud.
+- SCRUM-94: un mínimo local de 32 letras/números entre selección y contexto
+  detecta casos evidentemente vacíos. Superarlo no garantiza comprensión:
+  el modelo también debe detectar ambigüedad o insuficiencia. Una respuesta
+  inconsistente, negativa, incompleta o con citas inventadas no se guarda como
+  análisis correcto. Se ofrecen mensajes y reintentos según el caso.
+- El contexto insuficiente requiere una nueva solicitud más completa porque
+  el contenido de una solicitud enviada es inmutable. Los fallos transitorios
+  sí permiten reintentar la misma solicitud.
+- El hash SHA-256 antes/después de la lectura protege contra una modificación
+  accidental en memoria. Esta función no carga, reescribe ni reemplaza el PDF.
+  La prueba integrada con un PDF digital real confirmó bytes idénticos.
+- Un análisis correcto pasa de `processing/analyzing` a `pending/choosing`.
+  No genera refuerzos, no recomienda todavía opciones (HU019), no marca
+  `generated` y nunca aprueba en nombre del propietario.
+
+### Integración técnica y base de datos
+
+- Nueva ruta GET/POST:
+  `/api/projects/[projectId]/reinforcement-requests/[requestId]/analysis`.
+  GET consulta disponibilidad/resultado; POST `prepare` revisa contexto sin IA
+  y POST `analyze` solicita el diagnóstico. Se exige sesión fresca, propietario
+  activo, origen permitido y versión actual. El cuerpo se limita a 1000 bytes;
+  el navegador no puede aportar un contexto o resultado arbitrarios.
+- Panel en el detalle de solicitudes: Revisar contexto, Analizar selección,
+  Actualizar análisis, diagnóstico, insuficiencia, espera y reintento. Conserva
+  la navegación del PDF. El sondeo reutiliza el controlador de HU017 y cancela
+  respuestas de una selección anterior; el cliente bloquea doble clic.
+- SQL: `20261026224216_contextual_request_analysis.sql`, aplicada con éxito al
+  proyecto Supabase existente. Tabla con RLS y SELECT del propietario; sin
+  escritura directa ni acceso anónimo. RPC pública invoker y función privada
+  con prueba HMAC de servidor separada de la creación de solicitudes.
+- Reclamo atómico por solicitud: los duplicados reciben el intento en curso o
+  el resultado existente. Un intento vence tras 120 segundos y puede
+  recuperarse; un proceso anterior ya no puede publicar. Límite de dos análisis
+  activos y diez inicios por cuenta en cinco minutos. Los cambios de estado
+  quedan en el historial de HU017 en la misma transacción.
+- El análisis vuelve a comprobar permisos y versión al guardar. Cambiar el PDF,
+  eliminar el proyecto o desactivar al propietario invalida el resultado.
+- Se corrigió solamente el nombre local de la migración HU016 a
+  `20261026211919_create_reinforcement_requests.sql`, la versión comprobada en
+  `supabase_migrations.schema_migrations`. El SQL no cambió ni se reaplicó.
+  Se actualizaron sus referencias en los tests para evitar reaplicaciones.
+- RLS, falta de UPDATE autenticado y falta de SELECT/RPC anónimo verificados en
+  el proyecto real; no se crearon solicitudes ni diagnósticos ficticios allí.
+- El asesor de seguridad no añadió hallazgos para HU018. Conserva avisos previos
+  de funciones definer y protección de contraseñas; no forman parte de esta
+  historia. Referencias: [funciones públicas](https://supabase.com/docs/guides/database/database-linter?lint=0028_anon_security_definer_function_executable),
+  [funciones autenticadas](https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable),
+  [protección de contraseñas](https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection).
+  La tabla privada de secretos tiene RLS sin políticas deliberadamente para
+  denegar acceso directo ([referencia](https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy)).
+
+### Verificación ejecutada
+
+- `npm --prefix web test`: **173/173**, incluidas 24 nuevas pruebas de HU018.
+- `npm --prefix web run lint`, `npm --prefix web run build` y `git diff --check`:
+  correctos. Node 24.22.1 en la nube; no se cambió la instalación local.
+- Migraciones exactas en PostgreSQL aislado: pruebas manipuladas/caducadas,
+  permisos, transiciones, eventos, duplicados, reintento/lease, resultado tardío,
+  versión sustituida, eliminación, cuotas y borrado en cascada. Tras alinear
+  nombres se repitieron 29 pruebas de migraciones HU016/HU017/HU018, aprobadas.
+- Lectura de un PDF real de dos páginas: no incorpora la segunda página y
+  conserva su SHA-256; PDF vacío/corrupto/página inválida también comprobados.
+- Proveedor simulado: JSON válido, rechazo, fallo, timeout, respuesta incompleta,
+  contexto insuficiente y citas inexistentes. Esto NO acredita calidad semántica
+  ni integración real con OpenAI.
+- Servidor de producción en la nube: `/login` 200; GET y POST de análisis sin
+  sesión 401; POST desde otro origen 403. El worker de PDF.js está incluido
+  en el trazado de la ruta. No se utilizó navegador de la empresa ni del hogar.
+
+### Retomar en Codex de escritorio
+
+1. Leer este documento, `git status -sb` y el diff antes de cambiar de rama.
+   Conservar cambios locales y el stash `d6406e0`. Obtener la rama remota HU018
+   en un checkout limpio/aislado; no aplicar parches ni hacer resets forzados.
+2. Conservar la configuración existente de Supabase y el secreto de servidor
+   `REINFORCEMENT_REQUEST_SECRET` de HU016. Las migraciones anteriores ya están
+   aplicadas al proyecto indicado; no pegarlas nuevamente en SQL Editor.
+3. Para la prueba IA real, el propietario configura de forma segura
+   `OPENAI_API_KEY` y `OPENAI_ANALYSIS_MODEL` en el entorno del servidor
+   (`web/.env.local` ignorado por Git o el almacén de secretos del despliegue).
+   Ninguna usa prefijo `NEXT_PUBLIC_`. Elegir un modelo disponible en su cuenta
+   compatible con Responses y Structured Outputs y autorizar su consumo.
+   No enviar credenciales por chat, commits ni capturas. No existe un modelo
+   predeterminado ni se ha creado una cuenta/proveedor de pago.
+4. Reiniciar la aplicación. Con sesión autorizada, abrir un PDF propio de dos
+   páginas, crear una solicitud HU016 y abrir Solicitudes → Ver solicitud e
+   historial → Revisar contexto. Comprobar página, selección y texto cercano;
+   la segunda página no debe aparecer. Captura para SCRUM-93.
+5. Analizar una selección con una dificultad concreta. Comprobar espera, tema,
+   conceptos, alcance y citas; recargar detalle y confirmar persistencia e
+   historial `queued → analyzing → choosing`. Doble clic no crea otro intento.
+   Revisar coherencia del diagnóstico con el PDF, no solo que existe un JSON.
+   Captura real de diagnóstico guardado para SCRUM-182.
+6. Probar un PDF sin texto útil con transcripción mínima: aviso de contexto
+   insuficiente. Probar además un fragmento semánticamente ambiguo con el
+   proveedor real; no inventar que el modelo lo rechazará sin observarlo.
+   Descargar el original antes/después y comparar SHA-256. Capturas para SCRUM-94.
+7. Comprobar segunda cuenta, cierre de sesión, móvil, desconexión y reintento.
+   No alterar estados mediante SQL en el proyecto real para simular éxito.
+   Mantener En curso si faltan IA real o capturas; no marcar listas como hechas.
+8. Tras validar, adjuntar solamente capturas reales y una explicación breve
+   por tarea en Jira, respetando evidencias existentes. Revisar PRs encadenados
+   en orden antes de integrarlos hacia develop. La aprobación final del
+   refuerzo sigue siendo una función posterior, fuera de HU018.
+
+Documentación oficial consultada para el adaptador:
+[Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs),
+[Responses](https://developers.openai.com/api/docs/guides/migrate-to-responses),
+[PDF.js en Node](https://github.com/mozilla/pdf.js/blob/master/examples/node/getinfo.mjs).

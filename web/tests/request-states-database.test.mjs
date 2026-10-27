@@ -30,7 +30,7 @@ test('HU017 state contract, audit triggers and history RLS in PostgreSQL', async
       insert into public.documents values ('${documentId}','${owner}','${owner}/${documentId}.pdf',100);
       insert into public.projects values ('${projectId}','${owner}','${documentId}','pending');
     `);
-    await db.exec(readFileSync(new URL('../../supabase/migrations/20261026211544_create_reinforcement_requests.sql', import.meta.url), 'utf8'));
+    await db.exec(readFileSync(new URL('../../supabase/migrations/20261026211919_create_reinforcement_requests.sql', import.meta.url), 'utf8'));
     const secret = (await db.query('select secret from private.reinforcement_request_secrets')).rows[0].secret;
     process.env.REINFORCEMENT_REQUEST_SECRET = secret;
     const base = { userId: owner, projectId, content, idempotencyKey, pageCount: 2, storagePath: `${owner}/${documentId}.pdf`, sizeBytes: 100 };
