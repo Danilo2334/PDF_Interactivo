@@ -3,12 +3,12 @@
 Actualizado: 27/10/2026. Mantener este único documento al continuar.
 
 La entrega más reciente está en el último apartado
-«Cierre del Sprint 3, 27/10/2026».
+«Integración revisada de PR #24 y HU014–HU019, 27/10/2026».
 Los estados de los apartados anteriores describen su momento cronológico.
 
 **Sprint 3 cerrado en Jira:** siete historias y 25 subtareas finalizadas,
-82 capturas conservadas, 219/219 pruebas, lint y build correctos. Los PR
-siguen pendientes de integración autorizada; develop/main no cambiaron.
+82 capturas conservadas, 221/221 pruebas, lint y build correctos. Los PR
+#24 y #18–#23 están integrados en develop; main no cambió.
 
 Resumen inicial anterior a la validación local: develop continúa en HU013 (`99e7c08`). HU014 está entregada en
 [PR #18](https://github.com/Danilo2334/PDF_Interactivo/pull/18), todavía en
@@ -1726,3 +1726,98 @@ Referencias: [nivel gratuito de Gemini](https://ai.google.dev/gemini-api/docs/pr
   Sprint 4; el bloqueo SMTP de SCRUM-233 pertenece a autenticación y no se
   declara resuelto. **HU020 no se inició.** El cierre de Sprint 3 no modifica
   esos estados ni autoriza pagos, merges de PR o cambios en main.
+
+## Integración revisada de PR #24 y HU014–HU019, 27/10/2026
+
+El usuario autorizó revisar e integrar #24 y continuar los demás PR en el orden
+acordado. Esta autorización actualiza la restricción de integración de los
+apartados anteriores; esos apartados conservan su carácter cronológico.
+
+### Resultado de GitHub y checkout local
+
+Se integraron con merge commit, conservando ramas e historial. Después de cada
+predecesor se cambió la base del siguiente a develop y se revisó su diff. Cada
+merge quedó limitado al SHA de la cabeza revisada mediante `expected_head_sha`.
+La lectura final de GitHub confirmó los siete PR integrados y con base develop:
+
+| PR | Alcance | Commit de integración |
+| --- | --- | --- |
+| [#24](https://github.com/Danilo2334/PDF_Interactivo/pull/24) | Conflictos de reemplazo/eliminación | `7bbaaec06473a79c48936b2d210f432395202920` |
+| [#18](https://github.com/Danilo2334/PDF_Interactivo/pull/18) | HU014, dificultad | `ae3dfe441f502b73d286582bef154b043fdb3e55` |
+| [#19](https://github.com/Danilo2334/PDF_Interactivo/pull/19) | HU015, extracción | `cec9ddbfd5aacbec659eaf32f561dd487f306264` |
+| [#20](https://github.com/Danilo2334/PDF_Interactivo/pull/20) | HU016, solicitud | `c468a0f94bd0dfff38aff30d3b92cf969e53910f` |
+| [#21](https://github.com/Danilo2334/PDF_Interactivo/pull/21) | HU017, listado/estado/historial | `30f19514a5cf8c7d2192ec2e4ad92689f8ee3d21` |
+| [#22](https://github.com/Danilo2334/PDF_Interactivo/pull/22) | HU018, análisis contextual | `6cfceef8f83ed1d7decf59d976d8bc79d474ad82` |
+| [#23](https://github.com/Danilo2334/PDF_Interactivo/pull/23) | HU019, recomendaciones y elección | `791cf22fdd0587a154fcba98c86b3f069d93d8f2` |
+
+No había revisiones ni conversaciones pendientes en los PR consultados. Los
+commits consultados no tenían statuses o ejecuciones de Actions registradas;
+la verificación utilizada es la local y real descrita aquí. No se declara una
+ejecución de CI que no existió.
+
+El árbol de `791cf22` coincide exactamente con
+`883373f5ef00d82ed5042a67d2c5bf40c0b14751`, donde se ejecutaron las verificaciones
+finales. El checkout principal quedó en **develop**, actualizado por fast-forward.
+Next regeneró su encabezado de AGENTS mientras se pasaba por develop antiguo:
+se comprobó que su hash era idéntico al archivo remoto revisado, se conservó una
+copia externa y se alineó el índice para completar el fast-forward sin perder
+instrucciones. El checkout temporal de revisión ya se retiró, conservando su rama
+publicada. No se borraron ramas, no hubo force push ni se alteró el stash.
+
+### Corrección necesaria antes de integrar HU018
+
+- Se detectaron cuatro conflictos deterministas que todavía usaban `40001` en
+  `private.change_verified_reinforcement_analysis`: versión, etapa, intento no
+  vigente y lease vencido. Se aplicó la misma solución documentada por Supabase
+  que en las revisiones previas: **PT409**, con mapeo HTTP 409 compatible con el
+  código anterior. No se atribuyó una versión remota no comprobada de PostgREST.
+- Commit **`f8d4bf02a012a276c9a936a9db1c0f5a9e7de74f`**, SCRUM-182, en HU018 y
+  propagado a HU019 antes de integrar ambos PR. La migración forward
+  **`20261027223449_fix_analysis_conflict_codes.sql`** se creó con CLI y se aplicó
+  una vez. El historial remoto tiene ahora diez entradas. No repetir las
+  migraciones anteriores ni ejecutar db push.
+- Se comparó la función antes y después: solo cambian cuatro códigos;
+  firma, cuerpo restante, ACL y search_path se conservan. Las pruebas
+  PostgreSQL comparan también metadatos, RLS y políticas. La comparación de
+  fuente normaliza únicamente CRLF/LF de Windows. Los avisos remotos de
+  seguridad permanecieron iguales al ignorar su fecha de observación.
+- **20/20 pruebas dirigidas de API/PostgreSQL aprobadas**: conflicto al finalizar
+  no se presenta como diagnóstico guardado ni repite el proveedor; intentos
+  obsoletos/expirados, cambios de documento y etapas no elegibles se rechazan,
+  conservando los controles de firma, propiedad, cuotas e idempotencia.
+- Regresión autenticada contra el RPC real sobre la solicitud QA de energía:
+  documento distinto → **409/PT409 en 245 ms**; intento no vigente →
+  **409/PT409 en 592 ms**. Se usaron entradas negativas, sin fabricar estados
+  de generación/aprobación. El snapshot de solicitud, diagnóstico, eventos y
+  recomendaciones permaneció idéntico. Las firmas solo existieron en memoria;
+  no se imprimieron, almacenaron ni versionaron.
+
+### Verificación, Jira y siguiente revisión
+
+- **221/221 pruebas, lint y build de producción con TypeScript correctos**.
+  La comprobación HTTP/SDK `ai-read` confirmó ambos diagnósticos reales de
+  Gemini 3.5 Flash-Lite, citas y elecciones guardadas, aislamiento entre páginas
+  y cuentas, rechazos 401/404/409 sin mutaciones y **24 solicitudes intactas**.
+  Las solicitudes siguen pending/choosing, sin contenido generado ni aprobado.
+  No se hicieron nuevas llamadas a IA ni se activaron pagos.
+- Se actualizaron los comentarios existentes de las historias SCRUM-23/26/27/28/
+  29/30/31 con su PR y hash de integración, y el de SCRUM-182 con la corrección
+  y sus pruebas. La lectura posterior confirmó **un comentario de resultados
+  por incidencia**, sin imágenes duplicadas, conservando las cinco capturas de
+  SCRUM-182 y las imágenes previas de las historias. Las **82 capturas de las
+  25 subtareas del Sprint 3** siguen conservadas; no se duplicaron capturas para
+  documentar una operación de Git.
+- **Sprint 3 sigue cerrado**, con siete historias y 25 subtareas finalizadas,
+  listo para la revisión del usuario. HU014/HU015/HU016/HU018/HU019 conservan
+  Finalizado. **HU017/SCRUM-29 permanece En curso**: integrar listado, filtros y
+  contrato de estados no acredita generación/aprobación funcionales de historias
+  futuras. No se inició Sprint 4 ni HU020, ni se cerraron tareas por hacer merge.
+- La configuración privada y el servidor de localhost:3000 se conservaron.
+  `web/.env.local` sigue ignorado. El stash
+  `d6406e0cdbc464c1c0301c058024b10dd27c4515` permanece sin aplicar/eliminar.
+  main y origin/main siguen en `8a569e0a789c49d33c9fa812d7c601726b6a7848`;
+  el PR #13 hacia main quedó fuera de este encargo. SCRUM-233 mantiene su
+  pendiente de remitente SMTP; no se declara resuelto por esta integración.
+
+El siguiente paso es la revisión del usuario sobre develop y sus evidencias.
+No iniciar otra historia por el mero hecho de que los PR estén integrados.
