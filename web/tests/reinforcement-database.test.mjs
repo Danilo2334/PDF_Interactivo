@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { createHmac, randomUUID } from 'node:crypto';
 import test from 'node:test';
 import { PGlite } from '@electric-sql/pglite';
@@ -30,7 +30,27 @@ test('HU016 migration, PostgreSQL constraints, RPC authentication and RLS', asyn
       insert into public.documents values ('${documentId}','${owner}','${owner}/${documentId}.pdf',100);
       insert into public.projects values ('${projectId}','${owner}','${documentId}','pending');
     `);
-    await db.exec(readFileSync(new URL('../../supabase/migrations/20261026211544_create_reinforcement_requests.sql', import.meta.url), 'utf8'));
+    await db.exec(readFileSync(new URL('../../supabase/migrations/20261026211919_create_reinforcement_requests.sql', import.meta.url), 'utf8'));
+    await t.test('the forward migration changes only two conflict codes and preserves function metadata, ACL and RLS', async () => {
+      const functions = async () => (await db.query(`select n.nspname schema,p.proname name,p.prosrc source,to_jsonb(p)-'prosrc' metadata
+        from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+        where n.nspname in ('public','private','auth') order by p.oid`)).rows;
+      const security = async () => ({ tables: (await db.query(`select c.relname,c.relrowsecurity,c.relforcerowsecurity,c.relacl::text
+        from pg_class c where c.relnamespace in ('public'::regnamespace,'private'::regnamespace) and c.relkind='r' order by c.oid`)).rows,
+        policies: (await db.query("select * from pg_policies where schemaname in ('public','private') order by schemaname,tablename,policyname")).rows });
+      const before = await functions(), accessBefore = await security();
+      const migrations = readdirSync(new URL('../../supabase/migrations/', import.meta.url)).filter(name => name.endsWith('_fix_request_conflict_codes.sql'));
+      assert.equal(migrations.length, 1, 'Load the single HU016 forward migration independently of its reconciled remote timestamp');
+      await db.exec(readFileSync(new URL('../../supabase/migrations/' + migrations[0], import.meta.url), 'utf8'));
+      let replacements = 0;
+      const expected = before.map(fn => {
+        if (fn.schema !== 'private' || fn.name !== 'create_verified_reinforcement_request') return fn;
+        replacements = (fn.source.match(/errcode = '40001'/g) ?? []).length;
+        assert.equal(fn.metadata.prosecdef, true); assert.deepEqual(fn.metadata.proconfig, ['search_path=""']);
+        return { ...fn, source: fn.source.replaceAll("errcode = '40001'", "errcode = 'PT409'") };
+      });
+      assert.equal(replacements, 2); assert.deepEqual(await functions(), expected); assert.deepEqual(await security(), accessBefore);
+    });
     const secret = (await db.query('select secret from private.reinforcement_request_secrets')).rows[0].secret;
     process.env.REINFORCEMENT_REQUEST_SECRET = secret;
     const base = { userId: owner, projectId, content, idempotencyKey, pageCount: 2, storagePath: `${owner}/${documentId}.pdf`, sizeBytes: 100 };
@@ -86,13 +106,26 @@ test('HU016 migration, PostgreSQL constraints, RPC authentication and RLS', asyn
       }
       await db.exec(`reset role; update public.profiles set is_active=true,role='owner' where id='${owner}'`); await asUser();
     });
-    await t.test('PDF replacement prevents a new stale submission but preserves a previously committed receipt', async () => {
+    await t.test('a proof retained before PDF replacement fails with PT409 without insertion while a committed receipt remains idempotent', async () => {
+      const retained = proof.signRequestProof({ ...base, idempotencyKey: randomUUID() });
+      const before = (await db.query('select * from public.reinforcement_requests order by id')).rows;
       const replacement = randomUUID(); await db.exec(`reset role;
         insert into public.documents values('${replacement}','${owner}','new.pdf',100);
         update public.projects set document_id='${replacement}' where id='${projectId}';`); await asUser();
-      await assert.rejects(call({ ...base, idempotencyKey: randomUUID() }), e => e.code === '40001');
+      await assert.rejects(db.query('select public.create_reinforcement_request($1,$2)', [retained.p_payload, retained.p_signature]), e => e.code === 'PT409');
+      assert.deepEqual((await db.query('select * from public.reinforcement_requests order by id')).rows, before);
       assert.equal((await call()).request.id, id);
       await db.exec(`reset role; update public.projects set document_id='${documentId}' where id='${projectId}'`); await asUser();
+    });
+    await t.test('a retained proof rejects changed PDF storage metadata with PT409 without inserting requests', async () => {
+      for (const [column, value] of [['storage_path', 'replacement.pdf'], ['size_bytes', 101]]) {
+        const retained = proof.signRequestProof({ ...base, idempotencyKey: randomUUID() });
+        const before = (await db.query('select * from public.reinforcement_requests order by id')).rows;
+        await db.exec('reset role'); await db.query(`update public.documents set ${column}=$1 where id=$2`, [value, documentId]); await asUser();
+        await assert.rejects(db.query('select public.create_reinforcement_request($1,$2)', [retained.p_payload, retained.p_signature]), e => e.code === 'PT409');
+        assert.deepEqual((await db.query('select * from public.reinforcement_requests order by id')).rows, before);
+        await db.exec('reset role'); await db.query('update public.documents set storage_path=$1,size_bytes=100 where id=$2', [base.storagePath, documentId]); await asUser();
+      }
     });
     await t.test('pending deletion blocks reads and retries; project deletion cascades private requests', async () => {
       await db.exec(`reset role; insert into public.project_deletions values(array['${documentId}'::uuid])`); await asUser();
