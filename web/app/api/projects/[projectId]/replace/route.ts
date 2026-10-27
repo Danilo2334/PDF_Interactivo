@@ -63,9 +63,10 @@ export async function POST(request: Request, { params }: { params: Promise<{ pro
       console.error("Limpieza de reemplazo temporal pendiente.");
       return result("El PDF vigente se conserva. No se completó la limpieza del archivo temporal; inténtalo más tarde.", 503);
     }
-    return result(error.code === "40001"
+    const conflict = error.code === "PT409" || error.code === "40001";
+    return result(conflict
       ? "El documento cambió. Recarga el proyecto antes de reintentar."
-      : "No fue posible completar el reemplazo. El PDF vigente se conserva.", error.code === "40001" ? 409 : 503);
+      : "No fue posible completar el reemplazo. El PDF vigente se conserva.", conflict ? 409 : 503);
   }
   revalidatePath("/documents");
   revalidatePath(`/projects/${projectId}`);
