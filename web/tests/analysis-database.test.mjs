@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { randomUUID, createHmac } from 'node:crypto';
 import test from 'node:test';
 import { PGlite } from '@electric-sql/pglite';
@@ -33,6 +33,26 @@ test('HU018 signed analysis lifecycle and ownership in isolated PostgreSQL', asy
     `);
     for (const name of ['20261026211919_create_reinforcement_requests.sql', '20261026215447_track_reinforcement_request_states.sql', '20261026224216_contextual_request_analysis.sql'])
       await db.exec(readFileSync(new URL(`../../supabase/migrations/${name}`, import.meta.url), 'utf8'));
+    await t.test('the forward migration changes only four conflict codes and preserves function metadata, ACL and RLS', async () => {
+      const functions = async () => (await db.query(`select n.nspname schema,p.proname name,replace(p.prosrc,chr(13)||chr(10),chr(10)) source,to_jsonb(p)-'prosrc' metadata
+        from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+        where n.nspname in ('public','private','auth') order by p.oid`)).rows;
+      const security = async () => ({ tables: (await db.query(`select c.relname,c.relrowsecurity,c.relforcerowsecurity,c.relacl::text
+        from pg_class c where c.relnamespace in ('public'::regnamespace,'private'::regnamespace) and c.relkind='r' order by c.oid`)).rows,
+        policies: (await db.query("select * from pg_policies where schemaname in ('public','private') order by schemaname,tablename,policyname")).rows });
+      const before = await functions(), accessBefore = await security();
+      const files = readdirSync(new URL('../../supabase/migrations/', import.meta.url)).filter(name => name.endsWith('_fix_analysis_conflict_codes.sql'));
+      assert.equal(files.length, 1);
+      await db.exec(readFileSync(new URL('../../supabase/migrations/' + files[0], import.meta.url), 'utf8'));
+      let replacements = 0;
+      const expected = before.map(fn => {
+        if (fn.schema !== 'private' || fn.name !== 'change_verified_reinforcement_analysis') return fn;
+        replacements = (fn.source.match(/'40001'/g) ?? []).length;
+        assert.equal(fn.metadata.prosecdef, true); assert.deepEqual(fn.metadata.proconfig, ['search_path=""']);
+        return { ...fn, source: fn.source.replaceAll("'40001'", "'PT409'") };
+      });
+      assert.equal(replacements, 4); assert.deepEqual(await functions(), expected); assert.deepEqual(await security(), accessBefore);
+    });
     const secret = (await db.query('select secret from private.reinforcement_request_secrets')).rows[0].secret;
     process.env.REINFORCEMENT_REQUEST_SECRET = secret;
     async function asUser(id = owner, role = 'authenticated') {
@@ -94,7 +114,7 @@ test('HU018 signed analysis lifecycle and ownership in isolated PostgreSQL', asy
       const id=await fresh(); await db.exec('reset role');
       await db.query("update public.reinforcement_requests set status='processing',stage='generating' where id=$1",[id]);
       await db.query("update public.reinforcement_requests set status='generated',stage='review' where id=$1",[id]);
-      await asUser(); await assert.rejects(call(start(id)),e=>e.code==='40001');
+      await asUser(); await assert.rejects(call(start(id)),e=>e.code==='PT409');
     });
     await t.test('insufficient context records a clear failure without generating output; request content is immutable', async () => {
       const input=start(await fresh()); await call(input);
@@ -107,15 +127,15 @@ test('HU018 signed analysis lifecycle and ownership in isolated PostgreSQL', asy
     await t.test('expired claims are reclaimed atomically and an older worker can no longer publish', async () => {
       const input=start(await fresh()); await call(input); await db.exec('reset role');
       await db.query("update public.reinforcement_analyses set lease_expires_at=now()-interval '1 second' where request_id=$1",[input.requestId]);
-      await asUser(); await assert.rejects(call(finish(input)),e=>e.code==='40001');
+      await asUser(); await assert.rejects(call(finish(input)),e=>e.code==='PT409');
       const retry=start(input.requestId), result=await call(retry); assert.equal(result.analysis.attempts,2);
-      await assert.rejects(call(finish(input)),e=>e.code==='40001'); await call(fail(retry));
+      await assert.rejects(call(finish(input)),e=>e.code==='PT409'); await call(fail(retry));
       const recovery=start(input.requestId); await call(recovery); assert.equal((await call(finish(recovery))).analysis.status,'ready');
     });
     await t.test('a document replacement/deletion invalidates work before its diagnosis is persisted', async () => {
       const input=start(await fresh()); await call(input); await db.exec('reset role');
       await db.query('update public.projects set document_id=null where id=$1',[projectId]); await asUser();
-      await assert.rejects(call(finish(input)),e=>e.code==='40001');
+      await assert.rejects(call(finish(input)),e=>e.code==='PT409');
       await db.exec('reset role'); await db.query('update public.projects set document_id=$1 where id=$2',[documentId,projectId]);
       await db.query('insert into public.project_deletions values($1)',[[documentId]]); await asUser();
       await assert.rejects(call(finish(input)),e=>e.code==='42501');

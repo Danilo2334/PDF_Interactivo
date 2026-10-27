@@ -16,7 +16,8 @@ function fixture(options = {}) {
   }, storage: { from() { return { async download() { downloads++; return options.downloadError ? { error: {} } : { data: new Blob([new Uint8Array(100)]) }; } }; } },
   async rpc(_name,args) {
     const input = JSON.parse(args.p_payload); rpc.push(input);
-    if (options.rpcError) return { error: { code: options.rpcError } };
+    if (options.rpcError || input.action === 'finish' && options.finishRpcError)
+      return { error: { code: options.rpcError ?? options.finishRpcError } };
     return input.action === 'start' ? { data: { disposition: options.disposition ?? 'started', analysis: { ...analysis, attempt_id: input.attemptId } } }
       : { data: { disposition: 'saved', analysis: { ...analysis, status: input.status, attempt_id: input.attemptId,
         context: input.context, diagnosis: input.diagnosis, model: input.model, error_code: input.errorCode, finished_at: new Date().toISOString() } } };
@@ -94,11 +95,19 @@ test('insufficient local text avoids the provider; semantic insufficiency also n
 });
 
 test('current access/version failures during persistence and account rate limits cannot masquerade as success', async () => {
-  for (const [code,status] of [['42501',403],['40001',409],['23514',409],['P0001',429],['PGRST202',503]]) {
+  for (const [code,status] of [['42501',403],['PT409',409],['40001',409],['23514',409],['P0001',429],['PGRST202',503]]) {
     const f = fixture({ rpcError: code }); assert.equal((await f.post()).status, status); assert.equal(f.stats().providerCalls, 0);
   }
   const active = fixture({ analysis, record: { ...record, status: 'processing', stage: 'analyzing' } });
   assert.equal((await (await active.get()).json()).retryable, false);
   const expired = fixture({ analysis: { ...analysis, lease_expires_at: '2000-01-01T00:00:00.000Z' }, record: { ...record, status: 'processing', stage: 'analyzing' } });
   assert.equal((await (await expired.get()).json()).retryable, true);
+});
+
+test('a stale analysis finish returns 409 without a false diagnosis receipt or a provider retry', async () => {
+  const f = fixture({ finishRpcError: 'PT409' });
+  const response = await f.post(), body = await response.json();
+  assert.equal(response.status, 409); assert.match(body.message, /Actualiza el detalle/);
+  assert.equal(body.analysis, undefined); assert.equal(f.stats().providerCalls, 1);
+  assert.deepEqual(f.rpc.map(call => call.action), ['start', 'finish']);
 });
