@@ -2,11 +2,15 @@
 
 Actualizado: 27/10/2026. Mantener este único documento al continuar.
 
-La validación más reciente está en el último apartado
-«Resolución de Gemini y cierre de HU018–HU019, 27/10/2026».
+La entrega más reciente está en el último apartado
+«Cierre del Sprint 3, 27/10/2026».
 Los estados de los apartados anteriores describen su momento cronológico.
 
-Estado actual: develop continúa en HU013 (`99e7c08`). HU014 está entregada en
+**Sprint 3 cerrado en Jira:** siete historias y 25 subtareas finalizadas,
+82 capturas conservadas, 219/219 pruebas, lint y build correctos. Los PR
+siguen pendientes de integración autorizada; develop/main no cambiaron.
+
+Resumen inicial anterior a la validación local: develop continúa en HU013 (`99e7c08`). HU014 está entregada en
 [PR #18](https://github.com/Danilo2334/PDF_Interactivo/pull/18), todavía en
 borrador y sin merge; sus evidencias anteriores se conservan.
 HU015 / SCRUM-27 se implementó en la nube en la rama
@@ -1617,3 +1621,108 @@ Referencias: [nivel gratuito de Gemini](https://ai.google.dev/gemini-api/docs/pr
 [contrato REST estructurado](https://ai.google.dev/gemini-api/docs/generate-content/structured-output),
 [modelo 3.5 Flash-Lite](https://ai.google.dev/gemini-api/docs/models/gemini-3.5-flash-lite),
 [conflictos y reintentos de PostgREST](https://supabase.com/kb/troubleshooting/high-cpu-and-infinite-transaction-retries-when-using-custom-error-codes-in-rpc-functions).
+
+## Cierre del Sprint 3, 27/10/2026
+
+### Alcance y estado comprobados en Jira
+
+- El usuario pidió terminar el Sprint 3. Se consultaron el tablero 1, su
+  configuración y el sprint **4, SCRUM Sprint 3**; no se confundió con el Sprint 4.
+  Su alcance real son **HU010–HU016, SCRUM-22 a SCRUM-28**. Las siete historias
+  y sus **25 subtareas**, incluida SCRUM-144, están Finalizado y sin casillas
+  pendientes en sus descripciones. La última columna del tablero corresponde
+  a ese estado. Las métricas anteriores al cierre mostraron 7/7 y 100 %.
+- Se auditó un único comentario de resultados por cada subtarea: **80 capturas
+  previas**, sin nombres duplicados dentro de los comentarios. Se conservaron
+  esos comentarios e imágenes y se añadieron dos capturas auténticas a
+  SCRUM-180 y SCRUM-144; sus comentarios 10108 y 10087 contienen ahora dos y
+  tres imágenes respectivamente. **Total del Sprint 3: 82 capturas**. Se
+  actualizaron también los resultados de SCRUM-173/174/80 y los resúmenes madre,
+  sin duplicar imágenes ni crear informes adicionales.
+- Jira confirmó el cierre y una lectura independiente verificó `state=closed`,
+  con `completeDate=2026-10-27T22:13:41.337Z` (17:13 en Colombia). Se conservaron
+  el objetivo y las fechas originales; no se inició el Sprint 4.
+
+### Correcciones surgidas en la revisión final
+
+- Se revisaron en orden los cambios de HU014/HU015/HU016 y sus evidencias.
+  Los conflictos deterministas de versión aún usaban SQLSTATE `40001` en
+  creación de solicitudes, reemplazo y comienzo de eliminación. Se aplicó la
+  solución documentada por Supabase, ya validada en HU019: usar **PT409** sin
+  alterar la autorización ni presentar el conflicto como éxito. No se afirma
+  una versión remota de PostgREST que no se consultó.
+- **SCRUM-180, `d57a6b6`:** dos códigos en
+  `private.create_verified_reinforcement_request`, mapeo HTTP compatible con
+  PT409 y el código anterior, pruebas de rechazo tardío/borrador/idempotencia.
+  El archivo de creación de HU016 se reconcilió en su propia rama como
+  `20261026211919_create_reinforcement_requests.sql`, igual al historial remoto.
+- **SCRUM-173/174, `35a2abf`:** tres códigos en `replace_project_pdf` y
+  `begin_project_deletion`; mapeo 409 y reconocimiento de rollback PT409 para
+  limpiar solamente un archivo temporal de reemplazo. Una conexión ambigua
+  sigue sin autorizar esa limpieza. Se añadió la regresión SQL reproducible
+  con PGlite; sus entradas package/lock coinciden con las ya usadas en HU016.
+- Migraciones forward aplicadas **una sola vez**, después de conciliar historial
+  y comparar con las funciones remotas:
+  `20261027205032_fix_request_conflict_codes.sql` y
+  `20261027205336_fix_document_conflict_codes.sql`. El historial remoto contiene
+  ahora nueve entradas. La comparación posterior confirmó exactamente cinco
+  códigos sustituidos en tres funciones, sin otros cambios de cuerpos, firmas,
+  ACL o search_path. PostgreSQL/PGlite comprueba también políticas y RLS;
+  los avisos de seguridad remotos permanecen iguales al ignorar su fecha de lectura.
+  No hubo db push, repetición de migraciones anteriores ni cambios de secretos.
+
+### Regresión real de aplicación, API y datos
+
+- Se usó únicamente el proyecto descartable **QA-SPRINT3-cierre-descartable**,
+  `f334284a-ff06-4fcb-a026-984b18ded6f4`, propiedad de la cuenta QA ya existente.
+  Se cargó un PDF sintético, se creó una solicitud y se retuvo en memoria una
+  prueba firmada válida del PDF verificado. Después se reemplazó mediante la
+  aplicación. Enviar la prueba anterior al RPC real devolvió **HTTP 409/PT409
+  en 241 ms**, sin insertar. No se imprimieron ni persistieron esa firma o secreto.
+- La solicitud original permaneció asociada a la versión anterior. Se creó una
+  solicitud válida de la nueva versión, `4eec8815-dd20-4aa0-9fad-1b20b97320b3`;
+  reintentar devolvió el mismo ID. Existían dos solicitudes y dos eventos, pero
+  el listado de la versión vigente mostró solo una. Se abrió su recibo real en
+  el navegador; la captura de SCRUM-180 muestra ese resultado, no una alerta
+  inventada de la llamada RPC. La presentación del conflicto y conservación del
+  borrador se verifican adicionalmente en la prueba de API/controlador.
+- La confirmación antigua de eliminación devolvió **HTTP 409 en 578 ms** y
+  exigió reconfirmar. El RPC real de reemplazo con versión anterior devolvió
+  **409 en 471 ms**. El snapshot de proyecto, documentos, versiones, solicitudes
+  y trabajos de limpieza quedó idéntico; no se creó ninguna limpieza y el PDF
+  vigente siguió respondiendo 200. Una llamada inicial agotó su tiempo de espera;
+  se comprobó ausencia de cambios y, tras restablecer el acceso, el caso pasó.
+- La eliminación confirmada de la versión vigente terminó correctamente. API/SDK
+  y **SQL independiente** confirmaron cero proyectos, documentos, solicitudes,
+  eventos y objetos de Storage correspondientes al fixture: dos versiones,
+  dos solicitudes y dos eventos eliminados. PDF y listado privado devolvieron
+  404. La página recargada mostró **Documento no disponible**, con captura real
+  nueva en SCRUM-144. No se tocaron proyectos personales ni los fixtures de IA.
+- Pruebas dirigidas: 22/22 en HU016 y 27/27 en la corrección de documentos.
+  Verificación final acumulada: **219/219**, lint y build de producción con
+  TypeScript correctos. No se hicieron llamadas adicionales de IA; se conserva
+  Gemini 3.5 Flash-Lite, sin pagos ni fallback de proveedor. Se reutilizó el
+  servidor de localhost:3000.
+
+### Git, revisión e instrucciones para continuar
+
+- La corrección de HU011 tiene rama propia desde develop,
+  `codex/sprint3-conflictos-documentos`, y
+  [PR #24](https://github.com/Danilo2334/PDF_Interactivo/pull/24), en borrador.
+  Se propagó a HU014 → HU015 → HU016 → HU017 → HU018 → HU019. La corrección
+  de HU016 se propagó solamente a sus descendientes, sin reescribir historial.
+  El conflicto de merge en la prueba PostgreSQL de HU018 se resolvió conservando
+  tanto pgcrypto como las regresiones nuevas; la suite completa lo verificó.
+- **Orden preparado: #24 → #18 → #19 → #20 → #21 → #22 → #23.** El PR #24
+  apunta a develop; #18 tiene base provisional en la rama de #24, y el resto
+  conserva la cadena. Después de integrar un predecesor con autorización,
+  cambiar la base del siguiente a develop y revisar su diff/checks de nuevo.
+  Los PR conservan borrador y no se integraron. La entrega del sprint está
+  validada en la rama acumulada, no desplegada mediante un merge a develop.
+- develop permanece en `99e7c082c6ae2a69fd2f3d68ec57f5bc85099989`; main no cambió.
+  El checkout principal continúa en HU019. Se conserva sin aplicar/eliminar el
+  stash `d6406e0cdbc464c1c0301c058024b10dd27c4515` y la configuración privada.
+- HU017 y los estados finales de generación/aprobación siguen pendientes del
+  Sprint 4; el bloqueo SMTP de SCRUM-233 pertenece a autenticación y no se
+  declara resuelto. **HU020 no se inició.** El cierre de Sprint 3 no modifica
+  esos estados ni autoriza pagos, merges de PR o cambios en main.
