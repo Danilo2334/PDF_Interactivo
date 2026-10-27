@@ -2,8 +2,8 @@
 
 Actualizado: 27/10/2026. Mantener este único documento al continuar.
 
-La validación más reciente del equipo personal y sus bloqueos están en el
-último apartado «Validación en el equipo personal y cambio a Gemini».
+La validación más reciente está en el último apartado
+«Resolución de Gemini y cierre de HU018–HU019, 27/10/2026».
 Los estados de los apartados anteriores describen su momento cronológico.
 
 Estado actual: develop continúa en HU013 (`99e7c08`). HU014 está entregada en
@@ -1505,3 +1505,115 @@ Referencias oficiales utilizadas: [modelo Gemini](https://ai.google.dev/gemini-a
 [tarifas](https://ai.google.dev/gemini-api/docs/pricing),
 [contraseñas Supabase](https://supabase.com/docs/guides/auth/passwords),
 [SMTP](https://supabase.com/docs/guides/auth/auth-smtp).
+
+## Resolución de Gemini y cierre de HU018–HU019, 27/10/2026
+
+Este apartado actualiza el bloqueo anterior. Se continuó sobre HU019, sin
+aplicar/eliminar el stash `d6406e0cdbc464c1c0301c058024b10dd27c4515`, sin
+merge de PR, sin modificar develop/main y sin avanzar a HU020. Se reutilizó
+el servidor local y las cuentas temporales QA; no se solicitó ingreso personal.
+
+### Modelo y fallos corregidos
+
+- `gemini-3.8-flash` siguió respondiendo 200 a metadatos, pero la generación
+  mínima estructurada devolvió 503 y otra de texto agotó 45 segundos. Se
+  comprobaron el contrato REST y el nivel `low` en la documentación oficial;
+  no se cambiaron parámetros a ciegas ni se interpretó el GET 200 como éxito
+  de inferencia.
+- Se verificó el nivel gratuito publicado y una generación JSON real correcta
+  de **`gemini-3.5-flash-lite`**. Se configuró explícitamente en la variable
+  de servidor `GEMINI_ANALYSIS_MODEL` de `.env.local`, ignorada por Git.
+  La clave se conservó privada. No hay cambio automático de modelo/proveedor,
+  facturación activada, servicios contratados ni herramientas externas de pago.
+- **SCRUM-183, `fccbe06`:** una respuesta real de vocabulario descartaba tres
+  formatos con razones vacías, y el validador rechazaba también las dos opciones
+  útiles. Se permiten razones vacías solo en los candidatos que se descartan;
+  toda opción mostrada/persistida conserva razón de 20–700 caracteres y citas
+  verificadas. La prueba de regresión falló antes y pasó después del arreglo.
+- **SCRUM-183, `e6de533`:** otro resultado real usó una referencia temática
+  distinta del diagnóstico. El esquema enviado a Gemini ahora limita ese campo
+  a un enum con el tema y conceptos realmente guardados. La validación del
+  servidor sigue comprobando tema, citas del PDF y dificultad; no se aceptan
+  referencias fuera de ese conjunto ni se debilitaron las citas para conseguir un éxito.
+- **SCRUM-96, `bae21ef`:** se reprodujo un conflicto de elección que tardó
+  aproximadamente 2,1 minutos y devolvió 503. Las funciones usaban SQLSTATE
+  `40001` para un conflicto determinista, patrón asociado a reintentos internos
+  de PostgREST en la documentación de Supabase. Se sustituyeron nueve códigos
+  por `PT409` en tres funciones de recomendaciones y se añadió su mapeo HTTP.
+  No se atribuye una versión remota de PostgREST que no se comprobó.
+- Se reconcilió el historial remoto y se compararon los tres cuerpos de función
+  con el original, normalizando únicamente CRLF. Se aplicó **solo** la migración
+  forward `20261027201023_fix_recommendation_conflict_codes.sql`. El archivo local
+  y su prueba coinciden con esa versión del historial remoto. No hubo db push,
+  reaplicación de migraciones anteriores, rotación de secretos, terminación de
+  backends ni cambios de permisos/RLS. Las pruebas PostgreSQL comparan cuerpos,
+  metadatos, ACL, políticas y RLS; los avisos de seguridad existentes no aumentaron.
+
+### Pruebas reales completadas
+
+- Solicitud `e86007fc-a485-43b2-8f8f-1a5ab8cd98c4`: diagnóstico suficiente sobre
+  conservación de energía en un péndulo, conceptos y alcance coherentes con la
+  dificultad, con dos citas literales. Doble clic produjo **un solo intento**.
+  Recomendaciones reales justificadas y ordenadas, sin radios premarcados.
+  Se guardaron elecciones y se comprobaron recarga, teclado y móvil 390×844;
+  la elección final de esta solicitud es Imagen, versión 4.
+- Se recuperó realmente `795fd149-4dc8-4dc2-b07c-35dd79065243`, que conservaba
+  dos timeouts: el tercer intento terminó con diagnóstico suficiente de Gemini
+  3.5 Flash-Lite y estado pending/choosing. Sus siete eventos conservan los
+  errores, los reintentos y la recuperación, sin fabricar transiciones.
+- Se creó por UI la solicitud de vocabulario
+  `f6f024a6-53f9-41f1-b344-170b61f0f226`, sobre texto digital extraído de la
+  página 2 y una necesidad verbal breve de evaporación/condensación. El
+  diagnóstico y su cita corresponden al ciclo del agua, sin energía ni péndulo.
+  Tres respuestas de recomendaciones se rechazaron antes de completar las
+  correcciones; el cuarto intento guardó **solo Explicación y Resumen**,
+  excluyendo ejemplo, imagen e interacción. El rechazo anterior y el resultado
+  posterior tienen capturas auténticas. El documento digital tiene ahora 24
+  solicitudes sintéticas; no se tocaron documentos personales.
+- Dos pestañas sobre el caso de vocabulario: se retuvo únicamente el envío
+  real de B con versión 0, sin alterar su cuerpo. A guardó Explicación versión 1;
+  al liberar B, el servidor respondió **409** y la aplicación mostró el conflicto
+  conservando A. Después de actualizar, B guardó Resumen versión 2, persistido
+  tras recarga completa. Las interceptaciones temporales se retiraron.
+- La comprobación HTTP independiente de una opción distinta con versión antigua
+  devolvió 409 en 3099 ms incluyendo lecturas posteriores, sin cambiar elección,
+  razón, versión, fila ni recuento. El recibo idéntico sigue siendo idempotente.
+- `ai-read` contrastó ambos diagnósticos, opciones, citas y elecciones con BD:
+  persistencia, orden, 404 para otra cuenta, 409 con otro documento y 401 sin
+  sesión en GET/POST de análisis/recomendaciones; RLS oculta ambos registros
+  ajenos. Los snapshots antes/después no cambiaron filas ni iniciaron IA.
+  Ambas solicitudes siguen **pending/choosing**, sin aprobación ni contenido
+  de refuerzo generado. El escaneado insuficiente continúa correctamente
+  rechazado sin diagnóstico. No se fabricaron estados generada/aprobada.
+- Se repitieron las huellas SHA-256 después de las llamadas de IA: ambos PDF
+  coinciden con sus originales y con las huellas del apartado anterior.
+  La consola de la pestaña final recargada no mostró errores nuevos.
+- Verificación final: **210/210 pruebas**, lint y build de producción con
+  TypeScript correctos. Incluye la nueva regresión de filtrado y la migración
+  exacta en PostgreSQL/PGlite. Las respuestas reales de IA descritas arriba
+  se comprobaron aparte de las simulaciones automatizadas. Dependencias y Node
+  se conservaron; el audit anterior sigue documentado sin nuevas instalaciones.
+
+### Entrega y continuación
+
+- **Finalizado en Jira:** HU018/SCRUM-30 y SCRUM-182; HU019/SCRUM-31 y
+  SCRUM-95/183/96. SCRUM-93/94 ya estaban finalizadas y conservan sus evidencias.
+- Se añadieron **10 capturas reales** a las cuatro subtareas, actualizando sus
+  comentarios existentes 10115–10118. Se conservaron las tres imágenes previas
+  de esas subtareas; la comprobación HTML confirma 5/2/2/4 imágenes respectivamente,
+  sin duplicados. Las historias mantienen un único resumen sin duplicar imágenes.
+  El acumulado de la entrega local es **42 capturas y 22 comentarios de resultados**.
+- Las correcciones pertenecen a HU019 y permanecen en su rama; no se fusionó
+  una historia posterior en una anterior. Los PR #22/#23 describen los resultados
+  actuales y conservan sus bases y condición de borrador para revisión.
+- Se mantiene el servidor en localhost:3000 y la configuración privada con
+  `gemini-3.5-flash-lite`. No restablecer 3.8 por el texto de apartados antiguos.
+  Los fixtures QA externos permiten continuar sin credenciales personales.
+- Quedan fuera de este cierre HU017 y sus estados finales de historias futuras,
+  y SCRUM-233 por el remitente SMTP. HU020 **no está iniciada** y este encargo
+  no autoriza integrar PR ni modificar develop/main.
+
+Referencias: [nivel gratuito de Gemini](https://ai.google.dev/gemini-api/docs/pricing),
+[contrato REST estructurado](https://ai.google.dev/gemini-api/docs/generate-content/structured-output),
+[modelo 3.5 Flash-Lite](https://ai.google.dev/gemini-api/docs/models/gemini-3.5-flash-lite),
+[conflictos y reintentos de PostgREST](https://supabase.com/kb/troubleshooting/high-cpu-and-infinite-transaction-retries-when-using-custom-error-codes-in-rpc-functions).
