@@ -1,11 +1,11 @@
 import "server-only";
-import { z } from "zod";
 import { getAnalysisConfiguration } from "@/lib/reinforcements/analysis-provider";
+import { generateGeminiJson, GeminiFailure } from "@/lib/reinforcements/gemini-provider";
 import type { AnalysisContext, ContextDiagnosis } from "@/lib/validations/contextual-analysis";
 import { rankRecommendations, REINFORCEMENT_TYPES, type RecommendationFailureCode } from "@/lib/validations/recommendations";
 
 export class RecommendationFailure extends Error {
-  constructor(public code: RecommendationFailureCode) { super(code); }
+  constructor(public code: RecommendationFailureCode, public quotaExhausted = false) { super(code); }
 }
 export const getRecommendationConfiguration = getAnalysisConfiguration;
 const instructions = `Propón tipos de refuerzo, sin generar el contenido, en español.
@@ -29,32 +29,17 @@ const schema = { type: "object", additionalProperties: false, required: ["candid
     } },
   },
 } };
-const envelopeSchema = z.object({ status: z.literal("completed"), output: z.array(z.object({
-  type: z.string(), content: z.array(z.object({ type: z.string(), text: z.string().optional() })).optional(),
-})) });
-
 export async function recommendReinforcement(context: AnalysisContext, diagnosis: ContextDiagnosis,
   config: NonNullable<ReturnType<typeof getRecommendationConfiguration>>, transport: typeof fetch = fetch) {
   const { pageNumber, selectedText, nearbyText, textSource, need, category } = context;
-  let response: Response;
   try {
-    response = await transport("https://api.openai.com/v1/responses", {
-      method: "POST", headers: { Authorization: `Bearer ${config.key}`, "Content-Type": "application/json" },
-      signal: AbortSignal.timeout(45000), cache: "no-store", redirect: "error",
-      body: JSON.stringify({ model: config.model, store: false, instructions, max_output_tokens: 2600,
-        input: [{ role: "user", content: JSON.stringify({ pageNumber, selectedText, nearbyText, textSource, need, category,
-          diagnosis: { topic: diagnosis.topic, concepts: diagnosis.concepts, scope: diagnosis.scope } }) }],
-        text: { format: { type: "json_schema", name: "reinforcement_recommendations", strict: true, schema } },
-      }),
-    });
-  } catch (error) { throw new RecommendationFailure(error instanceof Error && ["TimeoutError", "AbortError"].includes(error.name) ? "timeout" : "provider_unavailable"); }
-  if (!response.ok) throw new RecommendationFailure("provider_unavailable");
-  const envelope = envelopeSchema.safeParse(await response.json().catch(() => null));
-  if (!envelope.success) throw new RecommendationFailure("invalid_recommendations");
-  const parts = envelope.data.output.filter(item => item.type === "message").flatMap(item => item.content ?? []);
-  if (parts.some(p => p.type === "refusal")) throw new RecommendationFailure("provider_refused");
-  const text = parts.filter(p => p.type === "output_text");
-  if (text.length !== 1 || typeof text[0].text !== "string" || text[0].text.length > 18000) throw new RecommendationFailure("invalid_recommendations");
-  try { return { options: rankRecommendations(JSON.parse(text[0].text), context, diagnosis), model: config.model }; }
-  catch { throw new RecommendationFailure("invalid_recommendations"); }
+    const value = await generateGeminiJson(config, { instructions, data: { pageNumber, selectedText, nearbyText, textSource, need, category,
+      diagnosis: { topic: diagnosis.topic, concepts: diagnosis.concepts, scope: diagnosis.scope } },
+      schema, maxOutputTokens: 4000, maxTextLength: 18000 }, transport);
+    return { options: rankRecommendations(value, context, diagnosis), model: config.model };
+  } catch (error) {
+    if (error instanceof GeminiFailure) throw new RecommendationFailure(error.kind === "timeout" ? "timeout" : error.kind === "refused" ? "provider_refused"
+      : error.kind === "invalid" ? "invalid_recommendations" : "provider_unavailable", error.quotaExhausted);
+    throw new RecommendationFailure("invalid_recommendations");
+  }
 }

@@ -87,16 +87,17 @@ export async function postRecommendations(request: Request, projectId: string, r
   if (claim.data.disposition !== "started") return reply({ recommendations: existing.data }, claim.data.disposition === "busy" ? 202 : 200);
 
   let options: RecommendationOption[] = [], model: string | null = null, errorCode: string | null = null;
-  let status: "ready" | "empty" | "error" = "error";
+  let status: "ready" | "empty" | "error" = "error", quotaExhausted = false;
   try {
     const result = await recommendReinforcement(source.analysis.context, source.analysis.diagnosis, config);
     options = result.options; model = result.model; status = options.length ? "ready" : "empty";
-  } catch (error) { errorCode = error instanceof RecommendationFailure ? error.code : "provider_unavailable"; }
+  } catch (error) { errorCode = error instanceof RecommendationFailure ? error.code : "provider_unavailable"; quotaExhausted = error instanceof RecommendationFailure && error.quotaExhausted; }
   let saved;
   try { saved = await access.db.rpc("change_reinforcement_recommendations", signRecommendationProof({ ...proof, action: "finish", status, options, model, errorCode,
     emptyReason: status === "empty" ? "No se encontraron opciones que aporten suficientemente al tema y a tu dificultad. Prepara una nueva solicitud con más contexto." : null })); }
   catch { return failure(); }
   if (saved.error) return failure(saved.error.code);
   const result = recommendationRecordSchema.safeParse(saved.data?.recommendations);
-  return result.success ? reply({ recommendations: result.data }) : failure();
+  return result.success ? reply({ recommendations: result.data,
+    ...(quotaExhausted ? { message: "La cuota gratuita de Gemini se agotó. Espera a que se restablezca antes de reintentar; no se usará un proveedor de pago." } : {}) }, quotaExhausted ? 429 : 200) : failure();
 }

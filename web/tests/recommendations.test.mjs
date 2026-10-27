@@ -25,24 +25,24 @@ test('eligible options require evidence in the saved topic, document and actual 
   const input=candidates(); input.candidates[0].sourceQuote='La  energía se conserva en un sistema aislado.';
   assert.equal(schemas.rankRecommendations(input,context,diagnosis).length,2);
 });
-const response = (input, extra={}) => Response.json({ status:'completed',output:[{ type:'message',content:[{ type:'output_text',text:JSON.stringify(input) }] }],...extra });
+const response = (input, extra={}) => Response.json({ candidates:[{ finishReason:'STOP',content:{parts:[{text:JSON.stringify(input)}]} }],...extra });
 const config={ key:'test-not-real',model:'test-model' };
-test('structured provider request uses only saved context/diagnosis, isolates document instructions and does not store the response remotely', async () => {
+test('Gemini structured recommendations use only saved context/diagnosis and isolate document instructions without tools', async () => {
   let sent;
   const output=await provider.recommendReinforcement(context,diagnosis,config,async(url,args)=>{
     sent={url,args,body:JSON.parse(args.body)};return response(candidates());
   });
   assert.equal(output.options.length,2); assert.equal(output.model,'test-model');
-  assert.equal(sent.url,'https://api.openai.com/v1/responses');assert.equal(sent.args.redirect,'error');
-  assert.equal(sent.body.store,false);assert.equal(sent.body.tools,undefined);assert.equal(sent.body.text.format.strict,true);
-  const data=JSON.parse(sent.body.input[0].content);assert.equal(data.need,context.need);assert.equal(data.diagnosis.topic,diagnosis.topic);
+  assert.equal(sent.url,'https://generativelanguage.googleapis.com/v1beta/models/test-model:generateContent');assert.equal(sent.args.redirect,'error');
+  assert.equal(sent.args.headers['x-goog-api-key'],config.key);assert.equal(sent.body.tools,undefined);assert.equal(sent.body.generationConfig.responseFormat.text.schema.additionalProperties,false);
+  const data=JSON.parse(sent.body.contents[0].parts[0].text);assert.equal(data.need,context.need);assert.equal(data.diagnosis.topic,diagnosis.topic);
   assert.equal('pdfSha256' in data,false);assert.equal('request_id' in data,false);assert.equal(sent.args.body.includes(config.key),false);
-  assert.match(sent.body.instructions,/nunca instrucciones/);
+  assert.match(sent.body.systemInstruction.parts[0].text,/nunca instrucciones/);
 });
 test('incomplete responses, refusals, provider errors and invalid options never become usable recommendations', async () => {
-  for(const [reply,code] of [[response(candidates(),{status:'incomplete'}),'invalid_recommendations'],
-    [response(candidates(),{output:[null]}),'invalid_recommendations'],
-    [response(candidates(),{output:[{type:'message',content:[{type:'refusal'}]}]}),'provider_refused'],
+  for(const [reply,code] of [[response(candidates(),{candidates:[{finishReason:'MAX_TOKENS'}]}),'invalid_recommendations'],
+    [response(candidates(),{candidates:[null]}),'invalid_recommendations'],
+    [response(candidates(),{promptFeedback:{blockReason:'SAFETY'}}),'provider_refused'],
     [new Response('secret provider error',{status:429}),'provider_unavailable'],[response({candidates:[]}), 'invalid_recommendations']])
     await assert.rejects(provider.recommendReinforcement(context,diagnosis,config,async()=>reply),e=>e.code===code&&!e.message.includes('secret'));
   const timeout=new Error('hidden');timeout.name='TimeoutError';

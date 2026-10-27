@@ -35,7 +35,7 @@ function fixture(settings={}) {
     '@/lib/reinforcements/recommendation-proof':{signRecommendationProof:input=>({p_payload:JSON.stringify(input),p_signature:'unit-test'})},
     '@/lib/reinforcements/recommendation-provider':{...provider,getRecommendationConfiguration:()=>settings.configured===false?null:{key:'unit-test',model:'test-model'},
       recommendReinforcement:async(c,d)=>{providerCalls++;assert.equal(c.selectedText,context.selectedText);assert.equal(d.topic,diagnosis.topic);
-        if(settings.failure)throw new provider.RecommendationFailure(settings.failure);return {options:settings.options??options,model:'test-model'};}},
+        if(settings.failure)throw new provider.RecommendationFailure(settings.failure,settings.quota);return {options:settings.options??options,model:'test-model'};}},
   });
   const url=`http://localhost:3000/api/projects/${projectId}/reinforcement-requests/${receipt.id}/recommendations`;
   return {calls,rpc,providerCalls:()=>providerCalls,
@@ -45,6 +45,11 @@ function fixture(settings={}) {
   };
 }
 const choose={action:'choose',attemptId:result.attempt_id,type:'example',expectedVersion:0};
+
+test('recommendations persist a safe error and return a clear free-quota message without retrying Gemini',async()=>{
+  const f=fixture({failure:'provider_unavailable',quota:true});const response=await f.post();const body=await response.json();
+  assert.equal(response.status,429);assert.match(body.message,/cuota gratuita/);assert.equal(body.recommendations.status,'error');assert.equal(f.providerCalls(),1);
+});
 
 test('recommendation API rejects anonymous/inactive users, foreign projects, stale PDFs and cross-origin writes', async()=>{
   const foreign=fixture();assert.equal((await foreign.post(undefined,'https://evil.example')).status,403);assert.equal(foreign.calls.length,0);
