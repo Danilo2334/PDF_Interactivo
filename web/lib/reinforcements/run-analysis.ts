@@ -33,7 +33,7 @@ async function prepare(access: Authorized): Promise<AnalysisContext> {
 }
 
 function rpcError(code?: string) {
-  const status = code === "42501" ? 403 : code === "40001" || code === "23514" ? 409 : code === "P0001" ? 429 : 503;
+  const status = code === "42501" ? 403 : ["PT409", "40001", "23514"].includes(code ?? "") ? 409 : code === "P0001" ? 429 : 503;
   const message = status === 403 ? "Ya no tienes permiso para analizar esta solicitud."
     : status === 409 ? "La solicitud cambió. Actualiza el detalle antes de continuar."
     : status === 429 ? "Hay varios análisis recientes o en curso. Espera un momento antes de reintentar."
