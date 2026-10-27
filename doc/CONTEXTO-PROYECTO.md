@@ -3,7 +3,7 @@
 Actualizado: 27/10/2026. Mantener este único documento al continuar.
 
 La entrega más reciente está en el último apartado
-«Integración revisada de PR #24 y HU014–HU019, 27/10/2026».
+«Detalle visible de solicitudes durante la revisión manual, 27/10/2026».
 Los estados de los apartados anteriores describen su momento cronológico.
 
 **Sprint 3 cerrado en Jira:** siete historias y 25 subtareas finalizadas,
@@ -1821,3 +1821,57 @@ publicada. No se borraron ramas, no hubo force push ni se alteró el stash.
 
 El siguiente paso es la revisión del usuario sobre develop y sus evidencias.
 No iniciar otra historia por el mero hecho de que los PR estén integrados.
+
+## Detalle visible de solicitudes durante la revisión manual, 27/10/2026
+
+El usuario confirmó navegación/zoom y selección/dificultad en la revisión guiada.
+Creó desde la UI la solicitud `1201c3a3-1632-41b0-ae4f-0b989ba676cb`, página 1
+del PDF digital QA, y después informó que «Ver solicitud e historial» no hacía
+nada. El documento tiene ahora **25 solicitudes**, una más que la última
+verificación automática; esa alta pertenece a la revisión del usuario.
+
+### Hallazgo y corrección SCRUM-92
+
+- Se reprodujo en el navegador: el detalle sí se obtenía, pero se dibujaba
+  después de los 20 registros de la primera página. Su inicio estaba a
+  **4196,7 px** de la parte superior visible, en una ventana de 715 px de alto.
+  El usuario no recibía una indicación visible de que la selección había abierto
+  el panel. La solicitud y sus datos estaban intactos.
+- `request-list-panel.tsx` lleva el foco y la vista al encabezado de detalle
+  al abrirlo, también si se vuelve a pulsar la solicitud ya seleccionada.
+  Se reserva una altura de viewport durante la carga para que el encabezado
+  pueda colocarse arriba antes de que llegue la respuesta. Las actualizaciones
+  de datos no vuelven a tomar el foco. «Volver al listado» restaura foco y vista
+  al encabezado de la lista, sin descartar la selección ni reiniciar el detalle.
+- Se consultaron las guías locales instaladas de componentes cliente y
+  accesibilidad de Next.js. No se modificaron API, permisos, datos o migraciones.
+
+### Verificación real y entrega
+
+- Carga inicial, apertura con clic y reapertura con Enter: encabezado enfocado
+  a aproximadamente **16 px** de la parte superior. «Volver al listado» recuperó
+  el encabezado de la lista. Se comprobó también apertura desde la segunda
+  página y se dejó nuevamente visible la solicitud del usuario en la primera.
+- «Actualizar detalle» y el polling conservaron el foco en el botón, sin
+  devolverlo al encabezado. Se repitió la navegación con viewport móvil
+  390×844; el detalle y los botones quedaron visibles, sin navegación horizontal.
+  Después se restableció el tamaño de ventana del usuario.
+- La solicitud `1201c3a3…` conserva texto, necesidad, página 1, estado
+  pending/queued y su evento de creación. La corrección no creó solicitudes,
+  analizó contenido ni llamó al proveedor de IA.
+- **7/7 pruebas dirigidas del listado, lint y build/TypeScript aprobados**.
+  La suite completa anterior de la integración permanece documentada como
+  221/221; no se presenta como una ejecución nueva de esta corrección visual.
+- Capturas reales: `92-05-detalle-fuera-de-vista-antes.jpg`,
+  `92-06-detalle-visible-corregido.jpg` y
+  `92-07-detalle-visible-teclado-movil.jpg`, para el comentario existente de
+  SCRUM-92, conservando sus cuatro imágenes previas. La historia HU017 sigue
+  En curso por sus estados funcionales futuros; este arreglo no cierra esa historia.
+- Rama **`codex/scrum-92-detalle-visible`**, basada en develop `00f8bd2`;
+  integración pendiente de revisión. Las ramas ya integradas, main, el stash
+  `d6406e0` y la configuración privada se conservaron. No se inició HU020.
+
+Al retomar scripts QA externos, reconciliar primero su baseline de 24 con las
+25 solicitudes actuales y la nueva solicitud del usuario; no confundir ese
+cambio de datos conocido con una duplicación del envío. La revisión guiada
+continúa solo cuando el usuario confirme que ya ve el detalle.

@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { REQUEST_STATUSES, REQUEST_STATUS_LABELS, REQUEST_STAGE_LABELS } from "@/lib/reinforcements/state";
 import { useRequestResource } from "@/lib/reinforcements/use-request-resource";
 import { ContextualAnalysisPanel } from "@/components/documents/contextual-analysis-panel";
@@ -11,6 +11,11 @@ const parseList = (body: unknown) => requestListSchema.parse(body);
 const parseDetail = (body: unknown) => requestDetailSchema.parse(body);
 const date = (value: string) => new Date(value).toLocaleString("es-CO");
 const buttonClass = "rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-800 disabled:opacity-50";
+
+function revealHeading(heading: HTMLHeadingElement | null) {
+  heading?.focus({ preventScroll: true });
+  heading?.scrollIntoView({ block: "start" });
+}
 
 export function RequestState({ request }: { request: RequestSummary }) {
   return <div className="space-y-1 text-sm">
@@ -24,17 +29,25 @@ export function RequestState({ request }: { request: RequestSummary }) {
   </div>;
 }
 
-function RequestDetailPanel({ projectId, documentId, requestId, active, onOpen }: {
-  projectId: string; documentId: string; requestId: string; active: boolean; onOpen: (request: RequestRecord) => void;
+function RequestDetailPanel({ projectId, documentId, requestId, active, focusVersion, onBack, onOpen }: {
+  projectId: string; documentId: string; requestId: string; active: boolean; focusVersion: number;
+  onBack: () => void; onOpen: (request: RequestRecord) => void;
 }) {
   const [page, setPage] = useState(1);
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  // Move only after opening/reopening the detail, never on a polling response.
+  useEffect(() => { if (active) revealHeading(headingRef.current); }, [active, focusVersion]);
   const url = `/api/projects/${projectId}/reinforcement-requests/${requestId}?documentId=${documentId}&page=${page}`;
   const resource = useRequestResource(url, active, parseDetail);
   const detail = resource.result?.value;
-  return <section aria-label="Detalle de solicitud" className="mt-5 space-y-3 rounded-xl border border-blue-200 bg-blue-50 p-4">
+  // Reserve space while loading so the heading can reach the top of the viewport.
+  return <section aria-label="Detalle de solicitud" className="mt-5 min-h-dvh space-y-3 rounded-xl border border-blue-200 bg-blue-50 p-4">
     <div className="flex flex-wrap items-center justify-between gap-2">
-      <h3 className="font-semibold text-slate-900">Detalle e historial</h3>
-      <button type="button" onClick={resource.refresh} className={buttonClass}>Actualizar detalle</button>
+      <h3 ref={headingRef} tabIndex={-1} className="scroll-mt-4 rounded-sm font-semibold text-slate-900 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-blue-700">Detalle e historial</h3>
+      <div className="flex flex-wrap gap-2">
+        <button type="button" onClick={onBack} className={buttonClass}>Volver al listado</button>
+        <button type="button" onClick={resource.refresh} className={buttonClass}>Actualizar detalle</button>
+      </div>
     </div>
     {!resource.result && <p role="status">Cargando solicitud…</p>}
     {resource.result?.error && <p role="alert" className="text-red-700">{resource.result.error}</p>}
@@ -74,12 +87,15 @@ export function RequestListPanel({ projectId, documentId, active, onOpen }: {
   const [filter, setFilter] = useState<RequestFilter>("all");
   const [page, setPage] = useState(1);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [detailFocusVersion, setDetailFocusVersion] = useState(0);
+  const listHeadingRef = useRef<HTMLHeadingElement>(null);
   const url = `/api/projects/${projectId}/reinforcement-requests?documentId=${documentId}&status=${filter}&page=${page}`;
   const resource = useRequestResource(url, active, parseList);
   const list = resource.result?.value;
   function changeFilter(value: RequestFilter) { setFilter(value); setPage(1); setSelectedId(null); }
+  function openDetail(requestId: string) { setSelectedId(requestId); setDetailFocusVersion(value => value + 1); }
   return <div className="mt-6 space-y-4" data-document-id={documentId}>
-    <h2 className="text-xl font-semibold text-slate-900">Solicitudes del documento</h2>
+    <h2 ref={listHeadingRef} tabIndex={-1} className="scroll-mt-4 rounded-sm text-xl font-semibold text-slate-900 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-blue-700">Solicitudes del documento</h2>
     <p className="text-sm text-slate-600">Consulta el avance y vuelve a la selección original. Los estados se actualizan mientras esta sección está visible.</p>
     <div className="flex flex-wrap items-end gap-3">
       <div><label htmlFor={filterId} className="mb-1 block text-sm font-medium text-slate-800">Estado</label>
@@ -101,13 +117,14 @@ export function RequestListPanel({ projectId, documentId, active, onOpen }: {
         <p className="font-semibold text-slate-900">Página {request.page_number}</p>
         <p className="text-sm text-slate-600">Propietario: tú · Creada: <time dateTime={request.created_at}>{date(request.created_at)}</time></p>
         <RequestState request={request} />
-        <button type="button" onClick={() => setSelectedId(request.id)} aria-pressed={selectedId === request.id} className={buttonClass}>Ver solicitud e historial</button>
+        <button type="button" onClick={() => openDetail(request.id)} aria-pressed={selectedId === request.id} className={buttonClass}>Ver solicitud e historial</button>
       </li>)}</ul>}
       <div className="flex flex-wrap gap-3">
         <button type="button" disabled={page === 1} onClick={() => setPage(value => value - 1)} className={buttonClass}>Solicitudes anteriores</button>
         <button type="button" disabled={page * list.pageSize >= list.total} onClick={() => setPage(value => value + 1)} className={buttonClass}>Más solicitudes</button>
       </div>
     </>}
-    {selectedId && <RequestDetailPanel key={selectedId} projectId={projectId} documentId={documentId} requestId={selectedId} active={active} onOpen={onOpen} />}
+    {selectedId && <RequestDetailPanel key={selectedId} projectId={projectId} documentId={documentId} requestId={selectedId} active={active}
+      focusVersion={detailFocusVersion} onBack={() => revealHeading(listHeadingRef.current)} onOpen={onOpen} />}
   </div>;
 }
