@@ -17,7 +17,7 @@ function load(name) {
   return exports;
 }
 const extraction = load('extract-selection-text'), drafts = load('selection-text-draft');
-const standardFontDataUrl = fileURLToPath(new URL('../node_modules/pdfjs-dist/standard_fonts/', import.meta.url));
+const standardFontDataUrl = fileURLToPath(new URL('../node_modules/pdfjs-dist/standard_fonts/', import.meta.url)).replaceAll('\\', '/');
 const viewport = { transform: [1, 0, 0, -1, 0, 800], width: 600, height: 800, scale: 1 };
 const styles = { font: { ascent: .8, descent: -.2, vertical: false, fontFamily: 'sans-serif' } };
 const item = (str, x, y, width, extras = {}) => ({ str, transform: [20, 0, 0, 20, x, y], width, height: 20, fontName: 'font', dir: 'ltr', hasEOL: false, ...extras });
