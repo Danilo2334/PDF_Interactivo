@@ -48,6 +48,20 @@ export function createPageFragments(TextLayer: typeof PdfTextLayer, onSelect: (v
   document.addEventListener("keyup", captureText);
   return {
     clear,
+    restore(value: FragmentSelection | null) {
+      if (disposed) return false;
+      if (!value) { clear(); return true; }
+      const rects = value.kind === "area" ? [value.rect] : value.rects;
+      if (!Number.isInteger(value.pageNumber) || value.pageNumber < 1 || !rects?.length ||
+        rects.some(rect => ![rect.x, rect.y, rect.width, rect.height].every(Number.isFinite) ||
+          rect.x < 0 || rect.y < 0 || rect.width <= 0 || rect.height <= 0 ||
+          rect.x + rect.width > 1.000001 || rect.y + rect.height > 1.000001)) return false;
+      drag = null;
+      mode = value.kind;
+      window.getSelection()?.removeAllRanges();
+      emit(structuredClone(value));
+      return true;
+    },
     clearOtherPage(number: number) { if (selected && selected.pageNumber !== number) clear(); },
     setMode(value: "text" | "area") { mode = value; window.getSelection()?.removeAllRanges(); paint(); },
     async decorate(page: PDFPageProxy, body: HTMLElement, viewport: PageViewport) {

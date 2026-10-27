@@ -7,7 +7,7 @@ import ts from 'typescript';
 import { validation as requestValidation, submission as requestSubmission } from './reinforcement-test-helpers.mjs';
 
 const require = createRequire(import.meta.url);
-const viewer = () => null, draftForm = () => null;
+const viewer = () => null, draftForm = () => null, requestPanel = () => null;
 const difficultyCode = ts.transpileModule(readFileSync(new URL('../lib/validations/difficulty.ts', import.meta.url), 'utf8'), {
   compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
 }).outputText;
@@ -54,6 +54,7 @@ function fixture(path, exportedName, initialProps) {
     if (name === '@/lib/pdf/extract-selection-text') return textExtraction;
     if (name === '@/components/documents/selection-text-editor') return { SelectionTextEditor: textEditor };
     if (name === '@/components/documents/reinforcement-submit') return { ReinforcementSubmit: () => null };
+    if (name === '@/components/documents/request-list-panel') return { RequestListPanel: requestPanel };
     if (name === '@/lib/validations/reinforcement-request') return requestValidation;
     if (name === '@/lib/reinforcements/submission') return requestSubmission;
     throw Error(`Unexpected dependency ${name}`);
@@ -67,6 +68,37 @@ function fixture(path, exportedName, initialProps) {
   return { render, find: predicate => nodes(tree).find(predicate), get props() { return props; } };
 }
 const props = { projectId: 'project', documentId: 'document-a', documentName: 'original.pdf', canRequestReinforcement: true, reinforcements: [], reinforcementsError: false };
+
+test('opening a saved request restores its page and area without confirming or submitting new content', () => {
+  const f = fixture('components/documents/project-workspace.tsx', 'ProjectWorkspace', props);
+  const panel = () => f.find(n => n.type === requestPanel);
+  const saved = { id: 'saved-request', project_id: props.projectId, document_id: props.documentId, page_number: 4,
+    selection: { documentId: props.documentId, kind: 'area', pageNumber: 4, rect: { x: .1, y: .2, width: .3, height: .4 } },
+    selected_text: 'Texto previamente confirmado', need: 'Explicación guardada en la solicitud.' };
+  assert.equal(panel().props.active, false);
+  f.find(n => n.type === 'button' && n.props.children === 'Solicitudes').props.onClick(); f.render();
+  const key = panel().key; assert.equal(panel().props.active, true);
+  panel().props.onOpen(saved); f.render();
+  assert.equal(f.find(n => n.type === viewer).props.initialPage, 4);
+  assert.deepEqual(f.find(n => n.type === viewer).props.initialFragment, saved.selection);
+  assert.equal(f.find(n => n.type === draftForm).props.difficultyDraft, null);
+  assert.equal(f.find(n => n.type === draftForm).props.selectionText, null);
+  assert.equal(panel().key, key); assert.equal(panel().props.active, false);
+  f.find(n => n.type === 'button' && n.props.children === 'Volver a solicitudes').props.onClick(); f.render();
+  assert.equal(panel().key, key); assert.equal(panel().props.active, true);
+  panel().props.onOpen({ ...saved, document_id: 'foreign-document' }); f.render();
+  assert.equal(panel().props.active, true);
+});
+
+test('request list is unavailable to a read-only account and remounts when the document changes', () => {
+  const f = fixture('components/documents/project-workspace.tsx', 'ProjectWorkspace', props);
+  const previous = f.find(n => n.type === requestPanel).key;
+  f.render({ ...props, documentId: 'document-b' });
+  assert.notEqual(f.find(n => n.type === requestPanel).key, previous);
+  f.render({ ...props, canRequestReinforcement: false });
+  assert.equal(f.find(n => n.type === requestPanel), undefined);
+  assert.equal(f.find(n => n.type === 'button' && n.props.children === 'Solicitudes'), undefined);
+});
 
 test('one shared draft captures document and page, replaces the previous page and keeps the viewer callback stable', () => {
   const f = fixture('components/documents/project-workspace.tsx', 'ProjectWorkspace', props);

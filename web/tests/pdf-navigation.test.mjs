@@ -333,9 +333,10 @@ test("a render error is reported and can be retried with a fresh renderer", asyn
 
 // Ejercitar los eventos reales del componente con estado y efectos controlados,
 // sin sustituir las pruebas visuales del navegador ni necesitar credenciales.
-function viewerFixture(total = 20, initialPage = 1) {
+function viewerFixture(total = 20, initialPage = 1, initialFragment = null) {
   const states = [], refs = [], effects = [], calls = [], requests = [], zooms = [], selections = [];
   let cursor = 0, refCursor = 0, effectStarted = false, callbacks, tree;
+  const restored = [];
   const dependencies = {
     react: {
       useId: () => "page-number",
@@ -358,7 +359,7 @@ function viewerFixture(total = 20, initialPage = 1) {
     },
     "@/components/diagnostics/view-timing": { ViewTiming: () => null },
     "@/components/documents/pdf-thumbnails": { PdfThumbnails: () => null },
-    "@/lib/pdf/page-fragments": {},
+    "@/lib/pdf/page-fragments": { createPageFragments: () => ({ clear() {}, clearOtherPage() {}, setMode() {}, dispose() {}, restore(value) { restored.push(value); return true; } }) },
     "@/lib/pdf/render-visible-pages": {
       renderVisiblePages(_pdf, _container, ready, error, changed) {
         callbacks = { ready, error, changed }; void Promise.resolve().then(ready);
@@ -374,7 +375,7 @@ function viewerFixture(total = 20, initialPage = 1) {
     },
     console: { error() {} },
   });
-  const outer = PdfViewer({ projectId: "test-project", initialPage, onPageSelect: page => selections.push(page) });
+  const outer = PdfViewer({ projectId: "test-project", initialPage, initialFragment, onFragmentSelect: initialFragment ? () => {} : undefined, onPageSelect: page => selections.push(page) });
   states.length = 0;
   const Pages = outer.type;
   function nodes(node) {
@@ -392,7 +393,7 @@ function viewerFixture(total = 20, initialPage = 1) {
   }
   render(); const cleanups = effects.map((effect) => effect()); effectStarted = true;
   return {
-    calls, requests, zooms, selections, render,
+    calls, requests, zooms, selections, restored, render,
     get callbacks() { return callbacks; },
     button(label) { return nodes(tree).find((node) => node.type === "button" && node.props.children === label); },
     labelled(label) { return nodes(tree).find((node) => node.props?.["aria-label"] === label); },
@@ -406,6 +407,16 @@ function viewerFixture(total = 20, initialPage = 1) {
     dispose() { for (const cleanup of cleanups) cleanup?.(); },
   };
 }
+
+test('saved fragments restore once on their valid page and never on a fallback page', async t => {
+  const area = { kind: 'area', pageNumber: 3, rect: { x: .1, y: .1, width: .3, height: .3 } };
+  const valid = viewerFixture(5, 3, area); t.after(() => valid.dispose()); await settle(); valid.render();
+  assert.equal(valid.restored.length, 1); assert.equal(valid.restored[0], area);
+  valid.callbacks.ready(); valid.render(); assert.equal(valid.restored.length, 1);
+  assert.equal(valid.requests.length, 1);
+  const invalid = viewerFixture(2, 3, area); t.after(() => invalid.dispose()); await settle(); invalid.render();
+  assert.equal(invalid.restored.length, 0); assert.equal(invalid.selections.at(-1), 1);
+});
 
 test("viewer validates text, preserves the current page and supports button and Enter navigation", async (t) => {
   const f = viewerFixture(); t.after(() => f.dispose()); await settle(); f.render();

@@ -1,6 +1,7 @@
 "use client";
 
 import type { SubmissionState } from "@/lib/reinforcements/submission";
+import { REQUEST_STATUS_LABELS } from "@/lib/reinforcements/state";
 
 export function ReinforcementSubmit({ missing, state, onSend, onReset }: {
   missing: string[]; state: SubmissionState; onSend: () => void; onReset: () => void;
@@ -12,9 +13,9 @@ export function ReinforcementSubmit({ missing, state, onSend, onReset }: {
       {missing.map(message => <li key={message}>{message}</li>)}
     </ul>}
     {state.status === "success" && state.receipt ? <div role="status" className="rounded-lg bg-green-50 p-3 text-sm text-green-900">
-      <p className="font-semibold">Solicitud recibida. Estado: pendiente.</p>
+      <p className="font-semibold">Solicitud recibida. Estado: {REQUEST_STATUS_LABELS[state.receipt.status]}.</p>
       <p className="mt-1 break-all">Identificador: {state.receipt.id}</p>
-      <p className="mt-1">El refuerzo todavía no se ha generado.</p>
+      <p className="mt-1">Consulta su estado actualizado en la sección Solicitudes del proyecto.</p>
       <button type="button" onClick={onReset} className="mt-3 rounded-lg border border-green-700 px-3 py-2">Preparar otra solicitud</button>
     </div> : <>
       {state.status === "error" && <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{state.message}</p>}

@@ -10,7 +10,7 @@ export function load(relative, dependencies = {}) {
     compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.ReactJSX },
   });
   const exports = {};
-  runInNewContext(outputText, { exports, Request, Response, URL, AbortSignal, fetch, crypto, process, Date, Error, structuredClone,
+  runInNewContext(outputText, { exports, Request, Response, URL, AbortSignal, AbortController, fetch, crypto, process, Date, Error, structuredClone,
     require(name) {
       if (name in dependencies) return dependencies[name];
       if (name === 'server-only') return {};
@@ -20,7 +20,8 @@ export function load(relative, dependencies = {}) {
   }, { filename: filename.pathname });
   return exports;
 }
-export const validation = load('lib/validations/reinforcement-request.ts');
+export const requestState = load('lib/reinforcements/state.ts');
+export const validation = load('lib/validations/reinforcement-request.ts', { '@/lib/reinforcements/state': requestState });
 export const proof = load('lib/reinforcements/request-proof.ts', { '@/lib/validations/reinforcement-request': validation });
 export const submission = load('lib/reinforcements/submission.ts', { '@/lib/validations/reinforcement-request': validation });
 export const owner = '8f4cf03b-4713-43f1-9b6c-d435457f5afe';

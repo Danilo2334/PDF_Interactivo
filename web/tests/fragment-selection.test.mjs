@@ -73,6 +73,7 @@ function controllerFixture({ failRead = false, failRender = false } = {}){
   const listeners=new Map(),changes=[],cancelled=[];let cleared=0;
   class TextLayer{constructor({container}){this.container=container;}async render(){if(failRender)throw Error('text render unavailable');}cancel(){cancelled.push(this);}}
   const {createPageFragments}=load('lib/pdf/page-fragments.ts',{'./fragment-selection':math},{
+    structuredClone,
     document:{createElement:()=>new Element(),addEventListener:(n,f)=>listeners.set(n,f),removeEventListener:n=>listeners.delete(n)},
     window:{getSelection:()=>({removeAllRanges(){cleared++;}})},
   });
@@ -92,6 +93,26 @@ test('a real controller gesture draws, moves and resizes one area then cancellat
   assert.ok(f.changes.at(-1).rect.width>.39);
   f.controller.clear();assert.equal(f.changes.at(-1),null);assert.equal(marks.children.length,0);assert.equal(marks.dataset.selection,undefined);
   f.controller.dispose();assert.equal(f.listeners.size,0);assert.ok(f.cancelled.length>0);
+});
+
+test('restored text and area paint on the correct page before or after decoration without retaining caller references', async () => {
+  for (const value of [
+    { kind: 'area', pageNumber: 2, rect: { x: .1, y: .2, width: .3, height: .4 } },
+    { kind: 'text', pageNumber: 2, text: 'Texto guardado', range: { start: 2, end: 16 }, rects: [{ x: .1, y: .2, width: .3, height: .04 }] },
+  ]) {
+    const f = controllerFixture(), expected = structuredClone(value);
+    assert.equal(f.controller.restore(value), true);
+    const surface = await f.ready(), marks = surface.children[0];
+    assert.deepEqual(JSON.parse(marks.dataset.selection), expected);
+    assert.equal(marks.children[0].style.left, '10%');
+    (value.rect ?? value.rects[0]).x = .7;
+    f.controller.setMode(value.kind);
+    assert.equal(marks.children[0].style.left, '10%');
+    assert.equal(f.controller.restore({ kind: 'area', pageNumber: 2, rect: { x: .9, y: 0, width: .5, height: 1 } }), false);
+    assert.deepEqual(JSON.parse(marks.dataset.selection), expected);
+    f.controller.clearOtherPage(3); assert.equal(marks.children.length, 0);
+    f.controller.dispose(); assert.equal(f.controller.restore(expected), false);
+  }
 });
 test('keyboard area creation, correction and changing page obey the same single-selection model',async()=>{
   const f=controllerFixture(),surface=await f.ready();f.controller.setMode('area');

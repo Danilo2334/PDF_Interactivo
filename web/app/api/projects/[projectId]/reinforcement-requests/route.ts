@@ -5,9 +5,14 @@ import { isSameOriginMutation } from "@/lib/documents/mutation-request";
 import { createClient } from "@/lib/supabase/server";
 import { reinforcementRequestSchema } from "@/lib/validations/reinforcement-request";
 import { requestHash, signRequestProof } from "@/lib/reinforcements/request-proof";
+import { readRequests } from "@/lib/reinforcements/read-requests";
 
 export const runtime = "nodejs";
 const reply = (body: unknown, status: number) => Response.json(body, { status, headers: { "Cache-Control": "private, no-store" } });
+
+export async function GET(request: Request, { params }: { params: Promise<{ projectId: string }> }) {
+  return readRequests(request, (await params).projectId);
+}
 
 export async function POST(request: Request, { params }: { params: Promise<{ projectId: string }> }) {
   if (!isSameOriginMutation(request)) return reply({ message: "Origen de la solicitud no permitido." }, 403);

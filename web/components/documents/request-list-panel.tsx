@@ -1,0 +1,129 @@
+"use client";
+
+import { useEffect, useId, useState } from "react";
+import { REQUEST_STATUSES, REQUEST_STATUS_LABELS, REQUEST_STAGE_LABELS } from "@/lib/reinforcements/state";
+import { createRequestResource, type RequestResource } from "@/lib/reinforcements/request-resource";
+import { requestListSchema, requestDetailSchema, type RequestFilter, type RequestRecord, type RequestSummary } from "@/lib/validations/request-list";
+
+function useRequestResource<T>(url: string, active: boolean, parse: (body: unknown) => T) {
+  const [refresh, setRefresh] = useState(0);
+  const key = `${url}:${refresh}`;
+  const [state, setState] = useState<{ key: string; result: RequestResource<T> } | null>(null);
+  useEffect(() => {
+    if (!active) return;
+    const reader = createRequestResource(url, parse, result => setState({ key, result }));
+    let cancelled = false;
+    let timer: number | undefined;
+    async function poll() {
+      if (document.visibilityState === "visible") await reader.load();
+      // Wait for the response before scheduling: slow requests must not be
+      // aborted repeatedly by the refresh interval.
+      if (!cancelled) timer = window.setTimeout(() => { void poll(); }, 10_000);
+    }
+    void poll();
+    return () => { cancelled = true; window.clearTimeout(timer); reader.dispose(); };
+  }, [url, key, active, parse]);
+  return { result: state?.key === key ? state.result : null, refresh: () => setRefresh(value => value + 1) };
+}
+const parseList = (body: unknown) => requestListSchema.parse(body);
+const parseDetail = (body: unknown) => requestDetailSchema.parse(body);
+const date = (value: string) => new Date(value).toLocaleString("es-CO");
+const buttonClass = "rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-800 disabled:opacity-50";
+
+export function RequestState({ request }: { request: RequestSummary }) {
+  return <div className="space-y-1 text-sm">
+    <p className="font-semibold text-blue-900">{REQUEST_STATUS_LABELS[request.status]}</p>
+    <p className="text-slate-700">{REQUEST_STAGE_LABELS[request.stage]}</p>
+    {request.status === "processing" && <p role="status" className="flex items-center gap-2 text-slate-700">
+      <span aria-hidden="true" className="h-4 w-4 animate-spin rounded-full border-2 border-blue-700 border-t-transparent motion-reduce:animate-none" />
+      La operación continúa. Puedes seguir consultando el documento.
+    </p>}
+    {request.status === "error" && request.error_message && <p className="break-words text-red-700">{request.error_message}</p>}
+  </div>;
+}
+
+function RequestDetailPanel({ projectId, documentId, requestId, active, onOpen }: {
+  projectId: string; documentId: string; requestId: string; active: boolean; onOpen: (request: RequestRecord) => void;
+}) {
+  const [page, setPage] = useState(1);
+  const url = `/api/projects/${projectId}/reinforcement-requests/${requestId}?documentId=${documentId}&page=${page}`;
+  const resource = useRequestResource(url, active, parseDetail);
+  const detail = resource.result?.value;
+  return <section aria-label="Detalle de solicitud" className="mt-5 space-y-3 rounded-xl border border-blue-200 bg-blue-50 p-4">
+    <div className="flex flex-wrap items-center justify-between gap-2">
+      <h3 className="font-semibold text-slate-900">Detalle e historial</h3>
+      <button type="button" onClick={resource.refresh} className={buttonClass}>Actualizar detalle</button>
+    </div>
+    {!resource.result && <p role="status">Cargando solicitud…</p>}
+    {resource.result?.error && <p role="alert" className="text-red-700">{resource.result.error}</p>}
+    {detail && <>
+      <p className="break-all text-sm text-slate-700">Identificador: {detail.request.id}</p>
+      <RequestState request={detail.request} />
+      <p className="text-sm text-slate-700">Página {detail.request.page_number} · Propietario: tú · Actualizada: {date(detail.request.updated_at)}</p>
+      <p className="font-medium text-slate-900">Contenido solicitado</p>
+      <blockquote className="max-h-52 overflow-y-auto whitespace-pre-wrap break-words rounded-lg bg-white p-3 text-sm text-slate-800">{detail.request.selected_text}</blockquote>
+      <p className="text-sm text-slate-800"><strong>Necesidad: </strong>{detail.request.need}</p>
+      <button type="button" onClick={() => onOpen(detail.request)} className={buttonClass}>Ver selección en el PDF</button>
+      <h4 className="font-semibold text-slate-900">Cambios registrados</h4>
+      {detail.events.length === 0 ? <p className="text-sm">No hay eventos en esta página del historial.</p> : <ol className="space-y-3">
+        {detail.events.map(event => <li key={event.id} className="rounded-lg bg-white p-3 text-sm text-slate-800">
+          <p>{event.previous_status ? `${REQUEST_STATUS_LABELS[event.previous_status]} → ` : ""}{REQUEST_STATUS_LABELS[event.status]} · {REQUEST_STAGE_LABELS[event.stage]}</p>
+          {event.previous_stage && event.previous_stage !== event.stage && <p>Etapa anterior: {REQUEST_STAGE_LABELS[event.previous_stage]}</p>}
+          <p>{event.actor_kind === "owner" ? "Responsable: propietario" : event.actor_kind === "system" ? "Responsable: sistema" : "Registro inicial al habilitar el historial"}</p>
+          <time dateTime={event.occurred_at}>{date(event.occurred_at)}</time>
+          {event.event_kind === "baseline" && <p>Los cambios anteriores a este registro no están disponibles.</p>}
+        </li>)}
+      </ol>}
+      <div className="flex flex-wrap items-center gap-3">
+        <button type="button" disabled={page === 1} onClick={() => setPage(value => value - 1)} className={buttonClass}>Historial anterior</button>
+        <span className="text-sm">Página {page}</span>
+        <button type="button" disabled={page * detail.pageSize >= detail.historyTotal} onClick={() => setPage(value => value + 1)} className={buttonClass}>Más historial</button>
+      </div>
+    </>}
+  </section>;
+}
+
+export function RequestListPanel({ projectId, documentId, active, onOpen }: {
+  projectId: string; documentId: string; active: boolean; onOpen: (request: RequestRecord) => void;
+}) {
+  const filterId = useId();
+  const [filter, setFilter] = useState<RequestFilter>("all");
+  const [page, setPage] = useState(1);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const url = `/api/projects/${projectId}/reinforcement-requests?documentId=${documentId}&status=${filter}&page=${page}`;
+  const resource = useRequestResource(url, active, parseList);
+  const list = resource.result?.value;
+  function changeFilter(value: RequestFilter) { setFilter(value); setPage(1); setSelectedId(null); }
+  return <div className="mt-6 space-y-4" data-document-id={documentId}>
+    <h2 className="text-xl font-semibold text-slate-900">Solicitudes del documento</h2>
+    <p className="text-sm text-slate-600">Consulta el avance y vuelve a la selección original. Los estados se actualizan mientras esta sección está visible.</p>
+    <div className="flex flex-wrap items-end gap-3">
+      <div><label htmlFor={filterId} className="mb-1 block text-sm font-medium text-slate-800">Estado</label>
+        <select id={filterId} value={filter} onChange={event => changeFilter(event.target.value as RequestFilter)} className={buttonClass}>
+          <option value="all">Todos los estados</option>
+          {REQUEST_STATUSES.map(status => <option key={status} value={status}>{REQUEST_STATUS_LABELS[status]}</option>)}
+        </select>
+      </div>
+      <button type="button" onClick={() => changeFilter("all")} className={buttonClass}>Restablecer filtro</button>
+      <button type="button" onClick={resource.refresh} className={buttonClass}>Actualizar solicitudes</button>
+    </div>
+    {!resource.result && <p role="status">Consultando solicitudes…</p>}
+    {resource.result?.error && <p role="alert" className="rounded-lg bg-red-50 p-3 text-red-700">{resource.result.error}</p>}
+    {list && <>
+      <p className="text-sm text-slate-700">{list.total} solicitudes · Página {page}</p>
+      {list.items.length === 0 ? <p role="status" className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+        {filter === "all" && page === 1 ? "Este documento todavía no tiene solicitudes." : "No hay solicitudes para este filtro y página."}
+      </p> : <ul className="space-y-3">{list.items.map(request => <li key={request.id} className="space-y-2 rounded-xl border border-slate-200 bg-white p-4">
+        <p className="font-semibold text-slate-900">Página {request.page_number}</p>
+        <p className="text-sm text-slate-600">Propietario: tú · Creada: <time dateTime={request.created_at}>{date(request.created_at)}</time></p>
+        <RequestState request={request} />
+        <button type="button" onClick={() => setSelectedId(request.id)} aria-pressed={selectedId === request.id} className={buttonClass}>Ver solicitud e historial</button>
+      </li>)}</ul>}
+      <div className="flex flex-wrap gap-3">
+        <button type="button" disabled={page === 1} onClick={() => setPage(value => value - 1)} className={buttonClass}>Solicitudes anteriores</button>
+        <button type="button" disabled={page * list.pageSize >= list.total} onClick={() => setPage(value => value + 1)} className={buttonClass}>Más solicitudes</button>
+      </div>
+    </>}
+    {selectedId && <RequestDetailPanel key={selectedId} projectId={projectId} documentId={documentId} requestId={selectedId} active={active} onOpen={onOpen} />}
+  </div>;
+}
