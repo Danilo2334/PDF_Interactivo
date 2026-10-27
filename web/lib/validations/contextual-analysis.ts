@@ -4,7 +4,7 @@ export const ANALYSIS_FAILURES = ["pdf_unavailable", "provider_unavailable", "pr
 export type AnalysisFailureCode = typeof ANALYSIS_FAILURES[number];
 export const ANALYSIS_MESSAGES: Record<AnalysisFailureCode, string> = {
   pdf_unavailable: "No fue posible leer el contexto de esta página. Reintenta o prepara una nueva solicitud con una transcripción más amplia.",
-  provider_unavailable: "El servicio de análisis no está disponible en este momento. Inténtalo nuevamente más tarde.",
+  provider_unavailable: "Gemini no está disponible o su cuota gratuita se agotó. Espera antes de reintentar; no se usará un proveedor de pago.",
   provider_refused: "No fue posible analizar este contenido. Revisa la selección y la dificultad antes de preparar otra solicitud.",
   invalid_diagnosis: "La respuesta del análisis no pudo verificarse. Puedes reintentar.",
   timeout: "El análisis tardó demasiado. Puedes reintentar; no se publicará un resultado incompleto.",

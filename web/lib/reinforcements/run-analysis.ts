@@ -122,7 +122,7 @@ export async function postAnalysis(request: Request, projectId: string, requestI
   if (claim.data.disposition !== "started") return reply({ analysis: existing.data, available: true }, claim.data.disposition === "busy" ? 202 : 200);
 
   let context: AnalysisContext | null = null, diagnosis: ContextDiagnosis | null = null, model: string | null = null;
-  let status: "ready" | "insufficient" | "error" = "error", code: string | null = null;
+  let status: "ready" | "insufficient" | "error" = "error", code: string | null = null, quotaExhausted = false;
   try {
     context = await prepare(access);
     if (!context.enough) { status = "insufficient"; code = "insufficient_context"; }
@@ -130,11 +130,12 @@ export async function postAnalysis(request: Request, projectId: string, requestI
       const result = await analyzeContext(context, config); diagnosis = result.diagnosis; model = result.model;
       status = diagnosis.sufficient ? "ready" : "insufficient"; code = diagnosis.sufficient ? null : "insufficient_context";
     }
-  } catch (error) { code = error instanceof AnalysisFailure ? error.code : "provider_unavailable"; }
+  } catch (error) { code = error instanceof AnalysisFailure ? error.code : "provider_unavailable"; quotaExhausted = error instanceof AnalysisFailure && error.quotaExhausted; }
   let saved;
   try { saved = await access.db.rpc("change_reinforcement_analysis", signAnalysisProof({ ...proofBase, action: "finish", attemptId, status, context, diagnosis, model, errorCode: code })); }
   catch { return rpcError(); }
   if (saved.error) return rpcError(saved.error.code);
   const result = analysisRecordSchema.safeParse(saved.data?.analysis);
-  return result.success ? reply({ analysis: result.data, available: true }) : rpcError();
+  return result.success ? reply({ analysis: result.data, available: true,
+    ...(quotaExhausted ? { message: "La cuota gratuita de Gemini se agotó. Espera a que se restablezca antes de reintentar; no se usará un proveedor de pago." } : {}) }, quotaExhausted ? 429 : 200) : rpcError();
 }
