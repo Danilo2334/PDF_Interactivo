@@ -52,7 +52,7 @@ function fixture(options = {}) {
 }
 
 test('cleanup never touches files when ownership, permission or the expected version is rejected', async () => {
-  for (const [code, status] of [['42501', 404], ['40001', 409], ['PGRST202', 503]]) {
+  for (const [code, status] of [['42501', 404], ['PT409', 409], ['40001', 409], ['PGRST202', 503]]) {
     const f = fixture({ beginError: { code } }); const result = await f.run();
     assert.equal(result.status, status); assert.equal(result.success, false); assert.equal(f.calls.length, 1);
   }

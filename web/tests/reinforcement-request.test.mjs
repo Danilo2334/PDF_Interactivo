@@ -65,7 +65,7 @@ function fixture(options = {}) {
         return { data: tables[table], error: options.lookupError && table === 'reinforcement_requests' ? {} : null };
       } };
     },
-    storage: { from: () => ({ download: async () => { events.push('download'); return { data: options.file ?? pdfFile, error: options.downloadError ?? null }; } }) },
+    storage: { from: () => ({ download: async () => { events.push('download'); options.onDownload?.(); return { data: options.file ?? pdfFile, error: options.downloadError ?? null }; } }) },
     async rpc(name, args) { events.push(['rpc', name, args]); return { data: { request: receipt, created: true }, error: options.rpcError ?? null }; },
   };
   const route = load('app/api/projects/[projectId]/reinforcement-requests/route.ts', {
@@ -115,8 +115,26 @@ test('foreign, stale, deleting, unreadable PDF and out-of-range page never invok
 });
 
 test('late ownership/version rejection and ambiguous transaction failures are reported without false confirmation', async () => {
-  for (const [code, status] of [['42501', 403], ['40001', 409], ['23505', 409], ['08006', 503]]) {
+  for (const [code, status] of [['42501', 403], ['PT409', 409], ['40001', 409], ['23505', 409], ['08006', 503]]) {
     const f = fixture({ rpcError: { code } }); const response = await f.run(); assert.equal(response.status, status);
     assert.equal((await response.json()).request, undefined);
+  }
+});
+
+test('a PDF version conflict discovered after download returns HTTP 409 and the submission controller preserves the draft', async () => {
+  for (const code of ['PT409', '40001']) {
+    const settings = { onDownload() { settings.rpcError = { code }; } }, f = fixture(settings);
+    const response = await f.run(), body = await response.json();
+    assert.equal(response.status, 409); assert.match(body.message, /Recarga el proyecto/); assert.equal(body.request, undefined);
+    assert.ok(f.events.indexOf('download') < f.events.findIndex(event => Array.isArray(event) && event[0] === 'rpc'));
+    assert.equal(f.events.filter(event => Array.isArray(event) && event[0] === 'rpc').length, 1);
+    const states = [], sent = [];
+    const controller = submission.createSubmissionController(state => states.push(state), {
+      uuid: () => idempotencyKey,
+      fetch: async (_url, request) => { sent.push(JSON.parse(request.body)); return Response.json(body, { status: 409 }); },
+    });
+    await controller.send(projectId, content);
+    assert.equal(states.at(-1).status, 'error'); assert.match(states.at(-1).message, /Recarga el proyecto/);
+    assert.equal(states.at(-1).receipt, undefined); assert.deepEqual(sent[0].content, content);
   }
 });
