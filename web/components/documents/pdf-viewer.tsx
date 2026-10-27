@@ -308,7 +308,7 @@ function PdfPages({
           ref={navigationRef}
           role="group"
           aria-label="Navegación por páginas del PDF"
-          className="sticky top-0 z-10 mt-4 rounded-lg border border-slate-200 bg-white p-3 shadow-sm"
+          className="z-10 mt-4 rounded-lg border border-slate-200 bg-white p-3 shadow-sm lg:sticky lg:top-0"
         >
           <div className="flex flex-wrap items-center gap-3">
             <p role="status" aria-live="polite" aria-atomic="true" className="text-sm font-semibold text-slate-900">
