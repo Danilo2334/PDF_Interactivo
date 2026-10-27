@@ -1,11 +1,14 @@
 "use client";
 
-import { useCallback, useId, useState } from "react";
+import { useCallback, useId, useRef, useState } from "react";
+import type { PDFDocumentProxy } from "pdfjs-dist";
 import { PdfViewer } from "@/components/documents/pdf-viewer";
 import { ReinforcementRequestDraft, type PageSelection } from "@/components/documents/reinforcement-request-draft";
 import type { Reinforcement } from "@/lib/types/reinforcement";
 import type { DocumentFragmentSelection, FragmentSelection } from "@/lib/pdf/fragment-selection";
 import { createDifficultyDraft, EMPTY_DIFFICULTY_INPUT, type DifficultyDraft, type DifficultyInput } from "@/lib/validations/difficulty";
+import { extractSelectionText } from "@/lib/pdf/extract-selection-text";
+import { beginTextExtraction, confirmSelectionText, editSelectionText, finishTextExtraction, selectionTextKey, type SelectionTextDraft } from "@/lib/pdf/selection-text-draft";
 
 type WorkspaceProps = {
   projectId: string;
@@ -38,14 +41,24 @@ export function ProjectWorkspace({
   const [fragmentResetKey, setFragmentResetKey] = useState(0);
   const [difficultyInput, setDifficultyInput] = useState<(PageSelection & DifficultyInput) | null>(null);
   const [difficultyDraft, setDifficultyDraft] = useState<DifficultyDraft | null>(null);
+  const [selectionText, setSelectionText] = useState<SelectionTextDraft | null>(null);
+  const textRequestId = useRef(0);
+  const pdfSource = useRef<{ documentId: string; pdf: PDFDocumentProxy } | null>(null);
   const draft = selection?.documentId === documentId ? selection : null;
   const currentFragment = fragment?.documentId === documentId && fragment.pageNumber === draft?.pageNumber ? fragment : null;
   const currentDifficultyInput = difficultyInput?.documentId === documentId && difficultyInput.pageNumber === draft?.pageNumber ? difficultyInput : EMPTY_DIFFICULTY_INPUT;
   const currentDifficulty = difficultyDraft?.documentId === documentId && difficultyDraft.pageNumber === draft?.pageNumber ? difficultyDraft : null;
+  const textContext = draft ? { ...draft, fragment: currentFragment } : null;
+  const currentText = textContext && selectionText && selectionTextKey(selectionText) === selectionTextKey(textContext) ? selectionText : null;
+  const receiveTextSource = useCallback((pdf: PDFDocumentProxy | null) => {
+    if (pdf) pdfSource.current = { documentId, pdf };
+    else if (pdfSource.current?.documentId === documentId) pdfSource.current = null;
+  }, [documentId]);
   const selectPage = useCallback((pageNumber: number | null) => {
     setDifficultyInput(previous => pageNumber === null || previous?.pageNumber === pageNumber ? previous : null);
     setDifficultyDraft(null);
     setFragment(previous => previous?.pageNumber === pageNumber ? previous : null);
+    setSelectionText(previous => previous?.documentId === documentId && previous.pageNumber === pageNumber ? previous : null);
     setSelection(previous => {
       if (pageNumber === null) return null;
       if (!Number.isInteger(pageNumber) || pageNumber < 1) return previous;
@@ -56,8 +69,9 @@ export function ProjectWorkspace({
   const selectFragment = useCallback((value: FragmentSelection | null) => {
     setFragment(value ? { ...value, documentId } : null);
     setDifficultyDraft(null);
+    setSelectionText(previous => value && previous && selectionTextKey(previous) === selectionTextKey({ documentId, pageNumber: value.pageNumber, fragment: { ...value, documentId } }) ? previous : null);
   }, [documentId]);
-  const clearFragment = useCallback(() => { setFragment(null); setDifficultyDraft(null); setFragmentResetKey(value => value + 1); }, []);
+  const clearFragment = useCallback(() => { setFragment(null); setDifficultyDraft(null); setSelectionText(null); setFragmentResetKey(value => value + 1); }, []);
   function changeDifficulty(value: DifficultyInput) {
     if (!draft) return;
     setDifficultyInput({ ...value, ...draft });
@@ -66,6 +80,21 @@ export function ProjectWorkspace({
   function confirmDifficulty() {
     if (!draft) return;
     setDifficultyDraft(createDifficultyDraft({ ...draft, fragment: currentFragment }, currentDifficultyInput));
+  }
+  async function extractText() {
+    if (!textContext) return;
+    const requestId = ++textRequestId.current;
+    setSelectionText(beginTextExtraction(textContext, requestId));
+    const source = pdfSource.current?.documentId === documentId ? pdfSource.current.pdf : null;
+    const result = await extractSelectionText(source, textContext.pageNumber, textContext.fragment);
+    setSelectionText(previous => finishTextExtraction(previous, requestId, result));
+  }
+  function changeText(text: string) {
+    if (textContext) setSelectionText(previous => editSelectionText(textContext, previous, text));
+  }
+  function confirmText() {
+    if (!textContext) return;
+    setSelectionText(previous => previous && selectionTextKey(previous) === selectionTextKey(textContext) ? confirmSelectionText(previous) : previous);
   }
 
   return (
@@ -101,11 +130,13 @@ export function ProjectWorkspace({
           <PdfViewer key={`${projectId}-${documentId}`} projectId={projectId}
             initialPage={draft?.pageNumber ?? 1} onPageSelect={canRequestReinforcement ? selectPage : undefined}
             onFragmentSelect={canRequestReinforcement ? selectFragment : undefined} fragmentResetKey={fragmentResetKey}
+            onTextSourceChange={canRequestReinforcement ? receiveTextSource : undefined}
             requestDraft={canRequestReinforcement ? <ReinforcementRequestDraft
               key={documentId} documentId={documentId} documentName={documentName} selection={draft}
               fragment={currentFragment} onClearSelection={clearFragment}
               difficultyInput={currentDifficultyInput} difficultyDraft={currentDifficulty}
               onDifficultyChange={changeDifficulty} onConfirmDifficulty={confirmDifficulty}
+              selectionText={currentText} onExtractText={extractText} onTextChange={changeText} onConfirmText={confirmText}
             /> : null} />
         )}
       </div>
