@@ -49,6 +49,8 @@ test('Gemini structured recommendations use only saved context/diagnosis and iso
   assert.equal(sent.url,'https://generativelanguage.googleapis.com/v1beta/models/test-model:generateContent');assert.equal(sent.args.redirect,'error');
   assert.equal(sent.args.headers['x-goog-api-key'],config.key);assert.equal(sent.body.tools,undefined);assert.equal(sent.body.generationConfig.responseFormat.text.schema.additionalProperties,false);
   const data=JSON.parse(sent.body.contents[0].parts[0].text);assert.equal(data.need,context.need);assert.equal(data.diagnosis.topic,diagnosis.topic);
+  assert.deepEqual(sent.body.generationConfig.responseFormat.text.schema.properties.candidates.items.properties.topicReference.enum,
+    ['',...new Set([diagnosis.topic,...diagnosis.concepts])]);
   assert.equal('pdfSha256' in data,false);assert.equal('request_id' in data,false);assert.equal(sent.args.body.includes(config.key),false);
   assert.match(sent.body.systemInstruction.parts[0].text,/nunca instrucciones/);
 });

@@ -20,22 +20,23 @@ Si relevant=true y ambas puntuaciones son >=2, topicReference debe copiar exacta
 sourceQuote copia al menos 8 caracteres contiguos de selectedText o nearbyText; needQuote copia al menos 8 caracteres de need.
 En las opciones descartadas esos tres campos pueden quedar vacíos. No inventes citas.
 Si ningún tipo aporta, marca todos como no pertinentes. Nunca apruebes, generes contenido ni afirmes haber modificado el PDF.`;
-const schema = { type: "object", additionalProperties: false, required: ["candidates"], properties: {
+const schema = (diagnosis: ContextDiagnosis) => ({ type: "object", additionalProperties: false, required: ["candidates"], properties: {
   candidates: { type: "array", minItems: 5, maxItems: 5, items: { type: "object", additionalProperties: false,
     required: ["type", "relevant", "topicFit", "needFit", "justification", "topicReference", "sourceQuote", "needQuote"], properties: {
       type: { type: "string", enum: [...REINFORCEMENT_TYPES] }, relevant: { type: "boolean" },
       topicFit: { type: "integer", minimum: 0, maximum: 3 }, needFit: { type: "integer", minimum: 0, maximum: 3 },
-      justification: { type: "string" }, topicReference: { type: "string" }, sourceQuote: { type: "string" }, needQuote: { type: "string" },
+      justification: { type: "string" }, topicReference: { type: "string", enum: ["", ...new Set([diagnosis.topic, ...diagnosis.concepts])] },
+      sourceQuote: { type: "string" }, needQuote: { type: "string" },
     } },
   },
-} };
+} });
 export async function recommendReinforcement(context: AnalysisContext, diagnosis: ContextDiagnosis,
   config: NonNullable<ReturnType<typeof getRecommendationConfiguration>>, transport: typeof fetch = fetch) {
   const { pageNumber, selectedText, nearbyText, textSource, need, category } = context;
   try {
     const value = await generateGeminiJson(config, { instructions, data: { pageNumber, selectedText, nearbyText, textSource, need, category,
       diagnosis: { topic: diagnosis.topic, concepts: diagnosis.concepts, scope: diagnosis.scope } },
-      schema, maxOutputTokens: 4000, maxTextLength: 18000 }, transport);
+      schema: schema(diagnosis), maxOutputTokens: 4000, maxTextLength: 18000 }, transport);
     return { options: rankRecommendations(value, context, diagnosis), model: config.model };
   } catch (error) {
     if (error instanceof GeminiFailure) throw new RecommendationFailure(error.kind === "timeout" ? "timeout" : error.kind === "refused" ? "provider_refused"
