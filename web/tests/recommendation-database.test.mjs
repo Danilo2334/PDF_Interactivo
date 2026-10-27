@@ -33,6 +33,25 @@ test('HU019 PostgreSQL recommendations, ownership, choice concurrency and versio
     `);
     for(const name of ['20261026211919_create_reinforcement_requests.sql','20261026215447_track_reinforcement_request_states.sql','20261026224216_contextual_request_analysis.sql','20261026230234_reinforcement_recommendations.sql'])
       await db.exec(readFileSync(new URL(`../../supabase/migrations/${name}`,import.meta.url),'utf8'));
+    await t.test('the forward migration changes only nine deterministic conflict codes and preserves function privileges and RLS',async()=>{
+      const functions=async()=>(await db.query(`select n.nspname schema,p.proname name,p.prosrc source,to_jsonb(p)-'prosrc' metadata
+        from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+        where n.nspname in ('public','private','auth') order by p.oid`)).rows;
+      const security=async()=>({tables:(await db.query(`select c.relname,c.relrowsecurity,c.relforcerowsecurity,c.relacl::text
+        from pg_class c where c.relnamespace='public'::regnamespace and c.relkind='r' order by c.relname`)).rows,
+        policies:(await db.query('select * from pg_policies where schemaname in (\'public\',\'private\') order by schemaname,tablename,policyname')).rows});
+      const before=await functions(), accessBefore=await security();
+      await db.exec(readFileSync(new URL('../../supabase/migrations/20261027201023_fix_recommendation_conflict_codes.sql',import.meta.url),'utf8'));
+      const names=['lock_current_recommendation_request','change_verified_recommendations','choose_owned_reinforcement_option'];
+      let replacements=0;
+      const expected=before.map(fn=>{
+        if(fn.schema!=='private'||!names.includes(fn.name))return fn;
+        replacements+=(fn.source.match(/errcode='40001'/g)??[]).length;
+        assert.equal(fn.metadata.prosecdef,true);assert.deepEqual(fn.metadata.proconfig,['search_path=""']);
+        return {...fn,source:fn.source.replaceAll("errcode='40001'","errcode='PT409'")};
+      });
+      assert.equal(replacements,9);assert.deepEqual(await functions(),expected);assert.deepEqual(await security(),accessBefore);
+    });
     const secret=(await db.query('select secret from private.reinforcement_request_secrets')).rows[0].secret;
     process.env.REINFORCEMENT_REQUEST_SECRET=secret;
     async function asUser(id=owner,role='authenticated'){
@@ -57,7 +76,7 @@ test('HU019 PostgreSQL recommendations, ownership, choice concurrency and versio
     const state=async id=>(await db.query('select * from public.reinforcement_requests where id=$1',[id])).rows[0];
     let first;
     await t.test('a sufficient saved diagnosis is mandatory; signed requests reject forgery, expiry and another operation',async()=>{
-      const pending=await fresh(false);await assert.rejects(start(pending),e=>e.code==='40001');
+      const pending=await fresh(false);await assert.rejects(start(pending),e=>e.code==='PT409');
       first=await fresh();
       await assert.rejects(call({...first,action:'start'},p=>({...p,p_signature:'0'.repeat(64)})),e=>e.code==='42501');
       for(const change of [{expiresAt:1},{operation:'contextual-analysis'},{userId:other}])
@@ -86,10 +105,13 @@ test('HU019 PostgreSQL recommendations, ownership, choice concurrency and versio
     });
     await t.test('choice stores exactly the server reason and version, supports retry, and rejects stale tabs or unavailable types',async()=>{
       await assert.rejects(choose(first,'image'),e=>e.code==='23514');
-      await assert.rejects(choose({...first,attemptId:randomUUID()}),e=>e.code==='40001');
+      await assert.rejects(choose({...first,attemptId:randomUUID()}),e=>e.code==='PT409');
       const saved=await choose(first);assert.equal(saved.choice.type,'example');assert.equal(saved.choice.justification,options[0].justification);assert.equal(saved.choiceVersion,1);
+      const before=await state(first.requestId), count=Number((await db.query('select count(*) n from public.reinforcement_requests')).rows[0].n);
       const retry=await choose(first);assert.equal(retry.choiceVersion,1);assert.equal(retry.choice.selectedAt,saved.choice.selectedAt);
-      await assert.rejects(choose(first,'explanation',0),e=>e.code==='40001');
+      assert.deepEqual(retry,saved);assert.deepEqual(await state(first.requestId),before);
+      await assert.rejects(choose(first,'explanation',0),e=>e.code==='PT409');
+      assert.deepEqual(await state(first.requestId),before);assert.equal(Number((await db.query('select count(*) n from public.reinforcement_requests')).rows[0].n),count);
       const changed=await choose(first,'explanation',1);assert.equal(changed.choiceVersion,2);
       const row=await state(first.requestId);assert.equal(row.recommended_type,'explanation');assert.equal(row.recommendation_reason,options[1].justification);
       assert.equal(row.recommendation_selected_by,owner);assert.equal(row.status,'pending');assert.equal(row.stage,'choosing');assert.equal(row.approved_at,null);
@@ -97,16 +119,16 @@ test('HU019 PostgreSQL recommendations, ownership, choice concurrency and versio
     });
     await t.test('after generation starts a different choice is blocked, while the same completed choice remains idempotent',async()=>{
       await db.exec('reset role');await db.query("update public.reinforcement_requests set status='processing',stage='generating' where id=$1",[first.requestId]);
-      await asUser();await assert.rejects(choose(first,'example',2),e=>e.code==='40001');assert.equal((await choose(first,'explanation',1)).choiceVersion,2);
-      await assert.rejects(start(first),e=>e.code==='40001');
+      await asUser();await assert.rejects(choose(first,'example',2),e=>e.code==='PT409');assert.equal((await choose(first,'explanation',1)).choiceVersion,2);
+      await assert.rejects(start(first),e=>e.code==='PT409');
     });
     await t.test('expired attempts can be reclaimed but late results cannot overwrite their replacement; empty result has no selectable fallback',async()=>{
       const input=await fresh();await start(input);await db.exec('reset role');
       await db.query("update public.reinforcement_recommendations set lease_expires_at=now()-interval '1 second' where request_id=$1",[input.requestId]);await asUser();
-      await assert.rejects(finish(input),e=>e.code==='40001');const retry={...input,attemptId:randomUUID()};assert.equal((await start(retry)).recommendations.attempts,2);
-      await assert.rejects(finish(input),e=>e.code==='40001');
+      await assert.rejects(finish(input),e=>e.code==='PT409');const retry={...input,attemptId:randomUUID()};assert.equal((await start(retry)).recommendations.attempts,2);
+      await assert.rejects(finish(input),e=>e.code==='PT409');
       const empty=await finish(retry,{status:'empty',options:[],emptyReason:'No hay opciones pertinentes para la dificultad actual.'});assert.equal(empty.recommendations.status,'empty');
-      assert.equal((await start(retry)).disposition,'cached');await assert.rejects(choose(retry),e=>e.code==='40001');
+      assert.equal((await start(retry)).disposition,'cached');await assert.rejects(choose(retry),e=>e.code==='PT409');
     });
     await t.test('a transient failure can retry without losing the original analysis or inventing a generated reinforcement',async()=>{
       const input=await fresh();await start(input);await fail(input);
@@ -116,11 +138,11 @@ test('HU019 PostgreSQL recommendations, ownership, choice concurrency and versio
     });
     await t.test('replacement, deletion and a changed analysis invalidate a claimed result before persistence',async()=>{
       const input=await fresh();await start(input);await db.exec('reset role');await db.query('update public.projects set document_id=null where id=$1',[projectId]);await asUser();
-      await assert.rejects(finish(input),e=>e.code==='40001');await db.exec('reset role');await db.query('update public.projects set document_id=$1 where id=$2',[documentId,projectId]);
+      await assert.rejects(finish(input),e=>e.code==='PT409');await db.exec('reset role');await db.query('update public.projects set document_id=$1 where id=$2',[documentId,projectId]);
       await db.query('insert into public.project_deletions values($1)',[[documentId]]);await asUser();await assert.rejects(finish(input),e=>e.code==='42501');
       assert.equal((await db.query('select * from public.reinforcement_recommendations')).rows.length,0);
       await db.exec('reset role;delete from public.project_deletions');await db.query('update public.reinforcement_analyses set attempt_id=$1 where request_id=$2',[randomUUID(),input.requestId]);await asUser();
-      await assert.rejects(finish(input),e=>e.code==='40001');await db.exec('reset role');await db.query('update public.reinforcement_analyses set attempt_id=$1 where request_id=$2',[input.analysisAttemptId,input.requestId]);await asUser();await fail(input);
+      await assert.rejects(finish(input),e=>e.code==='PT409');await db.exec('reset role');await db.query('update public.reinforcement_analyses set attempt_id=$1 where request_id=$2',[input.analysisAttemptId,input.requestId]);await asUser();await fail(input);
     });
     await t.test('concurrent and recent recommendation runs are bounded per account',async()=>{
       const a=await fresh(),b=await fresh(),c=await fresh();await start(a);await start(b);await assert.rejects(start(c),e=>e.code==='P0001');await fail(a);await fail(b);

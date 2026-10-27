@@ -77,7 +77,7 @@ test('the API uses the saved diagnosis and persists ordered options with the cla
 test('no pertinent options and provider failures are distinct from success, and errors expose only controlled messages',async()=>{
   const empty=fixture({options:[]});const noOptions=await(await empty.post()).json();assert.equal(noOptions.recommendations.status,'empty');assert.match(noOptions.recommendations.empty_reason,/No se encontraron/);
   for(const failure of schemas.RECOMMENDATION_FAILURES){const f=fixture({failure});const body=await(await f.post()).json();assert.equal(body.recommendations.status,'error');assert.equal(body.recommendations.error_code,failure);assert.equal(body.recommendations.options.length,0);}
-  for(const [code,status] of [['42501',403],['40001',409],['23514',409],['P0001',429],['PGRST202',503]]){
+  for(const [code,status] of [['42501',403],['PT409',409],['40001',409],['23514',409],['P0001',429],['PGRST202',503]]){
     const f=fixture({rpcError:code});assert.equal((await f.post()).status,status);assert.equal(f.providerCalls(),0);
   }
 });
@@ -86,7 +86,13 @@ test('owner choice works for stored options even during provider outage and neve
   assert.equal(saved.choice.justification,options[0].justification);assert.equal(f.rpc[0].name,'choose_reinforcement_option');assert.equal(f.providerCalls(),0);
   for(const extra of [{justification:'mi razón falsa'},{status:'approved'},{expectedVersion:-1},{type:'video'}])
     assert.equal((await f.post({...choose,...extra})).status,400);
-  assert.equal(f.rpc.length,1);assert.equal((await fixture({rpcError:'40001'}).post(choose)).status,409);
+  assert.equal(f.rpc.length,1);
+  for(const code of ['PT409','40001']){
+    const stale=fixture({rpcError:code}), response=await stale.post(choose), body=await response.json();
+    assert.equal(response.status,409);assert.match(body.message,/Actualiza las opciones/);
+    assert.equal(stale.rpc.length,1);assert.equal(stale.rpc[0].name,'choose_reinforcement_option');assert.equal(stale.providerCalls(),0);
+    assert.equal(body.choice,undefined);assert.equal(body.choiceVersion,undefined);
+  }
 });
 test('GET preserves the saved choice, blocks stale analysis sets and allows retries only after a lease expires',async()=>{
   const complete={...result,status:'ready',options,model:'test-model',finished_at:analysis.started_at};

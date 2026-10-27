@@ -20,7 +20,7 @@ async function savedAnalysis(access: Access) {
   return { analysis: { ...analysis, context: analysis.context, diagnosis: analysis.diagnosis } };
 }
 function failure(code?: string) {
-  const status = code === "42501" ? 403 : ["40001", "23514"].includes(code ?? "") ? 409 : code === "P0001" ? 429 : 503;
+  const status = code === "42501" ? 403 : ["PT409", "40001", "23514"].includes(code ?? "") ? 409 : code === "P0001" ? 429 : 503;
   return reply({ message: status === 403 ? "Ya no tienes permiso para esta solicitud." : status === 409
     ? "La solicitud o la elección cambió. Actualiza las opciones antes de continuar." : status === 429
       ? "Hay varias recomendaciones recientes o en curso. Espera un momento antes de reintentar."
