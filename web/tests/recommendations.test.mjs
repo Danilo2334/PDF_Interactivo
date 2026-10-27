@@ -18,6 +18,19 @@ test('malformed, duplicated, unknown or unsupported recommendation responses are
   }
   assert.throws(()=>schemas.rankRecommendations(candidates(),context,{ ...diagnosis,sufficient:false }));
 });
+
+test('discarded candidates with empty reasons do not reject useful options, whose reasons remain mandatory', () => {
+  // Real provider regression: formats rejected for a verbal vocabulary need
+  // had blank reasons; only the retained options need displayable reasons.
+  const input = candidates();
+  input.candidates.filter(c => !c.relevant || c.topicFit < 2 || c.needFit < 2)
+    .forEach(c => { c.justification = ''; c.topicReference = ''; c.sourceQuote = ''; c.needQuote = ''; });
+  const retained = schemas.rankRecommendations(input, context, diagnosis);
+  assert.deepEqual(Array.from(retained, o => o.type), ['example', 'explanation']);
+  input.candidates[0].justification = '';
+  assert.throws(() => schemas.rankRecommendations(input, context, diagnosis));
+  assert.equal(schemas.recommendationOptionSchema.safeParse({ ...retained[0], justification: '' }).success, false);
+});
 test('eligible options require evidence in the saved topic, document and actual user difficulty, including nonblank quotes', () => {
   for (const [key,value] of [['topicReference','Tema ajeno'],['sourceQuote','Cita de otro documento'],['needQuote','No pertenece a la dificultad'],['sourceQuote','        '],['needQuote','        ']]) {
     const input=candidates(); input.candidates[0][key]=value; assert.throws(()=>schemas.rankRecommendations(input,context,diagnosis));

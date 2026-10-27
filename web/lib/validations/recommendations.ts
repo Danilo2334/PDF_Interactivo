@@ -8,12 +8,15 @@ export const REINFORCEMENT_LABELS: Record<ReinforcementType, string> = {
 };
 const candidateSchema = z.object({
   type: z.enum(REINFORCEMENT_TYPES), relevant: z.boolean(), topicFit: z.number().int().min(0).max(3), needFit: z.number().int().min(0).max(3),
-  justification: z.string().trim().min(20).max(700), topicReference: z.string().max(200),
+  justification: z.string().trim().max(700), topicReference: z.string().max(200),
   sourceQuote: z.string().max(500), needQuote: z.string().max(500),
 }).strict();
 export const candidateResponseSchema = z.object({ candidates: z.array(candidateSchema).length(5) }).strict()
   .refine(value => new Set(value.candidates.map(c => c.type)).size === 5);
 export const recommendationOptionSchema = candidateSchema.omit({ relevant: true }).extend({
+  // Discarded provider candidates may have no reason. Every retained and
+  // persisted option still needs a useful reason, independently of that input.
+  justification: z.string().trim().min(20).max(700),
   topicFit: z.number().int().min(2).max(3), needFit: z.number().int().min(2).max(3),
   topicReference: z.string().trim().min(1).max(200), sourceQuote: z.string().trim().min(8).max(500), needQuote: z.string().trim().min(8).max(500),
 }).strict();
