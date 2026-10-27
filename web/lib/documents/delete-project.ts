@@ -13,8 +13,8 @@ export async function deleteOwnedProject(client: Client, input: {
     p_project_id: input.projectId, p_expected_document_id: input.documentId,
   });
   if (error) return {
-    success: false, status: error.code === "42501" ? 404 : error.code === "40001" ? 409 : 503,
-    message: error.code === "40001" ? "El documento cambió. Recarga y confirma su eliminación nuevamente."
+    success: false, status: error.code === "42501" ? 404 : ["PT409", "40001"].includes(error.code ?? "") ? 409 : 503,
+    message: ["PT409", "40001"].includes(error.code ?? "") ? "El documento cambió. Recarga y confirma su eliminación nuevamente."
       : error.code === "42501" ? "El documento no está disponible." : "No fue posible iniciar la eliminación. Inténtalo nuevamente.",
   };
   const snapshot = snapshotSchema.safeParse(data);
