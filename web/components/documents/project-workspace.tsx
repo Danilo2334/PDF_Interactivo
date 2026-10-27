@@ -9,6 +9,8 @@ import type { DocumentFragmentSelection, FragmentSelection } from "@/lib/pdf/fra
 import { createDifficultyDraft, EMPTY_DIFFICULTY_INPUT, type DifficultyDraft, type DifficultyInput } from "@/lib/validations/difficulty";
 import { extractSelectionText } from "@/lib/pdf/extract-selection-text";
 import { beginTextExtraction, confirmSelectionText, editSelectionText, finishTextExtraction, selectionTextKey, type SelectionTextDraft } from "@/lib/pdf/selection-text-draft";
+import { contentFromDraft, requestContentKey } from "@/lib/validations/reinforcement-request";
+import { createSubmissionController, IDLE_SUBMISSION, type SubmissionState } from "@/lib/reinforcements/submission";
 
 type WorkspaceProps = {
   projectId: string;
@@ -44,12 +46,28 @@ export function ProjectWorkspace({
   const [selectionText, setSelectionText] = useState<SelectionTextDraft | null>(null);
   const textRequestId = useRef(0);
   const pdfSource = useRef<{ documentId: string; pdf: PDFDocumentProxy } | null>(null);
+  const [submission, setSubmission] = useState<SubmissionState>(IDLE_SUBMISSION);
+  const senderRef = useRef<ReturnType<typeof createSubmissionController> | null>(null);
   const draft = selection?.documentId === documentId ? selection : null;
   const currentFragment = fragment?.documentId === documentId && fragment.pageNumber === draft?.pageNumber ? fragment : null;
   const currentDifficultyInput = difficultyInput?.documentId === documentId && difficultyInput.pageNumber === draft?.pageNumber ? difficultyInput : EMPTY_DIFFICULTY_INPUT;
   const currentDifficulty = difficultyDraft?.documentId === documentId && difficultyDraft.pageNumber === draft?.pageNumber ? difficultyDraft : null;
   const textContext = draft ? { ...draft, fragment: currentFragment } : null;
   const currentText = textContext && selectionText && selectionTextKey(selectionText) === selectionTextKey(textContext) ? selectionText : null;
+  const prepared = contentFromDraft(currentDifficulty, currentText);
+  const contentKey = prepared.content ? requestContentKey(projectId, prepared.content) : null;
+  const visibleSubmission = submission.status === "sending" || submission.contentKey === contentKey ? submission : IDLE_SUBMISSION;
+  function sendRequest() {
+    if (!canRequestReinforcement || !prepared.content) return;
+    if (!senderRef.current) senderRef.current = createSubmissionController(setSubmission);
+    void senderRef.current.send(projectId, prepared.content);
+  }
+  function resetRequest() {
+    if (submission.status === "sending") return;
+    senderRef.current?.reset();
+    setDifficultyDraft(null);
+    setSelectionText(previous => previous ? { ...previous, confirmed: false } : null);
+  }
   const receiveTextSource = useCallback((pdf: PDFDocumentProxy | null) => {
     if (pdf) pdfSource.current = { documentId, pdf };
     else if (pdfSource.current?.documentId === documentId) pdfSource.current = null;
@@ -137,6 +155,7 @@ export function ProjectWorkspace({
               difficultyInput={currentDifficultyInput} difficultyDraft={currentDifficulty}
               onDifficultyChange={changeDifficulty} onConfirmDifficulty={confirmDifficulty}
               selectionText={currentText} onExtractText={extractText} onTextChange={changeText} onConfirmText={confirmText}
+              submission={visibleSubmission} missing={prepared.missing} onSend={sendRequest} onResetRequest={resetRequest}
             /> : null} />
         )}
       </div>

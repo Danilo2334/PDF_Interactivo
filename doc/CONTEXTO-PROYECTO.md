@@ -8,12 +8,21 @@ borrador y sin merge; sus evidencias anteriores se conservan.
 HU015 / SCRUM-27 se implementó en la nube en la rama
 `codex/scrum-27-hu015-extraccion-texto`, commit funcional `99816ba`,
 [PR #19](https://github.com/Danilo2334/PDF_Interactivo/pull/19) en borrador.
-**111/111 pruebas, lint y build correctos; faltan pruebas visuales y capturas.**
+**HU015: 111/111 pruebas, lint y build correctos; faltan pruebas visuales y capturas.**
 SCRUM-27, SCRUM-87, SCRUM-179 y SCRUM-88 están En curso, no finalizados.
 PR #19 depende de #18; su base provisional es la rama de HU014. Integrar #18
 primero y cambiar después la base de #19 a develop antes de integrar HU015.
 No se accedió al PC de la empresa ni al equipo de casa. Conservar el stash
-local `d6406e0` sin aplicarlo ni eliminarlo. Ver continuidad de HU015 al final.
+local `d6406e0` sin aplicarlo ni eliminarlo.
+
+La implementación de HU016 / SCRUM-28 también está preparada en la rama
+`codex/scrum-28-hu016-solicitud-refuerzo`, basada en HU015 (`7d4f63a`).
+**130/130 pruebas, lint y build correctos; validación visual pendiente.**
+SCRUM-28, SCRUM-89, SCRUM-180 y SCRUM-90 están En curso. La migración aditiva
+de solicitudes ya está aplicada en Supabase. Antes de probar en casa, configurar
+el secreto de servidor indicado en el apartado HU016, sin publicarlo.
+Orden de revisión/integración: HU014 → HU015 → HU016, siempre hacia develop
+después de ajustar la base de cada PR. No cerrar Sprint 3 hasta verificar todo.
 
 ## Contexto proporcionado por el usuario
 
@@ -704,8 +713,8 @@ trabajo ni modificar sus restricciones, para que Codex continúe en casa.
   los cambios de HU015. **No hacer merge en esa rama.** Revisar/integrar #18,
   cambiar la base de #19 a `develop`, resolver cualquier diferencia y revisar
   las pruebas antes de integrar #19. No se modificaron main ni develop.
-- HU016 / SCRUM-28 no se implementó; será el siguiente trabajo después de
-  validar esta historia. La solicitud todavía no se registra en servidor.
+- En este punto inicial HU016 no estaba implementada. La entrega posterior
+  descrita al final añade el registro en servidor; no reimplementarla.
 
 ### Implementación comprobada
 
@@ -789,5 +798,125 @@ trabajo ni modificar sus restricciones, para que Codex continúe en casa.
    PR #19; no duplicar capturas innecesariamente en la historia madre.
 8. Resolver primero la revisión/integración pendiente de PR #18. Cambiar la
    base de #19 a develop y revisar su diff y las pruebas antes del merge.
-   Actualizar este documento con resultados reales y continuar HU016 cuando
-   corresponda. No reimplementar HU015 desde develop viejo.
+   Actualizar este documento con resultados reales y validar la entrega HU016
+   descrita a continuación. No reimplementar HU015 desde develop viejo.
+
+## 26/10/2026 — HU016 implementada en la nube; pendiente de validación visual
+
+### Alcance y entrega
+
+- Rama `codex/scrum-28-hu016-solicitud-refuerzo`, creada desde
+  `7d4f63a402813cb681ad5a6532fb857ddb39cfcb` (HU015 / PR #19).
+  El PR debe conservarse como borrador, con base provisional en HU015 para
+  revisar solo este cambio. No hacer merge en la rama HU015: integrar #18 y
+  #19 primero y luego retargetear el PR de HU016 a develop.
+- SCRUM-89: envía documento/version, página, fragmento o página completa,
+  texto corregido, origen digital/manual, categoría y necesidad. Usuario,
+  identificador, fecha y estado pendiente se fijan en servidor/base de datos.
+- SCRUM-180: valida cliente y servidor, coherencia del fragmento, campos
+  obligatorios y límites. Texto entre 1 y 20.000 caracteres; necesidad entre
+  20 y 2.000. Se exige confirmar texto y dificultad en el contexto actual.
+  La API consulta el proyecto propio y lee el PDF privado con pdf-lib para
+  comprobar el número real de páginas antes de registrar la solicitud.
+- SCRUM-90: deshabilita envío pendiente, conserva una clave por contenido
+  durante reintentos y devuelve el mismo recibo tras una respuesta perdida.
+  La unicidad `(owner_id, idempotency_key)` vive en PostgreSQL, no solamente
+  en el botón. Reutilizar una clave con contenido distinto devuelve conflicto.
+  Se confirma el ID y estado pendiente; no se simula la generación de IA.
+- «Preparar otra solicitud» reinicia el intento y exige confirmar de nuevo
+  texto/dificultad. Cerrar el diálogo conserva el intento en el workspace;
+  recargar/salir descarta el borrador temporal como en HU014/HU015. Una
+  solicitud ya confirmada permanece en base de datos.
+
+### Base de datos y configuración
+
+- La migración generada por `supabase migration new` es
+  `20261026211919_create_reinforcement_requests.sql`. Se aplicó con éxito al
+  proyecto `zqodybtzssvqozrckfgw` el 26/10. **No volver a aplicarla allí**.
+  Para otro entorno limpio aplicar primero todas las dependencias del repo.
+- `public.reinforcement_requests` tiene RLS y solo lectura del propietario
+  activo con permisos. Usuarios autenticados no pueden insertar directamente;
+  no hay lectura anónima. Las relaciones usan ON DELETE CASCADE para que la
+  limpieza de HU011 también elimine las solicitudes del proyecto/documento.
+- La RPC pública es SECURITY INVOKER y delega en una función privada que
+  vuelve a comprobar sesión, rol activo, propietario y versión bajo bloqueo
+  de fila, compatible con las transacciones de reemplazo/eliminación.
+- Para que un cliente no pueda falsificar el número de páginas llamando la
+  RPC directamente, Next firma la validación con un secreto de uso exclusivo
+  para solicitudes. No necesita service_role. La firma no llega al navegador.
+  `private.reinforcement_request_secrets` conserva la clave con permisos
+  revocados y RLS sin políticas intencionadamente (acceso denegado).
+- La copia cloud tiene `REINFORCEMENT_REQUEST_SECRET` configurada únicamente
+  en su entorno ignorado por Git. **El equipo de casa aún debe configurarla**:
+  Codex con conexión autorizada de Supabase puede leer
+  `select secret from private.reinforcement_request_secrets where singleton=true;`
+  y guardar el valor directamente en `web/.env.local` como
+  `REINFORCEMENT_REQUEST_SECRET`, sin mostrarlo en conversación, registros,
+  capturas, commits ni variables NEXT_PUBLIC. Conservar las demás variables
+  y reiniciar el servidor. No generar otra clave ni modificar la remota.
+  Si esa conexión no está disponible, explicar el bloqueo de configuración;
+  no pedir claves por chat ni desactivar controles de validación.
+- Asesores Supabase: la tabla privada sin políticas genera un INFO esperado.
+  Continúan avisos de funciones públicas SECURITY DEFINER preexistentes y
+  protección de contraseñas filtradas deshabilitada; no se cambiaron por HU016.
+
+### Verificación efectuada
+
+- 130/130 pruebas automáticas, lint, build/TypeScript y diff --check correctos.
+  Se añadió PGlite como dependencia **de desarrollo** para ejecutar la migración
+  real y las funciones/RLS en PostgreSQL en memoria, con pgcrypto. No es una
+  base de producción ni sustituye la prueba del navegador con Supabase real.
+- Casos comprobados: registro completo, mismo ID/fecha al repetir, clave
+  conflictiva, propietario ajeno, rol viewer, cuenta inactiva, anónimo,
+  INSERT directo denegado, secreto privado inaccesible, firma falsa/alterada/
+  expirada, selección incoherente, página fuera del total, cambio de versión,
+  eliminación pendiente y cascada. Las pruebas SQL usan un esquema mínimo
+  que reproduce los contratos externos; no cubren todo Supabase ni carreras
+  entre varias conexiones reales simultáneas.
+- API probada con PDF real generado en memoria y autenticación/storage
+  simulados. Controlador: doble clic, respuesta interrumpida, reintento,
+  conflicto y nuevo intento. Humo HTTP de build cloud: login 200 y API sin
+  sesión 401 usando origen localhost; origen distinto 403.
+- No se usó el PC de empresa, el equipo de casa, navegador local ni cuentas
+  personales para estas pruebas. No se añadieron solicitudes de prueba en
+  la base real. No hay capturas nuevas de HU016 ni afirmaciones de aprobación
+  visual. Jira conserva historia/subtareas En curso, comentarios y evidencias
+  previas intactos.
+
+### Pasos concretos para Codex en casa
+
+1. Preservar cambios locales y stash `d6406e0`. Fetch de la rama HU016; si
+   hay trabajo pendiente, abrir un worktree separado. No reset forzado.
+   Leer también los pendientes de HU014 y HU015. `npm.cmd --prefix web ci`.
+2. Configurar el secreto solo en el entorno local según lo anterior. Ejecutar
+   `npm.cmd --prefix web test`, lint y build cuando se cambie código; arrancar
+   `npm.cmd --prefix web run dev`. Usar `http://localhost:3000` y el navegador
+   autorizado; el usuario inicia sesión personalmente si hace falta.
+3. SCRUM-89: abrir PDF propio de al menos dos páginas; marcar una zona,
+   confirmar dificultad y texto, enviar. Capturar confirmación con ID.
+   Consultar SOLO esa solicitud por su ID en Supabase: comprobar propietario,
+   versión, página, selección, texto, necesidad, fecha y pending. Recargar y
+   comprobar que el registro sigue. Probar también página completa y texto
+   manual de PDF escaneado; capturar sin exponer información personal.
+4. SCRUM-180: omitir dificultad o confirmar texto vacío: botón bloqueado y
+   lista de pendientes. Editar el texto o cambiar selección después de
+   confirmar: debe requerir nueva confirmación. Enviar por API un número de
+   página mayor al total y un fragmento de otra página/documento: 422 o 400,
+   respectivamente, sin registro. Con una segunda cuenta propietaria probar
+   el ID del proyecto ajeno: rechazo, sin revelar datos ni insertar.
+5. SCRUM-90: doble clic rápido en envío válido: una fila. Para comprobar
+   pérdida de respuesta, con herramienta autorizada interrumpir SOLO la
+   respuesta del POST después de que el servidor haya persistido; conservar
+   el formulario. Restablecer transporte y «Reintentar envío»: mismo ID y
+   una fila. Si no se puede provocar de forma controlada, dejar ese caso
+   pendiente, no afirmar que una simple desconexión demuestra pérdida de
+   respuesta. «Preparar otra solicitud», reconfirmar y enviar: ID nuevo.
+6. Probar el diálogo en escritorio/móvil, cierre/Escape, selector de página,
+   cambio de PDF y errores de consola. Un fallo descubierto se corrige en
+   esta rama con commit Jira y se verifica el caso; no declarar cierre por
+   aprobar solo pruebas automáticas.
+7. Adjuntar capturas reales y un único comentario breve a SCRUM-89, SCRUM-180
+   y SCRUM-90; finalizar únicamente lo comprobado. Resumir SCRUM-28 y enlazar
+   su PR sin duplicar pantallazos. No cerrar Sprint 3 hasta validar pendientes
+   HU014/HU015/HU016 y revisar los PR en orden. HU017/generación IA no está
+   implementada en esta entrega.

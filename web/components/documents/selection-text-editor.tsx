@@ -42,7 +42,7 @@ export function SelectionTextEditor({ draft, hasPage, onExtract, onChange, onCon
       source: draft.source, originalText: draft.originalText, text: draft.text,
     }) : ""} />
     {draft?.confirmed && <p role="status" className="rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-900">
-      Texto {draft.source === "manual" ? "manual " : ""}confirmado para la página {draft.pageNumber}. Todavía no se ha enviado.
+      Texto {draft.source === "manual" ? "manual " : ""}confirmado para la página {draft.pageNumber}.
     </p>}
   </fieldset>;
 }
