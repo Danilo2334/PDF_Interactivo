@@ -61,6 +61,7 @@ test('Gemini receives only the required untrusted document context, a JSON schem
 test('invented quotes, incompatible diagnosis, malformed/incomplete responses and refusals cannot be saved as ready', async () => {
   for (const [reply, code] of [
     [response({ ...diagnosis, quotes: ['Cita totalmente inventada'] }), 'invalid_diagnosis'],
+    [response({ ...diagnosis, quotes: ['        '] }), 'invalid_diagnosis'],
     [response({ ...diagnosis, topic: '' }), 'invalid_diagnosis'],
     [response(diagnosis, { candidates: [{ finishReason: 'MAX_TOKENS' }] }), 'invalid_diagnosis'],
     [response(diagnosis, { candidates: [null] }), 'invalid_diagnosis'],
