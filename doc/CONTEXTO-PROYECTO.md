@@ -1,6 +1,10 @@
 # Continuidad de PDF_Interactivo
 
-Actualizado: 26/10/2026. Mantener este único documento al continuar.
+Actualizado: 27/10/2026. Mantener este único documento al continuar.
+
+La validación más reciente del equipo personal y sus bloqueos están en el
+último apartado «Validación en el equipo personal y cambio a Gemini».
+Los estados de los apartados anteriores describen su momento cronológico.
 
 Estado actual: develop continúa en HU013 (`99e7c08`). HU014 está entregada en
 [PR #18](https://github.com/Danilo2334/PDF_Interactivo/pull/18), todavía en
@@ -1290,3 +1294,214 @@ cuota → 429, configuración/infraestructura no disponible → 503.
 La implementación y las pruebas automatizadas están preparadas. Las capturas,
 la autenticación de prueba real y la calidad de recomendaciones reales todavía
 no están verificadas. No presentar mocks como respuestas del proveedor.
+
+## Validación en el equipo personal y cambio a Gemini, 26/10/2026
+
+Este apartado actualiza los estados cronológicos anteriores. Se recuperó la
+rama acumulada de HU019 y se conservaron el trabajo local y el stash completo
+`d6406e0cdbc464c1c0301c058024b10dd27c4515`, sin aplicarlo ni eliminarlo.
+Develop continúa en `99e7c08`; no se integraron PR, no se modificó main y no se
+inició HU020. Se mantienen los PR en borrador y su cadena #18 → #19 → #20 →
+#21 → #22 → #23, sin fusionar historias posteriores en ramas anteriores.
+
+### Configuración y correcciones comprobadas
+
+- Node local 22.23.3 y npm 10.9.9. Inicialmente se instaló el lockfile con
+  `npm.cmd --prefix web ci`, sin actualizar dependencias. La actualización de
+  seguridad posterior se detalla al final de este apartado. Supabase corresponde al
+  proyecto `zqodybtzssvqozrckfgw`. Se comprobó el historial de migraciones: las
+  cuatro de HU016–HU019 ya estaban aplicadas y no se reaplicaron.
+- Se recuperó de forma privada el secreto existente de HU016 y se configuró en
+  `web/.env.local`, ignorado por Git. No se rotó el valor remoto ni se relajaron
+  RLS, permisos, firmas o controles de propiedad.
+- El propietario configuró `GEMINI_API_KEY`. El modelo se configura mediante
+  `GEMINI_ANALYSIS_MODEL`; para estas pruebas es `gemini-3.8-flash`. Ambas son
+  variables de servidor sin prefijo NEXT_PUBLIC. Sustituyen al proveedor OpenAI
+  de los apartados anteriores para el análisis y las recomendaciones.
+- Gemini nativo conserva contratos, citas, orden por pertinencia, persistencia
+  y estados. Una llamada por acción, límite de 45 segundos y mensajes seguros
+  para cuota agotada, negativa, formato inválido o indisponibilidad. No hay
+  cambio automático a un proveedor de pago ni reintentos ilimitados. No se
+  activó facturación ni se contrataron servicios.
+- Commit HU015 `c30e2c0` (SCRUM-87): normaliza separadores Windows en la prueba
+  de fuentes de PDF.js. Corrige tres fallos de la suite local; no cambia la
+  extracción de la aplicación. Las 10 pruebas afectadas pasan.
+- Commit HU015 `faefcad` (SCRUM-87): la barra de navegación deja de ser fija por
+  debajo de 1024 px. A 390×844 tapaba casi todo el PDF; se conservaron capturas
+  reales antes/después y se repitieron selección con teclado, entrada manual,
+  envío y restauración en móvil. Se propagó por HU016 → HU017 → HU018 → HU019
+  usando un worktree separado para no cambiar la rama del servidor activo.
+- Commit HU018 `324e322` (SCRUM-182): adaptador Gemini y pruebas del análisis.
+  Commit HU019 `6b827d8` (SCRUM-95): recomendaciones Gemini y manejo de cuota.
+  Las correcciones se publicaron en la historia correspondiente y se
+  propagaron hacia sus descendientes conservando el historial.
+- Commit HU016 `5b33742` (SCRUM-89): `logging.serverFunctions: false` según la
+  documentación local de Next 16.3.8. Sus trazas de desarrollo incluían los
+  argumentos de autenticación. Se informó al propietario de la exposición;
+  no se copiaron valores privados al repositorio ni a Jira. Tras la corrección,
+  la lectura acotada del registro no encontró trazas de esas acciones.
+- Hallazgo SCRUM-233: Resend rechazó realmente el correo de recuperación con
+  error SMTP 550 por remitente en modo de pruebas. El dominio/remitente SMTP
+  sigue pendiente; no se declara reparada la recuperación por correo.
+- Commit `b0c8ff8` (SCRUM-233), incluido desde HU016 hasta HU019: cambio desde
+  Mi perfil con sesión vigente y cuenta activa. Verifica la contraseña actual
+  con un cliente Supabase efímero sin cookies del navegador; comprueba de nuevo
+  el acceso antes de actualizar y revoca sesiones tras el éxito. El propietario
+  escribe personalmente los valores. Se comprobó en navegador el rechazo de
+  campos vacíos y el propietario completó la rotación: la aplicación mostró
+  «Contraseña actualizada» y volvió al login. Capturas reales sin valores
+  privados en un único comentario de SCRUM-233 (10103), conservando sus imágenes.
+
+### Verificaciones y límites reales de esta sesión
+
+- Suite completa **208/208**, lint y build de producción con TypeScript
+  correctos después de los cambios. Incluye seis pruebas de seguridad de
+  SCRUM-233 y las pruebas Gemini con proveedor simulado; esas simulaciones no
+  acreditan una respuesta real de IA.
+- Tras la corrección móvil se repitieron **64/64** pruebas de extracción,
+  navegación, fragmentos y selección de página, además de lint y build de
+  producción con TypeScript: correctos. La revisión de las consolas de las
+  pestañas al terminar no encontró excepciones JavaScript nuevas.
+- HTTP real: login 200; listado/creación/análisis/recomendaciones sin sesión
+  401; escrituras desde origen ajeno 403. No se insertan registros con esas
+  comprobaciones.
+- La consulta real del modelo Gemini devuelve 200 y soporta generateContent.
+  **Dos llamadas mínimas de generación estructurada devolvieron 503 UNAVAILABLE.**
+  En la aplicación se ejecutó un análisis real y un único reintento: ambos
+  agotaron el límite de 45 segundos. El doble clic del primero no añadió otro
+  procesamiento. PostgreSQL confirmó exactamente dos inicios y dos errores
+  `timeout`, sin diagnóstico. El historial, el mensaje y la posibilidad de
+  reintento persistieron al recargar. No se ha obtenido aún un diagnóstico ni
+  una recomendación real; no se afirma calidad semántica ni se reemplazaron
+  resultados con datos simulados. No se efectuaron más llamadas tras esos fallos.
+- Se cargó por la aplicación el PDF digital sintético de dos páginas
+  `QA-HU015-019-digital.pdf`, proyecto `5feb6c07-68da-4b93-bc37-416fb4fcc65b`,
+  documento `d91357f4-ae07-4c92-9353-facb6295f18e`. La segunda página tiene un
+  tema diferente para detectar contaminación del contexto. El listado vacío
+  real de HU017 fue observado y capturado. También está preparado un PDF de
+  prueba escaneado, sin capa de texto.
+- Las capturas de esta sesión se conservan fuera del repositorio en la carpeta
+  de evidencias HU019 del chat. No adjuntar una pantalla de carga como prueba
+  de un resultado terminado. Las evidencias anteriores de HU014 se conservaron.
+- Para continuar autónomamente tras la rotación se provisionaron dos cuentas
+  temporales QA autenticables, sin usar ni extraer la contraseña o las cookies
+  personales. Son fixtures de prueba, no una prueba de registro o confirmación
+  por correo. IDs: `15abf825-9b25-4064-9cde-e6ab41693034` y
+  `92fb2847-9391-4aa5-91d1-6937d1c7d1bf`; solo contienen material sintético.
+  Sus credenciales se guardan exclusivamente fuera del repositorio en
+  `HU019/test-accounts.json` dentro de la carpeta privada de evidencias del chat.
+  No imprimirlas ni trasladarlas a Jira o a Git.
+- Proyecto digital QA: `3f600fbc-1b8a-4fbe-a5d1-8ac700c08585`, documento
+  `06d8f613-99b6-46b3-83a9-14f63b3788af`. Proyecto escaneado QA:
+  `d313803d-f9b3-4004-86e3-2aa53f8666e6`, documento
+  `d11635f1-7023-4d2d-96d0-46d1b9b5eca8`. Se conservan identificados para
+  retomar la validación de IA cuando el proveedor responda. No borrar documentos
+  personales ni interpretar estas cuentas como usuarios reales del producto.
+- **HU015 / SCRUM-27, SCRUM-87, SCRUM-179 y SCRUM-88: Finalizado en Jira.**
+  Extracción nativa exacta, zona con dos líneas completas y exclusión del resto,
+  orden, zoom 50→75 %, página completa, edición/confirmación, cierre con Escape
+  y reapertura comprobados. Cambiar selección, página o documento descarta texto
+  y confirmaciones anteriores. Espacios solos se rechazan. La extracción del
+  rango no provocó ninguna nueva descarga de `/pdf`. El escaneado mostró el
+  aviso y permitió transcribir, editar y confirmar manualmente, conservando su
+  documento, página y zona. También se comprobó móvil y teclado.
+- **HU016 / SCRUM-28, SCRUM-89, SCRUM-180 y SCRUM-90: Finalizado en Jira.**
+  Registro real completo, recarga, propietario, estado inicial pending/queued,
+  fechas y contenido inmutable verificados por UI, HTTP y Supabase. API real:
+  vacío o selección incoherente 400, página 3 en PDF de 2 páginas 422,
+  documento desactualizado 409, cuenta ajena 404 sin insertar; RLS no devuelve
+  filas ajenas. Cambiar el contenido de una clave ya utilizada devuelve 409.
+- Respuesta perdida: se interceptó **solo** la respuesta Fetch 201 después de
+  comprobar que `3033863f-45eb-4915-bb0f-11059857ab25` ya estaba persistida. Se
+  interrumpió esa respuesta con ConnectionClosed; el borrador mostró error y
+  reintentó con la misma clave/ID, sin otro registro. El doble clic tampoco
+  duplicó. «Preparar otra solicitud» creó el ID nuevo
+  `795fd149-4dc8-4dc2-b07c-35dd79065243`. Las interceptaciones se desactivaron
+  después de la prueba; no se desconectó la red del equipo.
+- **HU017 / SCRUM-29 y SCRUM-91/181/92: En curso.** Vacío y recarga verificados;
+  21 solicitudes creadas por la API real probaron paginación 20+1 sin repetir ID.
+  Filtros: 20 pendientes, un error real y vacío en generada; restablecer devuelve
+  todos. Después se añadieron dos solicitudes reales, una de página completa y
+  otra de texto nativo (23 en el digital). Se restauraron zonas en móvil y un
+  rango nativo de cuatro líneas en escritorio. El detalle conserva el historial
+  real de creación, análisis, timeout y reintento, distinguiendo propietario y
+  sistema. Faltan estados/transiciones finales de generación y aprobación de
+  HU020–HU024; no se fabricaron por SQL.
+- **SCRUM-93 y SCRUM-94: Finalizado; HU018 / SCRUM-30 y SCRUM-182: En curso.**
+  Contexto real de selección/página/dificultad sin incluir la segunda página ni
+  la línea ajena. En el escaneado se creó una solicitud con transcripción mínima
+  «A»: el servidor guardó `insufficient_context`, `enough=false`, sin diagnóstico
+  ni modelo, y exigió otra solicitud más completa. El bloqueo de IA real sigue
+  siendo los 503 y timeouts descritos arriba; falta evaluar tema, conceptos,
+  alcance y citas de una respuesta real válida.
+- SHA-256 real, comparado con los archivos originales después de los análisis:
+  digital `e7277d66afd7caba47385cfac2f0e55a2eeb4fb7aa7136409fa35300a6347946`;
+  escaneado `b0bc1809351f249bd352032fbcdd193846e4c44e4199cf4bfbfec24326b71302`.
+  Ambos coinciden; no se modificaron los PDF.
+- **HU019 / SCRUM-31 y SCRUM-95/183/96: En curso.** El botón de recomendaciones
+  permanece bloqueado sin un diagnóstico suficiente. No hubo recomendaciones
+  reales ni elección guardada. Quedan pendientes pertinencia, opciones sin
+  preselección, guardado/recarga, nueva elección y conflicto entre dos pestañas;
+  no crear diagnósticos o candidatos ficticios para sortear esa dependencia.
+- SCRUM-233 también se comprobó por Action HTTP real con la segunda cuenta QA:
+  rechazo de contraseña débil e incorrecta, rotación, cierre de sesión, rechazo
+  de la contraseña anterior e ingreso con la nueva. Su archivo de credenciales
+  privado fue actualizado sin mostrar valores. Continúa En curso por el bloqueo
+  independiente del correo SMTP, que requiere dominio/remitente verificado.
+- Jira: **29 imágenes nuevas** vinculadas a 13 subtareas y **20 comentarios de
+  resultados**, uno por cada historia/subtarea del alcance. Se comprobaron los
+  29 nombres en las imágenes HTML renderizadas, sin duplicados. SCRUM-183/96
+  remiten al bloqueo de SCRUM-182/95 sin duplicar capturas. SCRUM-233 conserva
+  sus dos imágenes y su único comentario 10103 actualizado. HU014 y sus
+  evidencias anteriores permanecen intactas.
+
+El servidor local queda activo y la validación ya puede retomarse con las
+cuentas QA sin depender del ingreso personal. Reutilizarlo y evitar cambios
+de rama mientras haya una prueba en curso. Los PR #19–#23 conservan la cadena;
+#22 y #23 describen Gemini y sus límites reales. Revisar antes de integrar y no
+avanzar a HU020 hasta resolver la validación pendiente del proveedor.
+
+### Regresión de seguridad y entrega, 27/10/2026
+
+- El audit real detectó dos paquetes afectados: Next 16.3.8 (tres avisos,
+  severidad crítica agregada) y Zod 4.6.5 (alta). Se abrió SCRUM-234 y se
+  corrigieron mediante `55ede93`: Next y eslint-config-next 16.4.3, Zod 4.6.6
+  exactos y lockfile actualizado. Esta causa concreta justifica la actualización;
+  Node se conserva. `1216db1` conserva el encabezado de AGENTS.md regenerado por
+  Next. Ambos commits parten de HU015 y se propagaron por merges normales
+  HU016 → HU017 → HU018 → HU019; no se reescribió historial.
+- Instalación final y documentación local de Next 16.4.3 comprobadas:
+  `logging.serverFunctions: false` sigue siendo válido. Tras el ingreso QA,
+  la lectura acotada de las trazas no encontró argumentos de acciones privadas.
+- Verificación final sobre la rama acumulada HU019: **208/208** pruebas,
+  lint, build de producción/TypeScript y **npm audit: 0 vulnerabilidades**.
+  Una segunda revisión estática no encontró fallos accionables en el adaptador
+  Gemini ni en el cambio de contraseña; no equivale a una respuesta real de IA.
+- Regresión real tras actualizar: inicio de sesión autónomo con una cuenta QA,
+  23 solicitudes persistidas, paginación 20+3 sin repetidos, detalle nativo,
+  cinco eventos reales del análisis fallido/reintento, mismo ID al reenviar,
+  rechazo de contenido cambiado/vacío sin insertar e aislamiento de la segunda
+  cuenta por API/RLS. Login público 200, API sin sesión 401 y origen ajeno 403.
+  Se restauraron los cuatro renglones del PDF en el visor y se comprobó el
+  desplazamiento móvil 390×844; consola de la pestaña final sin errores nuevos.
+  Las dos huellas SHA-256 se comprobaron de nuevo y coinciden con los originales.
+  No se hicieron nuevas llamadas de IA durante esta regresión.
+- SCRUM-234 quedó **Finalizado** con una captura auténtica del detalle después
+  de actualizar y un único comentario 10124. Se comprobó su imagen renderizada
+  `234-01-regresion-next-seleccion-real.jpg`. El total de esta entrega es de
+  **32 capturas nuevas y 22 comentarios de resultados**: 29/20 del alcance
+  HU015–HU019, dos/un comentario de SCRUM-233 y una/un comentario de SCRUM-234.
+  Se conservaron las evidencias previas y no se duplicaron imágenes.
+- Los PR #19–#23 describen ahora las pruebas locales, las correcciones y los
+  pendientes reales, con sus bases encadenadas y en borrador. HU015/HU016 y
+  SCRUM-93/94 están verificados; HU017 conserva sus pendientes funcionales,
+  HU018/HU019 el bloqueo de Gemini y SCRUM-233 el del remitente SMTP.
+  La configuración privada y los datos sintéticos QA se conservan para retomar
+  el proveedor sin solicitar otro ingreso personal. Servidor Next 16.4.3 activo
+  en localhost:3000. No hubo merge de PR, cambios a develop/main ni HU020.
+
+Referencias oficiales utilizadas: [modelo Gemini](https://ai.google.dev/gemini-api/docs/models/gemini-3.8-flash),
+[salida estructurada](https://ai.google.dev/gemini-api/docs/generate-content/structured-output),
+[tarifas](https://ai.google.dev/gemini-api/docs/pricing),
+[contraseñas Supabase](https://supabase.com/docs/guides/auth/passwords),
+[SMTP](https://supabase.com/docs/guides/auth/auth-smtp).
