@@ -16,7 +16,7 @@ function load(relative, dependencies) {
   });
   const exports = {};
   runInNewContext(outputText, {
-    exports, Request, Response, File, FormData, URL, TextDecoder,
+    exports, Request, Response, File, FormData, URL, TextDecoder, structuredClone,
     crypto: { randomUUID: () => newId }, console: { error() {} },
     require(name) {
       if (name in dependencies) return dependencies[name];
@@ -34,6 +34,7 @@ const ownerId = '8f4cf03b-4713-43f1-9b6c-d435457f5afe';
 const url = `http://localhost:3000/api/projects/${projectId}/replace`;
 const mutation = load('lib/documents/mutation-request.ts', {});
 const validation = load('lib/validations/pdf-file.ts', {});
+const difficultyValidation = load('lib/validations/difficulty.ts', {});
 const doc = await PDFDocument.create(); doc.addPage([200, 200]);
 const validPdf = new File([await doc.save()], 'version-2.pdf', { type: 'application/pdf' });
 
@@ -144,6 +145,7 @@ test('changing PDF identity remounts the viewer even when the project ID stays t
     react: { useId: () => 'workspace', useState: () => ['pdf', () => {}], useCallback: callback => callback },
     '@/components/documents/pdf-viewer': { PdfViewer: viewer },
     '@/components/documents/reinforcement-request-draft': { ReinforcementRequestDraft: () => null },
+    '@/lib/validations/difficulty': difficultyValidation,
   });
   function find(node) {
     if (!node || typeof node !== 'object') return null;

@@ -2,12 +2,12 @@
 
 Actualizado: 26/10/2026. Mantener este único documento al continuar.
 
-Estado actual: PR #16 / HU012 revisado e integrado en develop (`319b7e2`).
-HU013 / SCRUM-25 y sus tres subtareas finalizados con 86/86 pruebas, lint,
-build y 14 capturas reales verificadas en Jira. Entrega en
-[PR #17](https://github.com/Danilo2334/PDF_Interactivo/pull/17), en borrador,
-sin merge. Rama `codex/scrum-25-hu013-seleccion-fragmento`; commit funcional
-`cbe149a`. HU014 no iniciado. Stash `d6406e0` intacto. Ver cierre de HU013 al final.
+Estado actual: PR #17 / HU013 revisado e integrado en develop (`99e7c08`).
+HU014 / SCRUM-26 y sus tres subtareas finalizados con 96/96 pruebas, lint,
+build y 16 capturas reales verificadas en Jira. Entrega en
+[PR #18](https://github.com/Danilo2334/PDF_Interactivo/pull/18), en borrador,
+sin merge. Rama `codex/scrum-26-hu014-dificultad`; commit funcional `5909abc`.
+HU015 no iniciado. Stash `d6406e0` intacto. Ver cierre de HU014 al final.
 
 ## Contexto proporcionado por el usuario
 
@@ -554,9 +554,129 @@ sin merge. Rama `codex/scrum-25-hu013-seleccion-fragmento`; commit funcional
   nombres, cantidades, ausencia de duplicados e imágenes en el HTML renderizado
   de los cuatro comentarios. Cada subtarea conserva un único comentario con
   resultados, capturas y enlaces al commit/PR. Preservar sus figuras al editar.
-- PR #17 queda en borrador, sin merge, para revisión. El commit adicional de
-  continuidad forma parte de la misma rama. No se inició HU014 ni otra historia.
+- Estado al cierre de HU013: PR #17 en borrador, sin merge, para revisión.
+  El usuario autorizó después su revisión/merge y HU014, como se registra abajo.
+  El commit adicional de continuidad formaba parte de la misma rama.
   Servidor existente conservado; navegador en login sin cuentas de prueba.
-- Próximo paso: revisar PR #17 antes de autorizar su integración; después consultar
-  HU014 en Jira y sus dependencias. Conservar sin aplicar ni eliminar el stash
+- Se conservó sin aplicar ni eliminar el stash
   `d6406e0cdbc464c1c0301c058024b10dd27c4515`.
+
+## Revisión de HU013 e implementación de HU014
+
+- El 26/10 el usuario autorizó revisar PR #17, integrarlo si cumplía y continuar
+  con HU014. Se revisó head `b5d4a0e` sin fallos bloqueantes: 86/86 pruebas, lint,
+  build/TypeScript y diff correctos, sin observaciones pendientes. GitHub mostró
+  cero checks y cero estados externos; no se atribuyen resultados de CI.
+- PR #17 integrado en develop mediante
+  `99e7c082c6ae2a69fd2f3d68ec57f5bc85099989`, con el head revisado como condición.
+  Se actualizó el comentario único 10098 de SCRUM-25 preservando sus dos imágenes.
+  Rama nueva `codex/scrum-26-hu014-dificultad` desde develop actualizado.
+- HU014 / SCRUM-26: categoría principal, observación mínima y asociación con la
+  página y la selección. SCRUM-85, SCRUM-178 y SCRUM-86 pasaron a «En curso» y
+  luego a «Finalizado» tras comprobar criterios y evidencias. El registro
+  definitivo por SCRUM-89 queda expresamente para la integración con HU016.
+- Commit funcional `5909abc78e68839158e9f787e300ce2e392968b2` agrupa las tres
+  subtareas porque comparten formulario, validación y estado del borrador.
+  Se subió la rama y se creó PR #18 hacia develop, en borrador, sin merge.
+
+### Comportamiento y decisiones de HU014
+
+- `web/lib/validations/difficulty.ts` centraliza cinco categorías: Concepto poco
+  claro, Vocabulario técnico, Procedimiento o cálculo, Relación entre ideas y
+  Otra dificultad. Son una taxonomía inicial de implementación: Jira no define
+  las categorías concretas ni una longitud numérica.
+- Longitud configurada: mínimo 20 caracteres después de trim y máximo 2000.
+  Categoría desconocida, observación no textual, vacío/espacios y longitud
+  insuficiente/excesiva impiden confirmar. UI y validador comparten constantes.
+- El formulario usa select de valor único, textarea, contador y mensajes
+  accesibles. «Guardar dificultad en borrador» valida y confirma solo estado
+  temporal; no envía una solicitud al servidor. Se explica que recargar o salir
+  del proyecto descarta el borrador. Cerrar o Escape conserva sus campos.
+- Workspace mantiene los campos y la confirmación por documento/página. La
+  confirmación copia el fragmento para evitar que una edición posterior mute la
+  asociación. Incluye documentId, pageNumber, categoría, observación normalizada
+  y fragmento con texto/rango/rectángulos o zona proporcional; fragmento null
+  representa página completa. Se invalidan confirmaciones al cambiar campos,
+  seleccionar otro fragmento o limpiar; otra página/documento no hereda datos.
+- La selección compartida de HU012/HU013 sigue siendo la fuente única. Callbacks
+  del visor estables y campos controlados; no se vuelve a descargar por escribir.
+  Se leyeron las guías locales de Next sobre formularios y componentes cliente,
+  y se revisaron estado, accesibilidad y renderizado con la guía React.
+- No se añadieron dependencias, migraciones, permisos o políticas RLS. El
+  formulario se mantiene restringido al propietario autenticado con permiso.
+  No hay persistencia, generación IA ni trabajo de HU015/HU016 en esta entrega.
+
+### Pruebas reales y automatizadas de HU014
+
+- **96/96 pruebas, lint y build/TypeScript correctos**. Desde web: npm test,
+  npm run lint y npm run build. Diez regresiones nuevas: cuatro del validador y
+  copia/identidad del contexto y seis de estado/formulario. Incluyen límites
+  19/20 y 2000/2001, tipos inválidos, categoría única, confirmación de texto/zona,
+  invalidación, conservación de campos y aislamiento. Se adaptó el harness de
+  reemplazo a la nueva dependencia. Los dobles unitarios no son las evidencias UI.
+- Navegador integrado, servidor existente localhost:3000 y Supabase real.
+  Dos PDF sintéticos válidos se cargaron por la UI: proyecto de 4 páginas
+  `80a9ecee-7e6f-4b43-81db-59c1fd7d370d`, documento
+  `25f12f14-c96a-4556-971f-f1960273b9a2`; proyecto de 2 páginas
+  `aeedc27a-2647-4785-bc55-ebd929eb4dad`, documento
+  `4c2a3c41-fd62-4dde-9fa1-5244c113a358`. No se editaron documentos personales.
+- Categoría: cinco opciones verificadas en AX/DOM, una opción seleccionada.
+  Concepto poco claro se conservó al cerrar/reabrir; cambiar a Procedimiento o
+  cálculo quitó la confirmación anterior. Tras guardar y cerrar con Escape,
+  la categoría y la observación seguían conservadas al reabrir.
+- Validación UI real: vacío y solo espacios rechazados; «No entiendo la idea»
+  rodeado de espacios contó 19 y quedó bloqueado; «No entiendo la idea.» con
+  espacios contó 20 y se confirmó normalizado sin extremos. Mensajes accesibles
+  visibles y confirmación ausente en los casos inválidos.
+- Asociación: página 3 abrió vacía tras la dificultad de la 1. Texto nativo de
+  dos líneas seleccionado a zoom 50 %, rango [39,127), dos rectángulos. «No
+  entiendo» (11) se rechazó sin perder el fragmento. «No entiendo por qué el agua
+  permite este proceso.» (49) se confirmó con ese texto, documento y página 3.
+- Zona nueva en página 3 invalidó la confirmación de texto. Al guardar «No
+  comprendo el procedimiento indicado dentro de esta zona.» (59), se copió la
+  zona x=0.1349712464, y=0.2809245994, ancho=0.5743458950, alto=0.1735250398.
+  Limpiar quitó fragmento y confirmación; el texto de observación quedó editable
+  para revisarlo. El PDF de 2 páginas abrió en página 1 con categoría/observación
+  vacías, sin fragmento ni confirmación. Atributos de contexto leídos del DOM real.
+- Privacidad UI: segunda cuenta autenticada vio «Documento no disponible» al abrir
+  el proyecto ajeno mientras existía. HTTP/SDK real: SHA-256 de ambos PDF igual a
+  sus fuentes, API ajena 404, RLS cero filas y API sin sesión 401. SQL verificó
+  created_at = updated_at en ambos proyectos después de editar los borradores.
+- `web/tests/hu014-live.mjs` pasó check y cleanup. Reproducción desde web:
+  `node tests/hu014-live.mjs ACCOUNTS_FILE check`, luego cleanup solo para muestras
+  desechables. JSON externo users:[{id,email,password}] con dos propietarios
+  hu014-1/2-UUID@example.invalid; el primero debe tener exactamente los proyectos
+  HU014-4-paginas y HU014-2-paginas y sus PDF fuente junto al JSON. El ejecutor
+  inicia sesiones propias en memoria y nunca lee cookies del navegador.
+- Cleanup eliminó esos proyectos/documentos/archivos mediante la API confirmada.
+  Se purgaron solo las cuentas sintéticas `eac0d1d7-b01b-4dd8-a9ee-c0df0cbe3cf0`
+  y `225cb7d4-5e6c-4013-8328-74b201d84589`, con guardas por UUID/correo y ausencia
+  de proyectos/archivos. SQL final: **0 usuarios Auth, identidades, sesiones,
+  refresh tokens, perfiles, proyectos, documentos, trabajos de limpieza y archivos**.
+  Sesión del navegador cerrada y test-accounts.json eliminado. No hay secretos
+  en Git, comentarios de Jira ni este documento.
+
+### Jira y entrega de HU014
+
+| Tarea | Estado | Comentario único | Adjuntos reales |
+| --- | --- | --- | --- |
+| SCRUM-85 | Finalizado | 10099 | 10293 formulario; 10292 reapertura; 10294 categoría única tras Escape |
+| SCRUM-178 | Finalizado | 10100 | 10298 vacío; 10296 espacios; 10297 19 caracteres; 10295 20 válidos |
+| SCRUM-86 | Finalizado | 10101 | 10303 nueva página vacía; 10302 texto/incompleta; 10299 texto/válida; 10304 selección nueva sin confirmar; 10305 zona/válida; 10300 limpiar; 10301 nuevo documento vacío |
+| SCRUM-26 | Finalizado | 10102 | 10306 segunda cuenta; 10307 acceso ajeno denegado |
+
+- **16 capturas auténticas**, sin plantillas ni reconstrucciones. Verificados
+  adjuntos, nombres, cantidades, imágenes en el HTML renderizado y ausencia de
+  duplicados. Un comentario por tarea con resultados y enlaces al commit/PR.
+  Se preservaron las evidencias previas; mantener las figuras HTML al editar.
+- La relación está comprobada en el borrador compartido. La comprobación en la
+  solicitud persistida por SCRUM-89 sigue condicionada a la futura HU016; no
+  se declara realizada en esta entrega. Casillas aplicables y estados cerrados
+  después de verificar pruebas y evidencias.
+- El usuario pidió agrupar permisos antes de ausentarse. Se autorizó un script
+  temporal limitado a subir estas 16 capturas y publicar los commits de esta rama,
+  sin merge. Se elimina al completar la publicación de continuidad; no se guardan
+  credenciales de carga en la entrega. Servidor existente conservado, navegador
+  en login y stash `d6406e0` intacto.
+- Próximo paso: revisar PR #18 antes de autorizar su integración en develop y
+  consultar HU015. No se inició otra historia ni se hizo merge del PR #18.

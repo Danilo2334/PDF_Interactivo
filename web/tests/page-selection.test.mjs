@@ -7,6 +7,11 @@ import ts from 'typescript';
 
 const require = createRequire(import.meta.url);
 const viewer = () => null, draftForm = () => null;
+const difficultyCode = ts.transpileModule(readFileSync(new URL('../lib/validations/difficulty.ts', import.meta.url), 'utf8'), {
+  compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
+}).outputText;
+const difficulty = {};
+runInNewContext(difficultyCode, { exports: difficulty, structuredClone });
 function fixture(path, exportedName, initialProps) {
   const states = [], callbacks = []; let cursor = 0, callbackCursor = 0, props = initialProps, tree;
   const react = {
@@ -32,6 +37,7 @@ function fixture(path, exportedName, initialProps) {
     if (name === 'react/jsx-runtime') return require(name);
     if (name === '@/components/documents/pdf-viewer') return { PdfViewer: viewer };
     if (name === '@/components/documents/reinforcement-request-draft') return { ReinforcementRequestDraft: draftForm };
+    if (name === '@/lib/validations/difficulty') return difficulty;
     throw Error(`Unexpected dependency ${name}`);
   } });
   function nodes(node) {
@@ -123,4 +129,92 @@ test('draft preview carries selected text and range and becomes empty after canc
   f.render({...initial,fragment:null});
   assert.equal(f.find(n=>n.type==='blockquote'),undefined);
   assert.equal(f.find(n=>n.type==='input'&&n.props.name==='fragment').props.value,'');
+});
+
+test('difficulty category and observation live in the shared workspace across form/section reopening and temporary loading',()=>{
+  const f=fixture('components/documents/project-workspace.tsx','ProjectWorkspace',props);
+  const page=f.find(n=>n.type===viewer).props.onPageSelect;
+  page(2);f.render();
+  f.find(n=>n.type===draftForm).props.onDifficultyChange({category:'vocabulary',observation:'No entiendo el significado de esta palabra.'});f.render();
+  f.find(n=>n.type==='button'&&n.props.children==='Refuerzos').props.onClick();f.render();
+  f.find(n=>n.type==='button'&&n.props.children==='PDF original').props.onClick();f.render();
+  page(null);f.render();page(2);f.render();
+  const input=f.find(n=>n.type===draftForm).props.difficultyInput;
+  assert.equal(input.category,'vocabulary');assert.equal(input.observation,'No entiendo el significado de esta palabra.');
+  assert.equal(f.find(n=>n.type===viewer).props.onPageSelect,page);
+});
+
+test('confirming difficulty snapshots the current text or area and edits invalidate the confirmed association',()=>{
+  const f=fixture('components/documents/project-workspace.tsx','ProjectWorkspace',props);
+  f.find(n=>n.type===viewer).props.onPageSelect(3);f.render();
+  const fragments=[{kind:'text',pageNumber:3,text:'Un concepto',range:{start:4,end:15},rects:[]},
+    {kind:'area',pageNumber:3,rect:{x:.1,y:.2,width:.3,height:.4}}];
+  for(const fragment of fragments){
+    f.find(n=>n.type===viewer).props.onFragmentSelect(fragment);f.render();
+    f.find(n=>n.type===draftForm).props.onDifficultyChange({category:'concept',observation:'  No entiendo cómo se obtiene este resultado.  '});f.render();
+    f.find(n=>n.type===draftForm).props.onConfirmDifficulty();f.render();
+    const saved=f.find(n=>n.type===draftForm).props.difficultyDraft;
+    assert.equal(saved.documentId,props.documentId);assert.equal(saved.pageNumber,3);assert.equal(saved.fragment.kind,fragment.kind);
+    assert.equal(saved.observation,'No entiendo cómo se obtiene este resultado.');
+  }
+  f.find(n=>n.type===draftForm).props.onDifficultyChange({category:'other',observation:'Cambio mi explicación de la dificultad.'});f.render();
+  assert.equal(f.find(n=>n.type===draftForm).props.difficultyDraft,null);
+  f.find(n=>n.type===draftForm).props.onConfirmDifficulty();f.render();
+  f.find(n=>n.type===draftForm).props.onClearSelection();f.render();
+  assert.equal(f.find(n=>n.type===draftForm).props.difficultyDraft,null);
+});
+
+test('incomplete difficulty cannot be confirmed and a different page or document never inherits it',()=>{
+  const f=fixture('components/documents/project-workspace.tsx','ProjectWorkspace',props);
+  f.find(n=>n.type===viewer).props.onPageSelect(2);f.render();
+  f.find(n=>n.type===draftForm).props.onDifficultyChange({category:'concept',observation:'   corta   '});f.render();
+  f.find(n=>n.type===draftForm).props.onConfirmDifficulty();f.render();
+  assert.equal(f.find(n=>n.type===draftForm).props.difficultyDraft,null);
+  f.find(n=>n.type===viewer).props.onPageSelect(3);f.render();
+  assert.equal(f.find(n=>n.type===draftForm).props.difficultyInput.observation,'');
+  const oldChange=f.find(n=>n.type===draftForm).props.onDifficultyChange;
+  f.render({...props,documentId:'new-document'});
+  oldChange({category:'concept',observation:'Una explicación válida para el documento viejo.'});f.render();
+  assert.equal(f.find(n=>n.type===draftForm).props.difficultyInput.category,'');
+  assert.equal(f.find(n=>n.type===draftForm).props.difficultyDraft,null);
+});
+
+test('the real draft form reports missing category and short explanation without confirming or submitting a request',()=>{
+  let confirmations=0,prevented=0;
+  const initial={...props,selection:{documentId:props.documentId,pageNumber:2},difficultyInput:{category:'',observation:'   '},onConfirmDifficulty:()=>confirmations++};
+  const f=fixture('components/documents/reinforcement-request-draft.tsx','ReinforcementRequestDraft',initial);
+  f.find(n=>n.type==='button').props.onClick();f.render();
+  f.find(n=>n.type==='form').props.onSubmit({preventDefault(){prevented++;}});f.render();
+  assert.equal(confirmations,0);assert.equal(prevented,1);
+  assert.equal(f.find(n=>n.type==='select').props['aria-invalid'],true);
+  assert.equal(f.find(n=>n.type==='textarea').props['aria-invalid'],true);
+  assert.equal(f.find(n=>n.type==='input'&&n.props.name==='difficulty').props.value,'');
+  f.render({...initial,difficultyInput:{category:'concept',observation:'x'.repeat(difficulty.DIFFICULTY_MIN_LENGTH-1)}});
+  f.find(n=>n.type==='form').props.onSubmit({preventDefault(){}});f.render();assert.equal(confirmations,0);
+});
+
+test('the form accepts the configured minimum and preserves its controlled fields after close and Escape',()=>{
+  let confirmations=0;
+  const initial={...props,selection:{documentId:props.documentId,pageNumber:2},difficultyInput:{category:'procedure',observation:'x'.repeat(difficulty.DIFFICULTY_MIN_LENGTH)},onConfirmDifficulty:()=>confirmations++};
+  const f=fixture('components/documents/reinforcement-request-draft.tsx','ReinforcementRequestDraft',initial);
+  const open=()=>{f.find(n=>n.type==='button').props.onClick();f.render();};
+  open();f.find(n=>n.type==='form').props.onSubmit({preventDefault(){}});f.render();assert.equal(confirmations,1);
+  assert.equal(f.find(n=>n.type==='select').props.multiple,undefined);
+  f.find(n=>n.type==='button'&&n.props.children==='Cerrar borrador').props.onClick();f.render();open();
+  assert.equal(f.find(n=>n.type==='select').props.value,'procedure');
+  f.find(n=>n.type==='dialog').props.onCancel();f.render();open();
+  assert.equal(f.find(n=>n.type==='textarea').props.value,initial.difficultyInput.observation);
+});
+
+test('the draft payload includes the document, page and selected fragment and rejects foreign context',()=>{
+  const context={documentId:props.documentId,pageNumber:2,fragment:{documentId:props.documentId,pageNumber:2,kind:'area',rect:{x:.1,y:.2,width:.3,height:.4}}};
+  const saved=difficulty.createDifficultyDraft(context,{category:'connection',observation:'No entiendo la relación entre estas dos ideas.'});
+  const initial={...props,selection:{documentId:props.documentId,pageNumber:2},difficultyDraft:saved};
+  const f=fixture('components/documents/reinforcement-request-draft.tsx','ReinforcementRequestDraft',initial);
+  f.find(n=>n.type==='button').props.onClick();f.render();
+  assert.deepEqual(JSON.parse(f.find(n=>n.type==='input'&&n.props.name==='difficulty').props.value),JSON.parse(JSON.stringify(saved)));
+  f.render({...initial,selection:{documentId:props.documentId,pageNumber:3}});
+  assert.equal(f.find(n=>n.type==='input'&&n.props.name==='difficulty').props.value,'');
+  f.render({...initial,documentId:'another-document'});
+  assert.equal(f.find(n=>n.type==='input'&&n.props.name==='difficulty').props.value,'');
 });

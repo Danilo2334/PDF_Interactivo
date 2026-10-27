@@ -5,6 +5,7 @@ import { PdfViewer } from "@/components/documents/pdf-viewer";
 import { ReinforcementRequestDraft, type PageSelection } from "@/components/documents/reinforcement-request-draft";
 import type { Reinforcement } from "@/lib/types/reinforcement";
 import type { DocumentFragmentSelection, FragmentSelection } from "@/lib/pdf/fragment-selection";
+import { createDifficultyDraft, EMPTY_DIFFICULTY_INPUT, type DifficultyDraft, type DifficultyInput } from "@/lib/validations/difficulty";
 
 type WorkspaceProps = {
   projectId: string;
@@ -35,9 +36,15 @@ export function ProjectWorkspace({
   const [selection, setSelection] = useState<PageSelection | null>(null);
   const [fragment, setFragment] = useState<DocumentFragmentSelection | null>(null);
   const [fragmentResetKey, setFragmentResetKey] = useState(0);
+  const [difficultyInput, setDifficultyInput] = useState<(PageSelection & DifficultyInput) | null>(null);
+  const [difficultyDraft, setDifficultyDraft] = useState<DifficultyDraft | null>(null);
   const draft = selection?.documentId === documentId ? selection : null;
   const currentFragment = fragment?.documentId === documentId && fragment.pageNumber === draft?.pageNumber ? fragment : null;
+  const currentDifficultyInput = difficultyInput?.documentId === documentId && difficultyInput.pageNumber === draft?.pageNumber ? difficultyInput : EMPTY_DIFFICULTY_INPUT;
+  const currentDifficulty = difficultyDraft?.documentId === documentId && difficultyDraft.pageNumber === draft?.pageNumber ? difficultyDraft : null;
   const selectPage = useCallback((pageNumber: number | null) => {
+    setDifficultyInput(previous => pageNumber === null || previous?.pageNumber === pageNumber ? previous : null);
+    setDifficultyDraft(null);
     setFragment(previous => previous?.pageNumber === pageNumber ? previous : null);
     setSelection(previous => {
       if (pageNumber === null) return null;
@@ -48,8 +55,18 @@ export function ProjectWorkspace({
   }, [documentId]);
   const selectFragment = useCallback((value: FragmentSelection | null) => {
     setFragment(value ? { ...value, documentId } : null);
+    setDifficultyDraft(null);
   }, [documentId]);
-  const clearFragment = useCallback(() => { setFragment(null); setFragmentResetKey(value => value + 1); }, []);
+  const clearFragment = useCallback(() => { setFragment(null); setDifficultyDraft(null); setFragmentResetKey(value => value + 1); }, []);
+  function changeDifficulty(value: DifficultyInput) {
+    if (!draft) return;
+    setDifficultyInput({ ...value, ...draft });
+    setDifficultyDraft(null);
+  }
+  function confirmDifficulty() {
+    if (!draft) return;
+    setDifficultyDraft(createDifficultyDraft({ ...draft, fragment: currentFragment }, currentDifficultyInput));
+  }
 
   return (
     <div className="mt-8 min-w-0">
@@ -87,6 +104,8 @@ export function ProjectWorkspace({
             requestDraft={canRequestReinforcement ? <ReinforcementRequestDraft
               key={documentId} documentId={documentId} documentName={documentName} selection={draft}
               fragment={currentFragment} onClearSelection={clearFragment}
+              difficultyInput={currentDifficultyInput} difficultyDraft={currentDifficulty}
+              onDifficultyChange={changeDifficulty} onConfirmDifficulty={confirmDifficulty}
             /> : null} />
         )}
       </div>
