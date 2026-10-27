@@ -57,7 +57,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ pro
   catch { return reply({ message: "El envío todavía no está habilitado. El borrador se conserva." }, 503); }
   const { data: result, error } = await supabase.rpc("create_reinforcement_request", proof);
   if (error) {
-    if (error.code === "40001" || error.code === "23505") return reply({ message: "La versión o el contenido del envío cambió. Recarga el proyecto y prepara otra solicitud." }, 409);
+    if (error.code === "PT409" || error.code === "40001" || error.code === "23505") return reply({ message: "La versión o el contenido del envío cambió. Recarga el proyecto y prepara otra solicitud." }, 409);
     if (error.code === "42501") return reply({ message: "No tienes permiso para enviar esta solicitud." }, 403);
     return reply({ message: "No pudimos confirmar el envío. Reintenta sin cambiar el contenido para evitar duplicados." }, 503);
   }

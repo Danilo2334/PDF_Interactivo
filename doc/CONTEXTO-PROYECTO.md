@@ -839,7 +839,7 @@ trabajo ni modificar sus restricciones, para que Codex continúe en casa.
 ### Base de datos y configuración
 
 - La migración generada por `supabase migration new` es
-  `20261026211544_create_reinforcement_requests.sql`. Se aplicó con éxito al
+  `20261026211919_create_reinforcement_requests.sql`. Se aplicó con éxito al
   proyecto `zqodybtzssvqozrckfgw` el 26/10. **No volver a aplicarla allí**.
   Para otro entorno limpio aplicar primero todas las dependencias del repo.
 - `public.reinforcement_requests` tiene RLS y solo lectura del propietario
