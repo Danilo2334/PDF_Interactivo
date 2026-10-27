@@ -117,9 +117,9 @@ test('a valid replacement stores a new object before atomically attaching it to 
 });
 
 test('a rolled-back transaction cleans only the newly uploaded object; stale edits return conflict', async () => {
-  for (const code of ['23505', '40001', '42501', 'PGRST202']) {
+  for (const code of ['23505', 'PT409', '40001', '42501', 'PGRST202']) {
     const f = fixture({ rpcError: { code } }); const response = await f.run();
-    assert.equal(response.status, code === '40001' ? 409 : 503);
+    assert.equal(response.status, ['PT409', '40001'].includes(code) ? 409 : 503);
     assert.equal(JSON.stringify(f.events.at(-1)), JSON.stringify(['remove', [`${ownerId}/${newId}.pdf`]]));
     assert.deepEqual(f.paths, []);
   }
