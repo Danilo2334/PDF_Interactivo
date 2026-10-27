@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { LogoutButton } from "@/components/auth/logout-button";
 import { ProfileForm } from "@/components/profile/profile-form";
+import { ChangePasswordForm } from "@/components/profile/change-password-form";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
@@ -56,6 +57,7 @@ export default async function ProfilePage() {
           </div>
 
           <ProfileForm email={email} initialFullName={fullName} />
+          <ChangePasswordForm />
         </div>
       </section>
     </main>
