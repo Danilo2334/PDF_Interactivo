@@ -2622,3 +2622,23 @@ archivo correctos (3/3/2), sin duplicados. Se preservan las evidencias anteriore
 El script temporal de carga con grants se eliminó después de las subidas; solo
 se conservan metadatos de archivos fuera de Git. El commit y enlace del PR se
 agregarán a esos mismos comentarios, sin repetir imágenes ni crear informes.
+
+### Entrega de HU024 y siguiente historia
+
+Commit funcional publicado **`f3bcb64f04a697d2de6df618558e348b0edd24d5`**.
+PR borrador **[#30](https://github.com/Danilo2334/PDF_Interactivo/pull/30)**
+contra develop `203769a`. SCRUM-36 **En revisión**, comentario madre único
+**10144**; SCRUM-105/SCRUM-188/SCRUM-106 **Finalizado**. Los comentarios
+10141/10142/10143 ya incluyen el PR y commit. La lectura posterior confirma
+ocho imágenes resueltas, 3/3/2, conservadas sin nuevas subidas al editar.
+
+El servidor localhost:3000 queda activo. La sesión QA nueva confirmó las
+publicaciones después del build y reinicio; captura `HU024/entrega-hu024.jpg`
+y cero errores de consola. La comprobación HTTP/SDK final volvió a pasar con
+35 solicitudes/siete publicaciones y todo el baseline anterior intacto.
+Stash `d6406e0` y configuración privada preservados.
+
+Se continúa **HU025 / SCRUM-37**, autorizada por el último mensaje del usuario.
+El PR #30 queda preparado para revisión e integración. HU025 se desarrollará
+en una rama descendiente para conservar el diff de cada historia mientras se
+revisa #30. No se ha integrado #30 ni se ha modificado main.
