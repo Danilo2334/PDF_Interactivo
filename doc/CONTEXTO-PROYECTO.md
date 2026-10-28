@@ -3184,3 +3184,26 @@ Documentación oficial consultada:
 y [precio/nivel gratuito](https://ai.google.dev/gemini-api/docs/pricing#gemini-3.5-flash-lite).
 No se activó facturación. La evaluación automática reduce errores observados,
 pero se conserva la revisión expresa del propietario antes de aprobar.
+
+### Entrega de HU028
+
+Commit funcional **`8c843e56ab0008d7e36a134d87d5673c734a72ae`**, publicado en
+**[PR #34](https://github.com/Danilo2334/PDF_Interactivo/pull/34)**, borrador sobre
+`codex/scrum-39-hu027-recursos-multimedia` (#33). GitHub confirmó abierto,
+sin merge y sin conflictos. Cadena pendiente **#30 → #31 → #32 → #33 → #34**.
+
+SCRUM-113 **Finalizado**, comentario único **10160**, dos imágenes;
+SCRUM-195 **Finalizado**, **10161**, dos imágenes;
+SCRUM-196 **Finalizado**, **10162**, cuatro imágenes;
+SCRUM-114 **En curso**, **10163**, tres imágenes y dependencias HU029/HU032
+explícitas. SCRUM-40 sigue **En curso**, resumen madre único **10164**.
+Lectura posterior de `renderedBody`: once nombres de archivo/miniaturas resueltos,
+un comentario por subtarea y enlace al PR en todos. No se duplicaron evidencias.
+
+Se continúa **HU029 / SCRUM-41** desde esta rama: administrar opciones, respuesta
+correcta y reintentos, persistir una nueva versión privada y validar con HU030
+que el lector no reciba la clave antes de responder. La producción local sigue
+en puerto 3000. Quiz de energía: 4 descartado y 3 aprobado conservado; quiz de
+agua: 3 pendiente sin aprobación automática; resumen QA: quiz omitido y refuerzo
+4 aprobado. Son datos QA, no estados inventados por SQL. No modificar main,
+integrar PR nuevos automáticamente ni alterar el stash.
