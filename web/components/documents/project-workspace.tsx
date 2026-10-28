@@ -13,6 +13,7 @@ import { contentFromDraft, requestContentKey } from "@/lib/validations/reinforce
 import { createSubmissionController, IDLE_SUBMISSION, type SubmissionState } from "@/lib/reinforcements/submission";
 import { RequestListPanel } from "@/components/documents/request-list-panel";
 import type { RequestRecord } from "@/lib/validations/request-list";
+import { VisualResource } from "@/components/documents/visual-resource";
 
 type WorkspaceProps = {
   projectId: string;
@@ -234,7 +235,9 @@ export function ProjectWorkspace({
                   Contenido generado por IA · Aprobado por ti{reinforcement.content.editedByOwner === true ? " · Editado por ti" : ""}
                 </p>}
 
-                {typeof reinforcement.content.text === "string" && (
+                {reinforcement.content.type === "visual" && <div className="mt-3"><VisualResource value={reinforcement.content.visual} title={reinforcement.title}
+                  description={typeof reinforcement.content.text === "string" ? reinforcement.content.text : undefined} /></div>}
+                {reinforcement.content.type !== "visual" && typeof reinforcement.content.text === "string" && (
                   <p className="mt-3 whitespace-pre-wrap break-words text-sm text-slate-700">
                     {reinforcement.content.text}
                   </p>

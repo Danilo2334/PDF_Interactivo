@@ -66,6 +66,6 @@ export function ExamplePanel({ request, active, onChanged }: { request: RequestR
       <p><strong>Límites y supuestos: </strong>{generation.content.limitations}</p><p><strong>Cita del fragmento: </strong>{generation.content.sourceQuote}</p>
       <p>El PDF original permanece intacto. Las ediciones son responsabilidad del propietario y necesitan aprobación.</p>
     </article>}
-    {view?.review && <OwnerReviewPanel view={view} disabled={!active || busy} onReview={value => execute(value)} />}
+    {view?.exampleChosen && generation?.status === "ready" && view.review && <OwnerReviewPanel view={view} disabled={!active || busy} onReview={value => execute(value)} />}
   </section>;
 }

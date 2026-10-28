@@ -41,7 +41,7 @@ export function ExplanationPanel({ request, active, onChanged }: { request: Requ
     <h4 className="font-semibold text-slate-900">Explicación ampliada</h4>
     <p className="text-sm text-slate-700">Elige y guarda el nivel de detalle antes de generar. El resultado quedará pendiente de aprobación y conservará la referencia al fragmento.</p>
     {!view && !resource.result?.error && !busy && <p role="status" className="text-sm">Consultando explicación…</p>}
-    {view && !view.explanationChosen && <p className="text-sm text-slate-700">Guarda primero la opción Explicación en las recomendaciones. Los demás formatos estarán disponibles en historias posteriores.</p>}
+    {view && !view.explanationChosen && <p className="text-sm text-slate-700">Guarda primero la opción Explicación en las recomendaciones para usar este formato.</p>}
     {view?.explanationChosen && generation?.status !== "ready" && <>
       <form onSubmit={event => { event.preventDefault(); void execute("configure"); }}>
         <fieldset disabled={!active || !!busy || !view.canConfigure || !!resource.result?.error} className="space-y-2">
