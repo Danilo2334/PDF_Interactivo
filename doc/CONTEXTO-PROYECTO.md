@@ -2306,3 +2306,19 @@ localhost:3000. Node 22.23.3, Next 16.4.3 y dependencias permanecen sin cambios.
   El grant temporal de subida se retiró después de cargar los ocho archivos.
   No se versionan .env.local, credenciales, capturas o scripts con sesiones.
   El stash `d6406e0` se conserva sin aplicar ni eliminar.
+
+### Entrega de HU022
+
+Commit funcional publicado **`d7bf85087527e267857faee0921db852420b7fd4`**.
+PR borrador **[#28](https://github.com/Danilo2334/PDF_Interactivo/pull/28)**
+contra develop `36be0e9`, después de #27 integrado. **SCRUM-34 En revisión**,
+comentario madre único **10136**; subtareas SCRUM-101/SCRUM-186/SCRUM-102
+Finalizado. Los comentarios 10133/10134/10135 incluyen el PR y conservan las
+ocho imágenes, sin nuevas subidas ni duplicados tras editarlos.
+
+La comprobación visual posterior al build confirmó una revisión en Ejemplo
+y ninguna revisión visual ajena en esa solicitud; Refuerzos volvió a mostrar
+el diagrama y la imagen aprobados, con cero errores de consola observados.
+localhost:3000 quedó activo y la pestaña QA de Refuerzos abierta. El usuario
+puede revisar #28 antes de autorizar su integración. No hubo merge de #28,
+modificación de main ni avance a HU023 en esta entrega.
