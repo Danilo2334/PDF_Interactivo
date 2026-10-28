@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useId, useRef, useState } from "react";
+import { useCallback, useLayoutEffect, useId, useRef, useState } from "react";
 import type { PDFDocumentProxy } from "pdfjs-dist";
 import { PdfViewer } from "@/components/documents/pdf-viewer";
 import { ReinforcementRequestDraft, type PageSelection } from "@/components/documents/reinforcement-request-draft";
@@ -53,6 +53,45 @@ export function ProjectWorkspace({
   const pdfSource = useRef<{ documentId: string; pdf: PDFDocumentProxy } | null>(null);
   const [submission, setSubmission] = useState<SubmissionState>(IDLE_SUBMISSION);
   const [openedRequest, setOpenedRequest] = useState<RequestRecord | null>(null);
+  const [navigationKey, setNavigationKey] = useState(0);
+  const [readingPage, setReadingPage] = useState<{ documentId: string; number: number } | null>(null);
+  const activePage = readingPage?.documentId === documentId ? readingPage.number : 1;
+  const pdfPanelRef = useRef<HTMLDivElement>(null), reinforcementPanelRef = useRef<HTMLElement>(null);
+  const readingPosition = useRef<{ documentId: string; x: number; y: number; page: number; horizontal: number } | null>(null);
+  const panelStart = useRef<number | null>(null);
+  function changeSection(section: typeof activeSection, openedAt: number | null = null, page = activePage) {
+    if (section === activeSection) return;
+    if (activeSection === "pdf" && typeof window !== "undefined") {
+      const figure = pdfPanelRef.current?.querySelector<HTMLElement>(`[data-pdf-page="${page}"]`);
+      readingPosition.current = { documentId, x: window.scrollX, y: window.scrollY, page, horizontal: figure?.scrollLeft ?? 0 };
+    }
+    if (section === "reinforcements") panelStart.current = openedAt;
+    setActiveSection(section);
+  }
+  useLayoutEffect(() => {
+    const position = readingPosition.current;
+    if (activeSection === "pdf" && position?.documentId === documentId && typeof window !== "undefined") {
+      const figure = pdfPanelRef.current?.querySelector<HTMLElement>(`[data-pdf-page="${position.page}"]`);
+      if (figure) figure.scrollLeft = position.horizontal;
+      window.scrollTo({ left: position.x, top: position.y, behavior: "instant" });
+      Array.from(pdfPanelRef.current?.querySelectorAll<HTMLButtonElement>("[data-open-reinforcements]") ?? [])
+        .find(button => button.getClientRects().length > 0)?.focus({ preventScroll: true });
+    }
+    if (activeSection !== "reinforcements" || panelStart.current === null) return;
+    const started = panelStart.current, panel = reinforcementPanelRef.current;
+    if (panel) {
+      panel.dataset.panelReady = "false";
+      panel.scrollIntoView({ block: "start", behavior: "instant" });
+      panel.querySelector<HTMLButtonElement>("button")?.focus({ preventScroll: true });
+    }
+    let frame = requestAnimationFrame(() => { frame = requestAnimationFrame(() => {
+      if (panel) { panel.dataset.openDurationMs = (performance.now() - started).toFixed(2); panel.dataset.panelReady = "true"; }
+    }); });
+    return () => cancelAnimationFrame(frame);
+  }, [activeSection, documentId]);
+  const reportReadingPage = useCallback((number: number) => setReadingPage(previous =>
+    previous?.documentId === documentId && previous.number === number ? previous : { documentId, number }), [documentId]);
+  const pageReinforcements = reinforcements.filter(item => item.document_id === documentId && item.page_number === activePage);
   const senderRef = useRef<ReturnType<typeof createSubmissionController> | null>(null);
   const draft = selection?.documentId === documentId ? selection : null;
   const currentFragment = fragment?.documentId === documentId && fragment.pageNumber === draft?.pageNumber ? fragment : null;
@@ -82,6 +121,9 @@ export function ProjectWorkspace({
     setDifficultyDraft(null);
     setSelectionText(null);
     setOpenedRequest(request);
+    setNavigationKey(value => value + 1);
+    // A saved selection is an explicit navigation, rather than a return to the old scroll position.
+    readingPosition.current = null;
     setActiveSection("pdf");
   }
   const receiveTextSource = useCallback((pdf: PDFDocumentProxy | null) => {
@@ -144,7 +186,7 @@ export function ProjectWorkspace({
             type="button"
             aria-pressed={activeSection === section.id}
             aria-controls={`${workspaceId}-${section.id}`}
-            onClick={() => setActiveSection(section.id)}
+            onClick={() => changeSection(section.id, performance.now())}
             className={`rounded-lg px-4 py-2 text-sm font-semibold ${
               activeSection === section.id
                 ? "bg-blue-700 text-white"
@@ -158,6 +200,7 @@ export function ProjectWorkspace({
 
       <div
         id={`${workspaceId}-pdf`}
+        ref={pdfPanelRef}
         hidden={activeSection !== "pdf"}
       >
         {activeSection === "pdf" && openedRequest?.document_id === documentId && <aside className="mt-4 space-y-2 rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm text-slate-800">
@@ -169,8 +212,10 @@ export function ProjectWorkspace({
           </details>
           <button type="button" onClick={() => setActiveSection("requests")} className="rounded-lg bg-blue-700 px-3 py-2 font-semibold text-white">Volver a solicitudes</button>
         </aside>}
-        {activeSection === "pdf" && (
+        {(
           <PdfViewer key={`${projectId}-${documentId}`} projectId={projectId}
+            visible={activeSection === "pdf"} onVisiblePageChange={reportReadingPage} navigationKey={navigationKey}
+            onOpenReinforcements={(page, openedAt) => { reportReadingPage(page); changeSection("reinforcements", openedAt, page); }}
             initialPage={draft?.pageNumber ?? 1} initialFragment={currentFragment} onPageSelect={canRequestReinforcement ? selectPage : undefined}
             onFragmentSelect={canRequestReinforcement ? selectFragment : undefined} fragmentResetKey={fragmentResetKey}
             onTextSourceChange={canRequestReinforcement ? receiveTextSource : undefined}
@@ -192,12 +237,15 @@ export function ProjectWorkspace({
 
       <section
         id={`${workspaceId}-reinforcements`}
+        ref={reinforcementPanelRef}
+        aria-labelledby={`${workspaceId}-reinforcement-title`}
         hidden={activeSection !== "reinforcements"}
         data-document-id={documentId}
         className="mt-6"
       >
-        <h2 className="text-xl font-semibold text-slate-900">
-          Refuerzos del documento
+        <button type="button" onClick={() => changeSection("pdf")} className="mb-4 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-800">Cerrar refuerzos y volver al PDF</button>
+        <h2 id={`${workspaceId}-reinforcement-title`} className="text-xl font-semibold text-slate-900">
+          Refuerzos de la página {activePage}
         </h2>
 
         <p className="mt-2 text-sm text-slate-600">
@@ -213,13 +261,13 @@ export function ProjectWorkspace({
             No fue posible consultar los refuerzos. Recarga la página
             para intentarlo nuevamente.
           </p>
-        ) : reinforcements.length === 0 ? (
+        ) : pageReinforcements.length === 0 ? (
           <p className="mt-4 rounded-lg border border-slate-200 bg-slate-50 p-5 text-sm text-slate-600">
-            Este documento todavía no tiene refuerzos.
+            La página {activePage} todavía no tiene refuerzos aprobados.
           </p>
         ) : (
           <div className="mt-4 space-y-4">
-            {reinforcements.map((reinforcement) => (
+            {pageReinforcements.map((reinforcement) => (
               <article
                 key={reinforcement.id}
                 data-page-number={reinforcement.page_number}

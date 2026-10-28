@@ -29,7 +29,7 @@ function fixture(path, exportedName, initialProps) {
   const react = {
     useId: () => 'draft-page',
     useRef(initial) { const index = refCursor++; return refs[index] ??= { current: initial }; },
-    useEffect: () => {},
+    useEffect: () => {}, useLayoutEffect: () => {},
     useState(initial) {
       const index = cursor++; if (!(index in states)) states[index] = initial;
       return [states[index], value => { states[index] = typeof value === 'function' ? value(states[index]) : value; }];
@@ -44,7 +44,7 @@ function fixture(path, exportedName, initialProps) {
     compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.ReactJSX },
   });
   const exports = {};
-  runInNewContext(outputText, { exports, require(name) {
+  runInNewContext(outputText, { exports, performance: { now: () => 0 }, require(name) {
     if (name === 'react') return react;
     if (name === 'react/jsx-runtime') return require(name);
     if (name === '@/components/documents/pdf-viewer') return { PdfViewer: viewer };
@@ -70,6 +70,22 @@ function fixture(path, exportedName, initialProps) {
   return { render, find: predicate => nodes(tree).find(predicate), get props() { return props; } };
 }
 const props = { projectId: 'project', documentId: 'document-a', documentName: 'original.pdf', canRequestReinforcement: true, reinforcements: [], reinforcementsError: false };
+
+test('HU025 keeps the same viewer while switching panels and scopes published content to the visible page and document', () => {
+  const items=[{id:'one',document_id:'document-a',page_number:1,title:'Página uno',content:{}},
+    {id:'two',document_id:'document-a',page_number:2,title:'Página dos',content:{}},
+    {id:'foreign',document_id:'document-b',page_number:2,title:'Otro documento',content:{}}];
+  const f=fixture('components/documents/project-workspace.tsx','ProjectWorkspace',{...props,reinforcements:items,canRequestReinforcement:false});
+  const original=f.find(n=>n.type===viewer);assert.equal(original.props.visible,true);assert.equal(original.props.onPageSelect,undefined);
+  assert.ok(f.find(n=>n.type==='article'&&n.key==='one'));assert.equal(f.find(n=>n.type==='article'&&n.key==='two'),undefined);
+  original.props.onVisiblePageChange(2);f.render();assert.equal(f.find(n=>n.type==='article'&&n.key==='one'),undefined);
+  assert.ok(f.find(n=>n.type==='article'&&n.key==='two'));assert.equal(f.find(n=>n.type==='article'&&n.key==='foreign'),undefined);
+  f.find(n=>n.type==='button'&&n.props.children==='Refuerzos').props.onClick();f.render();
+  assert.equal(f.find(n=>n.type===viewer).key,original.key);assert.equal(f.find(n=>n.type===viewer).props.visible,false);
+  f.find(n=>n.type==='button'&&n.props.children==='Cerrar refuerzos y volver al PDF').props.onClick();f.render();
+  assert.equal(f.find(n=>n.type===viewer).key,original.key);assert.equal(f.find(n=>n.type===viewer).props.visible,true);
+  original.props.onVisiblePageChange(3);f.render();assert.equal(f.find(n=>n.type==='article'),undefined);
+});
 
 test('opening a saved request restores its page and area without confirming or submitting new content', () => {
   const f = fixture('components/documents/project-workspace.tsx', 'ProjectWorkspace', props);

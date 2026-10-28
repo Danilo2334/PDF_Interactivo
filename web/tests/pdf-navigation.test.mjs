@@ -32,7 +32,7 @@ function loadModule(path, dependencies = {}, globals = {}) {
 const settle = () => new Promise((resolve) => setImmediate(resolve));
 
 function rendererFixture({ count = 20, heights = {}, held = [], fail = [], viewportHeight = 800, viewportTop = 70, roundScroll = false, thumbnails = false, decorate } = {}) {
-  const reads = [], cleanups = [], changes = [], errors = [], canvases = [];
+  const reads = [], cleanups = [], changes = [], errors = [], canvases = [], readyPages = [];
   const frames = new Map(), listeners = new Map(), pending = new Map();
   let nextFrame = 0, renderer, intersection, resize;
   const pageHeight = (number) => heights[number] ?? 1000;
@@ -130,13 +130,13 @@ function rendererFixture({ count = 20, heights = {}, held = [], fail = [], viewp
       };
     },
   };
-  renderer = thumbnails ? { dispose: renderThumbnails(pdf, container, () => errors.push(new Error("thumbnail render failed"))) } : renderVisiblePages(pdf, container, () => {}, (error) => {
+  renderer = thumbnails ? { dispose: renderThumbnails(pdf, container, () => errors.push(new Error("thumbnail render failed"))) } : renderVisiblePages(pdf, container, page => readyPages.push(page), (error) => {
     errors.push(error);
     renderer.dispose();
   }, (number) => changes.push(number), () => viewportTop, decorate);
 
   return {
-    renderer, container, reads, cleanups, changes, errors, canvases, pending, browser,
+    renderer, container, reads, cleanups, changes, errors, canvases, pending, browser, readyPages,
     listeners, frames, get intersection() { return intersection; }, get resize() { return resize; },
     page(number) { return container.children[number - 1]; },
     scrollToPage(number) { browser.scrollTo({ top: pageTop(number) - 70 }); },
@@ -157,6 +157,22 @@ function rendererFixture({ count = 20, heights = {}, held = [], fail = [], viewp
     },
   };
 }
+
+test('HU025 pauses hidden observers without losing rendered pages, zoom or the current reading position', async t => {
+  const f=rendererFixture({count:3});t.after(()=>f.renderer.dispose());await settle();
+  f.renderer.goToPage(2);await settle();f.renderer.setZoom(150);await settle();f.flush();
+  const position=f.browser.scrollY,reads=f.reads.length,canvas=f.page(2).children[1].children[0];
+  f.renderer.setActive(false);f.container.clientWidth=0;f.resize.callback();
+  f.browser.scrollTo({top:0});f.observeVisible();f.flush();await settle();
+  assert.equal(f.reads.length,reads);assert.equal(f.page(2).dataset.renderZoom,'150');assert.equal(f.page(2).children[1].children[0],canvas);
+  f.container.clientWidth=900;f.renderer.setActive(true);f.browser.scrollTo({top:position});f.flush();await settle();
+  assert.equal(f.browser.scrollY,position);assert.equal(f.reads.length,reads);assert.equal(f.page(2).children[1].children[0],canvas);
+});
+
+test('HU025 reports the page actually in view when initial rendering finishes after navigation', async t => {
+  const f=rendererFixture({count:3});t.after(()=>f.renderer.dispose());f.renderer.goToPage(2);await settle();
+  assert.ok(f.readyPages.length);assert.ok(f.readyPages.every(page=>page===2));
+});
 
 test("thumbnails render only requested previews and release canvases when leaving the panel", async (t) => {
   const f = rendererFixture({ thumbnails: true }); t.after(() => f.renderer.dispose());
@@ -352,6 +368,7 @@ function viewerFixture(total = 20, initialPage = 1, initialFragment = null) {
         return refs[index] ??= { current: initial };
       },
       useEffect(effect) { if (!effectStarted) effects.push(effect); },
+      useLayoutEffect(effect) { if (!effectStarted) effects.push(effect); },
     },
     "pdfjs-dist": {
       GlobalWorkerOptions: {}, version: "test",
@@ -363,7 +380,7 @@ function viewerFixture(total = 20, initialPage = 1, initialFragment = null) {
     "@/lib/pdf/render-visible-pages": {
       renderVisiblePages(_pdf, _container, ready, error, changed) {
         callbacks = { ready, error, changed }; void Promise.resolve().then(ready);
-        return { dispose() {}, goToPage(number) { calls.push(number); changed(number); return true; }, setZoom(value) { zooms.push(value); return true; } };
+        return { setActive() {}, dispose() {}, goToPage(number) { calls.push(number); changed(number); return true; }, setZoom(value) { zooms.push(value); return true; } };
       },
     },
   };
