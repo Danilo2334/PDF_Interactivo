@@ -2772,3 +2772,22 @@ se leyó nuevamente en SCRUM-108 para comprobar su registro.
 Todos los criterios funcionales y las seis mediciones RNF están comprobados.
 Se enlazará el commit/PR en esos mismos comentarios y se registrará el estado
 final de entrega, conservando las imágenes existentes.
+
+### Entrega de HU025
+
+Commit funcional publicado **`92958c9a1c0883af2e08675ecbffc692522746cf`**.
+PR borrador **[#31](https://github.com/Danilo2334/PDF_Interactivo/pull/31)**
+sobre `codex/scrum-36-hu024-revision-regeneracion` (#30), con diff exclusivo
+de HU025. Tras integrar #30, cambiar la base de #31 a develop y revisar diff/
+checks antes de cualquier integración autorizada. No se integró #30 ni #31.
+
+SCRUM-37 **En revisión**, comentario madre único **10149**.
+SCRUM-107/SCRUM-189/SCRUM-190/SCRUM-108 **Finalizado**: los comentarios únicos
+10145/10146/10147/10148 incluyen el PR y commit. Lectura posterior: ocho imágenes
+resueltas, dos por subtarea, conservadas sin nuevas subidas al editar.
+El criterio RNF incorporado ahora quedó satisfecho sin aumentar el límite.
+
+Se continúa **HU026 / SCRUM-38**, tarjeta interactiva, desde una rama descendiente
+de HU025. Main y stash `d6406e0` permanecen intactos. La aplicación de producción
+local sigue activa; para el desarrollo siguiente se cambiará al servidor dev
+de este proyecto de forma controlada, conservando la configuración privada.
