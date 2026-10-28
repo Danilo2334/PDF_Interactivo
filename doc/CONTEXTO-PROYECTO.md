@@ -3284,3 +3284,34 @@ explicación reservada no llegan al lector antes de enviar su intento, y evaluar
 en servidor. No se declara terminada esa parte por haber probado el editor o
 el HTML inicial privado. HU028/SCRUM-114 sigue esperando la exclusión de borradores
 y rechazados en publicación de HU032. Se continuará HU030 sin integrar los PR.
+
+### Entrega de HU029 y ajuste del orden de integración
+
+Commit funcional **`4533c49166ece7595d695fcc8cba4e5f590120d4`**, publicado en
+**[PR #35](https://github.com/Danilo2334/PDF_Interactivo/pull/35)**, borrador sobre
+`codex/scrum-40-hu028-mini-quiz` (#34). GitHub confirmó abierto, sin merge y sin
+conflictos. Cadena **#30 → #31 → #32 → #33 → #34 → #35**.
+
+SCRUM-115 **Finalizado**, comentario único **10165**, dos imágenes;
+SCRUM-197 **Finalizado**, **10166**, dos imágenes;
+SCRUM-198 **En curso**, **10167**, dos imágenes y pendiente de lector/HU030;
+SCRUM-116 **Finalizado**, **10168**, tres imágenes.
+SCRUM-41 **En curso**, resumen madre único **10169**. Se verificaron en
+`renderedBody` los nueve archivos/miniaturas y enlaces al PR, sin duplicar comentarios.
+SCRUM-114 conserva su comentario **10163**, actualizado con la validación de
+configuración de HU029 y el pendiente de publicación; mantiene sus tres imágenes.
+
+Al leer el requisito completo de **HU030 / SCRUM-42**, Jira establece expresamente
+«Orden de integración: después de configurar el quiz en HU028–HU029 y disponer
+de la publicación y acceso del lector de HU032–HU033». Exige lectores reales desde
+un enlace publicado y vigente, con identificación opcional. Por ello se actualiza
+la intención anterior de continuar inmediatamente HU030: implementar primero
+**HU031 → HU032 → HU033**, luego verificar/integrar los intentos de **HU030**.
+No se presentará una simulación privada del propietario como acceso del lector.
+
+HU031 reutilizará visor, tarjetas, multimedia y quiz en una vista privada del
+propietario; sus intentos de prueba no deben alterar resultados reales. Su
+comparación con el lector publicado queda pendiente de HU032–HU033. HU032 exige
+un despliegue HTTPS mínimo (SCRUM-226), versiones aprobadas fijadas y enlace único;
+no basta el localhost para finalizarla. No se han creado publicaciones externas
+ni activado servicios de pago. La producción local sigue en 3000 con HU029.
