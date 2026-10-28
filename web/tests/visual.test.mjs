@@ -49,7 +49,7 @@ test('visual UI starts unselected, blocks generation until saved and requires a 
   const html=render(initial);assert.match(html,/Imagen/);assert.match(html,/Diagrama/);assert.equal((html.match(/checked=""/g)??[]).length,0);assert.match(html,/disabled=""[^>]*>Generar recurso visual/);
   const version={id:record.id,request_id:record.id,version:1,origin:'ai',title:visual.title,text:visual.text,actor_id:record.owner_id,created_at:record.created_at,visual_content:visual};
   const ready=render({...initial,generation:{...generation,status:'ready',content:visual},review:{request_id:record.id,current_version:1,decision:'pending',approved_version_id:null,approved_by:null,approved_at:null,updated_at:record.created_at},versions:[version],canRegenerate:true});
-  assert.match(ready,/Pendiente de aprobación/);assert.match(ready,/disabled=""[^>]*>Aprobar esta versión/);assert.match(ready,/Solicitar otro resultado/);assert.match(ready,/Descripción accesible/);
+  assert.match(ready,/Pendiente de aprobación/);assert.match(ready,/disabled=""[^>]*>Aprobar esta versión/);assert.match(ready,/Descripción accesible/);
   const unrelated=render({...initial,visualChosen:false,review:{request_id:record.id,current_version:1,decision:'pending'},versions:[version]});
   assert.equal(unrelated.includes('>Tu revisión<'),false);assert.equal(unrelated.includes('>Solicitar otro resultado<'),false);
 });

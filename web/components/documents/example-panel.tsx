@@ -3,7 +3,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useRequestResource } from "@/lib/reinforcements/use-request-resource";
 import { OwnerReviewPanel, type ReviewAction } from "@/components/documents/owner-review-panel";
-import { EXAMPLE_MODES, EXAMPLE_LABELS, EXAMPLE_DESCRIPTIONS, EXAMPLE_MESSAGES, exampleViewSchema, exampleRecordSchema, reviewHeadSchema, type ExampleMode } from "@/lib/validations/example";
+import { EXAMPLE_MODES, EXAMPLE_LABELS, EXAMPLE_DESCRIPTIONS, EXAMPLE_MESSAGES, exampleViewSchema, exampleRecordSchema, exampleContentSchema, reviewHeadSchema, type ExampleMode } from "@/lib/validations/example";
 import type { RequestRecord } from "@/lib/validations/request-list";
 const parseView = (body: unknown) => exampleViewSchema.parse(body);
 const buttonClass = "rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-800 disabled:opacity-50";
@@ -15,6 +15,8 @@ export function ExamplePanel({ request, active, onChanged }: { request: RequestR
   const view = resource.result?.value, generation = view?.generation, selected = mode ?? generation?.mode ?? null;
   const saved = !!generation && selected === generation.mode && generation.choice_version === view?.choiceVersion;
   const current = view?.versions.find(v => v.version === view.review?.current_version);
+  const snapshot=exampleContentSchema.safeParse(current?.generated_content);
+  const sourceContent=snapshot.success?snapshot.data:generation?.content;
   useEffect(() => () => { controllerRef.current?.abort(); }, [base, active]);
   async function execute(action: "configure" | "generate" | ReviewAction) {
     if (!view || !active || controllerRef.current) return null;
@@ -62,8 +64,8 @@ export function ExamplePanel({ request, active, onChanged }: { request: RequestR
       <p className="font-semibold">Contenido generado por IA{current.origin === "owner" ? " · Editado por ti" : ""} · {view?.review?.decision === "approved" ? "Aprobado por ti" : "Pendiente de aprobación"}</p>
       <p>Página {request.page_number} · {EXAMPLE_LABELS[generation.mode]} · Versión {current.version}</p>
       <blockquote className="whitespace-pre-wrap break-words">{request.selected_text}</blockquote><h5 className="font-semibold">{current.title}</h5>
-      <p className="whitespace-pre-wrap break-words">{current.text}</p><p><strong>Relación con el concepto: </strong>{generation.content.relation}</p>
-      <p><strong>Límites y supuestos: </strong>{generation.content.limitations}</p><p><strong>Cita del fragmento: </strong>{generation.content.sourceQuote}</p>
+      <p className="whitespace-pre-wrap break-words">{current.text}</p><p><strong>Relación con el concepto: </strong>{sourceContent?.relation}</p>
+      <p><strong>Límites y supuestos: </strong>{sourceContent?.limitations}</p><p><strong>Cita del fragmento: </strong>{sourceContent?.sourceQuote}</p>
       <p>El PDF original permanece intacto. Las ediciones son responsabilidad del propietario y necesitan aprobación.</p>
     </article>}
     {view?.exampleChosen && generation?.status === "ready" && view.review && <OwnerReviewPanel view={view} disabled={!active || busy} onReview={value => execute(value)} />}

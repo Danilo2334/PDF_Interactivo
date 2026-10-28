@@ -29,7 +29,7 @@ export const exampleRecordSchema = explanationRecordSchema.omit({ detail_level: 
 export const reviewHeadSchema = z.object({ request_id: z.string().uuid(), current_version: z.number().int().positive(), decision: z.enum(["pending", "approved", "discarded"]),
   approved_version_id: z.string().uuid().nullable(), approved_by: z.string().uuid().nullable(), approved_at: z.string().datetime({ offset: true }).nullable(), updated_at: z.string().datetime({ offset: true }) });
 export const reviewVersionSchema = z.object({ id: z.string().uuid(), request_id: z.string().uuid(), version: z.number().int().positive(), origin: z.enum(["ai", "owner"]),
-  title: z.string(), text: z.string(), actor_id: z.string().uuid(), created_at: z.string().datetime({ offset: true }) });
+  title: z.string(), text: z.string(), generated_content: z.record(z.string(), z.unknown()).nullable().optional(), actor_id: z.string().uuid(), created_at: z.string().datetime({ offset: true }) });
 export const reviewEventSchema = z.object({ operation_id: z.string().uuid(), request_id: z.string().uuid(), version: z.number().int().positive(),
   action: z.enum(["edit", "approve", "discard", "regenerate"]), actor_id: z.string().uuid(), occurred_at: z.string().datetime({ offset: true }) });
 export const exampleViewSchema = z.object({ generation: exampleRecordSchema.nullable(), choiceVersion: z.number().int().nonnegative(),

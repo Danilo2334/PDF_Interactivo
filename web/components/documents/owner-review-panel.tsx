@@ -5,7 +5,7 @@ import type { ExampleView } from "@/lib/validations/example";
 export type ReviewAction = { action: "edit"; title: string; text: string; expectedVersion: number } | { action: "approve"; confirmed: true; expectedVersion: number } | { action: "discard"; expectedVersion: number };
 const buttonClass = "rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-800 disabled:opacity-50";
 
-export function OwnerReviewPanel({ view, disabled, onReview, visual = false }: { view: Pick<ExampleView, "review" | "versions" | "events">; disabled: boolean; onReview: (action: ReviewAction) => Promise<number | null>; visual?: boolean }) {
+export function OwnerReviewPanel({ view, disabled, onReview, visual = false, explanation = false }: { view: Pick<ExampleView, "review" | "versions" | "events">; disabled: boolean; onReview: (action: ReviewAction) => Promise<number | null>; visual?: boolean; explanation?: boolean }) {
   const current = view.versions.find(v => v.version === view.review?.current_version);
   const [draft, setDraft] = useState(() => current ? { version: current.version, title: current.title, text: current.text } : null);
   const [confirmed, setConfirmed] = useState(false), [discardVersion, setDiscardVersion] = useState<number | null>(null);
@@ -28,10 +28,10 @@ export function OwnerReviewPanel({ view, disabled, onReview, visual = false }: {
           if (version !== null) { setDraft({ version, title: draft.title.trim(), text: draft.text.trim() }); setConfirmed(false); }
         });
       } }} className="space-y-2">
-        <label htmlFor={titleId} className="block font-medium">{visual ? "Título del recurso" : "Título del ejemplo"}</label>
+        <label htmlFor={titleId} className="block font-medium">{visual ? "Título del recurso" : explanation ? "Título de la explicación" : "Título del ejemplo"}</label>
         <input id={titleId} value={draft.title} maxLength={160} minLength={3} required disabled={disabled} className="w-full rounded-lg border border-slate-300 p-2"
           onChange={event => { setDraft({ ...draft, title: event.target.value }); setConfirmed(false); }} />
-        <label htmlFor={textId} className="block font-medium">{visual ? "Descripción accesible" : "Texto del ejemplo"}</label>
+        <label htmlFor={textId} className="block font-medium">{visual ? "Descripción accesible" : explanation ? "Texto de la explicación" : "Texto del ejemplo"}</label>
         <textarea id={textId} rows={7} value={draft.text} maxLength={6000} minLength={80} required disabled={disabled} className="w-full rounded-lg border border-slate-300 p-2"
           onChange={event => { setDraft({ ...draft, text: event.target.value }); setConfirmed(false); }} />
         <p>Guardar crea una versión pendiente y conserva las anteriores. El texto debe tener entre 80 y 6000 caracteres.</p>
