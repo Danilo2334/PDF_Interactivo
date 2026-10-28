@@ -6,6 +6,7 @@ import { useRequestResource } from "@/lib/reinforcements/use-request-resource";
 import { ContextualAnalysisPanel } from "@/components/documents/contextual-analysis-panel";
 import { RecommendationPanel } from "@/components/documents/recommendation-panel";
 import { ExplanationPanel } from "@/components/documents/explanation-panel";
+import { ExamplePanel } from "@/components/documents/example-panel";
 import { requestListSchema, requestDetailSchema, type RequestFilter, type RequestRecord, type RequestSummary } from "@/lib/validations/request-list";
 
 const parseList = (body: unknown) => requestListSchema.parse(body);
@@ -39,7 +40,7 @@ function RequestDetailPanel({ projectId, documentId, requestId, active, focusVer
   // Move only after opening/reopening the detail, never on a polling response.
   useEffect(() => { if (active) revealHeading(headingRef.current); }, [active, focusVersion]);
   const url = `/api/projects/${projectId}/reinforcement-requests/${requestId}?documentId=${documentId}&page=${page}`;
-  const resource = useRequestResource(url, active, parseDetail);
+  const resource = useRequestResource(url, active, parseDetail, true);
   const detail = resource.result?.value;
   // Reserve space while loading so the heading can reach the top of the viewport.
   return <section aria-label="Detalle de solicitud" className="mt-5 min-h-dvh space-y-3 rounded-xl border border-blue-200 bg-blue-50 p-4">
@@ -63,6 +64,7 @@ function RequestDetailPanel({ projectId, documentId, requestId, active, focusVer
       <ContextualAnalysisPanel key={`${documentId}:${requestId}`} request={detail.request} active={active} onChanged={resource.refresh} />
       <RecommendationPanel key={`recommendations:${documentId}:${requestId}`} request={detail.request} active={active} onChanged={resource.refresh} />
       <ExplanationPanel key={`explanation:${documentId}:${requestId}`} request={detail.request} active={active} onChanged={resource.refresh} />
+      <ExamplePanel key={`example:${documentId}:${requestId}`} request={detail.request} active={active} onChanged={resource.refresh} />
       <h4 className="font-semibold text-slate-900">Cambios registrados</h4>
       {detail.events.length === 0 ? <p className="text-sm">No hay eventos en esta página del historial.</p> : <ol className="space-y-3">
         {detail.events.map(event => <li key={event.id} className="rounded-lg bg-white p-3 text-sm text-slate-800">

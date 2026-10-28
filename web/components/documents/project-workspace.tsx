@@ -230,6 +230,9 @@ export function ProjectWorkspace({
                 <h3 className="mt-2 break-words font-semibold text-slate-900">
                   {reinforcement.title}
                 </h3>
+                {reinforcement.content.generatedByAI === true && <p className="mt-2 text-sm font-medium text-green-900">
+                  Contenido generado por IA · Aprobado por ti{reinforcement.content.editedByOwner === true ? " · Editado por ti" : ""}
+                </p>}
 
                 {typeof reinforcement.content.text === "string" && (
                   <p className="mt-3 whitespace-pre-wrap break-words text-sm text-slate-700">
