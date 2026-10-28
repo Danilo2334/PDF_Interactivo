@@ -3546,3 +3546,23 @@ ese enlace. SCRUM-203/204/122/226 y la historia permanecen **En curso**. No dar
 por terminado HU032, HU031/SCRUM-120, HU029/SCRUM-198 ni HU028/SCRUM-114 por estas
 pruebas de preparación. No activar las variables de publicación ni hacer merges
 para sortear los pendientes. El stash `d6406e0` sigue intacto.
+
+### Entrega de la preparación de HU032
+
+Commit funcional **`75b697e26df02e5c4a22016fb954eee603b9c15a`**, publicado en
+**[PR #37](https://github.com/Danilo2334/PDF_Interactivo/pull/37)**, borrador sobre
+`codex/scrum-43-hu031-vista-previa` (#36). GitHub confirmó abierto, sin merge,
+sin conflictos. No se ha desplegado ni habilitado la publicación.
+
+SCRUM-121 **Finalizado**, comentario único **10175**, cuatro capturas reales
+(preparación, recarga, vacío y móvil corregido). SCRUM-203 **En curso**, **10176**;
+SCRUM-204 **En curso**, **10177**; SCRUM-122 **En curso**, **10178**;
+SCRUM-226 **En curso**, **10179**, una captura del bloqueo real. Lectura posterior
+confirmó los cinco archivos/miniaturas y un comentario por subtarea, enlazado
+al PR. La historia permanece **En curso** con resumen madre único **10180**.
+
+El servidor queda en producción local, puerto 3000. Próximo trabajo: preparar
+HU033 a partir de estas instantáneas privadas, sin activar su acceso público ni
+desplegar mientras el propietario pide esperar. Después de acordar hosting,
+desplegar y probar el lector real; completar HU030 y los pendientes cruzados
+con intentos reales. No sustituirlos con la vista previa ni pruebas aisladas.
