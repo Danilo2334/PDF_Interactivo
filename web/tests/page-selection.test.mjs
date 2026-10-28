@@ -47,6 +47,7 @@ function fixture(path, exportedName, initialProps) {
   runInNewContext(outputText, { exports, performance: { now: () => 0 }, require(name) {
     if (name === 'react') return react;
     if (name === 'react/jsx-runtime') return require(name);
+    if (name === '@/components/documents/reinforcement-card') return { ReinforcementCard: 'article' };
     if (name === '@/components/documents/pdf-viewer') return { PdfViewer: viewer };
     if (name === '@/components/documents/reinforcement-request-draft') return { ReinforcementRequestDraft: draftForm };
     if (name === '@/lib/validations/difficulty') return difficulty;
@@ -77,9 +78,9 @@ test('HU025 keeps the same viewer while switching panels and scopes published co
     {id:'foreign',document_id:'document-b',page_number:2,title:'Otro documento',content:{}}];
   const f=fixture('components/documents/project-workspace.tsx','ProjectWorkspace',{...props,reinforcements:items,canRequestReinforcement:false});
   const original=f.find(n=>n.type===viewer);assert.equal(original.props.visible,true);assert.equal(original.props.onPageSelect,undefined);
-  assert.ok(f.find(n=>n.type==='article'&&n.key==='one'));assert.equal(f.find(n=>n.type==='article'&&n.key==='two'),undefined);
-  original.props.onVisiblePageChange(2);f.render();assert.equal(f.find(n=>n.type==='article'&&n.key==='one'),undefined);
-  assert.ok(f.find(n=>n.type==='article'&&n.key==='two'));assert.equal(f.find(n=>n.type==='article'&&n.key==='foreign'),undefined);
+  assert.ok(f.find(n=>n.type==='article'&&n.props.reinforcement?.id==='one'));assert.equal(f.find(n=>n.type==='article'&&n.props.reinforcement?.id==='two'),undefined);
+  original.props.onVisiblePageChange(2);f.render();assert.equal(f.find(n=>n.type==='article'&&n.props.reinforcement?.id==='one'),undefined);
+  assert.ok(f.find(n=>n.type==='article'&&n.props.reinforcement?.id==='two'));assert.equal(f.find(n=>n.type==='article'&&n.props.reinforcement?.id==='foreign'),undefined);
   f.find(n=>n.type==='button'&&n.props.children==='Refuerzos').props.onClick();f.render();
   assert.equal(f.find(n=>n.type===viewer).key,original.key);assert.equal(f.find(n=>n.type===viewer).props.visible,false);
   f.find(n=>n.type==='button'&&n.props.children==='Cerrar refuerzos y volver al PDF').props.onClick();f.render();

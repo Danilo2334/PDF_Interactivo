@@ -2791,3 +2791,93 @@ Se continúa **HU026 / SCRUM-38**, tarjeta interactiva, desde una rama descendie
 de HU025. Main y stash `d6406e0` permanecen intactos. La aplicación de producción
 local sigue activa; para el desarrollo siguiente se cambiará al servidor dev
 de este proyecto de forma controlada, conservando la configuración privada.
+
+
+## 2026-10-28 — HU026 / SCRUM-38: tarjeta interactiva accesible
+
+Continuación autorizada desde HU025, rama `codex/scrum-38-hu026-tarjeta-interactiva`.
+Los PR #30 y #31 siguen sin integrar; esta historia depende de #31. No se tocó
+main ni el stash `d6406e0`.
+
+### Estructura, contenido aprobado y vínculo de origen
+
+Los refuerzos publicados del panel se presentan como tarjetas desplegables.
+El título contraído es un botón nativo con `aria-expanded` y `aria-controls`;
+al expandir se consulta el contenido completo, incluyendo los renderizadores
+existentes de resumen y recurso visual. Clic, Enter y Espacio alternan el estado;
+«Contraer tarjeta» devuelve el foco al título. Se mantienen los nodos de contenido
+al ocultarlos, sin modificar texto, imagen, página o selección.
+
+`reinforcement_cards` guarda la presentación inicial, versión optimista, última
+operación, versión aprobada consultada, actor y fecha. Referencia el refuerzo ya
+publicado: el título y contenido se conservan en su versión aprobada, y la página/
+selección proceden de la solicitud inmutable. No se crea una copia educativa sin
+revisar ni se permite editar contenido desde la configuración de presentación.
+Las modificaciones educativas continúan por la revisión de HU024.
+
+«Abrir expandida al entrar al proyecto» y «Guardar tarjeta» persisten el estado
+inicial. Expandir/contraer durante la lectura es temporal; no escribe en servidor.
+Se comprobaron ambos inicios guardados y la salida/reentrada al proyecto. Los
+refuerzos sin configuración empiezan contraídos, sin backfill de datos antiguos.
+La consulta del proyecto carga en una petición las relaciones de tarjeta y origen.
+
+Migración **20261028060058_interactive_reinforcement_cards.sql**, aplicada una
+sola vez y reconciliada con el historial remoto. RLS de lectura por propietario,
+escrituras directas revocadas, RPC invoker con implementación privada y permisos
+comprobados. La operación bloquea proyecto/solicitud/publicación, comprueba usuario
+activo, documento vigente, página y puntero aprobado, título/contenido no vacíos.
+No exige que el borrador más reciente esté aprobado: conserva el acceso a la
+última publicación aprobada aunque exista una revisión posterior descartada.
+
+El POST de tarjeta verifica sesión de aplicación, propietario, origen, UUID,
+tamaño de cuerpo y versión. Un reintento idéntico conserva la misma operación;
+una pestaña antigua recibe 409. Se limita la espera del cliente a 20 segundos y
+un fallo ambiguo permite reintentar sin inventar éxito ni crear otra operación.
+No se invoca IA, no hay consumo ni cambios en las claves o facturación.
+
+### Validación real de HU026
+
+Producción local, build Turbopack/TypeScript correcto, **314/314 pruebas** y lint
+sin advertencias. Las pruebas incluyen contrato API, roles/RLS, reintento,
+conflicto de versión, rechazo de otra cuenta/documento, cuenta inactiva y proyecto
+en eliminación en PostgreSQL aislado. Las simulaciones de ese entorno no se
+presentan como evidencia visual o datos reales de producción.
+
+En navegador integrado autenticado con la cuenta QA existente y PDF de prueba:
+
+- Título contraído, contenido expandido y cierre con ratón, Enter y Espacio.
+  ARIA y foco DOM comprobados; indicador de foco visible en captura real.
+- Guardado inicial expandido, salida al dashboard y reentrada: recuperado.
+  Guardado inicial contraído y recarga: recuperado; se dejó el ejemplo expandido
+  para revisión. Solo se añadieron dos configuraciones de presentación de QA.
+- Dos pestañas: guardar desde la segunda, anterior, mostró el mensaje de conflicto
+  y no reemplazó la primera configuración. Captura real del rechazo.
+- «Ver zona original» del ejemplo QA `d26e29e7-2de6-4838-9184-89186daf9a6f`
+  restauró la zona de página 1; la tarjeta visual de página 2 abrió esa página.
+  No se enviaron solicitudes nuevas ni se alteraron sus dificultades.
+- Página 2, zoom 125 %, abrir/cerrar el panel: scrollY **2171,199951171875**,
+  scrollX **0** y desplazamiento horizontal **0** idénticos antes/después.
+- Móvil **390×844 CSS**, ancho documental **390**, sin desbordamiento. La captura
+  usa escala **1,25**, correspondiente a Windows 125 %, para incluir todo el ancho
+  real; se descartó la primera captura de diagnóstico recortada por DPR=1.
+  Se restauraron las emulaciones de viewport al finalizar.
+- Cero errores de consola observados. El autoscroll de la herramienta sobre la
+  barra sticky podía cambiar la página antes de pulsar; se usó el punto visible
+  del botón para esos pasos, sin modificar código o DOM durante las pruebas.
+
+HTTP real: sin sesión **401**, origen ajeno **403**, otra cuenta **404**, documento
+cambiado **409**, intento de sobrescribir título por este endpoint **400**, versión
+antigua **409**. El reenvío de la misma operación devolvió el mismo registro;
+UPDATE directo a la tabla denegado y cero filas visibles desde la otra cuenta.
+Las siete publicaciones permanecieron idénticas en la comparación del script;
+la comprobación final conservó 35 solicitudes, siete publicaciones y los 31/
+cuatro registros previos. Ambos PDF siguen con los SHA-256 registrados en HU025.
+Advisors de seguridad mantienen los cuatro grupos anteriores, sin nuevos avisos;
+los nuevos índices aparecen como no utilizados al ser una función recién creada.
+
+Scripts/resultados/capturas reales fuera de Git, `HU019/HU026`. Ocho imágenes
+adjuntadas en comentarios únicos: SCRUM-109 **10150**, SCRUM-191 **10151**,
+SCRUM-192 **10152**, SCRUM-110 **10153**, dos imágenes por subtarea. Se leyó
+`renderedBody` y se confirmaron los ocho nombres/miniaturas. El script temporal
+con grants de carga se eliminó después de subirlos. Falta enlazar commit/PR en
+esos mismos comentarios y registrar la entrega, sin duplicar capturas.
