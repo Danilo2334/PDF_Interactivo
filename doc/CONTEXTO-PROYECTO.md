@@ -3417,3 +3417,26 @@ publicada tras HU032–HU033, comprobar exclusión de borradores en ese enlace y
 volver a contrastar que las pruebas privadas no alteran intentos/resultados
 persistidos cuando exista HU030. No finalizar la historia por estas pruebas
 privadas. Se continúa HU032 y su despliegue HTTPS mínimo; sin merges automáticos.
+
+### Entrega de HU031
+
+Commit funcional **`3594c817625df20799f4dee953beadc76d982d2f`**, publicado en
+**[PR #36](https://github.com/Danilo2334/PDF_Interactivo/pull/36)**, borrador sobre
+`codex/scrum-41-hu029-configuracion-quiz` (#35). GitHub confirmó abierto, sin merge
+y sin conflictos. Cadena **#30 → #31 → #32 → #33 → #34 → #35 → #36**.
+
+SCRUM-119 **Finalizado**, comentario único **10170**, dos imágenes;
+SCRUM-201 **Finalizado**, **10171**, tres imágenes;
+SCRUM-202 **Finalizado**, **10172**, tres imágenes;
+SCRUM-120 **En curso**, **10173**, dos imágenes y comparación publicada pendiente.
+SCRUM-43 **En curso**, resumen madre único **10174**. Lectura posterior confirmó
+diez archivos/miniaturas y enlaces al PR, un comentario por subtarea.
+
+Se continúa **HU032 / SCRUM-44**, después HU033 y HU030 según las dependencias
+de Jira. Los siete registros actuales de `reinforcements` son refuerzos aprobados
+dentro del workspace privado; todavía no existen enlaces públicos de experiencia.
+Para las pruebas siguientes: quiz de agua **6 pendiente / true**, **4 aprobado /
+true** conservado; energía **5 pendiente / false**, **3 aprobado / false** conservado;
+resumen `deeb737f…` aprobado 4 con elección omitir. No publicar los borradores
+6/5 ni los descartes del historial. Mantener control de propietario y aprobación
+fija en la futura publicación. Servidor de producción local en 3000.
