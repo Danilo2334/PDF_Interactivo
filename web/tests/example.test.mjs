@@ -56,4 +56,5 @@ test('example UI starts without a selected modality and owner approval requires 
   assert.match(ready,/Pendiente de aprobación/);assert.match(ready,/&lt;script&gt;/);assert.match(ready,/disabled=""[^>]*>Aprobar esta versión/);
   const discarded=render({...view,generation:{...generation,status:'ready',content:example},review:{...head,decision:'discarded'},versions:[version]});
   assert.match(discarded,/No se publicó contenido/);assert.equal(discarded.includes('>Aprobar esta versión<'),false);
+  assert.equal(render({...view,exampleChosen:false,review:head,versions:[version]}).includes('>Tu revisión<'),false);
 });

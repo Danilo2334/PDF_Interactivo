@@ -2178,3 +2178,147 @@ SCRUM-100 Finalizado. Sus comentarios 10129/10130/10131 incluyen el PR y mantien
 las seis capturas sin volver a subirlas. No hay merge de #27 ni avance a HU022.
 localhost:3000 se dejó arrancado con el código revisado y la pestaña de Refuerzos
 QA conserva la versión aprobada; no se requiere entregar credenciales por chat.
+
+## Revisión e integración de PR #27, 27/10/2026
+
+El nuevo encargo autoriza revisar e integrar HU021 y continuar con HU022.
+Se revisaron código, SQL, permisos y diff de #27, head
+`997868ce36d4dbdb2bcad512303e82918304b528`, contra develop `757f88b`.
+No se encontraron impedimentos de integración. Se repitieron las **257/257**
+pruebas y `hu021-live.mjs final`: 27 solicitudes, un refuerzo publicado v3,
+v4 descartada, analogía descartada, solicitud personal intacta y mismo SHA-256.
+No había checks/workflows de CI publicados ni hilos de revisión pendientes;
+la validación local no se presenta como CI remoto.
+
+PR [#27](https://github.com/Danilo2334/PDF_Interactivo/pull/27) integrado con merge
+`36be0e96adbeac26e85b22123bde295ff984e8ce`, comprobando el head esperado.
+Develop local se actualizó por fast-forward y HU022 parte de ese merge.
+SCRUM-33 Finalizado; comentario madre 10132 actualizado. Se conservaron las
+seis capturas y comentarios 10129/10130/10131 de sus subtareas. Main y PR #13
+permanecen fuera del alcance.
+
+## HU022 / SCRUM-34: imagen o diagrama, 27/10/2026
+
+Rama `codex/scrum-34-hu022-imagen-diagrama`, desde develop `36be0e9`.
+Se leyeron historia y subtareas SCRUM-101, SCRUM-186 y SCRUM-102. Se continúa
+el código existente de HU018–HU021. No se inicia HU023 ni se declara completada
+HU024: se amplían sus primitivas compartidas solo para la revisión de HU022.
+
+### Implementación y límites
+
+- Imagen (ilustración vectorial) o Diagrama, sin premarcar; guardar tipo y
+  versión es obligatorio antes de generar. La descripción visual se prepara
+  en servidor con selección persistida, tema y dificultad del propietario.
+- Gemini existente `gemini-3.5-flash-lite` genera una composición estructurada
+  con nodos, símbolos y relaciones. El cliente dibuja el SVG a partir de esa
+  composición validada; no acepta SVG/HTML ejecutable, URLs ni imágenes remotas
+  del proveedor. Esto genera ilustraciones vectoriales y diagramas, no imágenes
+  fotográficas de un modelo de generación de bitmap. No se instalaron SDKs ni
+  se activaron facturación, proveedores alternativos o servicios de pago.
+- Se mantienen clave/modelo exclusivamente en servidor, firma con el secreto
+  existente, contexto de página, cita literal, tema exacto, propiedad y cuenta
+  activa. Una llamada por acción, timeout 45 s, errores seguros de salida,
+  rechazo, timeout y cuota; sin reintentos automáticos ilimitados.
+- Tablas visuales e intentos con RLS, sin escritura directa de usuarios.
+  Lease, versiones, bloqueo de duplicados y límites por cuenta. Una respuesta
+  tardía o un documento sustituido no puede publicar ni sobrescribir una versión.
+- Generar o solicitar otro resultado conserva una versión pendiente inmutable.
+  La aprobación explícita publica una única versión canónica fuera del PDF.
+  Se puede descartar o regenerar con indicaciones de hasta 500 caracteres.
+  La versión aprobada anterior sigue publicada durante la nueva revisión y
+  también si el nuevo borrador se descarta. Autor, fecha y decisiones se guardan.
+- Título, descripción accesible, detalle textual de nodos/relaciones y origen
+  visibles. Se corrigieron etiquetas de flechas ocultas tras los nodos. La
+  ampliación permite desplazar el gráfico con teclado o táctil en móvil.
+- La prueba real detectó revisión duplicada porque el panel de Ejemplo mostraba
+  un head visual compartido. Ambos paneles ahora comprueban el formato elegido;
+  regresión automatizada y prueba real confirman una sola revisión. La
+  confirmación de descarte queda vinculada a la versión y se limpia al cargar
+  otra, evitando reutilizar una confirmación anterior.
+- Migración `20261028035709_generate_visual_drafts.sql` aplicada una sola vez
+  mediante MCP y conciliada con su timestamp remoto. No se hizo db push ni se
+  reaplicaron migraciones anteriores. Se conservaron secretos, permisos y RLS.
+  Los advisors posteriores mantienen los avisos previos de seguridad y los
+  ocho avisos de evaluación RLS por fila, sin nuevos avisos de FK sin índice.
+
+### Pruebas reales y resultados
+
+Se reutilizaron las dos cuentas QA y el PDF digital. El baseline queda en
+**29 solicitudes y tres refuerzos publicados**: las 27 anteriores y estas dos
+solicitudes nuevas, creadas por API autenticada con análisis y recomendaciones
+reales. No se fabricaron diagnósticos, recomendaciones, estados ni resultados
+mediante SQL. El proveedor ofreció Imagen en ambos casos antes de elegirla.
+
+- Diagrama `163a3097-633b-4159-98ef-db7bcd1873c5`, página 1, selección de las dos
+  líneas del péndulo. Tipo Diagrama guardado en la interfaz. V1 IA se revisó y
+  descartó sin publicar. Se solicitó otra con indicaciones de etiquetas claras
+  y suma constante: v2 generada, revisada y aprobada explícitamente con teclado.
+  Su título es «Conservación de la Energía en el Péndulo Ideal»; distingue
+  potencial, cinética y suma invariable. La descripción y los detalles aclaran
+  posiciones de máxima energía y ausencia de rozamiento.
+- Imagen `793b12bc-64b3-4d58-88bb-f3c869d43c61`, página 2, selección sobre
+  evaporación y condensación. Tipo Imagen y descripción persistieron tras
+  recarga/reapertura. V1 «El ciclo del agua: Evaporación y Condensación» muestra
+  sol, evaporación y condensación con descripción del calor y enfriamiento.
+  Se aprobó explícitamente la versión `47196fb3-7b16-4192-94a6-8c04d5ca0d03`.
+  Otra generación con indicaciones creó v2 pendiente; v1 siguió publicada.
+  Descartar v2 conservó v1 y el estado approved/approved.
+- Cada solicitud terminó ready con dos intentos de generación visual, sin
+  fallos reales del proveedor en estos cuatro intentos. Las ocho llamadas de
+  esta validación fueron dos análisis, dos recomendaciones y cuatro visuales,
+  con la configuración gratuita existente. Los errores de cuota/rechazo/timeout
+  se cubrieron automáticamente y no se presentan como fallos reales observados.
+- Recarga y reapertura conservan los tres recursos publicados y sus páginas.
+  «Ver selección en el PDF» restauró página 2, texto y necesidad de Imagen.
+  Se preservan propietario, documento, página y selección original.
+- Comprobaciones HTTP reales: sin sesión 401, origen ajeno 403, otra cuenta
+  404/RLS, documento diferente 409, regeneración y aprobación obsoletas 409.
+  Repetir generación ready devuelve el mismo intento, sin otra llamada de IA.
+  Contexto insuficiente del PDF escaneado 409, sin invocar al proveedor.
+- Móvil 390×844: ancho cliente/contenido 390/390, ampliación accionada con Enter,
+  región enfocada y flecha derecha desplazó el gráfico 40 px. Emulación retirada.
+  Revisión/aprobación con teclado y cero errores de consola en la sesión QA
+  observada. Capturas de escritorio/móvil inspeccionadas con píxeles reales.
+- La solicitud personal `1201c3a3-1632-41b0-ae4f-0b989ba676cb` conserva texto,
+  necesidad y estado generated; el ejemplo HU021 aprobado v3 permanece intacto.
+  No se descartaron datos personales ni evidencias de historias anteriores.
+- PDF original conserva SHA-256
+  `e7277d66afd7caba47385cfac2f0e55a2eeb4fb7aa7136409fa35300a6347946`.
+
+**276/276 pruebas automatizadas**, lint y build Turbopack/TypeScript aprobados
+tras los ajustes finales. Nueve comprobaciones PostgreSQL nuevas verifican
+firma, propiedad, contrato visual, publicación, regeneración, versión anterior,
+descarte, errores y cascada. Las diez de HU021 también pasan con la migración
+visual aplicada. El build se ejecutó con dev detenido; después se reinició
+localhost:3000. Node 22.23.3, Next 16.4.3 y dependencias permanecen sin cambios.
+
+### Jira y evidencias de HU022
+
+- SCRUM-101: comentario único **10133**, dos capturas reales de tipo/descripcion.
+- SCRUM-186: comentario único **10134**, dos capturas reales de imagen/diagrama.
+- SCRUM-102: comentario único **10135**, cuatro capturas reales de regeneración,
+  descarte, móvil y aprobación tras recarga.
+- Lectura posterior de los comentarios confirma 2/2/4 imágenes resueltas por
+  nombre, sin duplicados y un solo comentario por subtarea. Las tres subtareas
+  Finalizado únicamente después de comprobar sus criterios.
+- Scripts y resultados reales están fuera de Git en `HU019/HU022`, con el
+  verificador `HU019/hu022-live.mjs final` ajustado al baseline de 29 solicitudes.
+  El grant temporal de subida se retiró después de cargar los ocho archivos.
+  No se versionan .env.local, credenciales, capturas o scripts con sesiones.
+  El stash `d6406e0` se conserva sin aplicar ni eliminar.
+
+### Entrega de HU022
+
+Commit funcional publicado **`d7bf85087527e267857faee0921db852420b7fd4`**.
+PR borrador **[#28](https://github.com/Danilo2334/PDF_Interactivo/pull/28)**
+contra develop `36be0e9`, después de #27 integrado. **SCRUM-34 En revisión**,
+comentario madre único **10136**; subtareas SCRUM-101/SCRUM-186/SCRUM-102
+Finalizado. Los comentarios 10133/10134/10135 incluyen el PR y conservan las
+ocho imágenes, sin nuevas subidas ni duplicados tras editarlos.
+
+La comprobación visual posterior al build confirmó una revisión en Ejemplo
+y ninguna revisión visual ajena en esa solicitud; Refuerzos volvió a mostrar
+el diagrama y la imagen aprobados, con cero errores de consola observados.
+localhost:3000 quedó activo y la pestaña QA de Refuerzos abierta. El usuario
+puede revisar #28 antes de autorizar su integración. No hubo merge de #28,
+modificación de main ni avance a HU023 en esta entrega.
