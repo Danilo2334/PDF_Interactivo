@@ -14,6 +14,7 @@ import { createSubmissionController, IDLE_SUBMISSION, type SubmissionState } fro
 import { RequestListPanel } from "@/components/documents/request-list-panel";
 import type { RequestRecord } from "@/lib/validations/request-list";
 import { VisualResource } from "@/components/documents/visual-resource";
+import { SummaryResource } from "@/components/documents/summary-resource";
 
 type WorkspaceProps = {
   projectId: string;
@@ -237,7 +238,8 @@ export function ProjectWorkspace({
 
                 {reinforcement.content.type === "visual" && <div className="mt-3"><VisualResource value={reinforcement.content.visual} title={reinforcement.title}
                   description={typeof reinforcement.content.text === "string" ? reinforcement.content.text : undefined} /></div>}
-                {reinforcement.content.type !== "visual" && typeof reinforcement.content.text === "string" && (
+                {reinforcement.content.type === "summary" && <div className="mt-3"><SummaryResource value={reinforcement.content.summary} /></div>}
+                {reinforcement.content.type !== "visual" && reinforcement.content.type !== "summary" && typeof reinforcement.content.text === "string" && (
                   <p className="mt-3 whitespace-pre-wrap break-words text-sm text-slate-700">
                     {reinforcement.content.text}
                   </p>

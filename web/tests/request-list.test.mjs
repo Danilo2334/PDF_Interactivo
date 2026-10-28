@@ -106,6 +106,7 @@ test('state presentation uses the persisted stage, indeterminate progress and a 
     '@/components/documents/explanation-panel': { ExplanationPanel() {} },
     '@/components/documents/example-panel': { ExamplePanel() {} },
     '@/components/documents/visual-panel': { VisualPanel() {} },
+    '@/components/documents/summary-panel': { SummaryPanel() {} },
     '@/lib/validations/request-list': schemas,
   });
   for (const [status, stage] of [['pending','queued'], ['processing','analyzing'], ['error','failed'], ['generated','review'], ['approved','approved']]) {

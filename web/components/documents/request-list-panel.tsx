@@ -8,6 +8,7 @@ import { RecommendationPanel } from "@/components/documents/recommendation-panel
 import { ExplanationPanel } from "@/components/documents/explanation-panel";
 import { ExamplePanel } from "@/components/documents/example-panel";
 import { VisualPanel } from "@/components/documents/visual-panel";
+import { SummaryPanel } from "@/components/documents/summary-panel";
 import { requestListSchema, requestDetailSchema, type RequestFilter, type RequestRecord, type RequestSummary } from "@/lib/validations/request-list";
 
 const parseList = (body: unknown) => requestListSchema.parse(body);
@@ -67,6 +68,7 @@ function RequestDetailPanel({ projectId, documentId, requestId, active, focusVer
       <ExplanationPanel key={`explanation:${documentId}:${requestId}`} request={detail.request} active={active} onChanged={resource.refresh} />
       <ExamplePanel key={`example:${documentId}:${requestId}`} request={detail.request} active={active} onChanged={resource.refresh} />
       <VisualPanel key={`visual:${documentId}:${requestId}`} request={detail.request} active={active} onChanged={resource.refresh} />
+      <SummaryPanel key={`summary:${documentId}:${requestId}`} request={detail.request} active={active} onChanged={resource.refresh} />
       <h4 className="font-semibold text-slate-900">Cambios registrados</h4>
       {detail.events.length === 0 ? <p className="text-sm">No hay eventos en esta página del historial.</p> : <ol className="space-y-3">
         {detail.events.map(event => <li key={event.id} className="rounded-lg bg-white p-3 text-sm text-slate-800">

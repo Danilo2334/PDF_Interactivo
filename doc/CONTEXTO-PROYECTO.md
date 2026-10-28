@@ -2322,3 +2322,139 @@ el diagrama y la imagen aprobados, con cero errores de consola observados.
 localhost:3000 quedó activo y la pestaña QA de Refuerzos abierta. El usuario
 puede revisar #28 antes de autorizar su integración. No hubo merge de #28,
 modificación de main ni avance a HU023 en esta entrega.
+
+## Revisión e integración de PR #28, 27/10/2026
+
+El nuevo encargo autoriza integrar HU022 si su revisión es correcta y continuar
+con HU023. Se revisaron diff, servicio/proveedor, UI, firmas, RLS y transacciones
+de revisión/publicación del head `659da75d908e269c1a203e6173dd48342a3eff5d`.
+Sin conflictos ni hilos pendientes. Se repitieron **276/276 pruebas** y
+`hu022-live.mjs final`: 29 solicitudes, tres refuerzos, imagen v1 preservada,
+diagrama v2 aprobado, descartes y permisos correctos, SHA-256 original intacto.
+No había checks de estado ni workflows de CI publicados para ese commit.
+
+PR [#28](https://github.com/Danilo2334/PDF_Interactivo/pull/28) integrado en
+develop con merge **`bf9ed6fa99616867a0684558aec5eeadd5a293d9`**, comprobando el
+head esperado. Develop local actualizado por fast-forward. SCRUM-34 Finalizado,
+comentario madre 10136 actualizado; se conservaron sus ocho capturas y los
+comentarios únicos 10133/10134/10135. Main y PR #13 no se modificaron.
+
+## HU023 / SCRUM-35: resumen y conceptos clave, 27/10/2026
+
+Rama `codex/scrum-35-hu023-resumen-conceptos`, desde develop `bf9ed6f`.
+Se leyeron HU023 y SCRUM-103, SCRUM-187 y SCRUM-104. Se continúa el código
+existente; no se reimplementan HU018–HU022 ni se inicia el alcance restante de
+HU024. El usuario activó acceso completo y no se solicitan permisos rutinarios.
+
+### Implementación
+
+- Dos extensiones explícitas, sin premarcar: Muy breve (máximo 350 caracteres)
+  y Breve (máximo 700), con mínimo de 80. Deben guardarse antes de generar;
+  versión y elección vigente se verifican en servidor y PostgreSQL.
+- Gemini `gemini-3.5-flash-lite`, con la configuración privada existente,
+  recibe selección, contexto de la misma página, diagnóstico y dificultad
+  persistidos. Se limita el esquema y la validación a la extensión guardada.
+  No hay clave en cliente, proveedor alternativo de pago, facturación activada
+  ni cambios de SDK/dependencias. Una llamada por generación y timeout de 45 s.
+- Resumen y lista estructurada de uno a ocho conceptos, cada uno con cita
+  literal que contiene su nombre. Se contrastan selección/contexto, tema y
+  citas; se eliminan vacíos y duplicados por mayúsculas/tildes. Un concepto sin
+  sustento en su cita o una salida incoherente con el contrato se rechaza.
+  Esta comprobación no sustituye la revisión semántica: no garantiza ausencia
+  universal de errores de IA y las ediciones son decisiones del propietario.
+- Vista previa separada del texto original, conceptos con citas desplegables
+  y referencia a página/selección. Edición atómica de título, texto y conceptos:
+  agregar/corregir/eliminar crea otra versión pendiente e inmutable.
+- Se reutilizan heads, versiones, auditoría y publicación de HU021/HU022.
+  Una transacción específica de resumen vuelve a validar extensión y conceptos,
+  conserva idempotencia y bloquea versiones obsoletas. El RPC genérico de otro
+  formato no puede aprobar ni editar resúmenes eludiendo esas comprobaciones.
+- Solo la aprobación explícita publica una versión canónica fuera del PDF.
+  Editar después mantiene la aprobación anterior mientras la nueva revisión
+  queda pendiente; descartarla conserva el contenido publicado anterior.
+  La interfaz conserva el borrador local de una pestaña antigua y exige cargar
+  la versión actual antes de guardar/aprobar. Una confirmación de descarte no
+  se arrastra a otra versión.
+- Migración `20261028043253_generate_summary_drafts.sql` creada con CLI y
+  conciliada con el timestamp remoto, aplicada una sola vez mediante MCP tras
+  probarla en PostgreSQL aislado. No hubo db push ni reaplicación de historial.
+  Tablas con RLS, escritura directa revocada, funciones privadas con permisos
+  acotados, firmas con el secreto existente, lease y límites por cuenta.
+- Advisors: sin avisos nuevos de seguridad respecto al baseline. Persisten
+  los avisos previos de Auth/funciones anteriores y ocho políticas RLS previas
+  con evaluación por fila. Los índices se conservan para las consultas previstas;
+  no se eliminan por aparecer inicialmente como no utilizados.
+
+### Pruebas reales y revisión de calidad
+
+Se reutilizaron cuentas QA y el PDF digital, sin tocar documentos personales.
+Se crearon por API autenticada dos solicitudes nuevas de página 1, seleccionando
+las cuatro líneas sobre conservación y transformación de energía. Ambas tuvieron
+análisis y recomendaciones reales; Resumen estaba realmente ofrecido, sin
+fabricar opciones, diagnósticos o estados con SQL:
+
+- Compacta: `2db4154c-57a8-491a-8f9b-524c956bb55c`.
+- Breve: `77565f8b-d6a5-4d26-b3e9-35708994b4a2`.
+
+Se hicieron seis llamadas reales con la configuración gratuita existente: dos
+análisis, dos recomendaciones y dos resúmenes. Cada generación terminó ready
+en el primer intento. No hubo fallo real de cuota, rechazo o timeout en estas
+llamadas; esos casos se cubrieron automáticamente y no se presentan como hechos
+observados del proveedor.
+
+- Gemini produjo 217/350 y 253/700 caracteres. Ambos textos conservan sistema
+  aislado, transformación, alternancia potencial/cinética y suma constante sin
+  rozamiento. No se observaron hechos externos añadidos en esos resultados.
+  Los tres conceptos iniciales de cada respuesta tienen citas literales.
+- Revisión real compacta: se corrigió «energia» a «Energía», se agregó
+  «energia cinetica» con la cita del péndulo y se eliminó «sistema aislado» de
+  la lista. Se editó el resumen a 187 caracteres y el título a
+  «QA HU023 · Conservación y transformación de la energía».
+- Antes se intentó guardar «Temperatura» con una cita sobre energía que no
+  contiene ese nombre. La interfaz mostró el rechazo, HTTP 400, conservando
+  v1 y el contenido sin publicar. La limpieza de duplicados/vacíos fue probada
+  automáticamente; no se atribuyen duplicados ficticios al proveedor real.
+- Guardar la revisión creó v2 pendiente, con cero publicaciones para esta
+  solicitud. Dos pestañas: «BORRADOR LOCAL QA: conservar al actualizar» se
+  mantuvo al actualizar; guardar/aprobar quedó deshabilitado y el POST antiguo
+  devolvió 409. Cargar la versión actual restableció los campos persistidos.
+- Se aprobó v2 explícitamente con teclado. Editar el título creó v3 pendiente:
+  lectura real confirmó que v2 seguía publicada. Descartar v3 conservó v2,
+  sus conceptos y la solicitud approved/approved. La segunda solicitud se
+  descartó en v1 sin publicar. El historial conserva acciones, versiones y fechas.
+- HTTP/SDK reales: sin sesión 401, origen ajeno 403, otra cuenta 404/RLS,
+  documento distinto 409, edición antigua 409, exceso de longitud y concepto
+  no sustentado 400, contexto insuficiente del escaneado 409. Repetir generación
+  ready conservó el intento y no consumió otra llamada de IA. Aprobar un
+  descarte se rechazó con 409.
+- Móvil 390×844: ancho cliente/contenido 390/390, título, resumen y conceptos
+  legibles. Radios, aprobación y navegación por teclado comprobados; cero
+  errores de consola observados. Emulación retirada y capturas inspeccionadas.
+- Baseline final: **31 solicitudes y cuatro refuerzos publicados**. El
+  verificador compara íntegramente las 29 solicitudes y tres publicaciones
+  anteriores con su snapshot inicial: todas intactas, incluida la solicitud
+  personal `1201c3a3-1632-41b0-ae4f-0b989ba676cb`.
+- PDF original conserva SHA-256
+  `e7277d66afd7caba47385cfac2f0e55a2eeb4fb7aa7136409fa35300a6347946`.
+
+### Verificación y evidencias de HU023
+
+**295/295 pruebas automatizadas**, lint, TypeScript y build habitual Turbopack
+aprobados. Nueve comprobaciones PostgreSQL de HU023 cubren generación, citas,
+límites, normalización, versiones, aprobación, idempotencia, permisos y cascada.
+Las pruebas de HU021/HU022 también pasan con la migración nueva. Se actualizaron
+los mocks de importaciones de los tests del workspace/listado al añadir los
+componentes de resumen. El build se ejecutó con dev detenido y después se
+reinició localhost:3000. Node 22.23.3, Next 16.4.3 y dependencias sin cambios.
+
+- SCRUM-103: comentario único **10137**, dos capturas reales de los resúmenes.
+- SCRUM-187: comentario único **10138**, dos capturas de citas/rechazo.
+- SCRUM-104: comentario único **10139**, cuatro capturas de revisión pendiente,
+  pestaña antigua, auditoría y móvil. Ocho imágenes subidas una sola vez.
+- Scripts, snapshot, capturas y resultados permanecen fuera de Git en
+  `HU019/HU023`; `HU019/hu023-live.mjs checks` documenta el estado intermedio
+  v2 pendiente y `final` comprueba el baseline final de 31/cuatro.
+  El script temporal con grants de carga se retiró tras completar las subidas.
+- Se conservan el stash `d6406e0`, la configuración privada y las evidencias
+  anteriores de Jira. Las subtareas siguen En curso hasta enlazar el commit/PR
+  de esta entrega; luego se registrará el estado final en el apartado posterior.

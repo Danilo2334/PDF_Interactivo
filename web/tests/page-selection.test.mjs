@@ -56,6 +56,7 @@ function fixture(path, exportedName, initialProps) {
     if (name === '@/components/documents/reinforcement-submit') return { ReinforcementSubmit: () => null };
     if (name === '@/components/documents/request-list-panel') return { RequestListPanel: requestPanel };
     if (name === '@/components/documents/visual-resource') return { VisualResource: () => null };
+    if (name === '@/components/documents/summary-resource') return { SummaryResource: () => null };
     if (name === '@/lib/validations/reinforcement-request') return requestValidation;
     if (name === '@/lib/reinforcements/submission') return requestSubmission;
     throw Error(`Unexpected dependency ${name}`);
