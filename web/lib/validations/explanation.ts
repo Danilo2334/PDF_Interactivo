@@ -27,8 +27,9 @@ export function validateExplanation(value: unknown, context: AnalysisContext, di
   const output = explanationContentSchema.parse(value), limits = EXPLANATION_LIMITS[level];
   const normalize = (s: string) => s.normalize("NFC").replace(/\s+/g, " ").trim();
   if (!context.enough || !diagnosis.sufficient || output.text.length < limits.min || output.text.length > limits.max
-    || !normalize(context.selectedText).includes(normalize(output.sourceQuote))
-    || normalize(output.topicReference) !== normalize(diagnosis.topic)
+    // Match the transaction's literal checks before attempting persistence.
+    || !context.selectedText.includes(output.sourceQuote)
+    || output.topicReference !== diagnosis.topic
     || !diagnosis.concepts.some(concept => normalize(output.text).toLocaleLowerCase("es").includes(normalize(concept).toLocaleLowerCase("es"))))
     throw Error("Explanation does not match the saved source, topic or detail level");
   return output;

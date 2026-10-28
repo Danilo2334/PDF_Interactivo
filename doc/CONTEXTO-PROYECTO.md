@@ -2017,3 +2017,25 @@ conservan main, develop, el stash `d6406e0` y todas las ramas anteriores.
 - HU020 está lista para revisión funcional de la explicación guardada. No se
   implementó HU021 ni aprobación/publicación HU024; HU017 conserva su pendiente
   de aprobación real y Sprint 3 permanece cerrado con sus evidencias anteriores.
+
+## Revisión autorizada de PR #25/#26 y Turbopack, 27/10/2026
+
+El usuario autorizó resolver el build, revisar e integrar #25 → #26 a develop y
+continuar con HU021. Se reprodujo la salida prematura del proceso auxiliar
+PostCSS/CSS de Turbopack. Se consultaron las guías locales de Next 16.4.3 y
+https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopackPluginRuntimeStrategy.
+En Windows se utiliza `experimental.turbopackPluginRuntimeStrategy=workerThreads`;
+otras plataformas conservan el valor predeterminado. No se sustituyó Turbopack,
+no se actualizaron paquetes ni Node (22.23.3) y no se usó forceWorkerThreads.
+La opción es experimental; Next conserva su fallback de compatibilidad en
+versiones Node afectadas, por lo que no se afirma una validación en otros Node/SO.
+El build habitual de Turbopack y TypeScript pasó dos veces (primera compilación
+9,3 s; siguiente 2,8 s). El dev anterior se reinició con esta configuración.
+
+La revisión de #26 detectó que JavaScript aceptaba citas/temas normalizados que
+la transacción exige literales: se alineó la validación antes de persistir y se
+añadieron casos de diferencias Unicode/espacios. Se evita que una salida inválida
+deje la generación pendiente hasta vencer el lease. Suite 237/237 y lint correctos;
+regresión HTTP/SDK real aprobada, mismo intento y SHA-256, sin llamadas nuevas a IA.
+No hay threads de revisión, statuses ni workflows registrados en los heads
+consultados: estos resultados son locales y reales, no CI remoto inventado.

@@ -12,6 +12,8 @@ test('HU020 validates source grounding, diagnostic topic, concepts and the lengt
     assert.throws(()=>schemas.validateExplanation(value,context,diagnosis,'brief'));
   assert.throws(()=>schemas.validateExplanation(explanation,{...context,enough:false},diagnosis,'intermediate'));
   assert.throws(()=>schemas.validateExplanation(explanation,context,diagnosis,'detailed'));
+  assert.throws(()=>schemas.validateExplanation({...explanation,sourceQuote:context.selectedText.replace('energía','energía')},context,diagnosis,'intermediate'));
+  assert.throws(()=>schemas.validateExplanation({...explanation,topicReference:diagnosis.topic+'  '},context,{...diagnosis,topic:' '+diagnosis.topic},'intermediate'));
   assert.equal(schemas.explanationInputSchema.safeParse({documentId:record.document_id,action:'generate',expectedVersion:1,choiceVersion:1,status:'approved'}).success,false);
 });
 
