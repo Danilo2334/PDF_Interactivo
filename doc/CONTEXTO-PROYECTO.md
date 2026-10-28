@@ -2881,3 +2881,23 @@ SCRUM-192 **10152**, SCRUM-110 **10153**, dos imágenes por subtarea. Se leyó
 `renderedBody` y se confirmaron los ocho nombres/miniaturas. El script temporal
 con grants de carga se eliminó después de subirlos. Falta enlazar commit/PR en
 esos mismos comentarios y registrar la entrega, sin duplicar capturas.
+
+
+### Entrega de HU026
+
+Commit funcional publicado **`5cf209a36ff77359957f71aa80fc5d8db073f52a`**.
+PR borrador **[#32](https://github.com/Danilo2334/PDF_Interactivo/pull/32)**
+sobre `codex/scrum-37-hu025-panel-refuerzo` (#31). Orden de integración pendiente:
+#30 → #31 → #32; tras cada predecesor integrado, cambiar base del siguiente a
+develop y revisar nuevamente diff/checks. Ninguno de esos tres PR se integró.
+
+SCRUM-38 **En revisión**, comentario madre único **10154**. SCRUM-109,
+SCRUM-191, SCRUM-192 y SCRUM-110 **Finalizado**. Sus comentarios 10150–10153
+incluyen commit/PR y conservan las ocho imágenes verificadas en una lectura
+posterior, sin volver a subirlas. La comprobación adicional real confirmó
+inicio contraído guardado tras recarga y se dejó de nuevo expandido el ejemplo.
+
+Se continúa **HU027 / SCRUM-39**, incorporación de recurso multimedia, desde
+la rama descendiente de HU026. Se mantienen configuración local, evidencia,
+main y stash. El servidor de producción local sigue disponible hasta el
+siguiente cambio controlado a desarrollo.
