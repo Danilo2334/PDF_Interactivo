@@ -2039,3 +2039,131 @@ deje la generación pendiente hasta vencer el lease. Suite 237/237 y lint correc
 regresión HTTP/SDK real aprobada, mismo intento y SHA-256, sin llamadas nuevas a IA.
 No hay threads de revisión, statuses ni workflows registrados en los heads
 consultados: estos resultados son locales y reales, no CI remoto inventado.
+
+### Integración completada y continuación HU021, 27/10/2026
+
+- Corrección de Turbopack publicada en `694306b16f473258ec4ef00d72c3930cc3b3b77a`.
+  PR #25 revisado e integrado primero: merge
+  `97980e9f5c38e079fad0b24146bd88ca9cdc4b51`. Después se cambió la base de #26
+  a develop, se revisaron su diff restante y comprobaciones y se integró:
+  `757f88b7ff4717d8504d72c384c5ec131aadc5cf`. develop local/remoto quedaron
+  en ese segundo merge. main y PR #13 permanecen sin cambios.
+- SCRUM-32 Finalizado. Se actualizaron sus resultados y los comentarios únicos
+  10112/SCRUM-92 y 10126/SCRUM-184, conservando sus 7 y 2 capturas anteriores
+  y añadiendo una regresión real a cada uno: lectura posterior confirma 8 y 3
+  nombres únicos respectivamente. No se borraron evidencias del Sprint 3.
+
+## HU021 / SCRUM-33: ejemplo o analogía y revisión del propietario, 27/10/2026
+
+Rama `codex/scrum-33-hu021-ejemplos-analogias`, creada desde develop `757f88b`.
+Se leyeron historia y subtareas SCRUM-99, SCRUM-185 y SCRUM-100. Esta última
+exige reutilizar edición/versionado/aprobación de HU024, que aún no existían:
+se añadió la base compartida mínima para HU021. No se implementó regeneración
+ni se declara completada HU024; HU022 y las historias siguientes no se iniciaron.
+
+### Implementación
+
+- Dos modalidades explícitas, Ejemplo práctico y Analogía, sin premarcar.
+  Guardar modalidad/versiones es obligatorio antes de generar. La IA recibe
+  diagnóstico suficiente, selección, texto cercano, necesidad y modalidad del
+  servidor; no acepta contexto ni resultados arbitrarios desde el navegador.
+- Gemini nativo usa la configuración privada existente `GEMINI_API_KEY` y
+  `GEMINI_ANALYSIS_MODEL=gemini-3.5-flash-lite`. Una llamada por acción, timeout
+  de 45 s, errores seguros, sin reintento automático ni proveedor de pago.
+  Cita literal y tema exacto restringidos también en el esquema; concepto
+  requerido y ortografía explícitos. Salidas incompletas, contradictorias según
+  contrato, sin cita o sin concepto se rechazan; esto no sustituye la revisión
+  semántica del propietario. No se promete ausencia universal de errores de IA.
+- Generación firmada con el secreto existente, lease/attempt/versiones y límites
+  por cuenta; reclamaciones duplicadas recuperan el intento sin consumir IA.
+  Tablas nuevas privadas por RLS y sin escritura directa del usuario.
+- Versiones inmutables, operaciones idempotentes, edición de título/texto,
+  confirmación explícita antes de aprobar y descarte confirmado. Una edición
+  posterior a la aprobación queda pendiente y conserva el refuerzo aprobado
+  anterior. Solo la transacción del propietario publica una versión en
+  `reinforcements`, siempre fuera del PDF. Historial registra autor/fecha/acción.
+- Las actualizaciones del mismo detalle/ejemplo conservan montado el editor;
+  URL distinta o error de acceso no reutilizan datos anteriores. Una pestaña
+  antigua conserva su texto local y bloquea guardar/aprobar hasta cargar la
+  versión actual. Guardar en la propia pestaña sincroniza la versión recibida.
+- Migraciones creadas con CLI, aplicadas una sola vez mediante MCP y conciliadas
+  con los timestamps remotos: `20261028031755_generate_example_drafts.sql` y
+  `20261028032600_index_review_head_current_version.sql`. No hubo db push,
+  reaplicación de migraciones anteriores, cambios al secreto ni RLS desactivado.
+  El índice adicional elimina el aviso nuevo de FK compuesta sin índice. Los
+  avisos de seguridad conservan el baseline anterior; los ocho avisos de
+  evaluación RLS por fila pertenecen a documentos/proyectos previos.
+
+### Pruebas reales y resultados observados
+
+Se usaron las cuentas QA ya existentes y el PDF digital de prueba. No se alteró
+la solicitud personal `1201c3a3-1632-41b0-ae4f-0b989ba676cb`: conserva su texto,
+necesidad, explicación y estado generated/review. Baseline actual: **27**
+solicitudes, las 25 anteriores más dos dedicadas a HU021:
+
+- Práctico `d26e29e7-2de6-4838-9184-89186daf9a6f`.
+- Analogía `806915fa-1acc-4701-99a7-7b5e2f5b9f43`.
+
+Ambas seleccionan las dos líneas del péndulo en página 1. Análisis y
+recomendaciones se obtuvieron por el flujo real; Ejemplo estaba realmente
+ofrecido. No se insertaron diagnósticos, opciones ni estados mediante SQL.
+Se guardaron ambas modalidades y Analogía sobrevivió recarga/reapertura.
+
+Cada modalidad terminó con generación ready en su tercer intento. Los dos
+intentos previos de cada una quedaron como errores reales, sin contenido:
+el diagnóstico acotado reprodujo cita alterada y concepto sin tildes. Se reforzó
+el contrato de salida y el prompt sin relajar la validación. También hubo un
+reintento de recomendaciones del práctico por salida inválida. Las llamadas de
+diagnóstico externas con el mismo texto QA no se presentan como generaciones
+persistidas. Todo se ejecutó con la clave/modelo existente y sin activar pagos.
+
+El ejemplo explica altura, velocidad, transformación y suma constante sin
+rozamiento. En revisión se añadió la referencia de energía potencial cero.
+La analogía relaciona dos reservas de monedas con ambas formas de energía; la
+redacción inicial de «gastar» resultaba ambigua para un total constante y se
+reescribió como traslado entre recipientes, aclarando la disipación al entorno.
+No se aprobó esa analogía automáticamente por tener JSON válido.
+
+Flujo real de revisión:
+
+- Práctico: v1 IA, v2 aclaración física, v3 título QA aprobado explícitamente;
+  se publicó **un** refuerzo, versión aprobada
+  `7f5f5789-029f-48cf-a940-6f5e77b71b6a`. Nueva v4 quedó pendiente sin sustituir
+  v3; al descartarla se conservó v3 publicada y la solicitud approved/approved.
+- Analogía: v1 IA, v2 edición del propietario y descarte confirmado sin publicar.
+  Solicitud generated/discarded, historial y ambas versiones conservados.
+- Dos pestañas: título local «BORRADOR LOCAL QA: conservar ante actualización»
+  permaneció tras actualizar; versión antigua deshabilitada y POST obsoleto 409.
+  Sesión ausente 401, origen ajeno 403, otra cuenta 404/RLS, documento distinto
+  409, publicación directa denegada y aprobar un descarte 409. Contexto
+  insuficiente del PDF escaneado 409, sin llamar al proveedor.
+- Escritorio, radios/checkbox/teclado, recarga y móvil 390×844 comprobados.
+  Ancho cliente/contenido 390/390; emulación retirada. Cero errores de consola
+  en la sesión observada. Capturas inspeccionadas antes de subir: una captura
+  inicial vacía se reemplazó por píxeles reales, nunca se utilizó como evidencia.
+- PDF original conserva SHA-256
+  `e7277d66afd7caba47385cfac2f0e55a2eeb4fb7aa7136409fa35300a6347946`.
+
+**257/257 pruebas automatizadas** aprobadas. Diez comprobaciones PostgreSQL
+aisladas cubren firmas, propiedad, idempotencia, edición, aprobación, descarte,
+versión publicada preservada, lease/reintento y eliminación en cascada del
+proyecto. API/proveedor/UI vuelven a pasar tras los ajustes finales. Lint y build
+habitual Turbopack/TypeScript correctos, sin Webpack. El build final se ejecutó
+con dev detenido y después se reinició localhost:3000; ejecutar build junto a
+dev había provocado un ciclo de recarga del entorno. No se actualizaron Node
+o dependencias. La configuración experimental de Windows mantiene la limitación
+de compatibilidad de Node documentada en la revisión anterior.
+
+### Jira y continuidad de HU021
+
+- SCRUM-99: comentario único **10129**, una captura real.
+- SCRUM-185: comentario único **10130**, dos capturas reales.
+- SCRUM-100: comentario único **10131**, tres capturas reales.
+- Las tres subtareas Finalizado por los criterios comprobados. La lectura
+  posterior confirmó 1/2/3 imágenes sin nombres repetidos. HU021 queda para
+  revisión/integración de su PR; no se autoriza su merge en este encargo.
+- Scripts, cuentas, capturas y resultados QA permanecen fuera del repositorio en
+  `HU019/HU021`; los grants temporales de carga se retiraron. No se versionaron
+  .env.local ni credenciales. Los scripts antiguos que exigen 24/25 solicitudes
+  o cero refuerzos ya no representan el baseline: `hu021-live.mjs` valida 27,
+  un publicado y descartes reales. El stash `d6406e0` permanece intacto.

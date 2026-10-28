@@ -26,9 +26,9 @@ export async function authorizeRequest(projectId: string, requestId: string, doc
   return { db, userId: access.userId, row: parsed.data };
 }
 
-export async function readSmallJson(request: Request): Promise<{ body: unknown; response?: never } | { response: Response; body?: never }> {
-  // Bound the stream before allocating its body. Only a version and action
-  // belong here; the server obtains document context independently.
+export async function readSmallJson(request: Request, maxBytes = 1000): Promise<{ body: unknown; response?: never } | { response: Response; body?: never }> {
+  // Bound the stream before allocation. Only the owner-edit endpoint opts into
+  // a larger server-defined limit; generation obtains its context independently.
   const reader = request.body?.getReader();
   if (!reader) return { response: reply({ message: "Solicitud no válida." }, 400) };
   const chunks: Uint8Array[] = []; let size = 0;
@@ -36,7 +36,7 @@ export async function readSmallJson(request: Request): Promise<{ body: unknown; 
     while (true) {
       const chunk = await reader.read(); if (chunk.done) break;
       size += chunk.value.byteLength;
-      if (size > 1000) { await reader.cancel(); return { response: reply({ message: "Solicitud demasiado grande." }, 413) }; }
+      if (size > maxBytes) { await reader.cancel(); return { response: reply({ message: "Solicitud demasiado grande." }, 413) }; }
       chunks.push(chunk.value);
     }
   } catch { return { response: reply({ message: "No fue posible leer la solicitud." }, 400) }; }

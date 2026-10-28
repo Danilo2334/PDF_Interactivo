@@ -3,13 +3,13 @@
 import { useCallback, useEffect, useState } from "react";
 import { createRequestResource, type RequestResource } from "@/lib/reinforcements/request-resource";
 
-export function useRequestResource<T>(url: string, active: boolean, parse: (body: unknown) => T) {
+export function useRequestResource<T>(url: string, active: boolean, parse: (body: unknown) => T, retainOnRefresh = false) {
   const [refresh, setRefresh] = useState(0);
   const key = `${url}:${refresh}`;
-  const [state, setState] = useState<{ key: string; result: RequestResource<T> } | null>(null);
+  const [state, setState] = useState<{ key: string; url: string; result: RequestResource<T> } | null>(null);
   useEffect(() => {
     if (!active) return;
-    const reader = createRequestResource(url, parse, result => setState({ key, result }));
+    const reader = createRequestResource(url, parse, result => setState({ key, url, result }));
     let cancelled = false;
     let timer: number | undefined;
     async function poll() {
@@ -21,5 +21,8 @@ export function useRequestResource<T>(url: string, active: boolean, parse: (body
     void poll();
     return () => { cancelled = true; window.clearTimeout(timer); reader.dispose(); };
   }, [url, key, active, parse]);
-  return { result: state?.key === key ? state.result : null, refresh: useCallback(() => setRefresh(value => value + 1), []) };
+  // Editable review panels must stay mounted while refreshing this exact URL.
+  // Never retain another request/document or suppress a failed access response.
+  return { result: state && (state.key === key || retainOnRefresh && state.url === url) ? state.result : null,
+    refresh: useCallback(() => setRefresh(value => value + 1), []) };
 }
