@@ -45,6 +45,7 @@ test('HU024 owner-controlled regeneration preserves approved versions across eve
       create table storage.objects(id uuid primary key default gen_random_uuid(),bucket_id text,name text);alter table storage.objects enable row level security;
       grant usage on schema storage to authenticated;grant select,insert,delete on storage.objects to authenticated;`);
     await db.exec(readFileSync(new URL(readdirSync(migrationDir).find(n=>n.endsWith('_reinforcement_multimedia.sql')),migrationDir),'utf8'));
+    await db.exec(readFileSync(new URL(readdirSync(migrationDir).find(n=>n.endsWith('_optional_reinforcement_quizzes.sql')),migrationDir),'utf8'));
     const secret=(await db.query('select secret from private.reinforcement_request_secrets')).rows[0].secret;process.env.REINFORCEMENT_REQUEST_SECRET=secret;
     async function asUser(id=owner,role='authenticated'){await db.exec('reset role');await db.query("select set_config('request.jwt.claim.sub',$1,false)",[id]);await db.exec(`set role ${role}`);}
     async function signed(name,signer,input,mutate=x=>x){const args=mutate(signer(input));return(await db.query(`select public.${name}($1,$2) result`,[args.p_payload,args.p_signature])).rows[0].result;}
@@ -165,6 +166,70 @@ test('HU024 owner-controlled regeneration preserves approved versions across eve
       for(const url of ['http://es.wikipedia.org/wiki/Energia','https://es.wikipedia.org.evil.invalid/wiki/Energia','https://localhost/private','https://es.wikipedia.org/wiki/Energia?redirect=evil'])
         await assert.rejects(change('prepare',{...link,assetId:randomUUID(),url}),e=>e.code==='23514');
       await assert.rejects(change('prepare',{...link,assetId:randomUUID(),kind:'image',mime:'image/svg+xml',size:100,storagePath:`${owner}/fake.svg`,fileName:'fake.svg',fileHash:'a'.repeat(64),url:null}),e=>e.code==='23514');
+    });
+    await t.test('HU028 optional private quiz uses its own immutable review versions and never gates or mutates the reinforcement',async()=>{
+      const input=await generated('example');input.kind='example';
+      const sourceVersion=(await db.query('select id from public.reinforcement_review_versions where request_id=$1 and version=1',[input.requestId])).rows[0].id;
+      const source=(await db.query('select public.get_reinforcement_quiz_source($1,$2,$3) result',[input.requestId,documentId,sourceVersion])).rows[0].result;
+      assert.equal(source.text,example.text);assert.equal(source.documentId,documentId);assert.equal(source.requestId,input.requestId);assert.match(source.hash,/^[a-f0-9]{64}$/);
+      const signer=load('lib/reinforcements/quiz-proof.ts').signQuizProof;
+      const base={userId:owner,requestId:input.requestId,documentId,sourceVersionId:sourceVersion};
+      const change=(action,values={},mutate)=>signed('change_reinforcement_quiz',signer,{...base,action,...values},mutate);
+      const operation=(hash='a')=>({operationId:randomUUID(),inputHash:hash.repeat(64)});
+      const omitted=await change('choose',{...operation(),choice:'omit',choiceVersion:0});assert.equal(omitted.head.choice,'omit');assert.equal(omitted.head.current_version,0);
+      await review(input,'approve',1);const original=(await pubs(input))[0];assert.ok(original);
+      await change('choose',{...operation(),choice:'generate',choiceVersion:1});
+      const makeContent=n=>({title:'Mini quiz sobre el refuerzo seleccionado',allowRetries:false,questions:Array.from({length:n},(_,i)=>({
+        prompt:`Pregunta ${i+1}: ¿qué idea expresa el refuerzo?`,options:['La energía se transforma.','La energía desaparece.'],correctIndex:0,
+        explanation:'La explicación se apoya en el texto del refuerzo elegido.',sourceQuote:source.text.slice(0,100)}))});
+      const first={...operation('b'),expectedVersion:0,choiceVersion:2,questionCount:1};
+      assert.equal((await change('start',first)).disposition,'started');assert.equal((await change('start',first)).disposition,'busy');
+      assert.equal((await change('start',{...first,operationId:randomUUID()})).disposition,'busy');
+      await assert.rejects(change('finish',{...first,status:'ready',content:makeContent(3),model:'isolated-test'}),e=>e.code==='23514');
+      const invalid=makeContent(1);invalid.questions[0].sourceQuote='Una cita ausente de este refuerzo';
+      await assert.rejects(change('finish',{...first,status:'ready',content:invalid,model:'isolated-test'}),e=>e.code==='23514');
+      const finished=await change('finish',{...first,status:'ready',content:makeContent(1),model:'isolated-test'});assert.equal(finished.head.decision,'pending');assert.equal(finished.head.approved_version_id,null);
+      assert.equal((await change('start',first)).disposition,'cached');
+      const approval={...operation('c'),expectedVersion:1,confirmed:true},approved=await change('approve',approval);
+      assert.equal(approved.head.approved_by,owner);assert.ok(approved.head.approved_at);assert.deepEqual(await change('approve',approval),approved);
+      const versionOne=(await db.query('select * from public.reinforcement_quiz_versions where request_id=$1 and version=1',[input.requestId])).rows[0];
+      const second={...operation('d'),expectedVersion:1,choiceVersion:2,questionCount:3};await change('start',second);
+      const updated=await change('finish',{...second,status:'ready',content:makeContent(3),model:'isolated-test'});
+      assert.equal(updated.head.current_version,2);assert.equal(updated.head.decision,'pending');assert.equal(updated.head.approved_version_id,versionOne.id);
+      await assert.rejects(change('approve',{...operation(),expectedVersion:1,confirmed:true}),e=>e.code==='PT409');
+      const discarded=await change('discard',{...operation(),expectedVersion:2});assert.equal(discarded.head.approved_version_id,versionOne.id);
+      const edited=makeContent(2);edited.allowRetries=true;
+      const saved=await change('edit',{...operation('e'),expectedVersion:2,content:edited});assert.equal(saved.head.current_version,3);assert.equal(saved.head.decision,'pending');
+      assert.equal(saved.head.approved_version_id,versionOne.id);assert.deepEqual((await db.query('select * from public.reinforcement_quiz_versions where id=$1',[versionOne.id])).rows[0],versionOne);
+      const bad=makeContent(1);bad.questions[0].options=['Iguales','iguales'];
+      await assert.rejects(change('edit',{...operation(),expectedVersion:3,content:bad}),e=>e.code==='23514');
+      bad.questions[0].options=['Una','Otra'];bad.questions[0].correctIndex=2;
+      await assert.rejects(change('edit',{...operation(),expectedVersion:3,content:bad}),e=>e.code==='23514');
+      await assert.rejects(change('approve',{...operation(),expectedVersion:3,confirmed:false}),e=>e.code==='PT409');
+      await change('approve',{...operation(),expectedVersion:3,confirmed:true});assert.deepEqual((await pubs(input))[0],original);
+      const fourth={...operation(),expectedVersion:3,choiceVersion:2,questionCount:1};await change('start',fourth);
+      await change('finish',{...fourth,status:'ready',content:makeContent(1),model:'isolated-test'});
+      assert.equal((await db.query('select content from public.reinforcement_quiz_versions where request_id=$1 and version=4',[input.requestId])).rows[0].content.allowRetries,true);
+      await assert.rejects(db.query("update public.reinforcement_quiz_versions set content='{}'"),e=>e.code==='42501');
+      await asUser(other);for(const name of ['versions','heads','events','jobs'])assert.equal((await db.query('select * from public.reinforcement_quiz_'+name)).rows.length,0);
+      await assert.rejects(change('choose',{...operation(),choice:'omit',choiceVersion:2,userId:other}),e=>e.code==='42501');await asUser();
+      await assert.rejects(change('choose',{...operation(),choice:'omit',choiceVersion:2},p=>({...p,p_signature:'0'.repeat(64)})),e=>e.code==='42501');
+      const different=await generated('example'),differentVersion=(await db.query('select id from public.reinforcement_review_versions where request_id=$1',[different.requestId])).rows[0].id;
+      await assert.rejects(db.query('select public.get_reinforcement_quiz_source($1,$2,$3)',[input.requestId,documentId,differentVersion]),e=>e.code==='PT409');
+      const otherBase={...base,requestId:different.requestId,sourceVersionId:differentVersion};
+      const call=(action,values)=>signed('change_reinforcement_quiz',signer,{...otherBase,action,...values});
+      await call('choose',{...operation(),choice:'generate',choiceVersion:0});const stale={...operation('f'),expectedVersion:0,choiceVersion:1,questionCount:1};await call('start',stale);
+      await review(different,'edit',1,{title:'Refuerzo revisado mientras se genera quiz',text:example.text+' Cambio explícito de la fuente.'});
+      const staleResult=await call('finish',{...stale,status:'ready',content:makeContent(1),model:'isolated-test'});assert.equal(staleResult.job.error_code,'source_changed');
+      assert.equal((await db.query('select * from public.reinforcement_quiz_versions where request_id=$1',[different.requestId])).rows.length,0);
+      const currentSource=(await db.query('select id from public.reinforcement_review_versions where request_id=$1 and version=2',[different.requestId])).rows[0].id;
+      otherBase.sourceVersionId=currentSource;
+      await call('choose',{...operation(),choice:'generate',choiceVersion:1});
+      const expired={...operation(),expectedVersion:0,choiceVersion:2,questionCount:1};await call('start',expired);
+      await db.exec('reset role');await db.query("update public.reinforcement_quiz_jobs set lease_expires_at=clock_timestamp()-interval '1 second' where operation_id=$1",[expired.operationId]);await asUser();
+      const replacement={...operation(),expectedVersion:0,choiceVersion:2,questionCount:1};await call('start',replacement);
+      await assert.rejects(call('finish',{...expired,status:'ready',content:makeContent(1),model:'isolated-test'}),e=>e.code==='PT409');
+      assert.equal((await call('finish',{...replacement,status:'error',errorCode:'insufficient_quiz'})).job.error_code,'insufficient_quiz');
     });
   }finally{if(previous===undefined)delete process.env.REINFORCEMENT_REQUEST_SECRET;else process.env.REINFORCEMENT_REQUEST_SECRET=previous;await db.close();}
 });

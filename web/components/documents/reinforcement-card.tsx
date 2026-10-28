@@ -6,6 +6,7 @@ import { cardRecordSchema } from "@/lib/validations/reinforcement-card";
 import { VisualResource } from "@/components/documents/visual-resource";
 import { SummaryResource } from "@/components/documents/summary-resource";
 import { ReinforcementMedia } from "@/components/documents/reinforcement-media";
+import { QuizPanel } from "@/components/documents/quiz-panel";
 
 type Props = { reinforcement: Reinforcement; projectId: string; canManage: boolean; onSource: (item: Reinforcement) => void };
 export function ReinforcementCard({ reinforcement: item, projectId, canManage, onSource }: Props) {
@@ -62,6 +63,8 @@ export function ReinforcementCard({ reinforcement: item, projectId, canManage, o
         Ver {source.selection?.kind === "area" ? "zona" : source.selection?.kind === "text" ? "selección de texto" : "página"} original · Página {item.page_number}
       </button>}
       {hasSource && <ReinforcementMedia reinforcement={item} projectId={projectId} canManage={canManage} />}
+      {canManage && hasSource && item.approved_version_id && <QuizPanel key={`${item.id}-${item.approved_version_id}`} projectId={projectId} documentId={item.document_id}
+        requestId={item.source_request_id!} sourceVersionId={item.approved_version_id} active={expanded} />}
       {canManage && hasSource && item.approved_version_id && <fieldset disabled={busy} className="mt-4 space-y-3 rounded-lg bg-slate-50 p-4">
         <legend className="text-sm font-semibold">Presentación de esta tarjeta</legend>
         <p className="text-sm text-slate-600">El título y el contenido corresponden a la versión aprobada. Para modificarlos, revisa la solicitud de origen.</p>

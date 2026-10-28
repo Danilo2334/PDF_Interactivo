@@ -6,6 +6,7 @@ import { regenerationViewSchema, regenerationJobSchema } from "@/lib/validations
 import { reviewHeadSchema } from "@/lib/validations/example";
 import { OwnerReviewPanel, type ReviewAction } from "@/components/documents/owner-review-panel";
 import type { RequestRecord } from "@/lib/validations/request-list";
+import { QuizPanel } from "@/components/documents/quiz-panel";
 const parseView=(body:unknown)=>regenerationViewSchema.parse(body);
 const buttonClass="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-800 disabled:opacity-50";
 export function RegenerationPanel({request,active,onChanged}:{request:RequestRecord;active:boolean;onChanged:()=>void}) {
@@ -37,10 +38,12 @@ export function RegenerationPanel({request,active,onChanged}:{request:RequestRec
     return version;
   }
   if(!view?.kind||!view.ready&&!view.review)return resource.result?.error?<p role="alert">{resource.result.error}</p>:null;
+  const quizSourceId=view.review?.decision==="discarded"?view.review.approved_version_id:view.versions.find(version=>version.version===view.review?.current_version)?.id;
   return <section aria-label="Ajustar y regenerar refuerzo" className="min-w-0 space-y-3 rounded-lg border border-slate-300 bg-white p-4 text-sm">
     <h4 className="font-semibold">Ajustar y regenerar refuerzo</h4>
     {view.kind==="explanation"&&!view.review&&<><p>La explicación generada es un borrador privado. Prepara su revisión para editarla, aprobarla o descartarla.</p><button type="button" className={buttonClass} disabled={!active||busy} onClick={()=>execute("prepare")}>Revisar explicación generada</button></>}
     {view.kind==="explanation"&&view.review&&<OwnerReviewPanel view={view} explanation disabled={!active||busy||processing} onReview={execute}/>}
+    {quizSourceId&&<QuizPanel key={`${request.id}-${quizSourceId}`} projectId={request.project_id} documentId={request.document_id} requestId={request.id} sourceVersionId={quizSourceId} active={active&&!busy&&!processing}/>}
     {view.review&&<form className="space-y-2" onSubmit={event=>{event.preventDefault();void execute("regenerate")}}>
       <p>Se usará la versión guardada {view.review.current_version}, su contexto y tus instrucciones. Guarda primero cualquier edición que quieras incluir.</p>
       <label className="block font-medium" htmlFor={id}>Instrucciones para regenerar</label>

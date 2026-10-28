@@ -3047,3 +3047,140 @@ de HU027. Mantener el borrador y las respuestas correctas restringidos al
 propietario; aprobación explícita de cada versión y conservación de la anterior.
 Omitir el quiz no debe bloquear el refuerzo. Su publicación se integra en HU032.
 La producción local continúa en puerto 3000 hasta el cambio controlado a dev.
+
+## 2026-10-28 — HU028 / SCRUM-40: mini quiz opcional y revisión privada
+
+Se continúa desde HU027, en `codex/scrum-40-hu028-mini-quiz`, sin integrar
+los PR #30–#33. Se conserva el stash `d6406e0` y la configuración privada.
+
+La decisión crear/omitir es expresa y se guarda con control de versión. No se
+llama a IA por abrir el panel ni por omitir. Cada generación pide exactamente
+una, dos o tres preguntas y crea una versión privada pendiente. La fuente es
+una versión inmutable del refuerzo seleccionado: título, texto y conceptos
+literalmente presentes, sin PDF completo, otros refuerzos ni recursos multimedia.
+El panel privado se carga bajo demanda; sus respuestas correctas no aparecen
+en el HTML inicial del proyecto.
+
+Migración **20261028123759_optional_reinforcement_quizzes.sql**, aplicada una vez
+y reconciliada: versiones inmutables, cabecera de elección/revisión, eventos y
+trabajos con RLS de propietario. Operaciones firmadas por servidor, comprobación
+de sesión activa, propiedad y documento vigente; escrituras directas revocadas.
+UUID y hash de entrada hacen idempotente cada operación. Máximo dos trabajos
+simultáneos por cuenta, diez en cinco minutos y arrendamiento de 120 segundos.
+El trabajador caducado o cuya fuente cambió no puede guardar una respuesta tardía.
+
+La revisión reutiliza `OwnerReviewPanel` de HU024 con cabecera independiente del
+refuerzo. Aprobar requiere casilla expresa y registra versión, propietario y
+fecha. Editar/regenerar crea otro borrador; descartar no elimina la aprobación
+anterior. Omitir no bloquea aprobar el refuerzo. La publicación del quiz se
+integra en HU032; no se afirma que esa publicación esté implementada aquí.
+SCRUM-114 depende además de validar preguntas/respuestas en HU029 y excluir
+borradores/rechazados de la publicación en HU032: permanece pendiente de esas
+comprobaciones, aunque su revisión privada ya se haya probado.
+
+### Calidad de IA: fallos reales y correcciones
+
+Se usa **gemini-3.5-flash-lite**, configuración de servidor existente, nivel
+gratuito, sin activar pagos, cambiar modelo ni recurrir a otro proveedor.
+La documentación oficial del modelo confirma salida estructurada y nivel gratuito.
+La primera generación real sobre conservación de energía produjo tres preguntas
+con respuestas y citas coherentes. Su regeneración de dos preguntas mantuvo la
+aprobación anterior, pero introdujo el distractor externo «materia»; se corrigió
+mediante edición explícita, sin aprobar esa salida original.
+
+En el refuerzo de agua, una primera pregunta tenía respuesta/cita correctas pero
+distractores sobre precipitación, filtración y calentamiento global que no estaban
+en la fuente. Una segunda, tras ajustar el prompt y restringir vocabulario,
+invertía una negación sobre el alcance del esquema. **Ambas quedaron sin aprobar
+y se descartaron**. Sus capturas se conservan como diagnóstico, no como pruebas
+de calidad aprobada.
+
+Por estos hallazgos se añadió una barrera conservadora de vocabulario para todas
+las opciones de IA, incluidos distractores. Ignora mayúsculas/acentos y admite
+palabras funcionales; los términos de contenido deben aparecer en título, texto
+o conceptos. Puede rechazar paráfrasis válidas y no demuestra corrección semántica.
+No limita las correcciones expresas del propietario.
+
+Después se ejecuta una **segunda evaluación independiente y acotada** con Gemini:
+contrasta enunciado, negaciones, alcance, opciones, índice correcto, explicación y
+cita con la misma fuente. Debe confirmar una única respuesta y coincidir con el
+índice propuesto; si falla, no se guarda esa versión. No repara ni reintenta por
+su cuenta y nunca aprueba. Dos llamadas como máximo por generación: hasta 45 s
+para generar y 30 s para revisar; espera del cliente 90 s y lease de 120 s.
+La revisión humana sigue siendo necesaria: ni el vocabulario ni otro modelo
+constituyen una garantía absoluta de exactitud pedagógica.
+
+También se corrigió un aviso de aprobación que permanecía visible cuando otra
+sesión creaba un borrador posterior. El mensaje se vincula ahora a versión,
+elección y decisión. Prueba real: versión 3 aprobada, edición HTTP normal a 4
+pendiente, actualización visual sin aviso antiguo y versión 3 conservada; después
+se descartó 4. No hubo aprobación silenciosa de la nueva versión.
+
+### Verificación real y estado de entrega de HU028
+
+**335/335 pruebas automatizadas**, lint y build de producción/TypeScript
+aprobados. Después de ajustar el tiempo de evaluación y evitar mensajes de error
+duplicados se repitieron los doce casos afectados, lint y build. PGlite acredita
+idempotencia, bloqueo/concurrencia, firmas, RLS, límites, trabajador caducado,
+fuente cambiada y conservación de la aprobación anterior. Los fallos de cuota y
+contexto insuficiente se comprobaron con simulaciones de proveedor; no se presentan
+como incidentes reales de la cuenta gratuita.
+
+Pruebas sobre los proyectos y cuentas QA ya existentes, sin credenciales en
+capturas ni en Git:
+
+- Energía `b9ffc509…`: generación real de tres preguntas (versión 1), aprobación
+  explícita; regeneración real de dos mediante dos peticiones concurrentes de la
+  misma operación (**200/202**), un solo trabajo. Se canceló únicamente el cuerpo
+  de la respuesta 200 después de persistir y su reenvío devolvió el mismo trabajo.
+  La versión aprobada 1 permaneció intacta. Edición correctiva → versión 3
+  pendiente, aprobación explícita de 3, edición posterior → 4 pendiente y descarte
+  de 4. Aprobación conservada: `4b356f05-1aca-4b7d-80aa-fb573d5d158a` (quiz 3).
+- Agua `167fe954…`: omitir y actualizar conservó la decisión sin crear preguntas.
+  Sus versiones 1 y 2 defectuosas se descartaron. La evaluación independiente se
+  probó directamente con la salida real archivada de la versión 2: Gemini rechazó
+  la negación invertida. En esta prueba técnica se reprodujo la salida archivada
+  de generación y **solo la evaluación hizo una llamada real**; no insertó filas
+  ni sustituye la prueba completa de la aplicación.
+- Dos operaciones completas posteriores acabaron en timeout de la evaluación
+  con límite inicial de 15 s, sin crear nuevas versiones. Se amplió a 30 s
+  manteniendo límites finitos. La nueva operación HTTP normal
+  `95c84d2e-8c02-4687-aa06-9c03bd14b016` completó generación y evaluación en
+  **29 773,9 ms**, guardó **una pregunta, quiz 3 pendiente**, modelo
+  `gemini-3.5-flash-lite`, fuente `5b7df6e1-4e1f-4fb4-89e6-d676bd8169a9`.
+  Revisión manual: pregunta por las dos etapas que ilustra el recurso; respuesta
+  evaporación y condensación, otros alcances incompletos/incorrectos, explicación
+  y cita coherentes. No afirma representar todo el ciclo. Se reabrió en navegador
+  y continuó pendiente, con aprobación desactivada hasta confirmar la casilla.
+- Resumen `deeb737f…`: edición normal del título → versión 4 pendiente, elección
+  explícita omitir sobre esa fuente y aprobación real del refuerzo. Mismo registro
+  publicado y mismo texto educativo; cero preguntas y cero trabajos IA para ese
+  quiz. Título QA actual: «QA HU028 · Resumen aprobado sin mini quiz». Así se
+  comprobó que omitir no bloquea aprobar; su futura publicación de proyecto
+  corresponde a HU032.
+- HTTP real: sin sesión **401**, otra cuenta **404**, otro documento o versión
+  de otro refuerzo **409**, origen ajeno **403**, cantidad 4 y aprobación sin
+  confirmación **400**. Las cuatro tablas privadas devuelven cero filas a la
+  cuenta ajena; UPDATE directo denegado (**42501**). HTML inicial sin claves de
+  respuestas del quiz. Las pruebas de UI/SQL no reemplazan estas comprobaciones.
+- Editor móvil **390×844 CSS**, ancho documental **390**, DPR 1,25, abierto con
+  Enter y campos recorridos con Tab. Cancelar no guardó cambios. Cero errores de
+  consola observados; viewport y visibilidad restaurados. Cierre/reapertura y
+  cambio a página 2 conservaron fuentes y quizzes separados.
+- Comprobación de conservación: **35 solicitudes / siete publicaciones**; los
+  31/cuatro registros anteriores a HU024 permanecen idénticos. Ambos PDF conservan
+  SHA-256 `e7277d66afd7caba47385cfac2f0e55a2eeb4fb7aa7136409fa35300a6347946`
+  y `b0bc1809351f249bd352032fbcdd193846e4c44e4199cf4bfbfec24326b71302`.
+
+Once capturas reales cargadas para comentarios únicos: dos SCRUM-113, dos
+SCRUM-195, cuatro SCRUM-196 (incluye diagnóstico identificado de la negación
+defectuosa y resultado final corregido) y tres SCRUM-114. Scripts, PDFs, cuentas,
+salidas originales y capturas diagnósticas adicionales permanecen fuera de Git,
+en `HU019/HU028`. Los scripts temporales con grants se eliminaron después de
+usar cada carga. Falta vincularlas y registrar commit/PR en los comentarios.
+
+Documentación oficial consultada:
+[modelo y salida estructurada](https://ai.google.dev/gemini-api/docs/models/gemini-3.5-flash-lite)
+y [precio/nivel gratuito](https://ai.google.dev/gemini-api/docs/pricing#gemini-3.5-flash-lite).
+No se activó facturación. La evaluación automática reduce errores observados,
+pero se conserva la revisión expresa del propietario antes de aprobar.
