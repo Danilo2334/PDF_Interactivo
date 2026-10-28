@@ -3025,3 +3025,25 @@ Lectura de `renderedBody`: ocho nombres y miniaturas resueltos. El script con
 grants de carga se eliminó. Scripts, archivos QA, hashes y resultados están fuera
 de Git en `HU019/HU027`. Falta enlazar commit/PR y registrar la entrega en esos
 mismos comentarios, conservando las imágenes.
+
+
+### Entrega de HU027
+
+Commit funcional publicado **`aa240daec0ddb46f78caf605d00643029a70b8b9`**.
+PR borrador **[#33](https://github.com/Danilo2334/PDF_Interactivo/pull/33)**
+sobre `codex/scrum-38-hu026-tarjeta-interactiva` (#32). Cadena pendiente:
+**#30 → #31 → #32 → #33**. Lectura de GitHub: los cuatro abiertos, borrador,
+sin merge y sin conflictos. Cambiar la base del siguiente a develop solo tras
+integrar su predecesor y volver a revisar diff/checks.
+
+SCRUM-39 **En revisión**, comentario madre único **10159**. SCRUM-111,
+SCRUM-193, SCRUM-194 y SCRUM-112 **Finalizado**. Sus comentarios únicos
+10155–10158 incluyen commit/PR y conservan las ocho capturas resueltas;
+la lectura posterior confirmó dos imágenes y el enlace al PR por subtarea.
+No se crearon informes adicionales, no se modificó main ni el stash.
+
+Se continúa **HU028 / SCRUM-40**, mini quiz opcional, desde una rama descendiente
+de HU027. Mantener el borrador y las respuestas correctas restringidos al
+propietario; aprobación explícita de cada versión y conservación de la anterior.
+Omitir el quiz no debe bloquear el refuerzo. Su publicación se integra en HU032.
+La producción local continúa en puerto 3000 hasta el cambio controlado a dev.
