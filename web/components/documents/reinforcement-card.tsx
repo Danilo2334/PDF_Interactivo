@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useRef, useState } from "react";
+import { useId, useRef, useState, type ReactNode } from "react";
 import type { Reinforcement } from "@/lib/types/reinforcement";
 import { cardRecordSchema } from "@/lib/validations/reinforcement-card";
 import { VisualResource } from "@/components/documents/visual-resource";
@@ -8,8 +8,8 @@ import { SummaryResource } from "@/components/documents/summary-resource";
 import { ReinforcementMedia } from "@/components/documents/reinforcement-media";
 import { QuizPanel } from "@/components/documents/quiz-panel";
 
-type Props = { reinforcement: Reinforcement; projectId: string; canManage: boolean; onSource: (item: Reinforcement) => void };
-export function ReinforcementCard({ reinforcement: item, projectId, canManage, onSource }: Props) {
+type Props = { reinforcement: Reinforcement; projectId: string; canManage: boolean; onSource: (item: Reinforcement) => void; active?: boolean; reviewLabel?: string; quizContent?: ReactNode };
+export function ReinforcementCard({ reinforcement: item, projectId, canManage, onSource, active = true, reviewLabel, quizContent }: Props) {
   const id = useId(), trigger = useRef<HTMLButtonElement>(null);
   const [saved, setSaved] = useState(item.card ?? null);
   const [expanded, setExpanded] = useState(item.card?.initial_expanded ?? false);
@@ -52,7 +52,7 @@ export function ReinforcementCard({ reinforcement: item, projectId, canManage, o
     <p className="text-xs text-slate-500">{expanded ? "Contenido expandido" : "Pulsa el título para expandir el contenido"}</p>
     <div id={`${id}-content`} hidden={!expanded}>
       {item.content.generatedByAI === true && <p className="mt-2 text-sm font-medium text-green-900">
-        Contenido generado por IA · Aprobado por ti{item.content.editedByOwner === true ? " · Editado por ti" : ""}
+        {reviewLabel ?? `Contenido generado por IA · Aprobado ${canManage ? "por ti" : "por el propietario"}${item.content.editedByOwner === true ? canManage ? " · Editado por ti" : " · Editado por el propietario" : ""}`}
       </p>}
       {item.content.type === "visual" && <div className="mt-3"><VisualResource value={item.content.visual} title={item.title}
         description={typeof item.content.text === "string" ? item.content.text : undefined} /></div>}
@@ -63,8 +63,9 @@ export function ReinforcementCard({ reinforcement: item, projectId, canManage, o
         Ver {source.selection?.kind === "area" ? "zona" : source.selection?.kind === "text" ? "selección de texto" : "página"} original · Página {item.page_number}
       </button>}
       {hasSource && <ReinforcementMedia reinforcement={item} projectId={projectId} canManage={canManage} />}
+      {quizContent}
       {canManage && hasSource && item.approved_version_id && <QuizPanel key={`${item.id}-${item.approved_version_id}`} projectId={projectId} documentId={item.document_id}
-        requestId={item.source_request_id!} sourceVersionId={item.approved_version_id} active={expanded} />}
+        requestId={item.source_request_id!} sourceVersionId={item.approved_version_id} active={expanded && active} />}
       {canManage && hasSource && item.approved_version_id && <fieldset disabled={busy} className="mt-4 space-y-3 rounded-lg bg-slate-50 p-4">
         <legend className="text-sm font-semibold">Presentación de esta tarjeta</legend>
         <p className="text-sm text-slate-600">El título y el contenido corresponden a la versión aprobada. Para modificarlos, revisa la solicitud de origen.</p>

@@ -3315,3 +3315,105 @@ comparación con el lector publicado queda pendiente de HU032–HU033. HU032 exi
 un despliegue HTTPS mínimo (SCRUM-226), versiones aprobadas fijadas y enlace único;
 no basta el localhost para finalizarla. No se han creado publicaciones externas
 ni activado servicios de pago. La producción local sigue en 3000 con HU029.
+
+## 2026-10-28 — HU031 / SCRUM-43: vista previa privada de la experiencia
+
+Rama `codex/scrum-43-hu031-vista-previa`, desde `0617858` (entrega documentada
+de HU029). No añade migraciones, dependencias ni llamadas de IA. La evaluación
+de respuestas es determinista en servidor; no se consulta Gemini para calificar.
+
+Se reutilizan `PdfViewer`, `ReinforcementCard`, `VisualResource`, `SummaryResource`
+y los recursos multimedia existentes. `QuizPlayer` recibe solo título, opciones,
+enunciados y regla de reintentos; nunca recibe índice correcto ni explicación
+reservada en su carga inicial. Después de enviar se muestra resultado, correcta/
+incorrecta, respuesta y explicación. Se reutilizará su presentación con el lector
+real, manteniendo separado el ciclo de intentos persistidos de HU030.
+
+La vista previa obtiene los cambios **guardados**, incluidos borradores propios,
+sin exigir publicación. Distingue borrador de contenido aprobado. Una explicación
+generada sin revisión preparada puede verse privadamente sin crear cabecera de
+revisión por GET. El quiz corresponde a la misma solicitud y versión del refuerzo;
+omite quizzes descartados o con elección «omitir», conservando la aprobación
+anterior compatible. No mezcla fuentes. Las consultas se paginan explícitamente.
+
+`GET /api/projects/[projectId]/preview` exige sesión activa, rol autorizado,
+propiedad y documento vigente. `POST` en la misma ruta comprueba origen y obtiene
+otra vez el quiz autorizado; una versión/fuente que ya no corresponde devuelve
+409. **Ambos son de solo lectura**: no crean trabajos, revisiones, intentos ni
+resultados. No se habilitó acceso anónimo a rutas privadas ni se cambiaron RLS.
+
+El editor permanece montado y oculto mientras se prueba la experiencia; su visor
+y lecturas periódicas quedan pausados. El encabezado con renombrar/reemplazar/
+eliminar se oculta en el modo previo. Un botón en los controles del visor permite
+entrar desde la página activa; desde otros paneles se ofrece la misma acción.
+Volver restaura sección, página, zoom, selección, posición y formularios locales.
+Los cambios locales sin guardar no se presentan como guardados en la vista previa.
+
+### Verificación y correcciones observadas
+
+**344/344 pruebas automatizadas**, lint y build de producción/TypeScript
+aprobados. Se actualizaron los dobles de prueba del workspace para el nuevo
+componente y se añadieron proyección sin clave, calificación de solo lectura,
+aislamiento, paginación y conservación del borrador. Tras el acceso desde el visor
+se repitieron 54 casos afectados; tras corregir el retorno del panel, 27 casos,
+lint y build. No se actualizaron Node/Next ni las dependencias.
+
+Resultados reales en producción autenticada:
+
+- Proyecto digital: **ocho refuerzos en vista previa**, uno en borrador privado,
+  y dos quizzes asociados. Hay **siete refuerzos aprobados en `reinforcements`**;
+  esto no equivale todavía a un enlace público de experiencia de HU032.
+  Los quizzes de energía 5 y agua 6 son borradores propios; las aprobaciones
+  anteriores siguen separadas.
+- Carga inicial del quiz sin clave/explicación; HTTP **401** sin sesión, **404**
+  otra cuenta en lectura/evaluación, **409** documento cambiado o quiz ajeno,
+  **403** origen ajeno y **400** respuesta incompleta. La evaluación devuelve
+  solo la retroalimentación posterior. Consultas HTTP antes/después conservaron
+  todos los registros leídos.
+- Prueba de agua con reintentos bloqueados (quiz 5): respuesta incorrecta,
+  **0/1**, explicación posterior, controles de opciones deshabilitados y sin
+  botón de reintento. Luego se guardó por HTTP normal del propietario **quiz 6
+  pendiente con reintentos true**, para probar la otra configuración; aprobación
+  4 `05092a69-f076-4955-a23f-3cd196d90b0b` intacta. Este cambio de fixture QA
+  ocurrió **antes** de guardar la línea base de las pruebas visuales.
+- Quiz 6 en vista previa: respuesta correcta **1/1**, reintentar limpió selección
+  y retroalimentación, segunda respuesta incorrecta **0/1**. Las respuestas de
+  prueba no cambiaron estado ni versiones. Tras esas operaciones y navegar/
+  consultar multimedia, comparación profunda de **diez tablas** idéntica:
+  solicitudes, refuerzos, cabeceras/versiones de revisión, cabeceras/versiones/
+  eventos/trabajos de quiz, tarjetas y multimedia. Las 36 solicitudes corresponden
+  al total de la cuenta QA en ambos proyectos; **35** pertenecen al digital.
+  No se afirma haber contrastado tablas de resultados de HU030 aún no implementadas.
+- Conservación del editor: página **2**, zoom **125 %**, zona rectangular,
+  categoría, observación y texto manual sin enviar. Antes/después:
+  **x=0, y=2171,199951171875**, desplazamiento horizontal
+  **0,800000011920929**, selección y todos los campos idénticos. No se envió
+  la solicitud temporal. Una segunda prueba conservó íntegra una edición local
+  del título del quiz al navegar por otra página en vista previa; el texto local
+  no se incluyó en la experiencia guardada y se canceló después sin guardarlo.
+- Fallo real corregido: cerrar «Refuerzos» dentro de la vista previa regresaba
+  a página 1 al perder la posición. Ahora guarda/restaura el punto de lectura.
+  Caso repetido: página **2**, **125 %**, antes/después **x=0,
+  y=1883,199951171875, horizontal=0**. Ambas aperturas/cierres conservaron página
+  y posición exactas. Este ajuste no cambia el regreso independiente al editor.
+- Se consultaron las páginas 1 y 2, tarjetas y diagrama, imagen privada PNG
+  **640×360** decodificada y referencia HTTPS existente. Sin controles de agregar/
+  retirar recursos, guardar tarjeta o configurar el quiz en modo previo. Esta
+  regresión visual acredita imagen y enlace visible; no se presenta como otra
+  reproducción de MP4, ya comprobada en HU027.
+- Móvil **390×844 CSS**, ancho documental **390**, DPR 1,25, foco/teclado y quiz
+  de lectura sin clave anticipada. PDF escaneado: estado vacío correcto, sin
+  inventar refuerzos. Cero errores de consola; viewport/visibilidad restaurados.
+- Ambos SHA-256 originales coinciden con HU028. Siete refuerzos aprobados,
+  35 solicitudes digitales y los 31/cuatro registros anteriores conservados.
+
+Diez capturas reales cargadas: SCRUM-119 dos, SCRUM-201 tres, SCRUM-202 tres,
+SCRUM-120 dos. Scripts, línea base, comparaciones y salidas en `HU019/HU031`, fuera
+de Git. Grants temporales eliminados. Falta vincular capturas y registrar commit/PR
+en los comentarios únicos. El servidor local queda ejecutando producción en 3000.
+
+**Pendiente expreso de SCRUM-120 / HU031**: comparar con la experiencia realmente
+publicada tras HU032–HU033, comprobar exclusión de borradores en ese enlace y
+volver a contrastar que las pruebas privadas no alteran intentos/resultados
+persistidos cuando exista HU030. No finalizar la historia por estas pruebas
+privadas. Se continúa HU032 y su despliegue HTTPS mínimo; sin merges automáticos.

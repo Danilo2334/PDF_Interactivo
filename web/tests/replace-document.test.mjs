@@ -147,6 +147,7 @@ test('changing PDF identity remounts the viewer even when the project ID stays t
     '@/components/documents/pdf-viewer': { PdfViewer: viewer },
     '@/components/documents/request-list-panel': { RequestListPanel: () => null },
     '@/components/documents/reinforcement-card': { ReinforcementCard: () => null },
+    '@/components/documents/experience-preview': { ExperiencePreview: () => null },
     '@/components/documents/visual-resource': { VisualResource: () => null },
     '@/components/documents/summary-resource': { SummaryResource: () => null },
     '@/components/documents/reinforcement-request-draft': { ReinforcementRequestDraft: () => null },
