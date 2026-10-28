@@ -49,6 +49,7 @@ function fixture(path, exportedName, initialProps) {
     if (name === 'react/jsx-runtime') return require(name);
     if (name === '@/components/documents/reinforcement-card') return { ReinforcementCard: 'article' };
     if (name === '@/components/documents/experience-preview') return { ExperiencePreview: 'preview' };
+    if (name === '@/components/documents/publication-panel') return { PublicationPanel: 'publication' };
     if (name === '@/components/documents/pdf-viewer') return { PdfViewer: viewer };
     if (name === '@/components/documents/reinforcement-request-draft') return { ReinforcementRequestDraft: draftForm };
     if (name === '@/lib/validations/difficulty') return difficulty;
@@ -72,6 +73,15 @@ function fixture(path, exportedName, initialProps) {
   return { render, find: predicate => nodes(tree).find(predicate), get props() { return props; } };
 }
 const props = { projectId: 'project', documentId: 'document-a', documentName: 'original.pdf', canRequestReinforcement: true, reinforcements: [], reinforcementsError: false };
+
+test('HU032 hides the floating PDF action while reviewing publication without losing the viewer, and scopes the suppression to this document',()=>{
+  const f=fixture('components/documents/project-workspace.tsx','ProjectWorkspace',props),original=f.find(n=>n.type===viewer);
+  assert.equal(typeof original.props.onOpenReinforcements,'function');
+  f.find(n=>n.type==='publication').props.onOpenChange(true);f.render();
+  assert.equal(f.find(n=>n.type===viewer).key,original.key);assert.equal(f.find(n=>n.type===viewer).props.onOpenReinforcements,undefined);
+  f.find(n=>n.type==='publication').props.onOpenChange(false);f.render();assert.equal(typeof f.find(n=>n.type===viewer).props.onOpenReinforcements,'function');
+  f.find(n=>n.type==='publication').props.onOpenChange(true);f.render({...props,documentId:'document-b'});assert.equal(typeof f.find(n=>n.type===viewer).props.onOpenReinforcements,'function');
+});
 
 test('HU031 entering and leaving preview retains the original viewer identity, selection and unsubmitted difficulty input',()=>{
   const f=fixture('components/documents/project-workspace.tsx','ProjectWorkspace',props),original=f.find(n=>n.type===viewer);

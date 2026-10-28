@@ -15,6 +15,7 @@ import { RequestListPanel } from "@/components/documents/request-list-panel";
 import type { RequestRecord } from "@/lib/validations/request-list";
 import { ReinforcementCard } from "@/components/documents/reinforcement-card";
 import { ExperiencePreview } from "@/components/documents/experience-preview";
+import { PublicationPanel } from "@/components/documents/publication-panel";
 
 type WorkspaceProps = {
   projectId: string;
@@ -46,6 +47,7 @@ export function ProjectWorkspace({
 
   const workspaceId = useId();
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [publicationDocument, setPublicationDocument] = useState<string | null>(null);
   const [previewPage, setPreviewPage] = useState(1);
   const previewButton = useRef<HTMLButtonElement>(null);
   const previewPosition = useRef<{ x: number; y: number } | null>(null);
@@ -202,6 +204,7 @@ export function ProjectWorkspace({
     <div className="min-w-0">
       <div hidden={previewOpen}>
       {editorHeader}
+      {canRequestReinforcement && <PublicationPanel key={`publication-${documentId}`} projectId={projectId} documentId={documentId} onOpenChange={open => setPublicationDocument(open ? documentId : null)} />}
       <div className="mt-8 min-w-0">
       {canRequestReinforcement && activeSection !== "pdf" && <button ref={previewButton} type="button" disabled={submission.status === "sending"} onClick={openPreview}
         className="mb-4 rounded-lg border border-blue-300 bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-900 disabled:opacity-50">Vista previa de la experiencia</button>}
@@ -246,7 +249,7 @@ export function ProjectWorkspace({
           <PdfViewer key={`${projectId}-${documentId}`} projectId={projectId}
             onOpenPreview={canRequestReinforcement && submission.status !== "sending" ? openPreview : undefined} previewTriggerRef={previewButton}
             visible={activeSection === "pdf" && !previewOpen} onVisiblePageChange={reportReadingPage} navigationKey={navigationKey}
-            onOpenReinforcements={(page, openedAt) => { reportReadingPage(page); changeSection("reinforcements", openedAt, page); }}
+            onOpenReinforcements={publicationDocument === documentId ? undefined : (page, openedAt) => { reportReadingPage(page); changeSection("reinforcements", openedAt, page); }}
             initialPage={draft?.pageNumber ?? 1} initialFragment={currentFragment} onPageSelect={canRequestReinforcement ? selectPage : undefined}
             onFragmentSelect={canRequestReinforcement ? selectFragment : undefined} fragmentResetKey={fragmentResetKey}
             onTextSourceChange={canRequestReinforcement ? receiveTextSource : undefined}
