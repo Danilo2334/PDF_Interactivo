@@ -103,6 +103,7 @@ test('state presentation uses the persisted stage, indeterminate progress and a 
     react: React, '@/lib/reinforcements/state': requestState, '@/lib/reinforcements/use-request-resource': { useRequestResource() {} },
     '@/components/documents/contextual-analysis-panel': { ContextualAnalysisPanel() {} },
     '@/components/documents/recommendation-panel': { RecommendationPanel() {} },
+    '@/components/documents/explanation-panel': { ExplanationPanel() {} },
     '@/lib/validations/request-list': schemas,
   });
   for (const [status, stage] of [['pending','queued'], ['processing','analyzing'], ['error','failed'], ['generated','review'], ['approved','approved']]) {
