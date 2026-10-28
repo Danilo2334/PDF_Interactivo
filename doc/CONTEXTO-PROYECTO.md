@@ -1875,3 +1875,33 @@ Al retomar scripts QA externos, reconciliar primero su baseline de 24 con las
 25 solicitudes actuales y la nueva solicitud del usuario; no confundir ese
 cambio de datos conocido con una duplicación del envío. La revisión guiada
 continúa solo cuando el usuario confirme que ya ve el detalle.
+
+## Revisión real de IA y autorización de HU020, 27/10/2026
+
+Se continuó sobre la solicitud del usuario `1201c3a3-1632-41b0-ae4f-0b989ba676cb`:
+selección «En un sistema aislado», página 1 del PDF digital QA y dificultad de
+comprensión del concepto. Gemini `gemini-3.5-flash-lite` produjo un diagnóstico
+coherente sobre conservación de energía y cinco recomendaciones pertinentes,
+con citas literales y referencias a la dificultad verificadas. Cada operación
+usó un intento real; no hubo proveedor de pago ni reintentos automáticos.
+
+Se guardó Explicación (versión 1), con la justificación de la opción persistida,
+y se recargó la aplicación: diagnóstico, opciones y elección permanecieron.
+La solicitud quedó pending/choosing, con tres eventos reales, sin contenido
+generado ni aprobado. El proyecto conserva 25 solicitudes. Los SHA-256 de ambos
+PDF QA permanecen iguales a los registrados anteriormente.
+
+Se añadieron tres capturas reales a los comentarios existentes, sin duplicarlos:
+SCRUM-182 `182-07-analisis-real-solicitud-usuario.jpg`, SCRUM-95
+`95-03-opciones-reales-solicitud-usuario.jpg` y SCRUM-96
+`96-05-eleccion-usuario-persistida-tras-recarga.jpg`. La lectura posterior confirmó
+un comentario por subtarea, con 6, 3 y 5 imágenes respectivamente, conservando
+todas las anteriores. Se actualizaron también SCRUM-183 y las historias madre.
+
+Después de esta comprobación, el usuario autorizó explícitamente **continuar con
+HU020/SCRUM-32**. El alcance es explicación ampliada (niveles breve, intermedio y
+detallado), vinculada al fragmento y marcada como generada por IA, pendiente de
+aprobación. No incluye aprobación/publicación, otros formatos, pagos ni merges
+automáticos. El PR #25 de visibilidad del detalle sigue pendiente de revisión;
+HU020 partirá de esa corrección en una rama separada. Se conserva el stash
+`d6406e0` sin aplicar/eliminar y la configuración privada fuera de Git.
