@@ -28,7 +28,7 @@ test('HU026 only passes approved identity, presentation and optimistic version; 
 });
 const item={id:body.reinforcementId,document_id:record.document_id,page_number:record.page_number,title:'Concepto de energía',content:{text:'Texto aprobado que permanece idéntico.'},
   source_request_id:record.id,approved_version_id:body.approvedVersionId,source:record,card};
-const deps={'@/lib/validations/reinforcement-card':schemas,'@/components/documents/visual-resource':{VisualResource:()=>null},'@/components/documents/summary-resource':{SummaryResource:()=>null}};
+const deps={'@/lib/validations/reinforcement-card':schemas,'@/components/documents/reinforcement-media':{ReinforcementMedia:()=>null},'@/components/documents/visual-resource':{VisualResource:()=>null},'@/components/documents/summary-resource':{SummaryResource:()=>null}};
 test('HU026 collapsed/expanded markup links a native keyboard button to content and scopes source controls',()=>{
   const {ReinforcementCard}=load('components/documents/reinforcement-card.tsx',{...deps,react:React});
   const render=value=>renderToStaticMarkup(React.createElement(ReinforcementCard,{reinforcement:value,projectId:record.project_id,canManage:true,onSource(){}}));

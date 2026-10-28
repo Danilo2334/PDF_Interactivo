@@ -41,6 +41,10 @@ test('HU024 owner-controlled regeneration preserves approved versions across eve
       readdirSync(migrationDir).find(n=>n.endsWith('_generate_explanation_drafts.sql')),readdirSync(migrationDir).find(n=>n.endsWith('_generate_example_drafts.sql')),readdirSync(migrationDir).find(n=>n.endsWith('_generate_visual_drafts.sql')),readdirSync(migrationDir).find(n=>n.endsWith('_generate_summary_drafts.sql')),readdirSync(migrationDir).find(n=>n.endsWith('_owner_reinforcement_regeneration.sql'))];
     for(const name of names)await db.exec(readFileSync(new URL(name,migrationDir),'utf8'));
     await db.exec(readFileSync(new URL(readdirSync(migrationDir).find(n=>n.endsWith('_interactive_reinforcement_cards.sql')),migrationDir),'utf8'));
+    await db.exec(`create schema storage;create table storage.buckets(id text primary key,name text,public boolean,file_size_limit bigint,allowed_mime_types text[]);
+      create table storage.objects(id uuid primary key default gen_random_uuid(),bucket_id text,name text);alter table storage.objects enable row level security;
+      grant usage on schema storage to authenticated;grant select,insert,delete on storage.objects to authenticated;`);
+    await db.exec(readFileSync(new URL(readdirSync(migrationDir).find(n=>n.endsWith('_reinforcement_multimedia.sql')),migrationDir),'utf8'));
     const secret=(await db.query('select secret from private.reinforcement_request_secrets')).rows[0].secret;process.env.REINFORCEMENT_REQUEST_SECRET=secret;
     async function asUser(id=owner,role='authenticated'){await db.exec('reset role');await db.query("select set_config('request.jwt.claim.sub',$1,false)",[id]);await db.exec(`set role ${role}`);}
     async function signed(name,signer,input,mutate=x=>x){const args=mutate(signer(input));return(await db.query(`select public.${name}($1,$2) result`,[args.p_payload,args.p_signature])).rows[0].result;}
@@ -134,6 +138,33 @@ test('HU024 owner-controlled regeneration preserves approved versions across eve
       await db.exec('reset role');await db.query("update public.projects set status='pending' where id=$1",[projectId]);await asUser();
       const pendingInput=await generated('example');
       await assert.rejects(db.query('select public.save_reinforcement_card($1,$2,$3,$4,0,false,$5)',[pendingInput.requestId,documentId,published.id,published.approved_version_id,randomUUID()]),e=>e.code==='42501');
+    });
+    await t.test('HU027 signed media lifecycle keeps private files staged until approval and revokes removed resources',async()=>{
+      const input=await generated('example');input.kind='example';await review(input,'approve',1);const published=(await pubs(input))[0];
+      const signer=load('lib/reinforcements/media-proof.ts').signMediaProof,assetId=randomUUID();
+      const metadata={...input,userId:owner,reinforcementId:published.id,approvedVersionId:published.approved_version_id,assetId,kind:'image',title:'Diagrama de prueba aislada',
+        fileName:'energy.png',mime:'image/png',size:120,storagePath:`${owner}/${assetId}.png`,url:null,fileHash:'a'.repeat(64),inputHash:'b'.repeat(64)};
+      const change=(action,values={},mutate)=>signed('change_reinforcement_media',signer,{...metadata,action,...values},mutate);
+      assert.equal((await change('prepare')).status,'uploading');assert.equal((await change('prepare')).id,assetId);
+      await assert.rejects(change('approve'),e=>e.code==='PT409');
+      await assert.rejects(db.query('insert into storage.objects(bucket_id,name) values($1,$2)',['reinforcement-media',`${owner}/unprepared.png`]),e=>e.code==='42501');
+      await db.query('insert into storage.objects(bucket_id,name) values($1,$2)',['reinforcement-media',metadata.storagePath]);
+      const approved=await change('approve');assert.equal(approved.status,'approved');assert.ok(approved.approved_at);assert.deepEqual(await change('approve'),approved);
+      await assert.rejects(change('prepare',{inputHash:'c'.repeat(64)}),e=>e.code==='PT409');
+      await assert.rejects(change('prepare',{approvedVersionId:randomUUID()}),e=>e.code==='PT409');
+      await assert.rejects(change('prepare',{},p=>({...p,p_signature:'0'.repeat(64)})),e=>e.code==='42501');
+      await assert.rejects(db.query("update public.reinforcement_media set title='forged'"),e=>e.code==='42501');
+      await asUser(other);assert.equal((await db.query('select * from public.reinforcement_media')).rows.length,0);
+      assert.equal((await db.query("select * from storage.objects where bucket_id='reinforcement-media'")).rows.length,0);
+      await assert.rejects(change('remove',{userId:other}),e=>e.code==='42501');await asUser();
+      assert.equal((await change('remove')).status,'removed');assert.equal((await change('remove')).id,assetId);
+      assert.equal((await db.query('select * from storage.objects where name=$1',[metadata.storagePath])).rows.length,0);
+      await assert.rejects(change('prepare'),e=>e.code==='PT409');assert.deepEqual((await pubs(input))[0],published);
+      const linkId=randomUUID();const link={assetId:linkId,kind:'link',fileName:null,mime:null,size:0,storagePath:null,url:'https://es.wikipedia.org/wiki/Energ%C3%ADa',fileHash:null,inputHash:'d'.repeat(64)};
+      await change('prepare',link);assert.equal((await change('approve',link)).status,'approved');
+      for(const url of ['http://es.wikipedia.org/wiki/Energia','https://es.wikipedia.org.evil.invalid/wiki/Energia','https://localhost/private','https://es.wikipedia.org/wiki/Energia?redirect=evil'])
+        await assert.rejects(change('prepare',{...link,assetId:randomUUID(),url}),e=>e.code==='23514');
+      await assert.rejects(change('prepare',{...link,assetId:randomUUID(),kind:'image',mime:'image/svg+xml',size:100,storagePath:`${owner}/fake.svg`,fileName:'fake.svg',fileHash:'a'.repeat(64),url:null}),e=>e.code==='23514');
     });
   }finally{if(previous===undefined)delete process.env.REINFORCEMENT_REQUEST_SECRET;else process.env.REINFORCEMENT_REQUEST_SECRET=previous;await db.close();}
 });

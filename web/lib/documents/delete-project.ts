@@ -31,6 +31,18 @@ export async function deleteOwnedProject(client: Client, input: {
     return { success: false, status: 503, message: "La eliminación está pendiente de limpieza. El contenido ya no está disponible. Reintenta desde Mis documentos." };
   }
   try {
+    // Snapshot all media paths while the project is locked against new uploads.
+    // Include retired and unfinished resources so their private files do not leak.
+    for (let offset = 0; ; offset += 100) {
+      const media = await client.from("reinforcement_media").select("storage_path").eq("project_id", input.projectId)
+        .eq("owner_id", input.ownerId).not("storage_path", "is", null).order("id").range(offset, offset + 99);
+      if (media.error || !Array.isArray(media.data) || media.data.some(row => typeof row.storage_path !== "string" || !row.storage_path.startsWith(`${input.ownerId}/`))) return failed("storage");
+      if (media.data.length) {
+        const removed = await client.storage.from("reinforcement-media").remove(media.data.map(row => row.storage_path));
+        if (removed.error) return failed("storage");
+      }
+      if (media.data.length < 100) break;
+    }
     const paths = snapshot.data.storage_paths;
     for (let index = 0; index < paths.length; index += 100) {
       const { error } = await client.storage.from("pdf-documents").remove(paths.slice(index, index + 100));
