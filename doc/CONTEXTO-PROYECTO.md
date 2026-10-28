@@ -2167,3 +2167,14 @@ de compatibilidad de Node documentada en la revisión anterior.
   .env.local ni credenciales. Los scripts antiguos que exigen 24/25 solicitudes
   o cero refuerzos ya no representan el baseline: `hu021-live.mjs` valida 27,
   un publicado y descartes reales. El stash `d6406e0` permanece intacto.
+
+### Entrega de HU021
+
+Commit funcional publicado **`e8434fcf6b56b3d3f5cd0904535b15e43fd941bf`**.
+PR borrador **[#27](https://github.com/Danilo2334/PDF_Interactivo/pull/27)**
+directamente contra develop, después de #25/#26 integrados. **SCRUM-33 En revisión**,
+comentario madre único **10132** con enlace y resultados; SCRUM-99, SCRUM-185 y
+SCRUM-100 Finalizado. Sus comentarios 10129/10130/10131 incluyen el PR y mantienen
+las seis capturas sin volver a subirlas. No hay merge de #27 ni avance a HU022.
+localhost:3000 se dejó arrancado con el código revisado y la pestaña de Refuerzos
+QA conserva la versión aprobada; no se requiere entregar credenciales por chat.
