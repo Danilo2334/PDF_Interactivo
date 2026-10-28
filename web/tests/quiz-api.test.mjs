@@ -51,3 +51,13 @@ test('HU028 GET reads the source, choice and private history without creating a 
   const f=fixture(),response=await f.get();assert.equal(response.status,200);const body=await response.json();assert.equal(body.source.requestId,record.id);assert.equal(body.head.current_version,0);assert.deepEqual(body.versions,[]);assert.equal(body.approvedVersion,null);
   assert.equal(f.ai.length,0);assert.deepEqual(f.calls.map(c=>c.name),['get_reinforcement_quiz_source']);
 });
+
+test('HU029 owner configuration rejects incomplete options, missing/extra correct answers and blank private text before any database mutation',async()=>{
+  const f=fixture(),edit={action:'edit',documentId:record.document_id,sourceVersionId:source.versionId,operationId:randomUUID(),expectedVersion:1,content};
+  for(const change of [q=>q.options=['Only one'],q=>q.options=['A',' '],q=>q.options=['Same','same'],q=>delete q.correctIndex,q=>q.correctIndex=-1,q=>q.correctIndex=4,q=>q.correctIndices=[0,1],q=>q.prompt='   ',q=>q.explanation='   ']){
+    const invalid=structuredClone(edit);change(invalid.content.questions[0]);assert.equal((await f.post(invalid)).status,400);
+  }
+  assert.equal(f.calls.length,0);assert.equal(f.ai.length,0);
+  for(const allowRetries of [true,false]){const value=structuredClone(edit);value.content.allowRetries=allowRetries;assert.equal((await f.post(value)).status,200);const proof=JSON.parse(f.calls.at(-1).args.p_payload);assert.equal(proof.content.allowRetries,allowRetries);assert.deepEqual(proof.content.questions,content.questions);}
+  const other=fixture({denied:404});assert.equal((await other.post(edit)).status,404);assert.equal(other.calls.length,0);
+});

@@ -25,6 +25,7 @@ export function QuizPanel({ projectId, documentId, requestId, sourceVersionId, a
   const controller = useRef<AbortController | null>(null), operation = useRef<{ key: string; id: string } | null>(null);
   const resource = useRequestResource(`${base}?documentId=${documentId}&sourceVersionId=${sourceVersionId}`, opened && active && !busy, parseView, true);
   const view = resource.result?.value, current = view?.versions.find(v => v.version === view.head?.current_version);
+  const editable = view?.head?.decision === "discarded" ? view.approvedVersion : current;
   const processing = view?.processing ?? false;
   const jobErrorMessage = view?.job?.status === "error" && !busy && !processing ? QUIZ_MESSAGES[view.job.error_code ?? "invalid_quiz"] : "";
   const staleReply = (view?.head?.current_version ?? 0) < confirmedState.version || (view?.head?.choice_version ?? 0) < confirmedState.choice
@@ -100,11 +101,12 @@ export function QuizPanel({ projectId, documentId, requestId, sourceVersionId, a
           <p className="text-sm font-semibold">Versión {current.version} · {view.head?.decision === "approved" ? "Aprobada por ti" : "Borrador pendiente"} · Fuente {current.source.title}</p>
           {current.source_version_id !== sourceVersionId && <p role="alert">Este quiz corresponde a otra versión del refuerzo. Genera uno nuevo para la fuente seleccionada.</p>}
           <QuizPreview content={current.content} />
-          {!editing ? <button type="button" className={button} disabled={disabled || view.head?.choice !== "generate" || current.source_version_id !== sourceVersionId} onClick={() => setEditing(true)}>Editar preguntas del quiz</button>
-            : <QuizEditor content={current.content} version={current.version} disabled={disabled} onCancel={() => setEditing(false)} onSave={async (content, expectedVersion) => {
-              const version = await execute({ action: "quiz_edit", content, expectedVersion }); if (version !== null) setEditing(false); return version !== null;
-            }} />}
         </>}
+        {editable && view.head && (!editing ? <button type="button" className={button} disabled={disabled || view.head.choice !== "generate" || editable.source_version_id !== sourceVersionId}
+          onClick={() => setEditing(true)}>{view.head.decision === "discarded" ? "Editar quiz aprobado conservado" : "Editar preguntas del quiz"}</button>
+            : <QuizEditor content={editable.content} version={view.head.current_version} disabled={disabled} onCancel={() => setEditing(false)} onSave={async (content, expectedVersion) => {
+              const version = await execute({ action: "quiz_edit", content, expectedVersion }); if (version !== null) setEditing(false); return version !== null;
+            }} />)}
         {review && <OwnerReviewPanel key={`${current?.version}-${view.head?.decision}`} view={review} readOnlyContent approvedLocation="el historial privado del quiz"
           confirmationLabel="He revisado estas preguntas, sus opciones y respuestas correctas, y confirmo que son coherentes con el refuerzo."
           disabled={disabled || editing || view.head?.choice !== "generate" || current?.source_version_id !== sourceVersionId} onReview={execute} />}

@@ -3207,3 +3207,80 @@ en puerto 3000. Quiz de energía: 4 descartado y 3 aprobado conservado; quiz de
 agua: 3 pendiente sin aprobación automática; resumen QA: quiz omitido y refuerzo
 4 aprobado. Son datos QA, no estados inventados por SQL. No modificar main,
 integrar PR nuevos automáticamente ni alterar el stash.
+
+## 2026-10-28 — HU029 / SCRUM-41: configuración privada del mini quiz
+
+Rama `codex/scrum-41-hu029-configuracion-quiz`, desde la entrega documentada de
+HU028 (`f4654ba`). Se reutilizan sus contratos, API, versiones inmutables y RLS;
+**no requiere otra migración ni llamadas nuevas a IA**.
+
+El editor precarga enunciado, opciones, respuesta y explicación, permite agregar
+hasta cinco opciones, retirarlas conservando al menos dos y cambiar su orden con
+botones de teclado. La respuesta correcta sigue la identidad de la opción al
+moverla o retirar una anterior. Retirar la opción marcada deja la pregunta sin
+respuesta seleccionada, muestra un aviso y bloquea guardar; no elige otra por el
+propietario. Opciones vacías/duplicadas, texto vacío y clave ausente/fuera de rango
+se rechazan también en servidor.
+
+La casilla «Permitir reintentos al responder el mini quiz» guarda un booleano
+por versión. Cada cambio crea un borrador pendiente; no altera el quiz aprobado
+ni su regla. Cuando el borrador actual está descartado y existe una aprobación
+de la misma fuente, «Editar quiz aprobado conservado» permite usar esa aprobación
+como base de otro borrador, sin regenerar con IA. Su escritura usa la versión
+actual de cabecera como comparación, sin reescribir la versión aprobada antigua.
+
+### Comprobaciones reales de HU029
+
+**338/338 pruebas**, lint y build de producción/TypeScript aprobados. Se añadieron
+casos sobre identidad de la respuesta al reordenar/retirar, límites de opciones,
+reintentos y rechazos de configuración antes de mutar la base. Revisión React:
+controles nativos etiquetados, actualizaciones inmutables, estado local preservado
+en conflictos y sin nuevas dependencias ni consultas al abrir el panel.
+
+Producción autenticada, proyecto QA digital existente:
+
+- Quiz de agua `167fe954…`, desde versión 3: se retiró la correcta y se observó
+  aviso sin selección automática y botón guardar desactivado. Agregar una opción
+  vacía también lo bloqueó. Se añadió de nuevo la respuesta, retiró otra opción,
+  movió la correcta y editó enunciado/explicación. Orden persistido de versión 4:
+  «La totalidad del ciclo del agua» / «La evaporación y la condensación» /
+  «Solo la evaporación», correcta **índice 1**. Pregunta: «Según este refuerzo,
+  ¿qué dos etapas se muestran en el esquema?». Explicación y cita acordes al
+  alcance de las dos etapas, sin afirmar que representan el ciclo completo.
+- Se guardó **quiz 4 pendiente, reintentos true**, reabrió con los mismos campos
+  y aprobó expresamente. Aprobación conservada:
+  **`05092a69-f076-4955-a23f-3cd196d90b0b`**, 2026-10-28T18:34:29.494604Z,
+  propietario QA `15abf825…`.
+- Con el editor 4 abierto y un enunciado local sin guardar, otra sesión HTTP
+  normal guardó **quiz 5 pendiente, reintentos false**. El navegador conservó
+  el texto local, avisó de la nueva versión y bloqueó guardar. «Cargar versión
+  actual del quiz» recuperó expresamente el enunciado válido y false. Recarga
+  completa y reapertura conservaron versión 5, opciones, índice, explicación y
+  false; aprobación 4/true intacta. No se guardó el texto local de diagnóstico.
+- En el editor, al reducir temporalmente de tres a dos opciones, ambos botones
+  «Retirar opción» quedaron desactivados. Se canceló ese cambio sin crear versión.
+- Quiz de energía `b9ffc509…`: desde 4 descartado, se abrió la aprobación 3 como
+  base, editó solo el título y guardó **5 pendiente**, reintentos false. La
+  aprobación **`4b356f05-1aca-4b7d-80aa-fb573d5d158a`** (quiz 3) quedó intacta;
+  ninguna llamada a IA ni aprobación automática. El estado anterior «4 descartado»
+  permanece en el historial, actualizado cronológicamente por esta prueba.
+- HTTP real: enunciado/explicación vacíos, una sola opción, opción vacía/duplicada,
+  clave ausente, índices múltiples o índice inválido → **400**; versión antigua
+  → **409**; escritura de otra cuenta → **404**. Sin insertar versiones ni cambiar
+  cabecera/aprobación. Se comprobó antes y después de existir la aprobación 4.
+  HTML inicial del proyecto sin la clave de respuestas; esto aún no demuestra
+  la proyección ni calificación del lector de HU030.
+- Móvil **390×844**, documento de ancho **390**, DPR 1,25, teclado y foco visibles;
+  cero errores de consola observados. Se restauraron viewport y visibilidad.
+  35 solicitudes, siete publicaciones y los 31/cuatro anteriores intactos;
+  ambos SHA-256 originales coinciden con HU028. No se cambió el contenido del PDF.
+
+Nueve capturas reales cargadas: dos para SCRUM-115, dos SCRUM-197, dos SCRUM-198
+y tres SCRUM-116. Scripts y resultados en `HU019/HU029`, fuera de Git; grants
+temporales eliminados. Falta vincularlas en comentarios únicos y registrar el PR.
+
+SCRUM-198 conserva un pendiente expreso de **HU030**: comprobar que la clave y
+explicación reservada no llegan al lector antes de enviar su intento, y evaluar
+en servidor. No se declara terminada esa parte por haber probado el editor o
+el HTML inicial privado. HU028/SCRUM-114 sigue esperando la exclusión de borradores
+y rechazados en publicación de HU032. Se continuará HU030 sin integrar los PR.
