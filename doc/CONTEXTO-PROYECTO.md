@@ -2458,3 +2458,20 @@ reinició localhost:3000. Node 22.23.3, Next 16.4.3 y dependencias sin cambios.
 - Se conservan el stash `d6406e0`, la configuración privada y las evidencias
   anteriores de Jira. Las subtareas siguen En curso hasta enlazar el commit/PR
   de esta entrega; luego se registrará el estado final en el apartado posterior.
+
+### Entrega de HU023
+
+Commit funcional publicado **`fb3f8acc2456da4835116b69957f6820ce71d8b7`**.
+PR borrador **[#29](https://github.com/Danilo2334/PDF_Interactivo/pull/29)**
+contra develop `bf9ed6f`, después de #28 integrado. **SCRUM-35 En revisión**,
+comentario madre único **10140**; SCRUM-103/SCRUM-187/SCRUM-104 Finalizado.
+Sus comentarios 10137/10138/10139 incluyen el PR y la lectura posterior confirma
+2/2/4 capturas resueltas, sin duplicados ni nuevas subidas tras editarlos.
+
+La verificación real `hu023-live.mjs final` pasó también después del build y el
+reinicio: 31 solicitudes, cuatro refuerzos y los 29/tres anteriores intactos.
+La aplicación recién iniciada mostró el resumen aprobado con sus conceptos,
+con cero errores de consola observados. localhost:3000 queda activo y la
+pestaña QA de Refuerzos abierta. Árbol de trabajo conservado y stash `d6406e0`
+intacto. El PR #29 queda pendiente de revisión e integración; no se hizo merge
+de HU023, no se modificó main ni se inició el alcance restante de HU024.
