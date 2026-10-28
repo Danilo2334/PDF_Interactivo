@@ -1996,3 +1996,24 @@ Los scripts QA externos antiguos de 24 solicitudes ya no son el baseline actual;
 `HU019/hu020-live.mjs` comprueba explícitamente las 25 y el ID de la revisión.
 No se versionaron scripts privados, capturas, .env.local o credenciales. Se
 conservan main, develop, el stash `d6406e0` y todas las ramas anteriores.
+
+### Entrega de HU020
+
+- Commit funcional **`0585894f6c1af0c448950de4df2a28b30396e029`**, publicado.
+  PR borrador **[#26](https://github.com/Danilo2334/PDF_Interactivo/pull/26)**,
+  base `codex/scrum-92-detalle-visible` (PR #25), sin merge. Revisar primero #25
+  cuando se autorice, cambiar después la base de #26 a develop y volver a revisar
+  el diff. No integrar automáticamente por el hecho de que pasen las pruebas.
+- **SCRUM-97, SCRUM-184 y SCRUM-98 Finalizado** por sus criterios funcionales
+  verificados. **SCRUM-32 En revisión**: entrega preparada, PR pendiente y fallo
+  posterior de Turbopack explícitamente abierto. El build final alternativo de
+  producción y TypeScript con Webpack pasó; no se cambió el script habitual.
+- Jira conserva un único comentario de resultados por incidencia: **10125** en
+  SCRUM-97 (3 capturas), **10126** en SCRUM-184 (2), **10127** en SCRUM-98 (2).
+  La lectura posterior confirmó las siete imágenes inline, sin nombres duplicados.
+  Comentario madre **10128** con alcance, validación, limitación y enlace del PR,
+  sin duplicar imágenes. Los grants temporales de carga se retiraron después
+  de subir los archivos; no se imprimieron ni versionaron.
+- HU020 está lista para revisión funcional de la explicación guardada. No se
+  implementó HU021 ni aprobación/publicación HU024; HU017 conserva su pendiente
+  de aprobación real y Sprint 3 permanece cerrado con sus evidencias anteriores.
