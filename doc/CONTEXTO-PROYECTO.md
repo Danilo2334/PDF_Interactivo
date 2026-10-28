@@ -1905,3 +1905,94 @@ aprobación. No incluye aprobación/publicación, otros formatos, pagos ni merge
 automáticos. El PR #25 de visibilidad del detalle sigue pendiente de revisión;
 HU020 partirá de esa corrección en una rama separada. Se conserva el stash
 `d6406e0` sin aplicar/eliminar y la configuración privada fuera de Git.
+
+## HU020 / SCRUM-32: explicación ampliada, 27/10/2026
+
+El usuario autorizó HU020 después de verificar el diagnóstico y la elección de
+su solicitud. Rama `codex/scrum-32-hu020-explicacion-ampliada`, basada en
+`codex/scrum-92-detalle-visible` (`4084eee`), cuyo PR #25 continúa pendiente.
+No se hizo merge ni se inició otra historia o el ciclo del Sprint 4.
+
+### Implementación SCRUM-97 / SCRUM-184 / SCRUM-98
+
+- El detalle de una solicitud incluye Explicación ampliada. Ofrece **Breve,
+  Intermedio y Detallado**, con descripciones y sin selección inicial. El nivel
+  se guarda en servidor antes de habilitar Generar. La versión del nivel y la
+  versión de la elección impiden sobrescrituras desde una pestaña antigua.
+- La ruta privada `/api/projects/[projectId]/reinforcement-requests/[requestId]/explanation`
+  reutiliza autorización, origen, tamaño de JSON y diagnóstico persistido.
+  Solo acepta la elección Explicación vigente y un análisis suficiente. El
+  servidor envía selección, contexto de su página, dificultad y nivel a Gemini.
+  Usa la configuración existente `GEMINI_ANALYSIS_MODEL=gemini-3.5-flash-lite`;
+  no se añadió una clave pública, otro proveedor, pago o reintento automático.
+- Se reutiliza el adaptador Gemini existente: una llamada acotada a 45 segundos,
+  salida estructurada, validación de longitud por nivel, tema, concepto y cita
+  del fragmento. Los errores de cuota, rechazo, respuesta inválida y timeout
+  son mensajes controlados. El texto se representa escapado, sin ejecutar HTML.
+- Migración forward **`20261028002100_generate_explanation_drafts.sql`**, creada
+  primero con CLI y aplicada una vez al proyecto Supabase existente. El timestamp
+  local se alineó con el registrado por MCP. Hay ahora **11 migraciones remotas**;
+  no repetirlas ni ejecutar db push. No se alteraron secretos ni migraciones previas.
+- `reinforcement_generations` conserva nivel, versión, intento y resultado privado;
+  `reinforcement_generation_runs` permite limitar concurrencia (2) y frecuencia
+  (10 intentos/5 minutos por cuenta). RLS y permisos de solo lectura para el dueño;
+  las escrituras pasan por una transacción firmada con el secreto existente,
+  caducidad y dominio propios. Wrapper público SECURITY INVOKER, implementación
+  privada con search_path vacío, propiedad y documento actual comprobados bajo
+  locks. Los conflictos deterministas usan PT409.
+- Un lease de 120 segundos evita llamadas paralelas duplicadas; un resultado
+  completado se devuelve desde caché y uno tardío no sobrescribe otro intento.
+  La generación registra processing/generating y generated/review de forma real.
+  El resultado tiene **approval_status=pending**, sin approved_by/approved_at.
+  No hay endpoint de aprobación/publicación: **no se inserta en reinforcements**.
+  HU024 deberá implementar la decisión explícita correspondiente.
+
+### Comprobación real y límites de lo probado
+
+- Se guardaron los tres niveles desde la UI (versiones 1, 2 y 3); no consumieron
+  IA. Se recargó y se comprobó Detallado antes de generar con Enter. La solicitud
+  `1201c3a3-1632-41b0-ae4f-0b989ba676cb` produjo una explicación real de **764
+  caracteres**, Gemini 3.5 Flash-Lite, **un intento**, sobre conservación de energía
+  en un sistema aislado, transformaciones potencial/cinética y péndulo sin rozamiento.
+  Se revisaron pertinencia, claridad y cita literal «En un sistema aislado».
+  La generación real de esta validación fue Detallado; los límites de los otros
+  niveles se comprobaron automáticamente, sin presentarlos como llamadas reales.
+- Una actualización de herramientas reinició el navegador y cerró el servidor.
+  El resultado ya estaba guardado. Se reinició únicamente Next del proyecto,
+  se recuperó el acceso local y se inició sesión con la cuenta QA desechable,
+  sin intervención ni credenciales personales. El diagnóstico, elección y
+  explicación reaparecieron tras el reinicio: no se volvió a llamar al proveedor.
+- Verificación HTTP/SDK autenticada: misma explicación en reenvíos simultáneos,
+  409 para nivel/elección/documento obsoletos, 409 para contexto insuficiente,
+  401 sin sesión, 403 desde origen ajeno, 404 y RLS vacío para otra cuenta.
+  Las actualizaciones directas de aprobación se rechazaron. Snapshot completo
+  antes/después idéntico: **25 solicitudes, un intento, cinco eventos reales,
+  cero refuerzos publicados**. No se fabricaron estados mediante SQL remoto.
+- Escritorio, cierre/reapertura de sección, recarga, reinicio, teclado y emulación
+  móvil 390×844 comprobados. El control general de viewport no cambió el ancho
+  efectivo de esta pestaña; se verificó con CDP por pestaña (ancho de documento y
+  contenido: 390 px), se capturó la pantalla real y se retiró la emulación.
+  Cero errores de consola observados en la sesión recuperada. La pestaña Refuerzos
+  sigue vacía y el original conserva SHA-256
+  `e7277d66afd7caba47385cfac2f0e55a2eeb4fb7aa7136409fa35300a6347946`.
+- **237/237 pruebas automatizadas aprobadas**, incluyendo API, proveedor, UI y
+  PostgreSQL aislado (8 comprobaciones de generación). Lint correcto. El build
+  inicial de Turbopack/TypeScript aprobó con el código de HU020; después del
+  reinicio un build restringido falló al descargar Geist y los reintentos con
+  red fallaron al conectar con el proceso auxiliar de CSS (salida 0, sin cuerpo
+  de error). No se ocultó con respuestas ficticias ni se actualizaron dependencias.
+  **Build final de producción con Webpack y TypeScript correcto** mediante
+  `npm.cmd --prefix web run build -- --webpack`, opción documentada por Next.
+  El script habitual conserva Turbopack; su fallo posterior de proceso auxiliar
+  queda pendiente de diagnóstico del entorno y no se declara corregido.
+- Los avisos de seguridad Supabase conservan el baseline: secreto privado con
+  RLS sin políticas, handle_new_user accesible a anon, ocho funciones definer
+  autenticadas anteriores y protección de contraseñas filtradas desactivada.
+  Las dos tablas nuevas tienen RLS, el wrapper es invoker y no se añadió un aviso.
+
+Las capturas se registran en las subtareas con un comentario de resultados por
+incidencia, conservando las evidencias anteriores de HU018/HU019 y del Sprint 3.
+Los scripts QA externos antiguos de 24 solicitudes ya no son el baseline actual;
+`HU019/hu020-live.mjs` comprueba explícitamente las 25 y el ID de la revisión.
+No se versionaron scripts privados, capturas, .env.local o credenciales. Se
+conservan main, develop, el stash `d6406e0` y todas las ramas anteriores.

@@ -5,6 +5,7 @@ import { REQUEST_STATUSES, REQUEST_STATUS_LABELS, REQUEST_STAGE_LABELS } from "@
 import { useRequestResource } from "@/lib/reinforcements/use-request-resource";
 import { ContextualAnalysisPanel } from "@/components/documents/contextual-analysis-panel";
 import { RecommendationPanel } from "@/components/documents/recommendation-panel";
+import { ExplanationPanel } from "@/components/documents/explanation-panel";
 import { requestListSchema, requestDetailSchema, type RequestFilter, type RequestRecord, type RequestSummary } from "@/lib/validations/request-list";
 
 const parseList = (body: unknown) => requestListSchema.parse(body);
@@ -61,6 +62,7 @@ function RequestDetailPanel({ projectId, documentId, requestId, active, focusVer
       <button type="button" onClick={() => onOpen(detail.request)} className={buttonClass}>Ver selección en el PDF</button>
       <ContextualAnalysisPanel key={`${documentId}:${requestId}`} request={detail.request} active={active} onChanged={resource.refresh} />
       <RecommendationPanel key={`recommendations:${documentId}:${requestId}`} request={detail.request} active={active} onChanged={resource.refresh} />
+      <ExplanationPanel key={`explanation:${documentId}:${requestId}`} request={detail.request} active={active} onChanged={resource.refresh} />
       <h4 className="font-semibold text-slate-900">Cambios registrados</h4>
       {detail.events.length === 0 ? <p className="text-sm">No hay eventos en esta página del historial.</p> : <ol className="space-y-3">
         {detail.events.map(event => <li key={event.id} className="rounded-lg bg-white p-3 text-sm text-slate-800">
