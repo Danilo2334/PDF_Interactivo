@@ -11,6 +11,7 @@ import type { FragmentSelection } from "@/lib/pdf/fragment-selection";
 
 type ViewerProps = {
   projectId: string;
+  sourceUrl?: string;
   initialPage?: number;
   initialFragment?: FragmentSelection | null;
   onPageSelect?: (number: number | null) => void;
@@ -40,7 +41,7 @@ const viewerMessages = {
   ready: "PDF disponible. Usa los controles o desplázate para consultar sus páginas.",
 };
 
-export function PdfViewer({ projectId, initialPage = 1, initialFragment = null, onPageSelect, requestDraft, onFragmentSelect, fragmentResetKey, onTextSourceChange, visible = true, onVisiblePageChange, onOpenReinforcements, navigationKey = 0, onOpenPreview, previewTriggerRef }: ViewerProps) {
+export function PdfViewer({ projectId, sourceUrl, initialPage = 1, initialFragment = null, onPageSelect, requestDraft, onFragmentSelect, fragmentResetKey, onTextSourceChange, visible = true, onVisiblePageChange, onOpenReinforcements, navigationKey = 0, onOpenPreview, previewTriggerRef }: ViewerProps) {
   const [attempt, setAttempt] = useState(0);
   // Only restore on mount; changing the selection must not reload the PDF.
   const [startingPage] = useState(initialPage);
@@ -48,8 +49,9 @@ export function PdfViewer({ projectId, initialPage = 1, initialFragment = null, 
 
   return (
     <PdfPages
-      key={`${projectId}-${attempt}`}
+      key={`${sourceUrl ?? projectId}-${attempt}`}
       projectId={projectId}
+      sourceUrl={sourceUrl}
       initialPage={startingPage}
       initialFragment={startingFragment}
       onPageSelect={onPageSelect}
@@ -67,6 +69,7 @@ export function PdfViewer({ projectId, initialPage = 1, initialFragment = null, 
 
 function PdfPages({
   projectId,
+  sourceUrl,
   initialPage = 1,
   initialFragment = null,
   onPageSelect,
@@ -156,7 +159,7 @@ function PdfPages({
           `/pdfjs/pdf.worker.min.mjs?v=${pdfjs.version}`;
 
         const response = await fetch(
-          `/api/projects/${projectId}/pdf`,
+          sourceUrl ?? `/api/projects/${projectId}/pdf`,
           {
             cache: "no-store",
             signal: controller.signal,
@@ -286,7 +289,7 @@ function PdfPages({
 
       container.replaceChildren();
     };
-  }, [projectId, initialPage, initialFragment, onPageSelect, onFragmentSelect, onTextSourceChange, onVisiblePageChange]);
+  }, [projectId, sourceUrl, initialPage, initialFragment, onPageSelect, onFragmentSelect, onTextSourceChange, onVisiblePageChange]);
 
   return (
     <section

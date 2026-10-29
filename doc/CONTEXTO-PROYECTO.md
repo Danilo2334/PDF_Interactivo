@@ -3566,3 +3566,135 @@ HU033 a partir de estas instantáneas privadas, sin activar su acceso público n
 desplegar mientras el propietario pide esperar. Después de acordar hosting,
 desplegar y probar el lector real; completar HU030 y los pendientes cruzados
 con intentos reales. No sustituirlos con la vista previa ni pruebas aisladas.
+
+## 2026-10-28 — HU033 / SCRUM-45: lector implementado y comprobación local privada
+
+Alcance confirmado por el propietario: **continuar HU033 y las pruebas locales,
+sin desplegar todavía**. Rama `codex/scrum-45-hu033-acceso-lector` desde
+`8f72713`, sobre la preparación de HU032 / PR #37. No se hicieron merges,
+despliegues de la aplicación, altas de hosting ni activación de pagos. El stash
+`d6406e0` se conserva y `.env.local` no se modificó.
+
+### Implementación y separación de permisos
+
+- `/read/[token]` y `/api/read/[token]` implementan la entrada del lector, la
+  identificación y la entrega de PDF/multimedia. El servidor exige la publicación
+  realmente publicada y más reciente del proyecto, origen HTTPS verificado,
+  documento actual, propietario activo y coincidencia con la instantánea. Una
+  publicación privada, retirada, sustituida o de documento eliminado no debe
+  permitir lectura ni entrega directa de archivos.
+- El servidor necesita **`SUPABASE_SERVER_KEY`** privada (secret key o legacy
+  service_role del mismo proyecto) para leer la publicación y firmar los archivos
+  privados sin una sesión del propietario. **No está configurada**: solo se
+  comprobó su ausencia, no se imprimió, solicitó por chat, generó ni recuperó una
+  clave. No usar la publishable key como sustituto ni desactivar RLS. La
+  publicación permanece bloqueada también cuando falta esta configuración,
+  aunque alguien configure el origen HTTPS.
+- Proyección explícita y validada del lector: títulos, contenido aprobado,
+  selección sin identificador privado de documento, recursos y preguntas/opciones.
+  Usa identificadores derivados opacos; no serializa usuario/proyecto/documento,
+  solicitud, versión privada, rutas de Storage, clave correcta, explicación de
+  evaluación ni citas privadas del quiz. Recursos visuales y resúmenes pasan por
+  sus esquemas. No se reutiliza directamente la instantánea privada como DTO.
+- Cada acceso al contenido o al archivo vuelve a verificar vigencia/propiedad/
+  documento y, cuando corresponde, identificación. Storage sigue privado; URL
+  firmada **30 segundos**, solo en servidor, sin redirecciones y con timeout.
+  Proxy entrega rangos, `no-store`, `nosniff`, CORP same-origin y no-referrer.
+  Las páginas de lectura no se indexan ni envían el enlace como Referer.
+- Migración **`20261029003154_reader_identification_setting.sql`** aplicada una
+  vez y reconciliada con el historial remoto. El nombre UTC del archivo es del
+  día 29; esta sesión corresponde al **28 de octubre en Bogotá**. Añade la opción
+  de identificación a la instantánea/recibo, por defecto false para versiones
+  anteriores. La configuración se elige al preparar una versión, no modifica
+  silenciosamente versiones ya fijadas. Reusar una operación con otra opción
+  devuelve conflicto. No se añadieron permisos anónimos ni políticas más amplias.
+- Nombre o correo son **declarados**, no autenticados ni verificados. No crean
+  cuenta ni conceden permisos de propietario. Cookie firmada, HttpOnly, Lax,
+  ligada a la publicación y con caducidad de **30 minutos**; Secure en HTTPS.
+  No guarda el nombre/correo en texto, logs o BD. La participación y atribución
+  persistida de HU030 siguen pendientes y no se simulan con este formulario.
+- El lector reutiliza PDF.js/visor mediante una fuente de archivo explícita,
+  conserva zoom/página/posición y permite abrir tarjetas, diagramas, resúmenes,
+  recursos y fuente original. No monta componentes ni acciones de edición,
+  aprobación, creación, retirada o publicación. Los quizzes muestran preguntas/
+  opciones sin revelar claves; **todavía no permiten enviar respuestas**, y la
+  UI lo dice. No se presentan esas preguntas como intentos reales de HU030.
+
+### Límite y alternativa de comprobación
+
+La revisión automática **rechazó el comando que activaba un acceso temporal QA
+sin sesión**, indicando únicamente «bloqueado por política». No se reintentó su
+activación ni se modificaron controles para evadir el rechazo. El mecanismo de
+leases/flags temporales se retiró por completo del código final; no quedó un
+modo de acceso anónimo alternativo ni un almacén global de credenciales.
+
+Se implementó una alternativa más restringida:
+`/projects/[projectId]/reader-test/[publicationId]`, con API bajo la misma ruta
+privada. **Exige la sesión y permiso del propietario en cada petición**, incluida
+identificación, contenido y archivo. Usa la misma proyección/visor del lector,
+desde una versión preparada y aprobada. Aviso visible: «Prueba privada del lector
+con sesión del propietario. No acredita acceso anónimo ni publicación HTTPS».
+Se abre desde «Probar lectura privada de esta versión». Ese prefijo privado
+no se acepta como token en la ruta pública.
+
+**No confundir** los resultados visuales siguientes con una publicación pública.
+El acceso anónimo positivo, la despublicación real y la vigencia de un enlace
+externo siguen sin ejecutarse. El contrato de esos casos se probó aisladamente.
+
+### Resultados reales en producción local
+
+- **356/356** pruebas automatizadas; lint sin advertencias y build de producción
+  con TypeScript correctos. Tras el bloqueo adicional por configuración del
+  servidor: **45/45 casos afectados**. Se recompiló después del ajuste final de
+  mensajes de conexión/validación, sin actualizar dependencias ni Node.
+- Preparaciones QA digitales: **3**, id
+  `3a57562d-64ee-4e2c-b81e-90192a093e99`, identificación true; **4**, id
+  `f8bd2826-1385-47d7-8199-6cd6f9bc34b1`, false. Ambas **7 refuerzos / 2 recursos /
+  2 quizzes aprobados**, conservando energía 3 y agua 4, no los borradores 5/6.
+  No tienen token, URL ni fecha de publicación. Preparaciones anteriores,
+  instantáneas y hashes íntegros. Los reintentos de estos fixtures reutilizan
+  sus UUID; no crean versiones adicionales.
+- Versión 4: lectura privada directa sin formulario. Versión 3: muestra
+  formulario, bloquea PDF directo **403**, rechaza datos vacíos **400**, acepta
+  nombre QA y también correo QA sin nombre, y conserva la identificación tras
+  recarga. La cookie de identificación sola, sin sesión propietaria, **no abre**
+  esa prueba privada: **401**.
+- Sin sesión: contenido/archivo privados **401**; otra cuenta: contenido,
+  archivo e identificación **404**; recurso ajeno **404**. Intentos HTTP de
+  publicación, eliminación, tarjeta y aprobación de quiz solo con cookie de
+  identificación: todos **401**, sin mutaciones. Página privada devuelve
+  redirección **307** al login. Ruta pública sin publicación y su PDF/identificar:
+  **404**; no se fabricaron flags públicos ni estados para obtener un 200.
+- PDF digital privado, con y sin identificación: SHA-256
+  `e7277d66afd7caba47385cfac2f0e55a2eeb4fb7aa7136409fa35300a6347946`.
+  `Range: bytes=0-63` devuelve **206**, 64 bytes, `bytes 0-63/1580`; rango múltiple
+  rechazado **416**. PNG real **6424 bytes**, decodificado en UI **640×360**;
+  referencia HTTPS visible y diagrama de agua consultable. No se afirma otra
+  reproducción de MP4 ni un envío de respuestas del quiz.
+- Proyecto escaneado: instantánea privada 1 sin refuerzos. Estado vacío real;
+  SHA-256 `b0bc1809351f249bd352032fbcdd193846e4c44e4199cf4bfbfec24326b71302`.
+  Pedir su ruta de archivo con el ID opaco de la imagen digital devuelve **404**:
+  no se mezclan archivos/documentos.
+- Navegación real páginas 1/2, tarjetas y teclado. Al cerrar el panel, conservación
+  exacta: página **2**, zoom **125 %**, **x=0, y=2011,199951171875**, horizontal
+  **0**. Misma instancia del visor. Móvil **390×844 CSS**, ancho documental
+  **375**, sin desbordamiento; viewport restaurado. Consolas observadas vacías
+  incluso en las variantes de error esperadas.
+- Comparación profunda de **diez tablas** antes/después idéntica (solicitudes,
+  refuerzos, revisión, versiones/eventos/trabajos de quiz, tarjetas y recursos).
+  Siguen las **35 solicitudes digitales**, siete refuerzos, los 31/cuatro
+  registros de la línea base anterior y ambos originales intactos. No hubo
+  llamadas de IA ni consumo nuevo. Asesores: mismos cuatro grupos previos,
+  sin nueva advertencia atribuida a esta migración.
+
+Diez capturas reales: SCRUM-123 dos; SCRUM-205 tres; SCRUM-206 dos;
+SCRUM-124 tres. Scripts/salidas en `HU019/HU033`, fuera de Git; grants de carga
+eliminados tras subir. Se registrarán en un comentario breve por subtarea, sin
+duplicar las evidencias anteriores.
+
+**Estado correcto**: SCRUM-45 y SCRUM-123/205/206/124 **En curso**. Falta la
+prueba anónima positiva sobre publicación vigente, configuración privada del
+servidor/HTTPS cuando se autorice, despublicación y cambios posteriores reales,
+además de participación HU030/opiniones habilitadas. No finalizar historias ni
+los pendientes cruzados de HU028/HU029/HU031 por esta prueba privada. Mantener
+HU032 bloqueada para publicación; no desplegar, fusionar ni habilitar pagos.
