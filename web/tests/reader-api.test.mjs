@@ -1,7 +1,10 @@
 import assert from 'node:assert/strict';
-import test from 'node:test';
+import test, {beforeEach,afterEach} from 'node:test';
 import {load,model,schemas,sessions,context,documentId,mediaId} from './reader-test-helpers.mjs';
 const token='a'.repeat(48);
+let previousSecret;
+beforeEach(()=>{previousSecret=process.env.REINFORCEMENT_REQUEST_SECRET;process.env.REINFORCEMENT_REQUEST_SECRET='a'.repeat(64);});
+afterEach(()=>{if(previousSecret===undefined)delete process.env.REINFORCEMENT_REQUEST_SECRET;else process.env.REINFORCEMENT_REQUEST_SECRET=previousSecret;});
 function fixture(options={}){
  const calls=[];class ReaderUnavailable extends Error{constructor(status=404){super('Unavailable');this.status=status;}}
  const ctx={...context,db:{storage:{from:()=>({createSignedUrl:async()=>({data:{signedUrl:'https://storage.unit/asset'}})})}},snapshot:{...context.snapshot,requireIdentification:!!options.identification}};

@@ -17,6 +17,10 @@ test('HU033 declared identity session is bounded, signed and publication-specifi
   assert.equal(sessions.hasReaderSession(req,token,Date.now()+1801000),false);assert.doesNotMatch(Buffer.from(value.split('.')[0],'base64url').toString(),/Reader QA|reader@example|userId|owner/);
   for(const identity of [{name:'',email:''},{name:' ',email:''},{name:'A',email:''},{name:'',email:'not an email'}])assert.equal(schemas.readerIdentitySchema.safeParse(identity).success,false);
   assert.equal(schemas.readerIdentitySchema.safeParse({name:'Reader QA',email:''}).success,true);assert.equal(schemas.readerIdentitySchema.safeParse({name:'',email:'qa@example.invalid'}).success,true);
+  const anonymous=sessions.createReaderSession(token,{name:'',email:''}),anonymousRequest=new Request('http://localhost',{headers:{Cookie:sessions.readerCookieName(token)+'='+anonymous}});
+  const anonymousSession=sessions.getReaderSession(anonymousRequest,token);assert.ok(anonymousSession);assert.equal(anonymousSession.identified,false);assert.equal(sessions.hasReaderSession(anonymousRequest,token),false);
+  const identified=sessions.createReaderSession(token,{name:'Reader QA',email:''},Date.now(),anonymousSession),identifiedRequest=new Request('http://localhost',{headers:{Cookie:sessions.readerCookieName(token)+'='+identified}});
+  assert.equal(sessions.getReaderSession(identifiedRequest,token).reader,anonymousSession.reader);assert.equal(sessions.hasReaderSession(identifiedRequest,token),true);
  }finally{if(old===undefined)delete process.env.REINFORCEMENT_REQUEST_SECRET;else process.env.REINFORCEMENT_REQUEST_SECRET=old;}
 });
 test('HU033 malformed tokens and nested answer fields cannot enter strict reader replies',()=>{

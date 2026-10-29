@@ -3719,3 +3719,100 @@ aislamiento y conservación aprobados otra vez. Servidor de producción local
 en **3000**, sin variables de prueba ni acceso temporal alternativo. Configuración
 de publicación y clave de servidor siguen sin habilitarse. La validación pública
 permanece pendiente; no avanzar cierres por una prueba privada.
+
+## 2026-10-28 — HU030 / SCRUM-42: intentos, evaluación y reintentos locales
+
+Alcance: continuar HU030, conservar el trabajo existente y documentar pruebas
+reales locales; **sin despliegues ni merges**. Rama
+`codex/scrum-42-hu030-retroalimentacion-reintentos`, desde `f0a4f58` (HU033).
+La interrupción de compactación no perdió los cambios ni las primeras seis
+capturas. Se recuperó la pestaña y se completó la revisión. El stash `d6406e0`
+permanece sin aplicar/eliminar y `.env.local` sigue fuera de Git, sin cambios.
+
+### Implementación
+
+- SCRUM-117: operaciones firmadas en servidor, vigencia de cinco minutos,
+  respuestas estrictas y operación UUID idempotente. Cada registro inmutable
+  asocia publicación/hash, versión aprobada de quiz, propietario, lector/sesión,
+  número, respuestas, evaluación y fecha de BD. No acepta identidad ni nota
+  aportadas por el navegador. Bloqueo transaccional serializa doble envío y
+  concurrencia; repetir una operación idéntica devuelve el mismo registro.
+- SCRUM-199: PostgreSQL evalúa contra las preguntas y claves de la instantánea
+  aprobada, sin usar el borrador actual. Guarda respuestas, total, aciertos y
+  explicaciones una sola vez. La calificación persistida no se recalcula para
+  HU039; no se permite editarla ni borrarla mediante DML del cliente.
+- SCRUM-200: la lectura inicial no entrega claves ni explicaciones de evaluación.
+  Tras enviar, solo se consulta el resultado de esa sesión autorizada. UI muestra
+  correcta/incorrecta, opción, explicación y total, y recupera el último intento.
+- SCRUM-118: reintento según configuración fijada en la versión. Cuando se permite,
+  limpia selecciones/retroalimentación, conserva el historial y crea otra operación.
+  Cuando no se permite, UI y servidor lo bloquean, también ante concurrencia.
+  Respuestas incompletas, fuera de opciones o con una nota inyectada se rechazan.
+  Límite de 30 envíos en cinco minutos por publicación/sesión, sin bucles de reintento.
+- Sesión de lector firmada y HttpOnly: UUID opaco incluso sin identificación;
+  identificarse conserva ese UUID. Identidad declarada no equivale a cuenta
+  verificada ni concede permisos de propietario. El límite anónimo es por sesión,
+  no por persona: borrar/caducar cookies crea una sesión distinta. La prueba
+  privada usa el usuario propietario, de modo que borrar esa cookie no reinicia
+  sus intentos privados. La identificación exigida sigue siendo obligatoria.
+- **Separación física**: `quiz_reader_attempts` para lectores reales y
+  `quiz_practice_attempts` para ensayos privados del propietario. RPC de lector
+  restringida al servidor; ensayo exige sesión y propiedad. RLS permanece activa,
+  sin escrituras directas del cliente ni nuevos permisos anónimos. HU031 conserva
+  su evaluación de vista previa sin escribir en ninguna de esas tablas.
+- Migración real **`20261029010922_quiz_reader_attempts.sql`**, aplicada una vez.
+  El nombre inicial de CLI `20261029010110` se reconcilió con la versión remota
+  `20261029010922`; tras retomar se consultó el historial y **no se reaplicó**.
+  Fecha UTC del día 29, sesión del 28 en Bogotá. No se modificaron las anteriores.
+
+### Verificación observada
+
+- **359/359 pruebas**, lint y build de producción con TypeScript aprobados.
+  Tras la ordenación final del rechazo de identificación: nueva compilación y
+  **8/8 casos afectados** al retomar. Sin actualizar Node ni dependencias.
+  PostgreSQL aislado valida permisos, instantánea, concurrencia/idempotencia,
+  identificación y publicación retirada. Sus fixtures no acreditan lectura pública.
+- HTTP real en producción local: doble envío idéntico devuelve el mismo ID;
+  dos operaciones concurrentes sin reintento producen un 200 y un 409. Cambiar
+  respuestas reutilizando una operación devuelve 409. Reintento prohibido 409.
+  Se interrumpió el consumo de la respuesta después del 200, se consultó el
+  registro persistido y se repitió la operación: mismo ID, sin duplicado.
+- Cinco ensayos HTTP: energía **1/2**, agua **1/1 → 0/1 → 1/1**, e identificación
+  con un único ganador concurrente. Rechazos reales: sin sesión **401**, solo
+  cookie identificada sin propietario **401**, quiz ajeno **404**, otra cuenta
+  **404**, origen ajeno **403**, vacío/nota inyectada/opción fuera de rango **400**.
+  Otra cuenta no ve registros; DML y RPC pública desde cliente autenticado:
+  **42501**. Ruta pública sin publicación vigente: **404**, sin insertar.
+- Versión privada QA **5**, `e5ddc59f-3d42-4145-a4e3-2788ef14da7a`, preparada
+  mediante la API normal: siete refuerzos, dos recursos y dos quizzes aprobados,
+  sin token ni fecha de publicación. No se fabricó una publicación con SQL.
+- Navegador real: energía **1/2**, explicación de cada pregunta, intento 1 y
+  selecciones bloqueadas conservados tras recarga; no ofrece reintento. Agua
+  **1/1** y luego **0/1**, intento 2 recuperado al actualizar. Al pulsar Reintentar:
+  cero radios marcados, ninguna explicación visible, envío deshabilitado y
+  constancia del intento anterior conservada. Teclado Space/Enter funcional.
+  Móvil **390×844 CSS**, ancho documental **375**, sin desbordamiento; viewport
+  restaurado. Consola observada: cero errores/advertencias.
+- Total final en BD: **8 ensayos privados, 0 intentos de lectores, 0 instantáneas
+  publicadas**. La vista previa HU031 no altera las tablas de intentos. Comparación
+  profunda de diez tablas de contenido y de instantáneas previas sin cambios.
+  Siguen 35 solicitudes digitales y siete refuerzos; preservados los 31/cuatro
+  registros de la línea base. PDF digital SHA-256
+  `e7277d66afd7caba47385cfac2f0e55a2eeb4fb7aa7136409fa35300a6347946`;
+  escaneado `b0bc1809351f249bd352032fbcdd193846e4c44e4199cf4bfbfec24326b71302`,
+  ambos comprobados otra vez tras la revisión visual. Sin llamadas nuevas de IA.
+  Asesores: mismos cuatro grupos previos, sin alertas nuevas de estas tablas.
+- Nueve capturas reales en `HU019/HU030`, fuera de Git: dos para SCRUM-117,
+  dos para SCRUM-199, dos para SCRUM-200 y tres para SCRUM-118. Los avisos de
+  ensayo privado permanecen visibles; no se presentan como participación pública.
+
+### Pendiente obligatorio antes del cierre
+
+**SCRUM-42 y SCRUM-117/199/200/118 permanecen En curso**. Falta recorrer el enlace
+de una publicación realmente vigente como lector, registrar intentos reales y
+comprobar su aislamiento/retirada/sustitución en ese flujo. No es posible hacerlo
+con la configuración actual: falta `SUPABASE_SERVER_KEY` privada y el origen HTTPS
+verificado de HU032/HU033; la publicación sigue deshabilitada y el propietario
+pide no desplegar. No se habilitó otro acceso anónimo local ni se alteraron esos
+controles. Los ensayos privados y contratos aislados **no sustituyen** esa prueba.
+No cerrar pendientes cruzados HU028/HU029/HU031 ni avanzar a otra historia.

@@ -1,16 +1,17 @@
 "use client";
-import { useId, useState } from "react";
+import { useId, useRef, useState } from "react";
 import type { PlayableQuiz, QuizFeedback } from "@/lib/validations/experience-preview";
-export function QuizPlayer({ quiz, onSubmit }: { quiz: PlayableQuiz; onSubmit: (answers: number[]) => Promise<QuizFeedback> }) {
-  const id = useId(), [answers, setAnswers] = useState<(number | null)[]>(() => quiz.questions.map(() => null));
-  const [feedback, setFeedback] = useState<QuizFeedback | null>(null), [busy, setBusy] = useState(false), [error, setError] = useState("");
+export function QuizPlayer({ quiz, onSubmit, initialResult, onRetry }: { quiz: Pick<PlayableQuiz, "title" | "questions" | "allowRetries">; onSubmit: (answers: number[]) => Promise<QuizFeedback>;
+  initialResult?: { answers: number[]; feedback: QuizFeedback } | null; onRetry?: () => void }) {
+  const id = useId(), inFlight = useRef(false), [answers, setAnswers] = useState<(number | null)[]>(() => initialResult?.answers ?? quiz.questions.map(() => null));
+  const [feedback, setFeedback] = useState<QuizFeedback | null>(initialResult?.feedback ?? null), [busy, setBusy] = useState(false), [error, setError] = useState("");
   const complete = answers.every(answer => answer !== null), locked = busy || feedback !== null;
   async function submit() {
-    if (!complete || locked) return;
-    setBusy(true); setError("");
+    if (!complete || locked || inFlight.current) return;
+    inFlight.current = true; setBusy(true); setError("");
     try { const result = await onSubmit(answers as number[]); if (result.total !== quiz.questions.length || result.questions.length !== quiz.questions.length) throw Error("No se pudo verificar el resultado."); setFeedback(result); }
     catch (error) { setError(error instanceof Error ? error.message : "No se pudo comprobar el resultado. Reintenta."); }
-    finally { setBusy(false); }
+    finally { inFlight.current = false; setBusy(false); }
   }
   return <section aria-labelledby={`${id}-title`} className="mt-5 space-y-3 border-t border-slate-200 pt-4">
     <h4 id={`${id}-title`} className="break-words font-semibold">{quiz.title}</h4>
@@ -27,7 +28,7 @@ export function QuizPlayer({ quiz, onSubmit }: { quiz: PlayableQuiz; onSubmit: (
       <p role="status" className="font-semibold">Resultado: {feedback.score} de {feedback.total}</p>
       {feedback.questions.map((q, index) => <div key={index} className="space-y-1 break-words text-sm"><p className="font-semibold">Pregunta {index + 1}: {q.correct ? "Correcta" : "Incorrecta"}</p>
         <p>Respuesta correcta: {q.correctOption}</p><p>{q.explanation}</p></div>)}
-      {quiz.allowRetries ? <button type="button" onClick={() => { setFeedback(null); setAnswers(quiz.questions.map(() => null)); setError(""); }} className="rounded-lg border border-blue-300 bg-white px-3 py-2 text-sm font-semibold">Reintentar mini quiz</button>
+      {quiz.allowRetries ? <button type="button" onClick={() => { onRetry?.(); setFeedback(null); setAnswers(quiz.questions.map(() => null)); setError(""); }} className="rounded-lg border border-blue-300 bg-white px-3 py-2 text-sm font-semibold">Reintentar mini quiz</button>
         : <p className="text-sm">Este mini quiz no permite reintentos.</p>}
     </div>}
   </section>;
