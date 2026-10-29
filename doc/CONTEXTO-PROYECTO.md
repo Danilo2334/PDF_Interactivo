@@ -3836,3 +3836,150 @@ actualizada. Se detiene aquí, antes de otra historia: la comprobación pública
 positiva y su retirada/sustitución siguen pendientes de HU032/HU033. No mezclar
 los ocho ensayos privados con resultados reales ni cerrar la historia por
 las verificaciones automáticas. Los originales y el stash siguen preservados.
+
+## 2026-10-29 — Propuesta QA HTTPS para HU032/HU033/HU030, sin ejecutar
+
+El propietario pide **preparar la propuesta**, sin desplegar, publicar contenido
+ni hacer merge. Inspección de solo lectura: árbol limpio al comenzar, stash
+`d6406e0` conservado. PR #39 abierto, borrador, dos commits, sin conflictos,
+HEAD **`f2667fddd08ea1f3f0c76dded701c180f5fc6a4c`**. Ese es el candidato
+inmutable para la primera comprobación QA; incluye el código HU030 de `a86d3ed`.
+Esta sección añade documentación, no código funcional ni resultados nuevos.
+
+### Destino, cuenta y costo propuestos
+
+- **Vercel, proyecto nuevo y exclusivo de QA**, nombre propuesto
+  `pdf-interactivo-qa`, bajo la cuenta personal de **Danilo**, vinculada a
+  `Danilo2334/PDF_Interactivo`. No existe todavía un ID/slug de hosting de Danilo
+  confirmado. La identidad del conector Vercel sigue siendo **Francisco**
+  (`molinapacho72-4319`); la lista de equipos accesibles devolvió cero. No se
+  consultaron/modificaron sus proyectos ni se crearon recursos en esa cuenta.
+  Primer paso pendiente: conectar Vercel con la cuenta de Danilo y verificar
+  titular, scope, plan y proyecto antes de cualquier cambio.
+- **USD 0 de gasto nuevo previsto**, condicionado a Hobby personal/no comercial
+  y sus cuotas. No activar Pro, pruebas Pro, pagos, dominios comprados, base nueva
+  ni proveedores de IA de pago. Si la cuenta/uso no cumple Hobby o no hay cuota,
+  detener el despliegue; no prometer gratuidad fuera de esos límites.
+- Usar un dominio generado **`.vercel.app`**, sin comprar dominio. Nombre y URL
+  exactos se confirmarán al crear el proyecto; no están reservados. Origen estable
+  del proyecto QA para evitar que una URL efímera cambie tras recompilar.
+- Para lectores sin cuenta Vercel, una Preview protegida no acredita el acceso
+  anónimo de HU033. Propuesta: dominio estable del proyecto QA con la protección
+  estándar, cuyo dominio Production queda accesible. **Production sería el nombre
+  técnico del entorno de ese proyecto QA aislado**, no main ni la entrega final.
+  Su exposición futura necesita autorización de despliegue/publicación. No cambiar
+  ahora protección, permisos, cuenta ni asociación Git; importar/conectar el repo
+  puede disparar despliegues automáticos. No habilitar automatismos hacia main/develop.
+
+### Parámetros de build y variables privadas
+
+Framework Next.js, directorio raíz `web`, Node **22.x**, instalar `npm ci`, compilar
+`npm run build`, salida por defecto de Next.js (sin export estático). Vercel ejecuta
+las funciones del framework; no requiere levantar el servidor local ni abrir su
+puerto 3000. No actualizar dependencias. Respetar `serverExternalPackages` y el
+worker PDF.js incluido en `next.config.ts`; validar su empaquetado en la prueba QA.
+
+En **Vercel → proyecto QA → Settings → Environment Variables**, restringidas al
+entorno elegido del proyecto QA, sin compartirlas a todo el equipo:
+
+| Variable | Procedencia / configuración propuesta |
+| --- | --- |
+| `NEXT_PUBLIC_SUPABASE_URL` | Proyecto existente `zqodybtzssvqozrckfgw`; coincide con la clave pública. |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Clave pública existente de ese mismo proyecto; es la única clave de Supabase que recibe el navegador. |
+| `SUPABASE_SERVER_KEY` | Secret key existente o legacy service_role del mismo proyecto, exclusivamente servidor y tipo Secret en hosting. Falta en local; no se leyó, generó ni copió en esta propuesta. |
+| `REINFORCEMENT_REQUEST_SECRET` | Valor existente de configuración privada, coincidente con `private.reinforcement_request_secrets`; no generar otro ni cambiar el remoto. Tipo Secret. |
+| `PUBLICATION_ORIGIN` | Origen HTTPS exacto del dominio QA estable, sin ruta, query, credenciales ni puerto. No inferir de Host ni usar localhost. |
+| `PUBLICATION_HTTPS_VERIFIED` | Inicialmente `false`; cambiar a `true` solo después de verificar realmente DNS/certificado/acceso HTTPS. |
+| `NEXT_PUBLIC_SITE_URL` | Mismo origen QA para recuperación de cuenta; conservar URL local en el equipo. |
+| `PDF_INTERACTIVO_LOGIN_EPOCH` | UUID de versión del arranque/despliegue QA, igual en todas sus funciones. Configurarlo explícitamente: Vercel no ejecuta el wrapper `npm start` que lo genera en local. No es una credencial de Supabase. |
+
+Para obtener la clave, el propietario puede abrir de forma privada
+**Supabase → proyecto zqodybtzssvqozrckfgw → Settings → API Keys** y guardarla
+directamente en el campo Secret del hosting. No enviarla por chat, capturas,
+comentarios, comandos registrados o Git. Lo mismo aplica al secreto de firma.
+La secret/service_role omite RLS: se mantiene solo en módulos de servidor y no
+se concede a clientes. No cambiar políticas ni usar una publishable key en su lugar.
+
+`GEMINI_API_KEY` y `GEMINI_ANALYSIS_MODEL` **no son necesarios para este recorrido**:
+se reutilizan refuerzos/quizzes QA ya aprobados; no se generará contenido ni habrá
+consumo nuevo de IA. Si se autoriza probar generación después, configurarlos solo
+en servidor y conservar la restricción de nivel gratuito. No copiar `.env.local`
+completo al hosting. No reejecutar migraciones: el esquema de desarrollo ya incluye
+`20261029010922_quiz_reader_attempts`; comprobar historial antes de cualquier SQL.
+Se propone reutilizar la BD existente solo con proyectos QA identificados; no es
+una BD físicamente aislada. No publicar documentos personales ni datos de terceros.
+
+### Límites encontrados antes del despliegue
+
+1. Vercel Functions limita el cuerpo de solicitud/respuesta a **4,5 MB**. La app
+   acepta PDF/vídeo de **20 MiB** e imágenes de 5 MiB a través del servidor. Por
+   tanto, este destino sirve para la prueba acotada con los PDFs QA existentes
+   (1580/13899 bytes) y PNG de 6424 bytes; **no acredita el rango completo de cargas**
+   ni resuelve la decisión de hosting final. Conservar los límites funcionales;
+   no bajarlos silenciosamente para aprobar. Una futura entrega completa necesita
+   resolver cargas grandes con autorización conservada o elegir otro alojamiento.
+2. **Retirada editorial pendiente de HU036 / SCRUM-48 (Por hacer)**. Comprobado
+   en Jira y código: la API actual solo ofrece preparar/publicar; no Despublicar.
+   La sustitución mediante una publicación posterior sí tiene contrato. No
+   presentar borrar un proyecto o alterar `published_at` con SQL como retirada
+   editorial real. El recorrido completo pedido no puede aprobarse solo poniendo
+   las variables: falta implementar/verificar HU036 y fijar su nuevo commit.
+   Esta propuesta no adelanta su implementación ni modifica el backlog.
+
+### Secuencia posterior, únicamente tras autorizarla
+
+Antes de habilitar contenido público para el ensayo completo, disponer de la
+acción de despublicación HU036 y de su commit revisado. `f2667fd` sirve como
+candidato de bootstrap QA cerrado y como línea base del código actual; no
+acredita esa función ausente. No empezar HU036 ni publicar en este encargo.
+
+1. Confirmar cuenta Danilo, Hobby/cuotas y destino QA. Revisar el SHA exacto y
+   configurar build/variables privadas. No importar a una cuenta ajena ni aceptar
+   upgrades. Fijar el dominio estable y no inventar su URL.
+2. Primer despliegue QA del candidato con publicación deshabilitada. Verificar
+   certificado válido sin excepciones, HTTP→HTTPS, login del propietario, cookies
+   Secure/HttpOnly, PDF.js/worker, visor y rutas privadas. Si se prueba recuperación,
+   añadir solo el callback QA exacto en Supabase Auth URL Configuration, preservando
+   los existentes; el login con contraseña no requiere rehacer usuarios.
+3. Tras verificar HTTPS, configurar el origen y habilitar el flag en el entorno
+   QA; crear un nuevo deployment del **mismo SHA**, ya que cambiar variables no
+   cambia deployments anteriores. La clave de servidor debe pertenecer a la misma
+   BD; confirmar permisos y lectura antes de publicar. No fabricar datos públicos.
+4. Desde la UI propietaria, publicar solo la instantánea QA aprobada más reciente;
+   comprobar confirmación/copia del enlace y exclusión de borradores/quiz 5/6.
+   Conservar hashes del PDF y de la instantánea y registrar versión/ID/fecha.
+5. Sesión A sin cookies de propietario: abrir enlace real, identificación opcional
+   y sin herramientas de edición. Antes de enviar, comprobar ausencia de claves;
+   contestar y contrastar resultado visible con registro de `quiz_reader_attempts`,
+   sin aumentar `quiz_practice_attempts`. Recargar; probar doble envío, respuesta
+   perdida después de persistir y reintentos permitidos/bloqueados en UI/servidor.
+6. Sesión B independiente: no recuperar nota/respuestas de A. Otra publicación,
+   documento o ID de quiz no debe aceptar operaciones ajenas; cookie declarada
+   no concede permisos de propietario. Probar variante con identificación exigida.
+7. Sustitución real: preparar y publicar nueva versión QA por UI. Enlace anterior,
+   PDF, recursos, consulta de intentos y envíos antiguos deben ser rechazados;
+   nuevo enlace funciona y los intentos anteriores siguen íntegros. Preparar una
+   versión sin publicarla no debe fingirse como sustitución ya efectiva.
+8. **Tras implementar HU036 en un nuevo SHA revisado**, despublicar por la acción
+   real de propietario y comprobar los mismos rechazos, incluida una pestaña ya
+   abierta. Confirmar cero inserciones nuevas y conservación de notas históricas.
+   No hacer esta prueba con SQL ni declarar su ejecución mientras falte la acción.
+   Mantener la publicación QA deshabilitada al finalizar; no borrar originales.
+9. Capturas reales de cada resultado, sin secretos ni enlaces de acceso completos
+   expuestos innecesariamente; actualizar los comentarios existentes de las
+   subtareas, conservando las nueve capturas previas. Solo cerrar criterios
+   efectivamente verificados. HU030/HU032/HU033 permanecen En curso hoy.
+
+Fuentes oficiales consultadas el 29/10/2026:
+[Hobby](https://vercel.com/docs/plans/hobby),
+[URLs generadas](https://vercel.com/docs/deployments/generated-urls),
+[protección](https://vercel.com/docs/deployment-protection),
+[variables](https://vercel.com/docs/environment-variables),
+[límites](https://vercel.com/docs/functions/limitations),
+[claves Supabase](https://supabase.com/docs/guides/getting-started/api-keys).
+Consulta del changelog Supabase: cambio TLS anunciado para noviembre; Node moderno
+no necesita habilitar cifrados antiguos. Sin cambios de infraestructura, claves,
+SQL, exposición pública o configuración en esta preparación. No se tomaron nuevas
+capturas de aplicación: esta es una propuesta, no una prueba HTTPS ejecutada.
+Se actualizan los resúmenes madre existentes de SCRUM-44/45/42 con esta dependencia,
+sin añadir comentarios duplicados, alterar las evidencias ni finalizar historias.
