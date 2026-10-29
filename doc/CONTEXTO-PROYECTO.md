@@ -3816,3 +3816,23 @@ verificado de HU032/HU033; la publicación sigue deshabilitada y el propietario
 pide no desplegar. No se habilitó otro acceso anónimo local ni se alteraron esos
 controles. Los ensayos privados y contratos aislados **no sustituyen** esa prueba.
 No cerrar pendientes cruzados HU028/HU029/HU031 ni avanzar a otra historia.
+
+### Entrega local de HU030
+
+Commit funcional **`a86d3edfcfe9aaa38d4bb12debf7f5bac19e438d`**, publicado en
+**[PR #39](https://github.com/Danilo2334/PDF_Interactivo/pull/39)**, borrador sobre
+`codex/scrum-45-hu033-acceso-lector` (#38). Sin merge ni despliegue. La cadena
+pendiente continúa **#30 → #31 → #32 → #33 → #34 → #35 → #36 → #37 → #38 → #39**.
+
+SCRUM-117 comentario único **10186**, dos capturas; SCRUM-199 **10187**, dos;
+SCRUM-200 **10188**, dos; SCRUM-118 **10189**, tres. Lectura posterior confirmó
+las nueve referencias de imagen resueltas, un comentario por subtarea y enlace
+al PR. Las cuatro siguen **En curso**. SCRUM-42 conserva resumen único **10190**,
+sin duplicar imágenes; también **En curso**. Grants de carga eliminados tras
+subir; ningún secreto, cuenta QA ni script temporal quedó versionado.
+
+Servidor de producción local en puerto 3000, rama conservada y documentación
+actualizada. Se detiene aquí, antes de otra historia: la comprobación pública
+positiva y su retirada/sustitución siguen pendientes de HU032/HU033. No mezclar
+los ocho ensayos privados con resultados reales ni cerrar la historia por
+las verificaciones automáticas. Los originales y el stash siguen preservados.
