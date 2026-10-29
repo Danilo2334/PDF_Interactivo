@@ -3698,3 +3698,24 @@ servidor/HTTPS cuando se autorice, despublicación y cambios posteriores reales,
 además de participación HU030/opiniones habilitadas. No finalizar historias ni
 los pendientes cruzados de HU028/HU029/HU031 por esta prueba privada. Mantener
 HU032 bloqueada para publicación; no desplegar, fusionar ni habilitar pagos.
+
+### Entrega local de HU033
+
+Commit funcional **`d2c20c63f73f4509fc9befe3593c157ed658dad4`**, publicado en
+**[PR #38](https://github.com/Danilo2334/PDF_Interactivo/pull/38)**, borrador sobre
+`codex/scrum-44-hu032-publicacion-enlace` (#37). GitHub confirmó abierto, sin
+conflictos y sin merge. La cadena queda **#30 → #31 → #32 → #33 → #34 → #35 →
+#36 → #37 → #38**; no se integró en develop/main.
+
+Todos **En curso**: SCRUM-123, comentario único **10181**, dos capturas;
+SCRUM-205, **10182**, tres; SCRUM-206, **10183**, dos;
+SCRUM-124, **10184**, tres. Lectura posterior confirmó diez referencias de
+archivo/miniatura resueltas, un comentario por subtarea y enlace al PR.
+SCRUM-45 conserva resumen madre único **10185**, sin duplicar imágenes.
+
+Se repitió el recorrido HTTP en la compilación final con los mismos UUID de
+preparación: sin nuevos registros, identificaciones nombre/correo, rangos,
+aislamiento y conservación aprobados otra vez. Servidor de producción local
+en **3000**, sin variables de prueba ni acceso temporal alternativo. Configuración
+de publicación y clave de servidor siguen sin habilitarse. La validación pública
+permanece pendiente; no avanzar cierres por una prueba privada.
