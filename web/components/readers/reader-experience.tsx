@@ -5,8 +5,9 @@ import { PdfViewer } from "@/components/documents/pdf-viewer";
 import { VisualResource } from "@/components/documents/visual-resource";
 import { SummaryResource } from "@/components/documents/summary-resource";
 import { readerReplySchema, type ReaderItem, type ReaderView } from "@/lib/validations/reader";
+import { ReaderQuiz } from "@/components/readers/reader-quiz";
 import type { FragmentSelection } from "@/lib/pdf/fragment-selection";
-function ReaderCard({ item, endpoint, onSource }: { item: ReaderItem; endpoint: string; onSource: () => void }) {
+function ReaderCard({ item, endpoint, onSource, privateTest }: { item: ReaderItem; endpoint: string; onSource: () => void; privateTest: boolean }) {
   const [expanded, setExpanded] = useState(item.initialExpanded), id = useId();
   return <article className="min-w-0 space-y-3 rounded-xl border border-slate-200 bg-white p-4">
     <p className="text-sm text-blue-800">Página {item.pageNumber} · Contenido aprobado</p>
@@ -18,9 +19,7 @@ function ReaderCard({ item, endpoint, onSource }: { item: ReaderItem; endpoint: 
         {m.kind === "link" ? m.url ? <a href={m.url} target="_blank" rel="noopener noreferrer" className="block break-all text-sm text-blue-800 underline">Consultar recurso (abre otra pestaña)</a> : <p>Enlace no disponible.</p>
           : m.kind === "image" ? <Image src={`${endpoint}/assets/${m.id}`} alt={m.title} width={640} height={360} unoptimized className="h-auto max-h-80 w-full object-contain" />
             : <video src={`${endpoint}/assets/${m.id}`} aria-label={m.title} controls playsInline preload="metadata" className="max-h-80 w-full" />}</div>)}</section>}
-      {item.quiz && <section aria-label={`Mini quiz: ${item.quiz.title}`} className="space-y-3 border-t pt-3"><h4 className="font-semibold">{item.quiz.title}</h4>
-        <ol className="list-decimal space-y-3 pl-5">{item.quiz.questions.map((q, n) => <li key={n}><p className="break-words text-sm">{q.prompt}</p><ul className="mt-2 list-disc space-y-1 pl-4">{q.options.map((option, index) => <li key={index} className="break-words text-sm">{option}</li>)}</ul></li>)}</ol>
-        <p className="text-sm text-slate-600">El envío de respuestas todavía no está habilitado en esta experiencia.</p></section>}
+      {item.quiz && <section aria-label={`Mini quiz: ${item.quiz.title}`}><ReaderQuiz quiz={item.quiz} endpoint={endpoint} privateTest={privateTest} active={expanded} /></section>}
     </div>
   </article>;
 }
@@ -39,7 +38,7 @@ function Reading({ view, endpoint }: { view: ReaderView; endpoint: string }) {
       onVisiblePageChange={reportPage} onOpenReinforcements={openPanel} /></div>
     <section ref={content} hidden={!panel} aria-label={`Refuerzos de la página ${page}`} className="space-y-4"><button type="button" onClick={() => setPanel(false)} className="rounded-lg border px-3 py-2">Cerrar refuerzos y volver al PDF</button><h2 className="text-xl font-semibold">Refuerzos de la página {page}</h2>
       {!view.items.some(i => i.pageNumber === page) && <p>Esta página no tiene refuerzos publicados para consultar.</p>}
-      {view.items.filter(i => i.pageNumber === page).map(item => <ReaderCard key={item.id} item={item} endpoint={endpoint} onSource={() => { position.current = null; setNavigation(p => ({ page: item.pageNumber, fragment: item.selection as FragmentSelection | null, key: p.key + 1 })); setPanel(false); }} />)}
+      {view.items.filter(i => i.pageNumber === page).map(item => <ReaderCard key={item.id} item={item} endpoint={endpoint} privateTest={view.privateTest} onSource={() => { position.current = null; setNavigation(p => ({ page: item.pageNumber, fragment: item.selection as FragmentSelection | null, key: p.key + 1 })); setPanel(false); }} />)}
     </section>
   </>;
 }

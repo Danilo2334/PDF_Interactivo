@@ -3,7 +3,7 @@ import { readSmallJson } from "@/lib/reinforcements/request-service";
 import { isSameOriginMutation } from "@/lib/documents/mutation-request";
 import { readerIdentitySchema } from "@/lib/validations/reader";
 import { readerProjection, readerObjectId } from "@/lib/readers/model";
-import { hasReaderSession, createReaderSession, readerCookieName } from "@/lib/readers/session";
+import { hasReaderSession, getReaderSession, createReaderSession, attachReaderCookie } from "@/lib/readers/session";
 import { loadReader, ReaderUnavailable } from "@/lib/readers/repository";
 const safeHeaders = { "Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff", "Referrer-Policy": "no-referrer", "X-Robots-Tag": "noindex, nofollow", "Cross-Origin-Resource-Policy": "same-origin" };
 const reply = (body: unknown, status = 200) => Response.json(body, { status, headers: safeHeaders });
@@ -13,7 +13,9 @@ export async function getReader(request: Request, token: string) {
     const context = await loadReader(request, token);
     if (context.snapshot.requireIdentification && !hasReaderSession(request, token)) return reply({ state: "identification_required", name: context.snapshot.name, version: context.version, privateTest: context.privateTest });
     const view = readerProjection(context.snapshot, context.hash, context.privateTest); view.version = context.version;
-    return reply({ state: "ready", view });
+    const response = reply({ state: "ready", view });
+    if (!getReaderSession(request, token)) attachReaderCookie(response, request, token, createReaderSession(token, { name: "", email: "" }));
+    return response;
   } catch (error) { return failure(error); }
 }
 export async function identifyReader(request: Request, token: string) {
@@ -23,9 +25,8 @@ export async function identifyReader(request: Request, token: string) {
     if (!context.snapshot.requireIdentification) return reply({ identified: true });
     const input = await readSmallJson(request, 1500); if (input.response) return input.response;
     const parsed = readerIdentitySchema.safeParse(input.body); if (!parsed.success) return reply({ message: "Indica un nombre de al menos dos caracteres o un correo válido." }, 400);
-    const response = reply({ identified: true }), secure = new URL(request.url).protocol === "https:";
-    const cookiePath = new URL(request.url).pathname.replace(/\/identify$/, "");
-    response.headers.set("Set-Cookie", `${readerCookieName(token)}=${createReaderSession(token, parsed.data)}; Path=${cookiePath}; Max-Age=1800; HttpOnly; SameSite=Lax${secure ? "; Secure" : ""}`);
+    const response = reply({ identified: true });
+    attachReaderCookie(response, request, token, createReaderSession(token, parsed.data, Date.now(), getReaderSession(request, token)));
     return response;
   } catch (error) { return failure(error); }
 }
