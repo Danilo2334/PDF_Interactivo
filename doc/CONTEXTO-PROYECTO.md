@@ -4225,3 +4225,42 @@ descripción sin nodos superiores/inferiores ni posiciones físicas no aportadas
 USD 0,008184 estimados por esa llamada; total de esta validación USD 0,088382 en
 17 llamadas completadas. No escribió BD ni sustituye la repetición autenticada
 pendiente. Resultado original conservado en `visual-direct-final.json` del QA.
+
+### 31/10/2026 — Cierre de validación autenticada de la integración Sol
+
+Este apartado actualiza los pendientes de la entrada anterior. Tras el ingreso
+personal se regeneró el diagrama conceptual desde la aplicación: v2 persistida,
+v1 conservada, etiquetas completas y descripción sin posiciones/disposición
+inventadas. Se encontró además una flecha que pasaba detrás del nodo intermedio;
+el renderizador ahora separa ese recorrido con una curva. La prueba geométrica
+nueva impide que vuelva a invadir el rectángulo central.
+
+Última compilación: **369/369 pruebas, lint y build aprobados**, TypeScript
+incluido. Después del último reinicio y nuevo ingreso personal se comprobó v2
+guardada, sin generar IA nuevamente: escritorio1280×900, ampliación con Enter,
+descripción accesible y móvil390×844 con desplazamiento mediante flechas. Página
+375px/client375px, sin desbordamiento; desplazamiento interno del gráfico40px.
+Sin errores de consola en la pestaña final. Servidor de producción local activo.
+
+El consejo «Elemento interactivo · Mini quiz opcional» aparece con su razón y
+explica el flujo posterior. No se ofrece como radio inicial sin generador. La
+explicación y el quiz privado v1 de tres preguntas se recuperaron tras reinicio;
+preguntas, respuestas correctas y explicaciones solo en la vista del propietario.
+Los recursos QA siguen pendientes de aprobación, sin publicación automática.
+
+Consumo final de esta integración: **18 llamadas reales, USD0,096426 estimados**
+por tokens Standard (16 iniciales de aplicación, una directa sin escritura y
+una regeneración autenticada). El flujo explicación+análisis+recomendaciones+
+quiz/auditoría costó USD0,026274. Son estimaciones, no factura. La comparación
+previa de Astra USD0,419760 correspondía a16tareas/18llamadas, no dos respuestas.
+
+Evidencia versionada y límites en
+`doc/evaluaciones/2026-10-31-sol/README.md`, `evidence.json` y ocho capturas
+originales. Jira: comentarios existentes actualizados en SCRUM-94,182,96,184,
+185,186,103,196, conservando las imágenes anteriores; resúmenes en SCRUM-30,
+31,32,33,34,35,40. No se fabricaron estados ni se cerraron pendientes HTTPS.
+PR#41 en borrador, base `codex/ia-comparacion-gpt-gemini` (PR#40). Integración
+publicada en88edaa4; corrección del recorrido y evidencia se añaden en commits
+posteriores de la misma rama `codex/ia-sol-integracion-contexto`.
+Sin merge ni despliegue. Stash d6406e0 preservado. No retomar HU030/HU032/HU033
+como si el lector HTTPS ya estuviera probado: ese bloqueo sigue pendiente.
