@@ -4326,3 +4326,57 @@ Jira: se añade el resultado de integración al único comentario existente de c
 Checkout local actualizado por fast-forward a develop. Stash d6406e0 y ramas
  conservados; .env.local ignorado y fuera de Git. PR #13 hacia main no integrado.
  No se desplegó, no se tocó main y no se avanzó a otra historia.
+
+### 31/10/2026 — Preparación pendiente del lector HTTPS, sin desplegar
+
+Encargo nuevo: avanzar la preparación HU030/HU032/HU033, documentarla y explicar
+si ya hace falta desplegar. Sí hace falta un entorno HTTPS externo para aceptar
+SCRUM-226 y el positivo anónimo; no basta localhost ni un ensayo de propietario.
+Se conserva la prohibición de despliegue/publicación. No se habilitó ningún flag.
+
+Base de aplicación: develop ee9f805, con #30–#41 integrados. Rama de preparación
+`codex/scrum-226-preparacion-qa-https`; solo guía, comprobador de configuración y
+continuidad. `doc/QA-LECTOR-HTTPS.md` actualiza la propuesta antigua basada en
+f2667fd: variables de servidor, fases, datos QA, costos condicionados y cierre.
+
+Inspección real de solo lectura:
+- Vercel sigue autenticado como Francisco (`molinapacho72-4319`), sin equipos
+  de Danilo. No se consultaron/modificaron sus proyectos ni se creó hosting.
+  Se solicitó conectar la cuenta personal correcta; no se pide ninguna clave
+  por chat. Esa conexión no es autorización de despliegue.
+- URL/clave pública local corresponden al Supabase previsto; secreto de firma
+  presente con formato correcto. SUPABASE_SERVER_KEY ausente. Origen QA ausente,
+  URL local no coincide con QA y falta epoch explícito para hosting; el wrapper
+  local sí crea un epoch de arranque. No se alteró .env.local ni el secreto remoto.
+- HU036/SCRUM-48 y subtareas129/130/211/212 siguen Por hacer. Código de
+  publicación solo prepare/publish: la retirada editorial real aún no existe.
+  No se inició esa historia ni se sustituye retirada por SQL/borrar proyecto.
+- Proyecto QA digital conserva cinco instantáneas privadas v1–v5, siete refuerzos
+  y dos quizzes cada una (uno permite reintentos). Todas con cero intentos reales
+  de lector. Ocho ensayos de propietario separados: v3=1, v4=4, v5=3. V3 exige
+  identificación, pero no se puede publicar directamente existiendo versiones
+  posteriores; preparar la próxima por UI para esa variante. Escaneado: una
+  instantánea privada vacía. No se imprimieron tokens, claves ni respuestas.
+- Vercel sigue limitando payload de Functions a4,5MB. QA con PDFs pequeños es
+  viable como alcance acotado, no prueba cargas completas de20MiB. Hobby USD0
+  condicionado a uso personal/no comercial, titular y cuota todavía no verificados.
+
+`web/scripts/check-reader-qa.mjs` es solo lectura, sin red ni escrituras, con
+fases bootstrap/publication. Imprime booleanos y nombres, nunca valores; el paso
+de configuración no acredita TLS ni titularidad de claves. Ejecución real local
+bootstrap:5 comprobaciones correctas y4 pendientes; salida1 esperada por faltantes.
+Sintaxis/ESLint y comprobación aislada de fases, rechazos y ausencia de secretos
+en salida correctas. Regresión publicación/lector/intentos:14/14 automatizadas
+aprobadas. No nuevas llamadas IA, ningún intento lector creado, ningún despliegue.
+
+Siguiente orden técnico: conectar Danilo y preparar secretos del proyecto QA;
+implementar/revisar HU036 para retirar el ensayo público; autorizar el bootstrap
+HTTPS con publicación false, verificar certificado/login/worker, y solo después
+habilitar el recorrido de publicación→lector→intentos→sustitución→retirada del
+mismo SHA revisado. Los pasos están completos en la guía. No cerrar HU030/032/033
+por esta preparación ni presentar como ejecutados los positivos externos.
+
+Jira: actualizar comentarios existentes SCRUM-226/42/44/45 conservando captura
+anterior y estados; registrar dependencia en un único comentario de SCRUM-48.
+No se adjuntan nuevas capturas porque no hubo una prueba visual/HTTPS nueva.
+Stash d6406e0 intacto. Sin merge de esta preparación, sin main ni cambios de BD.
