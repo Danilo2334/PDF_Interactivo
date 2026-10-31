@@ -4114,3 +4114,13 @@ Verificación de los scripts: sintaxis Node correcta, lint aprobado, preparació
 con las copias del corpus sin consumo de API y hashes iguales. No cambian rutas,
 APIs de Next ni componentes de producción; no se repite ni se atribuye a esta
 entrega el build o las pruebas autenticadas de historias anteriores.
+
+Entrega comprobada: commit de evaluación `c0e9156`, publicado en
+`codex/ia-comparacion-gpt-gemini`; [PR #40 en borrador](https://github.com/Danilo2334/PDF_Interactivo/pull/40)
+con base en la rama HU030 del PR #39 para conservar su avance pendiente. Incluye
+las tres entradas documentales locales previas sin reescribir historial.
+Se editaron los mismos comentarios de SCRUM-30/31/32/33/34/35/40 y
+SCRUM-182/185/196, sin crear duplicados. Lectura posterior confirmó un comentario
+por issue y nueva imagen renderizada por nombre. Medios de las tres subtareas:
+SCRUM-182 pasó de 6 a 7, SCRUM-185 de 2 a 3, SCRUM-196 de 4 a 5; todos los
+anteriores permanecen. No se cambiaron estados. Sin merge ni despliegue.

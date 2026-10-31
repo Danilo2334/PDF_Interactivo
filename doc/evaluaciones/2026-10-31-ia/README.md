@@ -106,3 +106,11 @@ El visor escucha solo `127.0.0.1:3001`, sirve únicamente la página comparativa
 Sol es el candidato con mejor equilibrio observado para un piloto: las explicaciones y analogías mejoraron por unos centavos. Mantener Gemini solo por rapidez/costo sin corregir los defectos no protege calidad. Astra puede reservarse para casos difíciles evaluados expresamente; estos dos casos no justifican utilizarlo por defecto. Antes de cambiar la integración: resolver etiquetas cortadas y contexto insuficiente, ampliar corpus a documentos de la presentación, revisar quizzes con docente/propietario y probar el recorrido autenticado completo con persistencia/errores. No se promete calidad universal ni sustituir revisión humana.
 
 Continúan pendientes por separado las pruebas HTTPS del lector en HU030/HU032/HU033. La comparación no las completa. Sin merge, despliegue, publicación de contenido ni sustitución del proveedor en esta entrega.
+
+## Registro de entrega verificado
+
+Evaluación publicada en commit `c0e9156`, [PR #40 en borrador](https://github.com/Danilo2334/PDF_Interactivo/pull/40), sobre la rama HU030 de PR #39, conservando sus commits y el trabajo documental previo. Lint general y dirigido aprobados. Copias del corpus preparadas otra vez sin llamadas API; sintaxis de ambos scripts correcta.
+
+Se actualizaron los comentarios existentes de las siete madres y de [SCRUM-182](https://danilocarlosama96.atlassian.net/browse/SCRUM-182), [SCRUM-185](https://danilocarlosama96.atlassian.net/browse/SCRUM-185) y [SCRUM-196](https://danilocarlosama96.atlassian.net/browse/SCRUM-196). La lectura posterior confirmó un único comentario por issue, mismo ID, nueva captura renderizada y conservación de los medios anteriores: 6→7, 2→3 y 4→5, respectivamente. No se cambiaron estados ni se duplicaron imágenes en las historias madre.
+
+![Comparación de la analogía de agua: captura real del banco de evaluación](capturas/185-comparacion-real-analogia-agua.png)
