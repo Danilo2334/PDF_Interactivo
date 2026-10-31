@@ -3983,3 +3983,31 @@ SQL, exposición pública o configuración en esta preparación. No se tomaron n
 capturas de aplicación: esta es una propuesta, no una prueba HTTPS ejecutada.
 Se actualizan los resúmenes madre existentes de SCRUM-44/45/42 con esta dependencia,
 sin añadir comentarios duplicados, alterar las evidencias ni finalizar historias.
+
+## 2026-10-30 — Objetivo de uso: presentación y demostración del proyecto
+
+El propietario aclara que desea utilizar los recursos de IA para conseguir la
+experiencia educativa buscada, preparar su presentación y demostrarla en la
+fecha acordada; después termina ese uso previsto. El horizonte actual no exige
+financiar una operación comercial indefinida. Esto orienta las prioridades y el
+presupuesto, pero no declara funcionalidades pendientes como terminadas ni
+reduce por sí solo los criterios ya acordados en Jira.
+
+Las capturas del propietario confirman USD 80 de saldo API disponible, sin
+consumo mostrado, recibido el 30/10/2026 y con caducidad el 24/11/2026. La fecha
+de presentación aún no está informada; se solicitó para comprobar que la
+demostración y los ensayos queden dentro de la vigencia del crédito. No asumir
+renovación, pagos adicionales ni que el saldo asegura disponibilidad del proveedor.
+
+Prioridad propuesta para la siguiente decisión: contrastar OpenAI con los casos
+educativos reales del proyecto, ampliar la integración donde se demuestren
+limitaciones y medir calidad/costo del refuerzo completo. Reservar saldo para
+ensayos y presentación. Preparar una demostración reproducible con generación
+real, revisión y persistencia; las evidencias previas siguen identificadas como
+previas y no se presentan como ejecuciones en vivo. La calidad visible del
+contenido y los recursos es central para el propietario, no solo recibir una
+respuesta válida de la API.
+
+Esta aclaración no ejecuta todavía migración de proveedor, consumo de API,
+despliegue, publicación ni merge. Se mantienen los bloqueos y resultados reales
+de HU030/HU032/HU033 y el trabajo local ya conservado.
