@@ -4011,3 +4011,38 @@ respuesta válida de la API.
 Esta aclaración no ejecuta todavía migración de proveedor, consumo de API,
 despliegue, publicación ni merge. Se mantienen los bloqueos y resultados reales
 de HU030/HU032/HU033 y el trabajo local ya conservado.
+
+## 2026-10-31 — Clave OpenAI configurada y verificación mínima real
+
+Alcance confirmado por el propietario: crear una clave nueva y guardarla en
+`web/.env.local`, sin mostrarla ni subirla a Git. Se instaló OpenAI Developers y
+se usó su flujo de aprovisionamiento seguro. Tras el selector, el guardado local
+no recibió aprobación; no se creó nada en ese paso. El propietario confirmó
+después explícitamente la creación y el destino exacto. No se pidió otra
+confirmación para el mismo destino ya autorizado.
+
+Selección conservada: clave denominada **Codex**, organización **Danilo Carlosama**,
+proyecto **Default project**, vigencia **30 días**. El proyecto de Platform no se
+renombró ni se creó otro para esta configuración. Se añadió `OPENAI_API_KEY`
+al archivo ignorado `web/.env.local`; no sustituyó una variable del mismo nombre
+ni alteró la configuración existente de Gemini/Supabase. La clave no se imprimió
+en stdout, mensajes, capturas, documentos ni Git.
+
+Comprobación real con el helper oficial de OpenAI Developers: presencia válida
+y una petición Responses API a **gpt-6-luna**, sin documentos ni datos personales,
+`store:false`, máximo 128 tokens de salida y razonamiento desactivado. Respuesta
+completada con texto (haiku): la autenticación y el acceso a ese modelo funcionan.
+Es una llamada real de consumo mínimo; no se midió su costo exacto ni se consultó
+el saldo actualizado. No se vincularon créditos de nuevo ni se configuraron pagos.
+
+Esto **no acredita todavía la calidad educativa de GPT ni cambia la aplicación a
+OpenAI**. El adaptador vigente continúa siendo Gemini; falta comparar e integrar
+el proveedor conforme a las historias y subtareas de Jira. Los videos y otros
+formatos mencionados por el propietario eran ejemplos: no amplían por sí solos
+el alcance. No se han hecho llamadas GPT con PDFs, migraciones de BD, despliegues,
+publicaciones ni merges durante esta configuración.
+
+Presentación mencionada como fecha tentativa: **martes 10/11/2026**, interpretando
+«de este martes en ocho»; confirmar la fecha definitiva antes de fijar un plan
+cerrado. La subvención observada en las capturas caduca el **24/11/2026**; la
+vigencia de la clave no prolonga ese crédito.
