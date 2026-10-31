@@ -8,6 +8,14 @@ export function useRequestResource<T>(url: string, active: boolean, parse: (body
   const key = `${url}:${refresh}`;
   const [state, setState] = useState<{ key: string; url: string; result: RequestResource<T> } | null>(null);
   useEffect(() => {
+    const changed = (event: Event) => {
+      const requestId: unknown = (event as CustomEvent).detail;
+      if (typeof requestId === "string" && url.includes(`/reinforcement-requests/${requestId}/`)) setRefresh(value => value + 1);
+    };
+    window.addEventListener("reinforcement-review-updated", changed);
+    return () => window.removeEventListener("reinforcement-review-updated", changed);
+  }, [url]);
+  useEffect(() => {
     if (!active) return;
     const reader = createRequestResource(url, parse, result => setState({ key, url, result }));
     let cancelled = false;

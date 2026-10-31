@@ -5,6 +5,7 @@ import { REQUEST_STATUSES, REQUEST_STATUS_LABELS, REQUEST_STAGE_LABELS } from "@
 import { useRequestResource } from "@/lib/reinforcements/use-request-resource";
 import { ContextualAnalysisPanel } from "@/components/documents/contextual-analysis-panel";
 import { RecommendationPanel } from "@/components/documents/recommendation-panel";
+import { RegenerationPanel } from "@/components/documents/regeneration-panel";
 import { ExplanationPanel } from "@/components/documents/explanation-panel";
 import { ExamplePanel } from "@/components/documents/example-panel";
 import { VisualPanel } from "@/components/documents/visual-panel";
@@ -68,6 +69,7 @@ function RequestDetailPanel({ projectId, documentId, requestId, active, focusVer
       <ExplanationPanel key={`explanation:${documentId}:${requestId}`} request={detail.request} active={active} onChanged={resource.refresh} />
       <ExamplePanel key={`example:${documentId}:${requestId}`} request={detail.request} active={active} onChanged={resource.refresh} />
       <VisualPanel key={`visual:${documentId}:${requestId}`} request={detail.request} active={active} onChanged={resource.refresh} />
+      <RegenerationPanel key={`regeneration:${documentId}:${requestId}`} request={detail.request} active={active} onChanged={resource.refresh} />
       <SummaryPanel key={`summary:${documentId}:${requestId}`} request={detail.request} active={active} onChanged={resource.refresh} />
       <h4 className="font-semibold text-slate-900">Cambios registrados</h4>
       {detail.events.length === 0 ? <p className="text-sm">No hay eventos en esta página del historial.</p> : <ol className="space-y-3">

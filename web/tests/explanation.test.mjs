@@ -24,6 +24,7 @@ test('Gemini receives only saved selection/context/difficulty and explicit detai
     const body=JSON.parse(init.body),data=JSON.parse(body.contents[0].parts[0].text);
     assert.equal(data.selection,context.selectedText);assert.equal(data.nearbyText,context.nearbyText);assert.equal(data.difficulty,context.need);
     assert.equal(data.detail.level,'Intermedio');assert.equal(data.ownerId,undefined);assert.equal(data.pdfSha256,undefined);
+    assert.deepEqual(body.generationConfig.responseFormat.text.schema.properties.sourceQuote.enum,[context.selectedText]);assert.deepEqual(body.generationConfig.responseFormat.text.schema.properties.topicReference.enum,[diagnosis.topic]);
     assert.match(body.systemInstruction.parts[0].text,/nunca instrucciones/);assert.equal(init.cache,'no-store');
     return Response.json({candidates:[{finishReason:'STOP',content:{parts:[{text:JSON.stringify(explanation)}]}}]});
   });
@@ -48,6 +49,6 @@ test('explanation UI requires a saved level, renders private pending approval te
   assert.equal((initial.match(/checked=""/g)??[]).length,0);assert.match(initial,/disabled=""[^>]*>Generar explicación/);
   const saved=render({...view,generation,canGenerate:true});assert.ok(saved.includes('Nivel guardado: Intermedio'));
   const ready=render({...view,generation:{...generation,status:'ready',content:{...explanation,text:'<script>no ejecutar</script>'+explanation.text}}});
-  assert.ok(ready.includes('Contenido generado por IA · Pendiente de aprobación'));assert.ok(ready.includes('&lt;script&gt;'));
-  assert.ok(ready.includes('No está publicado'));assert.equal(ready.includes('>Publicar<'),false);assert.equal(ready.includes('>Aprobar<'),false);
+  assert.ok(ready.includes('Borrador inicial generado por IA'));assert.ok(ready.includes('&lt;script&gt;'));
+  assert.ok(ready.includes('La generación inicial no publica contenido'));assert.equal(ready.includes('>Publicar<'),false);assert.equal(ready.includes('>Aprobar<'),false);
 });

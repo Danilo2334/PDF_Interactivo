@@ -45,7 +45,7 @@ export function SummaryReviewPanel({view,disabled,onReview}:{view:SummaryView;di
       </div>}
     </>}
     <details><summary className="cursor-pointer font-medium">Versiones y decisiones del resumen</summary><ul className="mt-2 space-y-2">{view.versions.map(v=><li key={v.id}>Versión {v.version} · {v.origin==="ai"?"IA":"Propietario"} · {new Date(v.created_at).toLocaleString("es-CO")}<details><summary className="cursor-pointer">Consultar resumen de versión {v.version}</summary><p className="whitespace-pre-wrap break-words">{v.text}</p><ul>{v.summary_content?.concepts.map(c=><li key={c.name}>{c.name}: {c.sourceQuote}</li>)}</ul></details></li>)}</ul>
-      <ul className="mt-3 space-y-1">{view.events.map(e=><li key={e.operation_id}>{e.action==="edit"?"Edición":e.action==="approve"?"Aprobación":"Descarte"} por ti · Versión {e.version} · {new Date(e.occurred_at).toLocaleString("es-CO")}</li>)}</ul><p>Se muestran las 20 versiones y decisiones más recientes.</p>
+      <ul className="mt-3 space-y-1">{view.events.map(e=><li key={e.operation_id}>{e.action==="edit"?"Edición":e.action==="approve"?"Aprobación":e.action==="regenerate"?"Nueva generación":"Descarte"} por ti · Versión {e.version} · {new Date(e.occurred_at).toLocaleString("es-CO")}</li>)}</ul><p>Se muestran las 20 versiones y decisiones más recientes.</p>
     </details>
   </section>;
 }

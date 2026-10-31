@@ -66,14 +66,14 @@ export function ExplanationPanel({ request, active, onChanged }: { request: Requ
     {(error || resource.result?.error) && <p role="alert" className="break-words text-sm text-red-700">{error || resource.result?.error}</p>}
     {generation?.status === "error" && <p role="alert" className="text-sm text-red-700">{EXPLANATION_MESSAGES[generation.error_code ?? "invalid_explanation"]}</p>}
     {generation?.status === "ready" && generation.content && <article className="space-y-3 rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-slate-900">
-      <p className="font-semibold">Contenido generado por IA · Pendiente de aprobación</p>
+      <p className="font-semibold">Borrador inicial generado por IA</p>
       <p>Página {request.page_number} · Nivel: {DETAIL_LABELS[generation.detail_level]}</p>
       <p className="font-medium">Fragmento original</p>
       <blockquote className="whitespace-pre-wrap break-words border-l-2 border-amber-500 pl-3">{request.selected_text}</blockquote>
       <h5 className="break-words text-base font-semibold">{generation.content.title}</h5>
       <p className="whitespace-pre-wrap break-words">{generation.content.text}</p>
       <p className="break-words"><strong>Cita del fragmento: </strong>{generation.content.sourceQuote}</p>
-      <p className="text-slate-700">Este borrador es privado. No está publicado en Refuerzos ni incorporado al PDF. La aprobación explícita estará disponible en su flujo correspondiente.</p>
+      <p className="text-slate-700">La generación inicial no publica contenido ni modifica el PDF. Usa «Revisar explicación generada» para editarla y decidir si la apruebas. Consulta la versión actual en Tu revisión.</p>
     </article>}
   </section>;
 }

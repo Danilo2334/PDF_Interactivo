@@ -2475,3 +2475,170 @@ con cero errores de consola observados. localhost:3000 queda activo y la
 pestaña QA de Refuerzos abierta. Árbol de trabajo conservado y stash `d6406e0`
 intacto. El PR #29 queda pendiente de revisión e integración; no se hizo merge
 de HU023, no se modificó main ni se inició el alcance restante de HU024.
+
+## 2026-10-28 — Revisión de PR #29 e implementación de HU024
+
+El usuario autorizó revisar e integrar #29 y continuar con HU024; después amplió
+el alcance para continuar con las historias siguientes en orden durante su
+ausencia, sin permisos rutinarios. No habilitar pagos ni modificar main.
+
+### Integración de HU023
+
+- PR #29 revisado: contratos de resumen/conceptos, transacciones, publicación,
+  permisos y UI. Sin hallazgos bloqueantes ni hilos de revisión pendientes.
+- 295/295 pruebas y `hu023-live.mjs final` pasaron nuevamente: 31 solicitudes,
+  cuatro publicaciones y los 29/tres anteriores preservados. GitHub no tenía
+  checks ni ejecuciones de Actions para ese head; no se presentan como aprobados.
+- Se marcó listo y se integró con merge normal, comprobando el head
+  `a74c18453d62e0d268c5246767ac1f7a3e3beec7`. Merge en develop:
+  **`203769ac772e84fbcf3499fc0445abdd38b2f2cf`**.
+- SCRUM-35 Finalizado. Se actualizó su comentario único 10140 con revisión e
+  integración; se conservaron las ocho capturas y comentarios de sus subtareas.
+- HU024 parte de ese develop en
+  `codex/scrum-36-hu024-revision-regeneracion`. Stash `d6406e0` conservado,
+  sin aplicarlo, eliminarlo ni descartar trabajo local.
+
+### HU024 / SCRUM-36: alcance implementado
+
+- Reutiliza versiones, decisiones y publicación de HU021–HU023. Completa la
+  edición y aprobación de explicaciones HU020 con una preparación explícita:
+  consultar una explicación anterior no escribe, publica ni cambia datos.
+- Una edición crea una versión pendiente. La versión aprobada y su publicación
+  permanecen intactas hasta una aprobación nueva y explícita. Rechazar un
+  borrador no borra una aprobación anterior ni modifica el PDF.
+- Regeneración común para explicación, ejemplo/analogía, resumen e imagen/
+  diagrama. Captura instrucciones de 3–500 caracteres y envía al proveedor el
+  contexto validado y la versión guardada anterior, incluidas sus ediciones.
+- El resultado es otra versión AI pendiente con snapshot completo. Conserva
+  texto, citas, conceptos o composición visual según corresponda; la UI del
+  ejemplo utiliza los metadatos de esa versión y no los de la generación inicial.
+- Tabla de operaciones de regeneración con RLS, propietario, instrucciones,
+  versión de origen, autor y fecha, firma HMAC, lease de 120 segundos, límite
+  de dos operaciones simultáneas por cuenta y diez en cinco minutos. Cada
+  operación explícita tiene UUID estable para recuperar una respuesta perdida.
+- Una operación en curso bloquea cambios de decisión y la generación visual
+  anterior. El resultado obsoleto o expirado no puede completar otra operación;
+  un intento fallido conserva borrador y publicación. No hay reintentos de IA
+  automáticos ni ilimitados. La llamada sigue teniendo timeout de 45 segundos.
+- La nueva versión no sobrescribe campos locales de otra pestaña: muestra el
+  conflicto, conserva el borrador y obliga a cargar la versión actual. El
+  servidor verifica también el número de versión, origen, sesión y documento.
+- La publicación guarda versión, actor y fecha; requiere checkbox y aprobación
+  explícita. Descartar exige su confirmación. Se conserva el historial real.
+- Migración **20261028050319_owner_reinforcement_regeneration.sql** aplicada
+  una vez en `zqodybtzssvqozrckfgw`, después de pruebas aisladas. Archivo creado
+  con Supabase CLI y conciliado con el timestamp remoto. Sin `db push`, backfill
+  de datos personales, cambios de secretos ni desactivación de RLS.
+- Advisories de seguridad y rendimiento comprobados antes/después: mismos
+  grupos de advertencias preexistentes, sin nuevos grupos. Los índices de la
+  nueva tabla cubren sus referencias a solicitud y actor.
+
+### Pruebas reales de HU024
+
+Servidor existente reutilizado en localhost:3000, navegador integrado con la
+cuenta QA ya disponible. Se crearon cuatro solicitudes identificadas como QA
+HU024, mediante endpoints autenticados y Gemini real con configuración privada
+existente **gemini-3.5-flash-lite**. Sin habilitar pagos ni sustituir respuestas
+por resultados simulados.
+
+- Explicación `b9ffc509-7b83-4219-90c8-54cacbe6dcc1`: selección de cuatro
+  líneas de energía, página 1. La primera respuesta fue rechazada como inválida
+  y no produjo publicación. Se fijaron cita literal y tema en el esquema del
+  proveedor sin relajar la validación. El reintento real pasó; dos intentos de
+  generación inicial en total. Se editó título/texto a v2, se aprobó mediante
+  checkbox y se regeneró v3 con instrucciones para dos párrafos. El resultado
+  conserva sistema aislado, transformación y péndulo sin rozamiento. Se descartó
+  v3; Refuerzos conserva exactamente v2, su autor y su fecha de aprobación.
+- Segunda pestaña: se mantuvo un título local de v2 mientras la primera creó
+  v3. Apareció el conflicto, guardar quedó deshabilitado y el texto local siguió
+  visible. No se presentó un resultado esperado como evidencia observada.
+- Ejemplo `e0ea0089-f049-4aed-8b69-e27a41fdec14`: v1 real y regeneración v2
+  de tres pasos. Explicita referencia de energía potencial cero en el punto
+  inferior y límites del péndulo ideal. Dos POST simultáneos de la misma
+  operación devolvieron **200/202**, una operación y una sola versión nueva.
+  Se revisó en UI y se descartó v2: ninguna publicación.
+- Resumen `deeb737f-4008-41d5-b345-bd9d26f434dc`: regeneración real v2
+  de dos frases, 180/350 caracteres y conceptos/citas de energía potencial y
+  cinética. Se descartó el cuerpo de la respuesta HTTP después de que el
+  servidor terminó y se reintentó el mismo UUID: recuperó la misma operación
+  y v2, sin otra llamada. No se confundió con desconectar antes del envío.
+  Revisión humana v3 de 210/350 caracteres: añade explícitamente «sin
+  rozamiento» y corrige la tilde de cinética. Aprobada con sus dos citas.
+- Diagrama `167fe954-382d-4c30-b276-51b5bbdbd7a0`, página 2: la versión
+  inicial se amplió más de lo necesario. Se solicitaron solo evaporación y
+  condensación, eliminando afirmaciones sobre ecosistemas y suministro. V2
+  real contiene dos nodos y una flecha y aclara que no representa todo el ciclo.
+  Revisado y aprobado mediante checkbox en UI; no se publicó la versión inicial.
+- Se contrastaron contenido, citas, modalidad, instrucciones y límites de los
+  resultados reales. La revisión humana sigue siendo necesaria; una respuesta
+  estructurada válida no demuestra por sí sola la calidad de cualquier salida.
+- En los cuatro formatos: sin sesión **401**, origen ajeno **403**, otra cuenta
+  **404**, otro documento **409**, versión antigua **409**, instrucciones vacías
+  **400** y lecturas ajenas por RLS vacías. Esas comprobaciones no consumen IA.
+- Escritorio, teclado, dos pestañas, móvil 390×844, recarga y persistencia. En
+  móvil `clientWidth/scrollWidth=390/390`; cero errores de consola observados.
+  La emulación se restauró después de capturar la evidencia.
+- `HU019/hu024-live.mjs final`: **35 solicitudes y siete publicaciones**.
+  Las **31 solicitudes y cuatro publicaciones anteriores** permanecen idénticas,
+  incluida la solicitud personal 1201c3a3-1632-41b0-ae4f-0b989ba676cb.
+  Explicación v3 descartada/v2 publicada, ejemplo v2 descartado sin publicación,
+  resumen v3 aprobado y diagrama v2 aprobado.
+- SHA-256 del PDF digital sin cambios:
+  `e7277d66afd7caba47385cfac2f0e55a2eeb4fb7aa7136409fa35300a6347946`.
+
+### Verificación y registro
+
+**307/307 pruebas automatizadas**, lint sin advertencias y TypeScript aprobados.
+Las pruebas nuevas cubren HTTP, contrato del proveedor, UI y PostgreSQL aislado:
+edición, regeneración, idempotencia, aprobación explícita, conservación de
+publicación, errores, expiración y permisos en los cuatro formatos. Las pruebas
+aisladas usan fixtures; se distinguen de las pruebas reales descritas arriba.
+
+Scripts, baseline, resultados y capturas están fuera de Git en `HU019/HU024`.
+No se versionan credenciales, configuración privada ni scripts de sesión. El
+build, las subidas reales a Jira y el PR se registrarán al completar la entrega
+en el apartado siguiente; las subtareas siguen En curso hasta ese registro.
+
+### Registro verificado de HU024
+
+Build de producción Turbopack aprobado, incluido TypeScript, y servidor de
+desarrollo reiniciado por separado. La verificación real de 35 solicitudes/siete
+publicaciones volvió a pasar después del reinicio. Tras el último ajuste de
+manejo de error al preparar la revisión se repitieron sus cuatro pruebas de API;
+tras normalizar texto UTF-8 de las instrucciones se repitieron las 16 pruebas
+de proveedores/UI afectados y el build. No se actualizaron dependencias.
+
+Jira contiene un único comentario y capturas reales por subtarea:
+
+- SCRUM-105: comentario **10141**, tres capturas de edición pendiente, pestaña
+  antigua conservada y publicación anterior intacta.
+- SCRUM-188: comentario **10142**, tres capturas de instrucciones, explicación
+  regenerada y diagrama regenerado de dos nodos.
+- SCRUM-106: comentario **10143**, dos capturas de historial de aprobación/
+  descarte y publicación aprobada en móvil.
+
+Se leyó `renderedBody` y se confirmaron las ocho miniaturas con nombres de
+archivo correctos (3/3/2), sin duplicados. Se preservan las evidencias anteriores.
+El script temporal de carga con grants se eliminó después de las subidas; solo
+se conservan metadatos de archivos fuera de Git. El commit y enlace del PR se
+agregarán a esos mismos comentarios, sin repetir imágenes ni crear informes.
+
+### Entrega de HU024 y siguiente historia
+
+Commit funcional publicado **`f3bcb64f04a697d2de6df618558e348b0edd24d5`**.
+PR borrador **[#30](https://github.com/Danilo2334/PDF_Interactivo/pull/30)**
+contra develop `203769a`. SCRUM-36 **En revisión**, comentario madre único
+**10144**; SCRUM-105/SCRUM-188/SCRUM-106 **Finalizado**. Los comentarios
+10141/10142/10143 ya incluyen el PR y commit. La lectura posterior confirma
+ocho imágenes resueltas, 3/3/2, conservadas sin nuevas subidas al editar.
+
+El servidor localhost:3000 queda activo. La sesión QA nueva confirmó las
+publicaciones después del build y reinicio; captura `HU024/entrega-hu024.jpg`
+y cero errores de consola. La comprobación HTTP/SDK final volvió a pasar con
+35 solicitudes/siete publicaciones y todo el baseline anterior intacto.
+Stash `d6406e0` y configuración privada preservados.
+
+Se continúa **HU025 / SCRUM-37**, autorizada por el último mensaje del usuario.
+El PR #30 queda preparado para revisión e integración. HU025 se desarrollará
+en una rama descendiente para conservar el diff de cada historia mientras se
+revisa #30. No se ha integrado #30 ni se ha modificado main.

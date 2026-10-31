@@ -11,18 +11,18 @@ const parseView = (body: unknown) => visualViewSchema.parse(body);
 const buttonClass = "rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-800 disabled:opacity-50";
 export function VisualPanel({ request, active, onChanged }: { request: RequestRecord; active: boolean; onChanged: () => void }) {
   const name = useId(), router = useRouter(), base = `/api/projects/${request.project_id}/reinforcement-requests/${request.id}`;
-  const [mode, setMode] = useState<VisualMode | null>(null), [busy, setBusy] = useState(false), [error, setError] = useState(""), [instructions, setInstructions] = useState("");
+  const [mode, setMode] = useState<VisualMode | null>(null), [busy, setBusy] = useState(false), [error, setError] = useState("");
   const controllerRef = useRef<AbortController | null>(null), operationRef = useRef<{ fingerprint: string; id: string } | null>(null);
   const resource = useRequestResource(`${base}/visual?documentId=${request.document_id}`, active && !busy, parseView, true);
   const view = resource.result?.value, generation = view?.generation, selected = mode ?? generation?.mode ?? null;
   const saved = !!generation && selected === generation.mode && generation.choice_version === view?.choiceVersion;
   const current = view?.versions.find(v => v.version === view.review?.current_version);
   useEffect(() => () => { controllerRef.current?.abort(); }, [base, active]);
-  async function execute(action: "configure" | "generate" | "regenerate" | ReviewAction) {
+  async function execute(action: "configure" | "generate" | ReviewAction) {
     if (!view || !active || controllerRef.current) return null;
     const review = typeof action === "object";
     const input = { documentId: request.document_id, ...(review ? action : { action, expectedVersion: generation?.version ?? 0, choiceVersion: view.choiceVersion,
-      ...(action === "configure" ? { mode: selected } : action === "regenerate" ? { reviewVersion: view.review?.current_version, instructions } : {}) }) };
+      ...(action === "configure" ? { mode: selected } : {}) }) };
     const fingerprint = JSON.stringify(input);
     if (operationRef.current?.fingerprint !== fingerprint) operationRef.current = { fingerprint, id: crypto.randomUUID() };
     const controller = new AbortController(); controllerRef.current = controller; setBusy(true); setError(""); let success = false, reviewedVersion: number | null = null;
@@ -68,11 +68,6 @@ export function VisualPanel({ request, active, onChanged }: { request: RequestRe
       <p>Este recurso es una representación adicional; el PDF original permanece intacto.</p>
     </article>}
     {view?.visualChosen && view.review && <OwnerReviewPanel visual view={view} disabled={!active || busy || generation?.status !== "ready"} onReview={value => execute(value)} />}
-    {view?.visualChosen && view.review && <form onSubmit={event => { event.preventDefault(); void execute("regenerate"); }} className="space-y-2 rounded-lg border border-slate-200 p-3 text-sm">
-      <label className="block font-medium" htmlFor={`${name}-instructions`}>Indicaciones para otro resultado (opcional)</label>
-      <textarea id={`${name}-instructions`} value={instructions} maxLength={500} rows={3} disabled={!active || busy} onChange={event => setInstructions(event.target.value)} className="w-full rounded-lg border border-slate-300 p-2" />
-      <p>Se generará otra versión pendiente. Las versiones y una aprobación anterior se conservan.</p>
-      <button type="submit" className={buttonClass} disabled={!active || busy || !view.canRegenerate}>Solicitar otro resultado</button>
-    </form>}
+
   </section>;
 }
