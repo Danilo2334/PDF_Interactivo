@@ -7,7 +7,7 @@ import { explanationRecordSchema, EXPLANATION_MESSAGES } from "@/lib/validations
 import { exampleRecordSchema } from "@/lib/validations/example";
 import { summaryRecordSchema } from "@/lib/validations/summary";
 import { visualRecordSchema } from "@/lib/validations/visual";
-import { getGeminiConfiguration } from "@/lib/reinforcements/gemini-provider";
+import { getAiConfiguration } from "@/lib/reinforcements/ai-provider";
 import { generateExplanation } from "@/lib/reinforcements/explanation-provider";
 import { generateExample } from "@/lib/reinforcements/example-provider";
 import { generateSummary } from "@/lib/reinforcements/summary-provider";
@@ -32,7 +32,7 @@ export async function getRegeneration(request:Request,projectId:string,requestId
   const generation=table?await access.db.from(table).select("status").eq("request_id",requestId).maybeSingle():null;
   if(generation?.error)return failure();
   const job=queries[4].data?.[0]??null;
-  const result=regenerationViewSchema.safeParse({kind:table?kind:null,ready:generation?.data?.status==="ready",providerAvailable:getGeminiConfiguration()!==null,
+  const result=regenerationViewSchema.safeParse({kind:table?kind:null,ready:generation?.data?.status==="ready",providerAvailable:getAiConfiguration()!==null,
     processing:job?.status==="processing"&&Date.parse(job.lease_expires_at)>Date.now(),
     review:queries[1].data,versions:queries[2].data,events:queries[3].data,job:queries[4].data?.[0]??null});
   return result.success?reply(result.data):failure();
@@ -48,7 +48,7 @@ export async function postRegeneration(request:Request,projectId:string,requestI
       return result.error?failure(result.error.code):reply({prepared:true});
     } catch { return failure(); }
   }
-  const config=getGeminiConfiguration();if(!config)return reply({message:EXPLANATION_MESSAGES.provider_unavailable},503);
+  const config=getAiConfiguration();if(!config)return reply({message:EXPLANATION_MESSAGES.provider_unavailable},503);
   const stored=await access.db.from("reinforcement_analyses").select("*").eq("request_id",requestId).maybeSingle();
   if(stored.error)return failure();
   const source=analysisRecordSchema.safeParse(stored.data),analysis=source.success?source.data:null;

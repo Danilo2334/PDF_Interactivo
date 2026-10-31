@@ -9,7 +9,7 @@ export const EXAMPLE_DESCRIPTIONS = { practical: "Una situación concreta que ap
 export const EXAMPLE_FAILURES = ["provider_unavailable", "provider_refused", "invalid_example", "timeout"] as const;
 export type ExampleFailureCode = typeof EXAMPLE_FAILURES[number];
 export const EXAMPLE_MESSAGES: Record<ExampleFailureCode, string> = {
-  provider_unavailable: "Gemini no está disponible o su cuota gratuita se agotó. Espera antes de reintentar; no se usará un proveedor de pago.",
+  provider_unavailable: "El servicio de IA no está disponible o se agotó su cuota. Espera antes de reintentar; no se cambiará de proveedor automáticamente.",
   provider_refused: "No fue posible generar este contenido. Revisa la selección y la dificultad.",
   invalid_example: "La respuesta no pudo verificarse con el fragmento. No se guardó contenido incompleto; puedes reintentar.",
   timeout: "La generación tardó demasiado. Puedes reintentar; no se publicará un resultado incompleto.",

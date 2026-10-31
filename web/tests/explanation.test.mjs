@@ -19,7 +19,7 @@ test('HU020 validates source grounding, diagnostic topic, concepts and the lengt
 
 test('Gemini receives only saved selection/context/difficulty and explicit detail, and is called once',async()=>{
   let calls=0;
-  const output=await provider.generateExplanation(context,diagnosis,'intermediate',{key:'unit-test',model:'gemini-test'},async(url,init)=>{
+  const output=await provider.generateExplanation(context,diagnosis,'intermediate',{provider:'gemini',key:'unit-test',model:'gemini-test'},async(url,init)=>{
     calls++;assert.match(url,/gemini-test:generateContent$/);assert.equal(init.headers['x-goog-api-key'],'unit-test');
     const body=JSON.parse(init.body),data=JSON.parse(body.contents[0].parts[0].text);
     assert.equal(data.selection,context.selectedText);assert.equal(data.nearbyText,context.nearbyText);assert.equal(data.difficulty,context.need);
@@ -37,7 +37,7 @@ test('provider quota, timeout, refusal and invalid output are controlled errors 
     [async()=>{const e=Error('sensitive');e.name='TimeoutError';throw e},'timeout',false],
     [async()=>Response.json({promptFeedback:{blockReason:'SAFETY'}}),'provider_refused',false],
     [async()=>Response.json({candidates:[{finishReason:'STOP',content:{parts:[{text:'{"title":"incomplete"}'}]}}]}),'invalid_explanation',false],
-  ]){let calls=0;await assert.rejects(provider.generateExplanation(context,diagnosis,'brief',{key:'unit-test',model:'gemini-test'},(...args)=>{calls++;return transport(...args)}),e=>e.code===code&&e.quotaExhausted===quota&&!e.message.includes('sensitive'));assert.equal(calls,1);}
+  ]){let calls=0;await assert.rejects(provider.generateExplanation(context,diagnosis,'brief',{provider:'gemini',key:'unit-test',model:'gemini-test'},(...args)=>{calls++;return transport(...args)}),e=>e.code===code&&e.quotaExhausted===quota&&!e.message.includes('sensitive'));assert.equal(calls,1);}
 });
 
 test('explanation UI requires a saved level, renders private pending approval text safely, and contains no publish action',()=>{

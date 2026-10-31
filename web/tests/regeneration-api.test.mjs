@@ -20,7 +20,7 @@ function fixture(options={}){
     '@/lib/documents/mutation-request':{isSameOriginMutation:r=>r.headers.get('Origin')==='http://localhost'},
     '@/lib/validations/regeneration':schemas,'@/lib/validations/contextual-analysis':{analysisRecordSchema:{safeParse:data=>({success:true,data})},validateDiagnosis(){}},
     '@/lib/validations/explanation':explanationSchemas,'@/lib/validations/example':exampleSchemas,'@/lib/validations/summary':summarySchemas,'@/lib/validations/visual':visualSchemas,
-    '@/lib/reinforcements/gemini-provider':{getGeminiConfiguration:()=>options.unavailable?null:{model:'test-only'}},
+    '@/lib/reinforcements/ai-provider':{getAiConfiguration:()=>options.unavailable?null:{model:'test-only'}},
     '@/lib/reinforcements/explanation-provider':{async generateExplanation(...args){providerCalls.push(args);if(options.providerError)throw options.providerError;return {content:explanation,model:'test-only'}}},
     '@/lib/reinforcements/example-provider':{},'@/lib/reinforcements/summary-provider':{},'@/lib/reinforcements/visual-provider':{},
     '@/lib/reinforcements/regeneration-proof':{signRegenerationProof:value=>value},

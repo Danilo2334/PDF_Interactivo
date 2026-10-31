@@ -4,7 +4,7 @@ import { reviewHeadSchema, reviewEventSchema } from "@/lib/validations/example";
 export const QUIZ_FAILURES = ["provider_unavailable", "provider_refused", "invalid_quiz", "insufficient_quiz", "timeout", "source_changed"] as const;
 export type QuizFailureCode = typeof QUIZ_FAILURES[number];
 export const QUIZ_MESSAGES: Record<QuizFailureCode, string> = {
-  provider_unavailable: "Gemini no está disponible o se agotó la cuota gratuita. Espera antes de reintentar; no se usará un proveedor de pago.",
+  provider_unavailable: "El servicio de IA no está disponible o se agotó su cuota. Espera antes de reintentar; no se cambiará de proveedor automáticamente.",
   provider_refused: "No fue posible formular preguntas con este refuerzo. Revisa su contenido antes de reintentar.",
   invalid_quiz: "Las preguntas, opciones o citas no pudieron validarse con el refuerzo. No se guardó esa versión; revisa la fuente antes de reintentar.",
   insufficient_quiz: "El refuerzo no contiene información suficiente para esa cantidad de preguntas claras. Prueba con menos preguntas o revisa el refuerzo; no se forzó un quiz.",

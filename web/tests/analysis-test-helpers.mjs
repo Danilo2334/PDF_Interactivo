@@ -3,8 +3,8 @@ export { load, owner, projectId, documentId, receipt };
 export const schemas = load('lib/validations/contextual-analysis.ts');
 export const requestSchemas = load('lib/validations/request-list.ts', { '@/lib/reinforcements/state': requestState, '@/lib/validations/reinforcement-request': validation });
 export const contextModule = load('lib/reinforcements/analysis-context.ts', { '@/lib/validations/contextual-analysis': schemas });
-export const gemini = load('lib/reinforcements/gemini-provider.ts');
-export const provider = load('lib/reinforcements/analysis-provider.ts', { '@/lib/validations/contextual-analysis': schemas, '@/lib/reinforcements/gemini-provider': gemini });
+export const gemini = load('lib/reinforcements/ai-provider.ts');
+export const provider = load('lib/reinforcements/analysis-provider.ts', { '@/lib/validations/contextual-analysis': schemas, '@/lib/reinforcements/ai-provider': gemini });
 export const record = { id: receipt.id, project_id: projectId, document_id: documentId, owner_id: owner, page_number: 1,
   status: 'pending', stage: 'queued', created_at: receipt.createdAt, updated_at: receipt.createdAt, error_message: null,
   selection: null, selected_text: 'La energía se conserva en un sistema aislado.', text_source: 'digital', category: content.category, need: content.need };

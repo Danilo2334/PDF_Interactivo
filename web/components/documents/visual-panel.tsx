@@ -54,7 +54,7 @@ export function VisualPanel({ request, active, onChanged }: { request: RequestRe
       <button type="button" className={buttonClass} disabled={!active || busy || !view.canGenerate || !saved} onClick={() => void execute("generate")}>{generation?.status === "error" || generation?.status === "processing" ? "Reintentar recurso visual" : "Generar recurso visual"}</button>
     </>}
     {generation && <div className="space-y-1 rounded-lg bg-slate-50 p-3 text-sm"><p className="font-medium">Tipo guardado: {VISUAL_LABELS[generation.mode]}</p><p>Descripción visual solicitada</p><p className="whitespace-pre-wrap break-words">{generation.visual_brief}</p></div>}
-    {view?.visualChosen && !view.providerAvailable && <p className="text-sm">Gemini no está configurado. Puedes guardar el tipo sin consumir IA.</p>}
+    {view?.visualChosen && !view.providerAvailable && <p className="text-sm">El servicio de IA no está configurado. Puedes guardar el tipo sin consumir IA.</p>}
     <button type="button" className={buttonClass} disabled={!active || busy} onClick={() => { setError(""); resource.refresh(); onChanged(); }}>Actualizar recurso visual</button>
     {busy && <p role="status" className="text-sm">Guardando o generando el recurso visual…</p>}
     {!busy && generation?.status === "processing" && <p role="status" className="text-sm">Generación en proceso. El resultado anterior se conserva; actualiza para consultar el nuevo.</p>}

@@ -21,7 +21,7 @@ function fixture(settings={}){
   const service=load('lib/reinforcements/run-explanation.ts',{'@/lib/reinforcements/request-service':access,
     '@/lib/documents/mutation-request':load('lib/documents/mutation-request.ts'),'@/lib/validations/contextual-analysis':analysisSchemas,
     '@/lib/validations/explanation':schemas,'@/lib/reinforcements/explanation-proof':{signExplanationProof:input=>({p_payload:JSON.stringify(input),p_signature:'unit-test'})},
-    '@/lib/reinforcements/explanation-provider':{...provider,getExplanationConfiguration:()=>settings.configured===false?null:{key:'unit-test',model:'test-model'},
+    '@/lib/reinforcements/explanation-provider':{...provider,getExplanationConfiguration:()=>settings.configured===false?null:{provider:'gemini',key:'unit-test',model:'test-model'},
       generateExplanation:async(c,d,l)=>{calls++;assert.equal(c.selectedText,context.selectedText);assert.equal(d.topic,diagnosis.topic);assert.equal(l,'intermediate');
         if(settings.failure)throw new provider.ExplanationFailure(settings.failure,settings.quota);return {content:explanation,model:'test-model'};}},
   });

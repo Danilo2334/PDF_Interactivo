@@ -23,7 +23,7 @@ function fixture(settings={}){
   const service=load('lib/reinforcements/run-visual.ts',{'@/lib/reinforcements/request-service':access,
     '@/lib/documents/mutation-request':load('lib/documents/mutation-request.ts'),'@/lib/validations/contextual-analysis':analysisSchemas,
     '@/lib/validations/visual':schemas,'@/lib/validations/example':exampleSchemas,'@/lib/reinforcements/visual-proof':{signVisualProof:input=>({p_payload:JSON.stringify(input),p_signature:'unit-test'})},
-    '@/lib/reinforcements/visual-provider':{...provider,getVisualConfiguration:()=>settings.configured===false?null:{key:'unit-test',model:'test-model'},
+    '@/lib/reinforcements/visual-provider':{...provider,getVisualConfiguration:()=>settings.configured===false?null:{provider:'gemini',key:'unit-test',model:'test-model'},
       generateVisual:async(c,d,l)=>{calls++;assert.equal(c.selectedText,context.selectedText);assert.equal(d.topic,diagnosis.topic);assert.equal(l,'diagram');
         if(settings.failure)throw new provider.VisualFailure(settings.failure,settings.quota);return {content:visual,model:'test-model'};}},
   });

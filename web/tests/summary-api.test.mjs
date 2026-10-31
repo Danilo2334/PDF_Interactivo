@@ -21,7 +21,7 @@ function fixture(settings={}){
   const service=load('lib/reinforcements/run-summary.ts',{'@/lib/reinforcements/request-service':access,
     '@/lib/documents/mutation-request':load('lib/documents/mutation-request.ts'),'@/lib/validations/contextual-analysis':analysisSchemas,
     '@/lib/validations/summary':schemas,'@/lib/validations/example':reviewSchemas,'@/lib/reinforcements/summary-proof':{signSummaryProof:input=>({p_payload:JSON.stringify(input),p_signature:'unit-test'})},
-    '@/lib/reinforcements/summary-provider':{...provider,getSummaryConfiguration:()=>settings.configured===false?null:{key:'unit-test',model:'test-model'},
+    '@/lib/reinforcements/summary-provider':{...provider,getSummaryConfiguration:()=>settings.configured===false?null:{provider:'gemini',key:'unit-test',model:'test-model'},
       generateSummary:async(c,d,l)=>{calls++;assert.equal(c.selectedText,context.selectedText);assert.equal(d.topic,diagnosis.topic);assert.equal(l,'compact');
         if(settings.failure)throw new provider.SummaryFailure(settings.failure,settings.quota);return {content:summary,model:'test-model'};}},
   });

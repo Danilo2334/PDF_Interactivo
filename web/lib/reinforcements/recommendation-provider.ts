@@ -1,6 +1,6 @@
 import "server-only";
 import { getAnalysisConfiguration } from "@/lib/reinforcements/analysis-provider";
-import { generateGeminiJson, GeminiFailure } from "@/lib/reinforcements/gemini-provider";
+import { generateJson, AiFailure } from "@/lib/reinforcements/ai-provider";
 import type { AnalysisContext, ContextDiagnosis } from "@/lib/validations/contextual-analysis";
 import { rankRecommendations, REINFORCEMENT_TYPES, type RecommendationFailureCode } from "@/lib/validations/recommendations";
 
@@ -32,14 +32,15 @@ const schema = (diagnosis: ContextDiagnosis) => ({ type: "object", additionalPro
 } });
 export async function recommendReinforcement(context: AnalysisContext, diagnosis: ContextDiagnosis,
   config: NonNullable<ReturnType<typeof getRecommendationConfiguration>>, transport: typeof fetch = fetch) {
+  if (!context.enough || !diagnosis.sufficient) throw new RecommendationFailure("invalid_recommendations");
   const { pageNumber, selectedText, nearbyText, textSource, need, category } = context;
   try {
-    const value = await generateGeminiJson(config, { instructions, data: { pageNumber, selectedText, nearbyText, textSource, need, category,
+    const value = await generateJson(config, { instructions, data: { pageNumber, selectedText, nearbyText, textSource, need, category,
       diagnosis: { topic: diagnosis.topic, concepts: diagnosis.concepts, scope: diagnosis.scope } },
       schema: schema(diagnosis), maxOutputTokens: 4000, maxTextLength: 18000 }, transport);
     return { options: rankRecommendations(value, context, diagnosis), model: config.model };
   } catch (error) {
-    if (error instanceof GeminiFailure) throw new RecommendationFailure(error.kind === "timeout" ? "timeout" : error.kind === "refused" ? "provider_refused"
+    if (error instanceof AiFailure) throw new RecommendationFailure(error.kind === "timeout" ? "timeout" : error.kind === "refused" ? "provider_refused"
       : error.kind === "invalid" ? "invalid_recommendations" : "provider_unavailable", error.quotaExhausted);
     throw new RecommendationFailure("invalid_recommendations");
   }

@@ -1,9 +1,9 @@
 import { load, analysisSchemas, context, diagnosis, analysis, record } from './recommendation-test-helpers.mjs';
 export { load, analysisSchemas, context, diagnosis, analysis, record };
 export const schemas = load('lib/validations/explanation.ts');
-export const gemini = load('lib/reinforcements/gemini-provider.ts');
+export const gemini = load('lib/reinforcements/ai-provider.ts');
 export const provider = load('lib/reinforcements/explanation-provider.ts', {
-  '@/lib/reinforcements/gemini-provider': gemini, '@/lib/validations/explanation': schemas,
+  '@/lib/reinforcements/ai-provider': gemini, '@/lib/validations/explanation': schemas,
 });
 export const explanation = { title: 'La conservación de la energía',
   text: 'La energía de un sistema aislado permanece constante porque no se intercambia energía con el entorno. Las transformaciones entre energía potencial y cinética cambian su forma, sin crear ni destruir energía.',

@@ -41,8 +41,13 @@ export function VisualResource({ value, title, description }: { value: unknown; 
         const from = nodes.find(n => n.id === edge.from)!, to = nodes.find(n => n.id === edge.to)!;
         const vertical = from.y !== to.y, sx = from.x, sy = from.y + (vertical ? 65 : 0), tx = to.x, ty = to.y - (vertical ? 65 : 0);
         const x1 = vertical ? sx : sx + (tx > sx ? 125 : -125), x2 = vertical ? tx : tx + (tx > sx ? -135 : 135);
-        return <g key={i}><path d={`M${x1} ${sy}L${x2} ${ty}`} stroke="#475569" strokeWidth="3" markerEnd={`url(#${id}-arrow)`} />
-          <text x={(x1+x2)/2} y={vertical ? (sy+ty)/2-15 : sy-101} textAnchor="middle" fontSize="15" fill="#334155" stroke="white" strokeWidth="4" paintOrder="stroke">{lines(edge.label, 18).map((line, j) => <tspan key={j} x={(x1+x2)/2} dy={j ? 17 : 0}>{line}</tspan>)}</text></g>;
+        // A connection that skips a node must not run behind that node or merge
+        // with adjacent arrows. Route it through the free space below its row.
+        const skipsNode = !vertical && Math.abs(tx-sx) > 960 / cols * 1.1;
+        const route = skipsNode ? `M${sx} ${sy+62}C${sx} ${sy+150} ${tx} ${ty+150} ${tx} ${ty+72}` : `M${x1} ${sy}L${x2} ${ty}`;
+        const labelY = skipsNode ? sy+139 : vertical ? (sy+ty)/2-15 : sy-101;
+        return <g key={i}><path d={route} stroke="#475569" fill="none" strokeWidth="3" markerEnd={`url(#${id}-arrow)`} />
+          <text x={(x1+x2)/2} y={labelY} textAnchor="middle" fontSize="15" fill="#334155" stroke="white" strokeWidth="4" paintOrder="stroke">{lines(edge.label, 18).map((line, j) => <tspan key={j} x={(x1+x2)/2} dy={j ? 17 : 0}>{line}</tspan>)}</text></g>;
       })}
       {nodes.map((node, i) => <g key={node.id} transform={`translate(${node.x} ${node.y})`}>
         {image ? <><rect x="-190" y="-105" width="380" height="240" rx="28" fill={palette[i%4]} /><g transform="translate(0 -10)" stroke="currentColor" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" fill="none" color="#1e40af"><Symbol name={node.symbol} /></g></>

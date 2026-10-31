@@ -13,7 +13,7 @@ export const EXPLANATION_LIMITS = { brief: { min: 80, max: 1200 }, intermediate:
 export const EXPLANATION_FAILURES = ["provider_unavailable", "provider_refused", "invalid_explanation", "timeout"] as const;
 export type ExplanationFailureCode = typeof EXPLANATION_FAILURES[number];
 export const EXPLANATION_MESSAGES: Record<ExplanationFailureCode, string> = {
-  provider_unavailable: "Gemini no está disponible o su cuota gratuita se agotó. Espera antes de reintentar; no se usará un proveedor de pago.",
+  provider_unavailable: "El servicio de IA no está disponible o se agotó su cuota. Espera antes de reintentar; no se cambiará de proveedor automáticamente.",
   provider_refused: "No fue posible generar una explicación para este contenido. Revisa el fragmento y la dificultad.",
   invalid_explanation: "La explicación recibida no pudo verificarse. No se guardó contenido incompleto; puedes reintentar.",
   timeout: "La generación tardó demasiado. Puedes reintentar; no se publicará un resultado incompleto.",

@@ -18,7 +18,7 @@ test('HU021 rejects unsupported modalities, invented quotes/topics, contradictio
 
 test('Gemini receives the saved modality, source and difficulty once, without identity or secret fields',async()=>{
   for(const mode of schemas.EXAMPLE_MODES){let calls=0;
-    const result=await provider.generateExample(context,diagnosis,mode,{key:'test',model:'test-model'},async(url,init)=>{
+    const result=await provider.generateExample(context,diagnosis,mode,{provider:'gemini',key:'test',model:'test-model'},async(url,init)=>{
       calls++;const body=JSON.parse(init.body),data=JSON.parse(body.contents[0].parts[0].text);
       assert.equal(data.modality,schemas.EXAMPLE_LABELS[mode]);assert.equal(data.selection,context.selectedText);
       assert.equal(data.difficulty,context.need);assert.equal(data.nearbyText,context.nearbyText);
@@ -37,7 +37,7 @@ test('quota, timeout, refusal and invalid examples fail without retries or leaki
     [async()=>{const e=Error('private upstream body');e.name='TimeoutError';throw e},'timeout',false],
     [async()=>Response.json({promptFeedback:{blockReason:'SAFETY'}}),'provider_refused',false],
     [async()=>Response.json({candidates:[{finishReason:'STOP',content:{parts:[{text:JSON.stringify({...example,consistentWithSource:false})}]}}]}),'invalid_example',false],
-  ]){let calls=0;await assert.rejects(provider.generateExample(context,diagnosis,'analogy',{key:'test',model:'test-model'},(...args)=>{calls++;return transport(...args)}),
+  ]){let calls=0;await assert.rejects(provider.generateExample(context,diagnosis,'analogy',{provider:'gemini',key:'test',model:'test-model'},(...args)=>{calls++;return transport(...args)}),
     e=>e.code===code&&e.quotaExhausted===quota&&!e.message.includes('private'));assert.equal(calls,1);}
 });
 

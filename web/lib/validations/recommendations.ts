@@ -49,7 +49,7 @@ export function rankRecommendations(value: unknown, context: AnalysisContext, di
 export const RECOMMENDATION_FAILURES = ["provider_unavailable", "provider_refused", "invalid_recommendations", "timeout"] as const;
 export type RecommendationFailureCode = typeof RECOMMENDATION_FAILURES[number];
 export const RECOMMENDATION_MESSAGES: Record<RecommendationFailureCode, string> = {
-  provider_unavailable: "Gemini no está disponible o su cuota gratuita se agotó. Espera antes de reintentar; no se usará un proveedor de pago.",
+  provider_unavailable: "El servicio de IA no está disponible o se agotó su cuota. Espera antes de reintentar; no se cambiará de proveedor automáticamente.",
   provider_refused: "No fue posible recomendar un refuerzo para este contenido. Revisa la selección y tu dificultad.",
   invalid_recommendations: "Las recomendaciones recibidas no pudieron verificarse. Puedes reintentar.",
   timeout: "Las recomendaciones tardaron demasiado. Puedes reintentar sin repetir un resultado ya guardado.",

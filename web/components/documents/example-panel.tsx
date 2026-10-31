@@ -52,7 +52,7 @@ export function ExamplePanel({ request, active, onChanged }: { request: RequestR
         <button type="submit" className={buttonClass} disabled={!selected || saved}>Guardar modalidad</button>
       </fieldset></form>
       {saved && <p role="status" className="text-sm text-green-900">Modalidad guardada: {EXAMPLE_LABELS[generation!.mode]}</p>}
-      {!view.providerAvailable && <p className="text-sm">Gemini no está configurado. Puedes guardar la modalidad sin consumir IA.</p>}
+      {!view.providerAvailable && <p className="text-sm">El servicio de IA no está configurado. Puedes guardar la modalidad sin consumir IA.</p>}
       <button type="button" className={buttonClass} disabled={!active || busy || !view.canGenerate || !saved} onClick={() => void execute("generate")}>{generation?.status === "error" || generation?.status === "processing" ? "Reintentar ejemplo" : "Generar ejemplo o analogía"}</button>
     </>}
     <button type="button" className={buttonClass} disabled={!active || busy} onClick={() => { setError(""); resource.refresh(); onChanged(); }}>Actualizar ejemplo</button>
