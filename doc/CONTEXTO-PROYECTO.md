@@ -4264,3 +4264,65 @@ publicada en88edaa4; corrección del recorrido y evidencia se añaden en commits
 posteriores de la misma rama `codex/ia-sol-integracion-contexto`.
 Sin merge ni despliegue. Stash d6406e0 preservado. No retomar HU030/HU032/HU033
 como si el lector HTTPS ya estuviera probado: ese bloqueo sigue pendiente.
+
+### 31/10/2026 — Revisión e integración autorizada de PR #41 y dependencias
+
+El propietario autorizó revisar e integrar la cadena pendiente en develop, sin
+ despliegue. Se revisaron diferencias de código, controles de propietario/origen,
+ RLS y firmas, selección de versiones aprobadas, proyección del lector sin claves
+ de quiz, idempotencia/concurrencia y los límites del proveedor IA. No se detectó
+ un bloqueo nuevo para integrar. Los pendientes de aceptación HTTPS continúan
+ explícitos; integrar código no los convierte en pruebas completadas.
+
+Orden real de merges (todos con merge commit, sin reescribir historia):
+
+| PR | Commit de merge |
+| --- | --- |
+| #30 | `cf2b066` |
+| #31 | `267b3c4` |
+| #32 | `0ebc7bd` |
+| #33 | `05e4d06` |
+| #34 | `2a96fd6` |
+| #35 | `cc292ee` |
+| #36 | `0dade47` |
+| #37 | `9049e40` |
+| #38 | `9427083` |
+| #39 | `85058aa` |
+| #40 | `e04894e` |
+| #41 | `d0a264b` |
+
+Antes de integrar cada sucesor se cambió su base a develop, se comprobó el SHA
+ esperado del predecesor y del head, mergeabilidad y el mismo conjunto de archivos
+ que su diff original. No hubo conflictos. El árbol completo de develop en
+ `d0a264b7588afd37dd0a115379d6a12fcd3b1d9c` es idéntico al revisado en
+ `4223b2b039c0a015bbba143a1f234e36fcb8f07c` (git diff vacío).
+
+Verificación de esta revisión: 369/369 pruebas automatizadas y lint ejecutados de
+ nuevo y aprobados. Se conserva el build de producción/TypeScript y la validación
+ autenticada de la entrada anterior sobre exactamente el mismo código; no se
+ reinició el servidor ni se repitieron generaciones para hacer el merge. GitHub
+ no reporta checks/statuses ni workflows de PR configurados, y no tiene revisiones
+ ni hilos pendientes en estos 12 PR. No se presenta ausencia de CI como CI aprobado.
+
+Las siete migraciones de la cadena se comprobaron ya aplicadas en el historial
+ remoto, incluida `20261029010922_quiz_reader_attempts`. No se ejecutó SQL ni
+ db push. Asesor de seguridad consultado: conserva avisos previos (tabla privada
+ de secretos con RLS sin políticas, trigger handle_new_user y RPC históricos
+ definer, protección de contraseñas filtradas desactivada). No atribuirlos como
+ regresión de esta cadena ni afirmar cero avisos; no se cambiaron permisos.
+ Referencias del asesor:
+ https://supabase.com/docs/guides/database/database-linter?lint=0028_anon_security_definer_function_executable
+ y https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection.
+
+Jira: se añade el resultado de integración al único comentario existente de cada
+ historia SCRUM-30 a SCRUM-45; las evidencias y comentarios de las subtareas se
+ conservan sin subir ni duplicar imágenes. Estados de aceptación preservados:
+ HU024–HU027 En revisión; HU028/HU029/HU030/HU031/HU032/HU033 En curso con sus
+ pendientes actuales. El recorrido positivo de publicación vigente → lector →
+ intento/calificación persistidos, retirada/sustitución y HTTPS sigue pendiente.
+ PUBLICATION_HTTPS_VERIFIED no se habilitó. No se publicó contenido QA, no hubo
+ llamadas nuevas de IA ni gasto adicional en esta revisión.
+
+Checkout local actualizado por fast-forward a develop. Stash d6406e0 y ramas
+ conservados; .env.local ignorado y fuera de Git. PR #13 hacia main no integrado.
+ No se desplegó, no se tocó main y no se avanzó a otra historia.
