@@ -1,0 +1,38 @@
+@import "tailwindcss";
+
+:root {
+  color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: #f1f5f9;
+}
+
+body {
+  margin: 0;
+  color: #0f172a;
+  background: #f1f5f9;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+/* Text layout follows PDF.js TextLayer (Apache-2.0), matching the bundled version. */
+.pdf-page-text { position: absolute; inset: 0; overflow: clip; line-height: 1; text-align: initial; transform-origin: 0 0; text-size-adjust: none; --min-font-size: 1; --text-scale-factor: calc(var(--total-scale-factor) * var(--min-font-size)); --min-font-size-inv: calc(1 / var(--min-font-size)); }
+.pdf-page-text :is(span, br) { color: transparent; position: absolute; white-space: pre; cursor: text; transform-origin: 0 0; user-select: text; }
+.pdf-page-text > :not(.markedContent), .pdf-page-text .markedContent span:not(.markedContent) { --font-height: 0; font-size: calc(var(--text-scale-factor) * var(--font-height)); --scale-x: 1; --rotate: 0deg; transform: rotate(var(--rotate)) scaleX(var(--scale-x)) scale(var(--min-font-size-inv)); }
+.pdf-page-text .markedContent { display: contents; }
+.pdf-page-text ::selection { background: rgb(37 99 235 / .35); color: transparent; }
+.pdf-page-surface, .pdf-page-marks { position: absolute; inset: 0; }
+.pdf-page-surface { cursor: crosshair; }
+.pdf-page-marks { pointer-events: none; }
+.pdf-selected-zone, .pdf-selected-text { position: absolute; border: 2px solid #1d4ed8; background: rgb(59 130 246 / .15); }
+.pdf-selected-text { border: 0; background: rgb(250 204 21 / .35); }
+.pdf-selected-zone { pointer-events: auto; cursor: move; }
+.pdf-zone-handle { position: absolute; right: -6px; bottom: -6px; width: 14px; height: 14px; border: 2px solid white; background: #1d4ed8; cursor: se-resize; }

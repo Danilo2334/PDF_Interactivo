@@ -1,0 +1,885 @@
+{
+  "date": "2026-10-31",
+  "provider": "openai",
+  "model": "gpt-6.1-sol",
+  "productionBuild": true,
+  "originalSha256": "e7277d66afd7caba47385cfac2f0e55a2eeb4fb7aa7136409fa35300a6347946",
+  "projectId": "91b849b8-a5e7-4241-8cef-babb910d12ee",
+  "latestVisualRetest": {
+    "status": "passed",
+    "authenticated": true,
+    "version": 2,
+    "retainedVersions": [
+      2,
+      1
+    ],
+    "labels": [
+      "Alterna con",
+      "Integra la suma",
+      "Integra la suma"
+    ],
+    "renderer": "curva separada para conexión n1-n3, sin cruzar nodo central",
+    "desktop": "1280x900, ampliación con Enter",
+    "mobile": {
+      "viewport": "390x844",
+      "documentClientWidth": 375,
+      "documentScrollWidth": 375,
+      "graphicScrollLeftAfterArrowRight": 40
+    },
+    "interactiveAdvice": "Mini quiz opcional visible; tres radios de formatos, sin radio inicial interaction",
+    "checks": "369/369 pruebas, lint y build",
+    "additionalAiCalls": 0
+  },
+  "networkCapture": "Selected real UI/API responses; buffered events were evicted, not an exhaustive request trace",
+  "cases": [
+    {
+      "kind": "explanation",
+      "id": "33ad1c22-c95b-4e10-81a4-e5c72704149f",
+      "analysis": {
+        "status": "ready",
+        "model": "gpt-6.1-sol",
+        "context": {
+          "pageNumber": 1,
+          "selectedText": "En un sistema aislado, la energia total se conserva.\nLa energia no se crea ni se destruye: se transforma.\nUn pendulo alterna energia potencial y energia cinetica.\nSin rozamiento, la suma de ambas permanece constante.",
+          "textSource": "digital",
+          "nearbyText": "QA HU015-HU019 - Energia   FUERA DE ZONA: temperatura de fusion del hielo.",
+          "nearbySource": "selection",
+          "need": "No comprendo cómo puede conservarse la energía si el péndulo cambia entre energía potencial y cinética. Aclara el papel de la ausencia de rozamiento.",
+          "category": "concept",
+          "pdfSha256": "e7277d66afd7caba47385cfac2f0e55a2eeb4fb7aa7136409fa35300a6347946",
+          "enough": true,
+          "truncated": false
+        },
+        "diagnosis": {
+          "sufficient": true,
+          "topic": "Conservación de la energía en un péndulo sin rozamiento",
+          "concepts": [
+            "Energía total",
+            "Transformación de la energía",
+            "Energía potencial",
+            "Energía cinética",
+            "Ausencia de rozamiento"
+          ],
+          "scope": "Aclarar que el cambio entre energía potencial y cinética es una transformación, no una creación o destrucción de energía, y que, sin rozamiento, la suma de ambas permanece constante. Limitar el papel del rozamiento a esta condición, sin explicar mecanismos no descritos en el documento.",
+          "reason": "",
+          "quotes": [
+            "La energia no se crea ni se destruye: se transforma.",
+            "Un pendulo alterna energia potencial y energia cinetica.",
+            "Sin rozamiento, la suma de ambas permanece constante."
+          ]
+        },
+        "errorCode": null
+      },
+      "recommendations": {
+        "status": "ready",
+        "model": "gpt-6.1-sol",
+        "options": [
+          {
+            "type": "explanation",
+            "topicFit": 3,
+            "needFit": 3,
+            "justification": "Permite distinguir la transformación entre energía potencial y cinética de la conservación de su suma, aclarando la condición de ausencia de rozamiento.",
+            "topicReference": "Conservación de la energía en un péndulo sin rozamiento",
+            "sourceQuote": "Sin rozamiento, la suma de ambas permanece constante.",
+            "needQuote": "Aclara el papel de la ausencia de rozamiento."
+          },
+          {
+            "type": "example",
+            "topicFit": 3,
+            "needFit": 3,
+            "justification": "Un ejemplo centrado en el péndulo sin rozamiento permite concretar cómo cambian ambas energías sin que cambie el total.",
+            "topicReference": "Transformación de la energía",
+            "sourceQuote": "Un pendulo alterna energia potencial y energia cinetica.",
+            "needQuote": "No comprendo cómo puede conservarse la energía"
+          },
+          {
+            "type": "image",
+            "topicFit": 3,
+            "needFit": 3,
+            "justification": "Una representación visual de ambas energías y su suma permitiría contrastar sus cambios con un total constante, indicando la condición sin rozamiento.",
+            "topicReference": "Energía total",
+            "sourceQuote": "Sin rozamiento, la suma de ambas permanece constante.",
+            "needQuote": "si el péndulo cambia entre energía potencial y cinética"
+          },
+          {
+            "type": "interaction",
+            "topicFit": 3,
+            "needFit": 3,
+            "justification": "Permitiría practicar la relación entre los cambios de ambas energías y la constancia de su suma, manteniendo explícita la ausencia de rozamiento.",
+            "topicReference": "Conservación de la energía en un péndulo sin rozamiento",
+            "sourceQuote": "Sin rozamiento, la suma de ambas permanece constante.",
+            "needQuote": "cómo puede conservarse la energía si el péndulo cambia"
+          }
+        ]
+      },
+      "generation": {
+        "status": "ready",
+        "model": "gpt-6.1-sol",
+        "content": {
+          "title": "La energía se transforma, pero el total no cambia",
+          "text": "La clave es distinguir entre las formas de energía y su suma. Que cambien la energía potencial y la energía cinética no significa que cambie la energía total.\n\n1. Dos formas de una misma energía\nEl péndulo alterna entre energía potencial y energía cinética. Ese cambio es una transformación: no se crea energía nueva ni se destruye la que ya existe.\n\n2. Lo que se conserva es la suma\nEnergía total = energía potencial + energía cinética.\n\nSin rozamiento, cuando una de estas formas disminuye, la otra aumenta en la misma cantidad. Por eso, cada una puede variar mientras la suma permanece constante. Conservar la energía no significa que cada forma deba mantenerse por separado.\n\n3. El papel de la ausencia de rozamiento\nEl texto establece la ausencia de rozamiento como condición para que la suma de energía potencial y cinética permanezca constante. No debemos extender esa afirmación a un péndulo con rozamiento, porque el fragmento no explica ese caso.\n\nEn resumen: el péndulo cambia cómo está repartida su energía, no la cantidad total, siempre bajo la condición indicada de que no haya rozamiento.",
+          "sourceQuote": "En un sistema aislado, la energia total se conserva.\nLa energia no se crea ni se destruye: se transforma.\nUn pendulo alterna energia potencial y energia cinetica.\nSin rozamiento, la suma de ambas permanece constante.",
+          "topicReference": "Conservación de la energía en un péndulo sin rozamiento"
+        },
+        "approvalStatus": "pending"
+      }
+    },
+    {
+      "kind": "insufficient",
+      "id": "bee43241-30e9-446b-a6ce-1723d46d9f26",
+      "analysis": {
+        "status": "insufficient",
+        "model": "gpt-6.1-sol",
+        "context": {
+          "pageNumber": 2,
+          "selectedText": "El ciclo del agua describe evaporacion y condensacion.",
+          "textSource": "digital",
+          "nearbyText": "OTRA PAGINA - No mezclar contextos   Este contenido NO pertenece a la seleccion de pagina 1.",
+          "nearbySource": "selection",
+          "need": "Confundo evaporación y condensación y no sé si este fragmento describe todo el ciclo del agua o solamente esos dos procesos.",
+          "category": "concept",
+          "pdfSha256": "e7277d66afd7caba47385cfac2f0e55a2eeb4fb7aa7136409fa35300a6347946",
+          "enough": true,
+          "truncated": false
+        },
+        "diagnosis": {
+          "sufficient": false,
+          "topic": "",
+          "concepts": [],
+          "scope": "",
+          "reason": "El fragmento solo nombra evaporación y condensación: no define ni diferencia ambos procesos, ni aclara si constituyen todo el ciclo del agua. Falta una explicación de los procesos y del alcance del ciclo para resolver la duda.",
+          "quotes": []
+        },
+        "errorCode": "insufficient_context"
+      },
+      "recommendations": null,
+      "generation": null
+    },
+    {
+      "kind": "visual_positions_insufficient",
+      "id": "fb1c0cce-3fc0-4294-a5df-11bab0774c41",
+      "need": "Necesito ver en un diagrama cómo cambia la energía potencial y cinética entre las posiciones del péndulo, conservando la suma sin rozamiento.",
+      "analysis": {
+        "status": "insufficient",
+        "model": "gpt-6.1-sol",
+        "context": {
+          "pageNumber": 1,
+          "selectedText": "En un sistema aislado, la energia total se conserva.\nLa energia no se crea ni se destruye: se transforma.\nUn pendulo alterna energia potencial y energia cinetica.\nSin rozamiento, la suma de ambas permanece constante.",
+          "textSource": "digital",
+          "nearbyText": "QA HU015-HU019 - Energia   FUERA DE ZONA: temperatura de fusion del hielo.",
+          "nearbySource": "selection",
+          "need": "Necesito ver en un diagrama cómo cambia la energía potencial y cinética entre las posiciones del péndulo, conservando la suma sin rozamiento.",
+          "category": "concept",
+          "pdfSha256": "e7277d66afd7caba47385cfac2f0e55a2eeb4fb7aa7136409fa35300a6347946",
+          "enough": true,
+          "truncated": false
+        },
+        "diagnosis": {
+          "sufficient": false,
+          "topic": "",
+          "concepts": [],
+          "scope": "",
+          "reason": "El texto indica que el péndulo alterna energía potencial y cinética y que su suma permanece constante sin rozamiento, pero no explica cómo se relaciona cada energía con las posiciones del péndulo. Falta esa relación para fundamentar el diagrama solicitado.",
+          "quotes": []
+        },
+        "errorCode": "insufficient_context"
+      },
+      "recommendations": null,
+      "generation": null
+    },
+    {
+      "kind": "visual",
+      "id": "4716166b-8fcd-46a7-a0cc-d218eb36af36",
+      "analysis": {
+        "status": "ready",
+        "model": "gpt-6.1-sol",
+        "context": {
+          "pageNumber": 1,
+          "selectedText": "En un sistema aislado, la energia total se conserva.\nLa energia no se crea ni se destruye: se transforma.\nUn pendulo alterna energia potencial y energia cinetica.\nSin rozamiento, la suma de ambas permanece constante.",
+          "textSource": "digital",
+          "nearbyText": "QA HU015-HU019 - Energia   FUERA DE ZONA: temperatura de fusion del hielo.",
+          "nearbySource": "selection",
+          "need": "Necesito un diagrama para distinguir el cambio entre energía potencial y cinética de la conservación de su suma, indicando la condición sin rozamiento.",
+          "category": "concept",
+          "pdfSha256": "e7277d66afd7caba47385cfac2f0e55a2eeb4fb7aa7136409fa35300a6347946",
+          "enough": true,
+          "truncated": false
+        },
+        "diagnosis": {
+          "sufficient": true,
+          "topic": "Transformación y conservación de la energía en un péndulo",
+          "concepts": [
+            "Energía potencial",
+            "Energía cinética",
+            "Transformación de energía",
+            "Conservación de la suma de energías",
+            "Ausencia de rozamiento"
+          ],
+          "scope": "Plantear un diagrama conceptual sencillo que distinga la alternancia entre energía potencial y cinética de la constancia de su suma, señalando explícitamente la condición «sin rozamiento». No añadir posiciones del péndulo, fórmulas ni valores que el documento no proporciona.",
+          "reason": "",
+          "quotes": [
+            "La energia no se crea ni se destruye: se transforma.",
+            "Un pendulo alterna energia potencial y energia cinetica.",
+            "Sin rozamiento, la suma de ambas permanece constante."
+          ]
+        },
+        "errorCode": null
+      },
+      "recommendations": {
+        "status": "ready",
+        "model": "gpt-6.1-sol",
+        "options": [
+          {
+            "type": "image",
+            "topicFit": 3,
+            "needFit": 3,
+            "justification": "Un diagrama conceptual permite diferenciar visualmente la alternancia de las dos energías de la constancia de su suma y vincular esta última con la condición sin rozamiento, sin añadir posiciones, fórmulas ni valores.",
+            "topicReference": "Transformación y conservación de la energía en un péndulo",
+            "sourceQuote": "Sin rozamiento, la suma de ambas permanece constante.",
+            "needQuote": "Necesito un diagrama para distinguir el cambio entre energía potencial y cinética de la conservación de su suma"
+          }
+        ]
+      },
+      "generation": {
+        "status": "ready",
+        "model": "gpt-6.1-sol",
+        "content": {
+          "title": "Energías que cambian, suma que se conserva",
+          "text": "Borrador para revisión. Los dos nodos superiores representan la energía potencial y la energía cinética del péndulo: ambas se transforman una en otra. Las flechas hacia el nodo inferior indican que las dos forman parte de una misma suma, no que una produzca esa suma. En el sistema aislado descrito y sin rozamiento, las energías alternan, pero su suma permanece constante. El diagrama no representa posiciones, fórmulas ni valores.",
+          "sourceQuote": "En un sistema aislado, la energia total se conserva.\nLa energia no se crea ni se destruye: se transforma.\nUn pendulo alterna energia potencial y energia cinetica.\nSin rozamiento, la suma de ambas permanece constante.",
+          "topicReference": "Transformación y conservación de la energía en un péndulo",
+          "consistentWithSource": true,
+          "scene": {
+            "kind": "diagram",
+            "nodes": [
+              {
+                "id": "n1",
+                "label": "Energía potencial",
+                "detail": "Una de las dos formas de energía que alternan en el péndulo; se transforma en energía cinética y viceversa.",
+                "symbol": "energy"
+              },
+              {
+                "id": "n2",
+                "label": "Energía cinética",
+                "detail": "La otra forma de energía del péndulo; se transforma en energía potencial y viceversa.",
+                "symbol": "energy"
+              },
+              {
+                "id": "n3",
+                "label": "Suma constante",
+                "detail": "Sin rozamiento, la suma de energía potencial y cinética permanece constante en el sistema aislado descrito.",
+                "symbol": "pendulum"
+              }
+            ],
+            "edges": [
+              {
+                "from": "n1",
+                "to": "n2",
+                "label": "Alterna con"
+              },
+              {
+                "from": "n1",
+                "to": "n3",
+                "label": "Integra la suma"
+              },
+              {
+                "from": "n2",
+                "to": "n3",
+                "label": "Integra la suma"
+              }
+            ]
+          }
+        },
+        "approvalStatus": "pending"
+      }
+    },
+    {
+      "kind": "analogy",
+      "id": "306f3764-dcc2-4b37-8250-8608873189e9",
+      "analysis": {
+        "status": "ready",
+        "model": "gpt-6.1-sol",
+        "context": {
+          "pageNumber": 1,
+          "selectedText": "En un sistema aislado, la energia total se conserva.\nLa energia no se crea ni se destruye: se transforma.\nUn pendulo alterna energia potencial y energia cinetica.\nSin rozamiento, la suma de ambas permanece constante.",
+          "textSource": "digital",
+          "nearbyText": "QA HU015-HU019 - Energia   FUERA DE ZONA: temperatura de fusion del hielo.",
+          "nearbySource": "selection",
+          "need": "Necesito una analogía que aclare cómo pueden cambiar la energía potencial y cinética sin que cambie su suma, bajo la condición de ausencia de rozamiento.",
+          "category": "concept",
+          "pdfSha256": "e7277d66afd7caba47385cfac2f0e55a2eeb4fb7aa7136409fa35300a6347946",
+          "enough": true,
+          "truncated": false
+        },
+        "diagnosis": {
+          "sufficient": true,
+          "topic": "Conservación de la energía en un péndulo sin rozamiento",
+          "concepts": [
+            "Energía potencial",
+            "Energía cinética",
+            "Transformación de la energía",
+            "Conservación de la energía total",
+            "Ausencia de rozamiento"
+          ],
+          "scope": "Preparar una analogía sencilla que muestre cómo la energía potencial y la cinética pueden variar compensándose entre sí, de modo que su suma permanezca constante en un péndulo sin rozamiento.",
+          "reason": "",
+          "quotes": [
+            "La energia no se crea ni se destruye: se transforma.",
+            "Un pendulo alterna energia potencial y energia cinetica.",
+            "Sin rozamiento, la suma de ambas permanece constante."
+          ]
+        },
+        "errorCode": null
+      },
+      "recommendations": {
+        "status": "ready",
+        "model": "gpt-6.1-sol",
+        "options": [
+          {
+            "type": "explanation",
+            "topicFit": 3,
+            "needFit": 3,
+            "justification": "Una explicación apoyada en una analogía permite distinguir el cambio de cada energía de la constancia de su suma, explicitando la ausencia de rozamiento.",
+            "topicReference": "Conservación de la energía en un péndulo sin rozamiento",
+            "sourceQuote": "Sin rozamiento, la suma de ambas permanece constante.",
+            "needQuote": "Necesito una analogía"
+          },
+          {
+            "type": "example",
+            "topicFit": 3,
+            "needFit": 3,
+            "justification": "Un ejemplo analógico sencillo puede concretar la compensación entre ambas energías y señalar que la comparación supone ausencia de rozamiento.",
+            "topicReference": "Transformación de la energía",
+            "sourceQuote": "Un pendulo alterna energia potencial y energia cinetica.",
+            "needQuote": "cómo pueden cambiar la energía potencial y cinética sin que cambie su suma"
+          },
+          {
+            "type": "image",
+            "topicFit": 3,
+            "needFit": 2,
+            "justification": "Una representación visual de la analogía puede mostrar variaciones compensadas y un total constante; debe comunicar esas relaciones y explicitar la ausencia de rozamiento, no limitarse a ilustrar un péndulo.",
+            "topicReference": "Conservación de la energía total",
+            "sourceQuote": "Sin rozamiento, la suma de ambas permanece constante.",
+            "needQuote": "sin que cambie su suma"
+          }
+        ]
+      },
+      "generation": {
+        "status": "ready",
+        "model": "gpt-6.1-sol",
+        "content": {
+          "title": "Dos compartimentos, una misma cantidad",
+          "text": "Imagina una caja con dos compartimentos y diez fichas en total. Uno lleva la etiqueta «Energía potencial» y el otro, «Energía cinética». Esta es una comparación ilustrativa, no una situación descrita en el documento.\n\nCuando el péndulo está en un extremo de su recorrido, imagina las diez fichas en el compartimento de energía potencial y ninguna en el de cinética: está a su mayor altura y momentáneamente en reposo. Al bajar, pasas fichas del primer compartimento al segundo: disminuye la energía potencial y aumenta la cinética, porque el péndulo gana rapidez.\n\nEn el punto más bajo, las diez fichas están en el compartimento de energía cinética, si tomamos ese punto como referencia de energía potencial cero. Al subir hacia el otro extremo, las fichas regresan al compartimento de energía potencial: pierde rapidez y gana altura.\n\nLa clave es que cambiar las fichas de compartimento no cambia su número total. Del mismo modo, sin rozamiento, cambian las dos formas de energía, pero su suma permanece constante.\n\nLa comparación tiene límites: la energía no está hecha de fichas y se transforma de forma continua, no en saltos. Además, si hubiera rozamiento, parte de la energía mecánica se transformaría en energía interna; ya no permanecería constante únicamente la suma de potencial y cinética.",
+          "sourceQuote": "En un sistema aislado, la energia total se conserva.\nLa energia no se crea ni se destruye: se transforma.\nUn pendulo alterna energia potencial y energia cinetica.\nSin rozamiento, la suma de ambas permanece constante.",
+          "topicReference": "Conservación de la energía en un péndulo sin rozamiento",
+          "relation": "Los dos compartimentos representan la energía potencial y la cinética; las fichas transferidas representan su transformación mutua. El número fijo de fichas representa la conservación de su suma.",
+          "limitations": "Se supone un péndulo ideal sin rozamiento ni otras pérdidas, con soporte fijo. Se elige el punto más bajo como referencia de energía potencial cero. Las fichas son una representación de cantidades de energía, no objetos físicos que circulen dentro del péndulo.",
+          "consistentWithSource": true
+        },
+        "approvalStatus": "pending"
+      }
+    },
+    {
+      "kind": "summary",
+      "id": "95a219f7-2473-4101-addf-763f58ddb1aa",
+      "analysis": {
+        "status": "ready",
+        "model": "gpt-6.1-sol",
+        "context": {
+          "pageNumber": 1,
+          "selectedText": "En un sistema aislado, la energia total se conserva.\nLa energia no se crea ni se destruye: se transforma.\nUn pendulo alterna energia potencial y energia cinetica.\nSin rozamiento, la suma de ambas permanece constante.",
+          "textSource": "digital",
+          "nearbyText": "QA HU015-HU019 - Energia   FUERA DE ZONA: temperatura de fusion del hielo.",
+          "nearbySource": "selection",
+          "need": "No logro sintetizar las ideas esenciales de este fragmento: necesito un resumen breve y los conceptos clave, conservando la condición de ausencia de rozamiento.",
+          "category": "concept",
+          "pdfSha256": "e7277d66afd7caba47385cfac2f0e55a2eeb4fb7aa7136409fa35300a6347946",
+          "enough": true,
+          "truncated": false
+        },
+        "diagnosis": {
+          "sufficient": true,
+          "topic": "Conservación y transformación de la energía en un péndulo",
+          "concepts": [
+            "Sistema aislado",
+            "Conservación de la energía total",
+            "Transformación de la energía",
+            "Energía potencial",
+            "Energía cinética",
+            "Ausencia de rozamiento"
+          ],
+          "scope": "Identificar las ideas esenciales para un resumen breve: conservación de la energía total en un sistema aislado y alternancia entre energía potencial y cinética en un péndulo, manteniendo explícita la condición de que su suma permanece constante sin rozamiento. Sin introducir fórmulas ni explicaciones externas.",
+          "reason": "",
+          "quotes": [
+            "En un sistema aislado, la energia total se conserva.",
+            "Un pendulo alterna energia potencial y energia cinetica.",
+            "Sin rozamiento, la suma de ambas permanece constante."
+          ]
+        },
+        "errorCode": null
+      },
+      "recommendations": {
+        "status": "ready",
+        "model": "gpt-6.1-sol",
+        "options": [
+          {
+            "type": "summary",
+            "topicFit": 3,
+            "needFit": 3,
+            "justification": "Es el formato solicitado para reunir las ideas esenciales y los conceptos clave, manteniendo explícita la condición de ausencia de rozamiento.",
+            "topicReference": "Conservación y transformación de la energía en un péndulo",
+            "sourceQuote": "Sin rozamiento, la suma de ambas permanece constante.",
+            "needQuote": "necesito un resumen breve y los conceptos clave"
+          },
+          {
+            "type": "image",
+            "topicFit": 3,
+            "needFit": 2,
+            "justification": "Un esquema visual puede condensar la alternancia entre energía potencial y cinética y vincular la suma constante con la ausencia de rozamiento, como apoyo a la síntesis.",
+            "topicReference": "Conservación y transformación de la energía en un péndulo",
+            "sourceQuote": "Un pendulo alterna energia potencial y energia cinetica.",
+            "needQuote": "No logro sintetizar las ideas esenciales de este fragmento"
+          },
+          {
+            "type": "interaction",
+            "topicFit": 3,
+            "needFit": 2,
+            "justification": "Una actividad de selección y organización de ideas permitiría practicar la síntesis del fragmento y conservar la ausencia de rozamiento como condición esencial.",
+            "topicReference": "Ausencia de rozamiento",
+            "sourceQuote": "Sin rozamiento, la suma de ambas permanece constante.",
+            "needQuote": "conservando la condición de ausencia de rozamiento"
+          }
+        ]
+      },
+      "generation": {
+        "status": "ready",
+        "model": "gpt-6.1-sol",
+        "content": {
+          "title": "Conservación y transformación de la energía",
+          "text": "En un sistema aislado, la energía total se conserva: no se crea ni se destruye, sino que se transforma. En un péndulo, la energía alterna entre potencial y cinética; sin rozamiento, la suma de ambas permanece constante.",
+          "concepts": [
+            {
+              "name": "sistema aislado",
+              "sourceQuote": "En un sistema aislado, la energia total se conserva."
+            },
+            {
+              "name": "energia total",
+              "sourceQuote": "En un sistema aislado, la energia total se conserva."
+            },
+            {
+              "name": "se transforma",
+              "sourceQuote": "La energia no se crea ni se destruye: se transforma."
+            },
+            {
+              "name": "energia potencial",
+              "sourceQuote": "Un pendulo alterna energia potencial y energia cinetica."
+            },
+            {
+              "name": "energia cinetica",
+              "sourceQuote": "Un pendulo alterna energia potencial y energia cinetica."
+            },
+            {
+              "name": "Sin rozamiento",
+              "sourceQuote": "Sin rozamiento, la suma de ambas permanece constante."
+            }
+          ],
+          "sourceQuote": "En un sistema aislado, la energia total se conserva.\nLa energia no se crea ni se destruye: se transforma.\nUn pendulo alterna energia potencial y energia cinetica.\nSin rozamiento, la suma de ambas permanece constante.",
+          "topicReference": "Conservación y transformación de la energía en un péndulo",
+          "consistentWithSource": true
+        },
+        "approvalStatus": "pending"
+      }
+    }
+  ],
+  "quiz": {
+    "head": {
+      "version": 1,
+      "decision": "pending",
+      "choice": "generate",
+      "approved": false
+    },
+    "job": {
+      "status": "ready",
+      "model": "gpt-6.1-sol",
+      "questionCount": 3
+    },
+    "source": {
+      "title": "La energía se transforma, pero el total no cambia",
+      "text": "La clave es distinguir entre las formas de energía y su suma. Que cambien la energía potencial y la energía cinética no significa que cambie la energía total.\n\n1. Dos formas de una misma energía\nEl péndulo alterna entre energía potencial y energía cinética. Ese cambio es una transformación: no se crea energía nueva ni se destruye la que ya existe.\n\n2. Lo que se conserva es la suma\nEnergía total = energía potencial + energía cinética.\n\nSin rozamiento, cuando una de estas formas disminuye, la otra aumenta en la misma cantidad. Por eso, cada una puede variar mientras la suma permanece constante. Conservar la energía no significa que cada forma deba mantenerse por separado.\n\n3. El papel de la ausencia de rozamiento\nEl texto establece la ausencia de rozamiento como condición para que la suma de energía potencial y cinética permanezca constante. No debemos extender esa afirmación a un péndulo con rozamiento, porque el fragmento no explica ese caso.\n\nEn resumen: el péndulo cambia cómo está repartida su energía, no la cantidad total, siempre bajo la condición indicada de que no haya rozamiento.",
+      "concepts": [
+        "Energía total",
+        "Energía potencial",
+        "Energía cinética",
+        "Ausencia de rozamiento"
+      ],
+      "hash": "60aee92133dfb9d1c75a43378383a7106d873d36636219a3b390250ef039cc63"
+    },
+    "versions": [
+      {
+        "version": 1,
+        "origin": "ai",
+        "content": {
+          "title": "La energía se transforma, pero el total no cambia",
+          "allowRetries": false,
+          "questions": [
+            {
+              "prompt": "Según el refuerzo, ¿qué permanece constante en el péndulo sin rozamiento?",
+              "options": [
+                "Cada forma de energía por separado.",
+                "La suma de energía potencial y cinética."
+              ],
+              "correctIndex": 1,
+              "explanation": "Se conserva la suma, aunque cada forma de energía puede variar.",
+              "sourceQuote": "Por eso, cada una puede variar mientras la suma permanece constante. Conservar la energía no significa que cada forma deba mantenerse por separado."
+            },
+            {
+              "prompt": "Según el refuerzo, sin rozamiento, cuando la energía potencial disminuye, ¿qué ocurre con la energía cinética?",
+              "options": [
+                "Aumenta en la misma cantidad.",
+                "Disminuye en la misma cantidad."
+              ],
+              "correctIndex": 0,
+              "explanation": "La disminución de una forma se compensa con el aumento de la otra en la misma cantidad.",
+              "sourceQuote": "Sin rozamiento, cuando una de estas formas disminuye, la otra aumenta en la misma cantidad."
+            },
+            {
+              "prompt": "¿Bajo qué condición establece el refuerzo que permanece constante la suma de energía potencial y cinética?",
+              "options": [
+                "Con rozamiento.",
+                "Sin rozamiento."
+              ],
+              "correctIndex": 1,
+              "explanation": "El refuerzo limita esa afirmación a la ausencia de rozamiento y no explica el caso con rozamiento.",
+              "sourceQuote": "El texto establece la ausencia de rozamiento como condición para que la suma de energía potencial y cinética permanezca constante."
+            }
+          ]
+        },
+        "source_version_id": "f081edd4-e4b4-42ae-82c3-b2b9f92a94ee"
+      }
+    ]
+  },
+  "usageBeforeFinalFix": [
+    {
+      "event": "reinforcement_ai_usage",
+      "provider": "openai",
+      "model": "gpt-6.1-sol",
+      "inputTokens": 485,
+      "outputTokens": 168,
+      "cachedInputTokens": 0
+    },
+    {
+      "event": "reinforcement_ai_usage",
+      "provider": "openai",
+      "model": "gpt-6.1-sol",
+      "inputTokens": 741,
+      "outputTokens": 585,
+      "cachedInputTokens": 0
+    },
+    {
+      "event": "reinforcement_ai_usage",
+      "provider": "openai",
+      "model": "gpt-6.1-sol",
+      "inputTokens": 617,
+      "outputTokens": 344,
+      "cachedInputTokens": 0
+    },
+    {
+      "event": "reinforcement_ai_usage",
+      "provider": "openai",
+      "model": "gpt-6.1-sol",
+      "inputTokens": 949,
+      "outputTokens": 659,
+      "cachedInputTokens": 0
+    },
+    {
+      "event": "reinforcement_ai_usage",
+      "provider": "openai",
+      "model": "gpt-6.1-sol",
+      "inputTokens": 925,
+      "outputTokens": 128,
+      "cachedInputTokens": 0
+    },
+    {
+      "event": "reinforcement_ai_usage",
+      "provider": "openai",
+      "model": "gpt-6.1-sol",
+      "inputTokens": 438,
+      "outputTokens": 75,
+      "cachedInputTokens": 0
+    },
+    {
+      "event": "reinforcement_ai_usage",
+      "provider": "openai",
+      "model": "gpt-6.1-sol",
+      "inputTokens": 482,
+      "outputTokens": 116,
+      "cachedInputTokens": 0
+    },
+    {
+      "event": "reinforcement_ai_usage",
+      "provider": "openai",
+      "model": "gpt-6.1-sol",
+      "inputTokens": 480,
+      "outputTokens": 203,
+      "cachedInputTokens": 0
+    },
+    {
+      "event": "reinforcement_ai_usage",
+      "provider": "openai",
+      "model": "gpt-6.1-sol",
+      "inputTokens": 749,
+      "outputTokens": 520,
+      "cachedInputTokens": 0
+    },
+    {
+      "event": "reinforcement_ai_usage",
+      "provider": "openai",
+      "model": "gpt-6.1-sol",
+      "inputTokens": 977,
+      "outputTokens": 694,
+      "cachedInputTokens": 0
+    },
+    {
+      "event": "reinforcement_ai_usage",
+      "provider": "openai",
+      "model": "gpt-6.1-sol",
+      "inputTokens": 484,
+      "outputTokens": 187,
+      "cachedInputTokens": 0
+    },
+    {
+      "event": "reinforcement_ai_usage",
+      "provider": "openai",
+      "model": "gpt-6.1-sol",
+      "inputTokens": 733,
+      "outputTokens": 562,
+      "cachedInputTokens": 0
+    },
+    {
+      "event": "reinforcement_ai_usage",
+      "provider": "openai",
+      "model": "gpt-6.1-sol",
+      "inputTokens": 709,
+      "outputTokens": 512,
+      "cachedInputTokens": 0
+    },
+    {
+      "event": "reinforcement_ai_usage",
+      "provider": "openai",
+      "model": "gpt-6.1-sol",
+      "inputTokens": 482,
+      "outputTokens": 211,
+      "cachedInputTokens": 0
+    },
+    {
+      "event": "reinforcement_ai_usage",
+      "provider": "openai",
+      "model": "gpt-6.1-sol",
+      "inputTokens": 763,
+      "outputTokens": 561,
+      "cachedInputTokens": 0
+    },
+    {
+      "event": "reinforcement_ai_usage",
+      "provider": "openai",
+      "model": "gpt-6.1-sol",
+      "inputTokens": 650,
+      "outputTokens": 362,
+      "cachedInputTokens": 0
+    }
+  ],
+  "finalVisualProviderTest": {
+    "method": "Direct call to the latest production provider using the actual persisted QA context; no database write or authenticated UI retest",
+    "requestId": "4716166b-8fcd-46a7-a0cc-d218eb36af36",
+    "result": {
+      "content": {
+        "title": "Energía del péndulo: transformación y conservación",
+        "text": "Borrador para revisión. El péndulo alterna energía potencial y energía cinética: una se transforma en la otra. La flecha entre ambas representa esta transformación, que ocurre en ambos sentidos. Las relaciones con «Suma de energías» indican que ambas forman parte de esa suma, no que sean etapas sucesivas. Sin rozamiento, la suma permanece constante aunque cambie cada energía. Así se distingue la transformación de las energías de la conservación de su suma. No se representan posiciones del péndulo, fórmulas ni valores.",
+        "sourceQuote": "En un sistema aislado, la energia total se conserva.\nLa energia no se crea ni se destruye: se transforma.\nUn pendulo alterna energia potencial y energia cinetica.\nSin rozamiento, la suma de ambas permanece constante.",
+        "topicReference": "Transformación y conservación de la energía en un péndulo",
+        "consistentWithSource": true,
+        "scene": {
+          "kind": "diagram",
+          "nodes": [
+            {
+              "id": "n1",
+              "label": "Energía potencial",
+              "detail": "En el péndulo, se transforma en energía cinética y viceversa.",
+              "symbol": "energy"
+            },
+            {
+              "id": "n2",
+              "label": "Energía cinética",
+              "detail": "Alterna con la energía potencial durante el movimiento del péndulo.",
+              "symbol": "energy"
+            },
+            {
+              "id": "n3",
+              "label": "Suma de energías",
+              "detail": "La suma de energía potencial y cinética permanece constante sin rozamiento.",
+              "symbol": "energy"
+            }
+          ],
+          "edges": [
+            {
+              "from": "n1",
+              "to": "n2",
+              "label": "Transformación en ambos sentidos"
+            },
+            {
+              "from": "n1",
+              "to": "n3",
+              "label": "Forma parte de"
+            },
+            {
+              "from": "n2",
+              "to": "n3",
+              "label": "Forma parte de"
+            }
+          ]
+        }
+      },
+      "model": "gpt-6.1-sol"
+    },
+    "accepted": true,
+    "ms": 8686,
+    "calls": 1,
+    "usage": {
+      "input_tokens": 1037,
+      "input_tokens_details": {
+        "cache_write_tokens": 1034,
+        "cached_tokens": 0
+      },
+      "output_tokens": 611,
+      "output_tokens_details": {
+        "reasoning_tokens": 115
+      },
+      "total_tokens": 1648
+    },
+    "estimatedUsd": 0.008184
+  },
+  "estimatedUsd": 0.096426,
+  "authenticatedVisualRegeneration": {
+    "version": 2,
+    "decision": "pending",
+    "model": "gpt-6.1-sol",
+    "history": [
+      {
+        "version": 2,
+        "origin": "ai",
+        "title": "Energías que cambian, suma que se conserva",
+        "text": "Borrador para revisión. La energía potencial y la energía cinética del péndulo se transforman una en otra. La relación «Alterna con» representa ese cambio. Las relaciones «Integra la suma» indican que ambas energías forman parte de la suma constante, no que produzcan otra energía. En el sistema aislado descrito, sin rozamiento, cambia la forma de energía, pero la suma de ambas permanece constante. El diagrama es conceptual: no representa posiciones del péndulo, fórmulas ni valores.",
+        "visual_content": {
+          "title": "Energías que cambian, suma que se conserva",
+          "text": "Borrador para revisión. La energía potencial y la energía cinética del péndulo se transforman una en otra. La relación «Alterna con» representa ese cambio. Las relaciones «Integra la suma» indican que ambas energías forman parte de la suma constante, no que produzcan otra energía. En el sistema aislado descrito, sin rozamiento, cambia la forma de energía, pero la suma de ambas permanece constante. El diagrama es conceptual: no representa posiciones del péndulo, fórmulas ni valores.",
+          "sourceQuote": "En un sistema aislado, la energia total se conserva.\nLa energia no se crea ni se destruye: se transforma.\nUn pendulo alterna energia potencial y energia cinetica.\nSin rozamiento, la suma de ambas permanece constante.",
+          "topicReference": "Transformación y conservación de la energía en un péndulo",
+          "consistentWithSource": true,
+          "scene": {
+            "kind": "diagram",
+            "nodes": [
+              {
+                "id": "n1",
+                "label": "Energía potencial",
+                "detail": "Forma de energía del péndulo que se transforma en energía cinética y viceversa.",
+                "symbol": "energy"
+              },
+              {
+                "id": "n2",
+                "label": "Energía cinética",
+                "detail": "Forma de energía del péndulo que se transforma en energía potencial y viceversa.",
+                "symbol": "energy"
+              },
+              {
+                "id": "n3",
+                "label": "Suma constante",
+                "detail": "En el sistema aislado descrito, sin rozamiento, la suma de energía potencial y energía cinética permanece constante.",
+                "symbol": "pendulum"
+              }
+            ],
+            "edges": [
+              {
+                "from": "n1",
+                "to": "n2",
+                "label": "Alterna con"
+              },
+              {
+                "from": "n1",
+                "to": "n3",
+                "label": "Integra la suma"
+              },
+              {
+                "from": "n2",
+                "to": "n3",
+                "label": "Integra la suma"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "version": 1,
+        "origin": "ai",
+        "title": "Energías que cambian, suma que se conserva",
+        "text": "Borrador para revisión. Los dos nodos superiores representan la energía potencial y la energía cinética del péndulo: ambas se transforman una en otra. Las flechas hacia el nodo inferior indican que las dos forman parte de una misma suma, no que una produzca esa suma. En el sistema aislado descrito y sin rozamiento, las energías alternan, pero su suma permanece constante. El diagrama no representa posiciones, fórmulas ni valores.",
+        "visual_content": {
+          "title": "Energías que cambian, suma que se conserva",
+          "text": "Borrador para revisión. Los dos nodos superiores representan la energía potencial y la energía cinética del péndulo: ambas se transforman una en otra. Las flechas hacia el nodo inferior indican que las dos forman parte de una misma suma, no que una produzca esa suma. En el sistema aislado descrito y sin rozamiento, las energías alternan, pero su suma permanece constante. El diagrama no representa posiciones, fórmulas ni valores.",
+          "sourceQuote": "En un sistema aislado, la energia total se conserva.\nLa energia no se crea ni se destruye: se transforma.\nUn pendulo alterna energia potencial y energia cinetica.\nSin rozamiento, la suma de ambas permanece constante.",
+          "topicReference": "Transformación y conservación de la energía en un péndulo",
+          "consistentWithSource": true,
+          "scene": {
+            "kind": "diagram",
+            "nodes": [
+              {
+                "id": "n1",
+                "label": "Energía potencial",
+                "detail": "Una de las dos formas de energía que alternan en el péndulo; se transforma en energía cinética y viceversa.",
+                "symbol": "energy"
+              },
+              {
+                "id": "n2",
+                "label": "Energía cinética",
+                "detail": "La otra forma de energía del péndulo; se transforma en energía potencial y viceversa.",
+                "symbol": "energy"
+              },
+              {
+                "id": "n3",
+                "label": "Suma constante",
+                "detail": "Sin rozamiento, la suma de energía potencial y cinética permanece constante en el sistema aislado descrito.",
+                "symbol": "pendulum"
+              }
+            ],
+            "edges": [
+              {
+                "from": "n1",
+                "to": "n2",
+                "label": "Alterna con"
+              },
+              {
+                "from": "n1",
+                "to": "n3",
+                "label": "Integra la suma"
+              },
+              {
+                "from": "n2",
+                "to": "n3",
+                "label": "Integra la suma"
+              }
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "usageAfterFirstRebuild": [
+    {
+      "event": "reinforcement_ai_usage",
+      "provider": "openai",
+      "model": "gpt-6.1-sol",
+      "inputTokens": 1497,
+      "outputTokens": 505,
+      "cachedInputTokens": 0
+    }
+  ]
+}
