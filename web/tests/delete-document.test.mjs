@@ -30,6 +30,8 @@ function fixture(options = {}) {
   const calls = [];
   const paths = options.paths ?? [`${ownerId}/original.pdf`, `${ownerId}/version2.pdf`];
   const client = {
+    from(table) { assert.equal(table, 'reinforcement_media'); return { select(){return this},eq(){return this},not(){return this},order(){return this},
+      async range(start,end) { return {data:(options.mediaPaths??[]).slice(start,end+1).map(storage_path=>({storage_path})),error:options.mediaQueryError??null}; } }; },
     async rpc(name, args) {
       calls.push([name, args]);
       if (name === 'begin_project_deletion') return { data: options.snapshot ?? { state: options.state ?? 'pending', storage_paths: paths }, error: options.beginError ?? null };
@@ -41,9 +43,9 @@ function fixture(options = {}) {
       return { error: null };
     },
     storage: { from(bucket) {
-      assert.equal(bucket, 'pdf-documents');
+      assert.ok(['pdf-documents','reinforcement-media'].includes(bucket));
       return { async remove(paths) {
-        calls.push(['remove', paths]); if (options.storageThrows) throw Error('Disconnected');
+        calls.push(['remove', paths, bucket]); if (options.storageThrows) throw Error('Disconnected');
         return { error: options.storageError ?? null };
       } };
     } },
@@ -77,6 +79,14 @@ test('large histories are removed in bounded batches without skipping versions',
   assert.deepEqual(removed.map(c => c[1].length), [100, 100, 5]);
   assert.equal(JSON.stringify(removed.flatMap(c => c[1])), JSON.stringify(paths));
   assert.equal(f.calls.at(-1)[0], 'finish_project_deletion');
+});
+test('HU027 cleanup removes retired and unfinished private media before deleting records, with bounded batches and owner paths', async () => {
+  const paths=Array.from({length:201},(_,i)=>`${ownerId}/${i}.mp4`),f=fixture({mediaPaths:paths});
+  assert.equal((await f.run()).success,true);const media=f.calls.filter(c=>c[0]==='remove'&&c[2]==='reinforcement-media');
+  assert.deepEqual(media.map(c=>c[1].length),[100,100,1]);assert.deepEqual(media.flatMap(c=>c[1]),paths);
+  for(const options of [{mediaPaths:['another-owner/private.mp4']},{mediaQueryError:{code:'unavailable'}}]) {
+    const denied=fixture(options);assert.equal((await denied.run()).success,false);assert.ok(!denied.calls.some(c=>c[0]==='finish_project_deletion'));
+  }
 });
 test('storage errors and disconnections remain recoverable and never finalize records', async () => {
   for (const options of [{ storageError: {} }, { storageThrows: true }]) {

@@ -4,19 +4,19 @@ import { runInNewContext } from 'node:vm';
 import ts from 'typescript';
 
 const require = createRequire(import.meta.url);
-export function load(relative, dependencies = {}) {
+export function load(relative, dependencies = {}, globals = {}) {
   const filename = new URL(`../${relative}`, import.meta.url);
   const { outputText } = ts.transpileModule(readFileSync(filename, 'utf8'), {
     compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.ReactJSX },
   });
   const exports = {};
-  runInNewContext(outputText, { exports, Request, Response, URL, AbortSignal, AbortController, fetch, crypto, process, Date, Error, structuredClone, Uint8Array, TextDecoder, setTimeout, clearTimeout,
+  runInNewContext(outputText, { exports, Request, Response, URL, Headers, File, FormData, Buffer, AbortSignal, AbortController, fetch, crypto, process, Date, Error, structuredClone, Uint8Array, TextDecoder, setTimeout, clearTimeout,
     require(name) {
       if (name in dependencies) return dependencies[name];
       if (name === 'server-only') return {};
       if (['zod', 'node:crypto', 'react/jsx-runtime'].includes(name)) return require(name);
       throw Error(`Unexpected dependency: ${name}`);
-    },
+    }, ...globals,
   }, { filename: filename.pathname });
   return exports;
 }

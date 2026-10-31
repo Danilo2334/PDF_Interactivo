@@ -60,7 +60,7 @@ export default async function ProjectPage({
   const { data: reinforcementRows, error: reinforcementsError } =
     await supabase
       .from("reinforcements")
-      .select("id, document_id, page_number, title, content, source_request_id, approved_version_id, card:reinforcement_cards(*), source:reinforcement_requests!source_request_id(id, project_id, document_id, page_number, selection)")
+      .select("id, document_id, page_number, title, content, source_request_id, approved_version_id, card:reinforcement_cards(*), source:reinforcement_requests!source_request_id(id, project_id, document_id, page_number, selection), media:reinforcement_media(id,reinforcement_id,approved_version_id,kind,title,file_name,mime_type,size_bytes,url,status,created_at,approved_at)")
       .eq("document_id", project.document_id)
       .order("page_number", { ascending: true })
       .order("created_at", { ascending: true });
@@ -74,6 +74,7 @@ export default async function ProjectPage({
   const reinforcements = (reinforcementRows ?? []).map(row => ({ ...row,
     card: Array.isArray(row.card) ? row.card[0] ?? null : row.card,
     source: Array.isArray(row.source) ? row.source[0] ?? null : row.source,
+    media: (row.media ?? []).filter(value => value.status === "approved"),
   })) as unknown as Reinforcement[];
 
   return (

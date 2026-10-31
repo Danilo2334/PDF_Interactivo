@@ -2901,3 +2901,149 @@ Se continúa **HU027 / SCRUM-39**, incorporación de recurso multimedia, desde
 la rama descendiente de HU026. Se mantienen configuración local, evidencia,
 main y stash. El servidor de producción local sigue disponible hasta el
 siguiente cambio controlado a desarrollo.
+
+
+## 2026-10-28 — HU027 / SCRUM-39: recursos multimedia privados
+
+Rama `codex/scrum-39-hu027-recursos-multimedia`, descendiente de HU026. El PR
+#32 y sus predecesores permanecen sin integrar. Se conserva el stash `d6406e0`.
+
+### Recepción, aprobación y retirada
+
+Las tarjetas de refuerzos publicados admiten imágenes **PNG/JPEG hasta 5 MiB**,
+con límite de 16 megapíxeles, videos **MP4 hasta 20 MiB** y enlaces externos.
+Se exige título/descripción y revisar/aprobar explícitamente la vista previa.
+El navegador debe decodificar la imagen o los metadatos del video antes de
+habilitar esa aprobación. El servidor comprueba extensión, MIME, tamaño y
+estructura/signatura de bytes; no se presenta esto como un análisis antivirus.
+Se bloquean SVG, HTML renombrado y contenedores incompletos/no admitidos.
+
+Los enlaces usan HTTPS, sin credenciales/puertos alternativos y dominios exactos:
+`es.wikipedia.org`, `en.wikipedia.org`, `www.khanacademy.org`, `es.khanacademy.org`,
+`www.youtube.com`, `youtube.com`, `youtu.be`. Wikipedia requiere `/wiki/...`;
+YouTube requiere ID de 11 caracteres y se normaliza a `watch?v=...`. Los demás
+parámetros, fragmentos y dominios parecidos se rechazan. La vista previa del
+enlace muestra título, dominio y dirección; no hace fetch de Open Graph, no sigue
+redirecciones remotas y no incrusta iframes/scripts de terceros. El destino
+externo solo se abre por acción expresa, con `noopener noreferrer`.
+
+Cada recurso se asocia al refuerzo, solicitud, proyecto, documento y versión
+aprobada que el propietario revisó. No altera contenido educativo, página,
+selección ni estado de la solicitud. La asociación al refuerzo publicado es
+estable; la versión de incorporación permanece en el registro de auditoría.
+
+La tabla `reinforcement_media` y el bucket **privado** `reinforcement-media`
+se crearon mediante **20261028080942_reinforcement_multimedia.sql**, aplicada una
+sola vez y reconciliada con el historial remoto. Preparación y aprobación usan
+HMAC de servidor con caducidad, UUID idempotente y hash de metadatos/archivo.
+La transacción bloquea cuenta/proyecto/solicitud/publicación y comprueba rol
+activo, propiedad, documento vigente y versión aprobada. RLS y permisos de
+Storage solo permiten archivos de operaciones preparadas; no hay upsert ni
+escrituras directas de metadatos desde clientes autenticados.
+
+Máximo 10 recursos activos o cargas recientes por refuerzo y 100 MiB de archivos
+privados por cuenta, incluyendo el historial retirado. La retirada cambia el
+estado a `removed`, oculta inmediatamente el recurso y bloquea nuevas consultas;
+no borra el objeto privado. La eliminación recuperable del proyecto limpia todos
+sus archivos multimedia, incluidos retirados/inacabados, en lotes de 100 antes
+de finalizar los registros. Su comportamiento de fallo y reintento se probó de
+forma automatizada; no se borró el proyecto QA compartido para acreditarlo.
+
+El proxy de archivos autentica cada petición y transmite rangos 206 sin exponer
+URL firmada al cliente. Las firmas de Storage duran 30 segundos y solo se usan
+en servidor. Respuestas privadas/no-store, `nosniff` y `Cross-Origin-Resource-Policy:
+same-origin`. Las solicitudes de formulario se limitan durante la lectura antes
+de parsearlas; los rechazos no crean registros. Una carga cuya respuesta se
+pierde puede reutilizar su objeto solo tras comparar su hash, sin sobrescribirlo.
+
+Los metadatos necesarios se incluyen en la consulta inicial del proyecto; el
+panel no añade consultas al abrir. Archivos guardados se abren solo al pulsar
+«Ver imagen/video guardado». El borrador local usa blob URL que se revoca al
+cambiar/retirar el archivo o desmontar el componente. No se usa IA ni facturación.
+
+### Pruebas reales y límites observados
+
+**322/322 pruebas**, lint sin advertencias y build de producción/TypeScript
+aprobados. Tras ajustar revocación de blob y textos largos se repitieron los
+seis casos afectados, lint y build. Una compilación informó 130 minutos de tiempo
+de pared sin fallo; la causa no se confirmó. La compilación final posterior
+terminó correctamente (1691 ms de compilado, más TypeScript y generación), sin
+actualizar Node, Next o dependencias.
+
+Producción autenticada, cuenta QA existente, refuerzo de explicación
+`b9ffc509-7b83-4219-90c8-54cacbe6dcc1`:
+
+- PNG **6424 B** y JPEG **17601 B**, 640×360, seleccionados/previsualizados y
+  aprobados en la aplicación. La imagen recuperada del bucket se decodificó.
+- MP4 **1128375 B**, 960×540 y **5,055 s**, reproducido en la vista previa y
+  desde el archivo privado después de reabrir el proyecto. Muestra técnica
+  [flower.mp4 de MDN](https://developer.mozilla.org/shared-assets/videos/flower.mp4),
+  enlazada por la [documentación de video](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/video).
+  Identificada como QA/MDN y retirada después; no se ofrece como refuerzo pedagógico.
+- Los tres archivos recuperados por HTTP son idénticos a los originales locales;
+  rangos de 64 bytes devuelven **206**. Reenviar sus operaciones devuelve el mismo
+  ID y no añade registros. El fallo ambiguo de carga se cubre además en pruebas
+  automatizadas, sin presentarlo como una desconexión visual observada.
+- Un dominio suplantado y un SVG se rechazaron visualmente. Servidor rechazó
+  HTML renombrado, MIME incoherente, imagen de más de 5 MiB y enlace no permitido
+  (**415**), falta de aprobación (**400**), origen ajeno (**403**), sesión ausente
+  (**401**), otra cuenta (**404**) y documento cambiado (**409**).
+- Retirar un borrador elimina su vista previa sin guardarlo. JPEG, MP4 y un enlace
+  guardados se retiraron; no reaparecen tras recarga y los archivos retirados
+  devuelven **404**. Se dejó el PNG y una nueva referencia HTTPS a energía:
+  cinco registros en total, dos aprobados y tres retirados, sin duplicados visibles.
+- Storage anónimo denegado, cero metadatos visibles para la otra cuenta y UPDATE
+  directo a la tabla denegado. La publicación no cambió. Comprobación final:
+  35 solicitudes, siete publicaciones y los 31/cuatro anteriores conservados;
+  ambos SHA-256 de PDF coinciden con HU025.
+- Móvil **390×844 CSS**, ancho documental **390**, imagen privada visible y
+  enlace enfocado con teclado. Captura a DPR 1,25, correspondiente a Windows 125 %,
+  encuadrada en el viewport real. Cero errores de consola observados. Viewport y
+  visibilidad del navegador restaurados.
+
+Regresión del criterio de SCRUM-108, con producción, sesión y PDF ya abierto:
+Intel i5-11400H 2,70 GHz, mismo Windows/RAM y Chrome integrado 156 de HU025;
+Wi-Fi ahora informa **86,7 Mbps**, sin limitación artificial. Caché habilitada,
+JS/SSR cargados y PDF no-store ya abierto. Primera apertura tras recargar y
+posteriores en la misma sesión, navegador presentado. Con cinco refuerzos
+(un ejemplo, un diagrama, dos resúmenes y una explicación), y dos recursos
+multimedia asociados, **14,4 / 7,0 / 11,8 ms**. Sin refuerzos, PDF escaneado,
+**10,6 / 8,0 / 11,4 ms**. Máximo global **14,4 ms**: las seis cumplen 3000 ms.
+Se verificaron cinco artículos consultables o estado vacío completo y dos frames,
+con cero peticiones adicionales a PDF/multimedia al abrir. La descarga voluntaria
+de un archivo mediante otro botón es una acción distinta del acceso al panel.
+No se sustituyen las seis mediciones anteriores de HU025; esta es una regresión
+nueva después de incorporar metadatos multimedia.
+
+Advisors de seguridad mantienen los cuatro grupos previos; los seis índices
+nuevos aparecen inicialmente como no utilizados. No se cambió la protección ni
+los permisos de otras tablas/buckets para hacer pasar las pruebas.
+
+Ocho capturas reales en comentarios únicos: SCRUM-111 **10155**, SCRUM-193
+**10156**, SCRUM-194 **10157**, SCRUM-112 **10158**, dos imágenes por subtarea.
+Lectura de `renderedBody`: ocho nombres y miniaturas resueltos. El script con
+grants de carga se eliminó. Scripts, archivos QA, hashes y resultados están fuera
+de Git en `HU019/HU027`. Falta enlazar commit/PR y registrar la entrega en esos
+mismos comentarios, conservando las imágenes.
+
+
+### Entrega de HU027
+
+Commit funcional publicado **`aa240daec0ddb46f78caf605d00643029a70b8b9`**.
+PR borrador **[#33](https://github.com/Danilo2334/PDF_Interactivo/pull/33)**
+sobre `codex/scrum-38-hu026-tarjeta-interactiva` (#32). Cadena pendiente:
+**#30 → #31 → #32 → #33**. Lectura de GitHub: los cuatro abiertos, borrador,
+sin merge y sin conflictos. Cambiar la base del siguiente a develop solo tras
+integrar su predecesor y volver a revisar diff/checks.
+
+SCRUM-39 **En revisión**, comentario madre único **10159**. SCRUM-111,
+SCRUM-193, SCRUM-194 y SCRUM-112 **Finalizado**. Sus comentarios únicos
+10155–10158 incluyen commit/PR y conservan las ocho capturas resueltas;
+la lectura posterior confirmó dos imágenes y el enlace al PR por subtarea.
+No se crearon informes adicionales, no se modificó main ni el stash.
+
+Se continúa **HU028 / SCRUM-40**, mini quiz opcional, desde una rama descendiente
+de HU027. Mantener el borrador y las respuestas correctas restringidos al
+propietario; aprobación explícita de cada versión y conservación de la anterior.
+Omitir el quiz no debe bloquear el refuerzo. Su publicación se integra en HU032.
+La producción local continúa en puerto 3000 hasta el cambio controlado a dev.

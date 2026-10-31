@@ -5,6 +5,7 @@ import type { Reinforcement } from "@/lib/types/reinforcement";
 import { cardRecordSchema } from "@/lib/validations/reinforcement-card";
 import { VisualResource } from "@/components/documents/visual-resource";
 import { SummaryResource } from "@/components/documents/summary-resource";
+import { ReinforcementMedia } from "@/components/documents/reinforcement-media";
 
 type Props = { reinforcement: Reinforcement; projectId: string; canManage: boolean; onSource: (item: Reinforcement) => void };
 export function ReinforcementCard({ reinforcement: item, projectId, canManage, onSource }: Props) {
@@ -60,6 +61,7 @@ export function ReinforcementCard({ reinforcement: item, projectId, canManage, o
       {hasSource && <button type="button" onClick={() => onSource(item)} className="mt-4 rounded-lg border border-blue-300 px-3 py-2 text-sm font-semibold text-blue-800">
         Ver {source.selection?.kind === "area" ? "zona" : source.selection?.kind === "text" ? "selección de texto" : "página"} original · Página {item.page_number}
       </button>}
+      {hasSource && <ReinforcementMedia reinforcement={item} projectId={projectId} canManage={canManage} />}
       {canManage && hasSource && item.approved_version_id && <fieldset disabled={busy} className="mt-4 space-y-3 rounded-lg bg-slate-50 p-4">
         <legend className="text-sm font-semibold">Presentación de esta tarjeta</legend>
         <p className="text-sm text-slate-600">El título y el contenido corresponden a la versión aprobada. Para modificarlos, revisa la solicitud de origen.</p>
