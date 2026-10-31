@@ -48,14 +48,23 @@ export function ReaderExperience({ token, endpointOverride }: { token: string; e
   const [name, setName] = useState(""), [email, setEmail] = useState(""), [busy, setBusy] = useState(false), [error, setError] = useState(""), [attempt, setAttempt] = useState(0);
   useEffect(() => {
     const controller = new AbortController();
-    void (async () => { try { const response = await fetch(endpoint, { cache: "no-store", signal: AbortSignal.any([controller.signal, AbortSignal.timeout(30000)]) }), body = await response.json();
+    let checking = false, blocked = false;
+    const timer = setInterval(() => { if (document.visibilityState === "visible") void check(); }, 15000);
+    async function check() {
+      if (checking || blocked || controller.signal.aborted) return;
+      checking = true;
+      try { const response = await fetch(endpoint, { cache: "no-store", signal: AbortSignal.any([controller.signal, AbortSignal.timeout(30000)]) }), body = await response.json();
       if (!response.ok) throw Error(body.message ?? "Esta experiencia no está disponible para lectura.");
       const checked = readerReplySchema.safeParse(body); if (!checked.success) throw Error("No fue posible validar esta versión. Reintenta la lectura."); const parsed = checked.data;
       if (controller.signal.aborted) return;
-      if (parsed.state === "ready") { setView(parsed.view); setGate(null); } else { setView(null); setGate(parsed); }
+      if (parsed.state === "ready") { setView(previous => previous?.version === parsed.view.version && previous.privateTest === parsed.view.privateTest ? previous : parsed.view); setGate(null); } else { setView(null); setGate(parsed); }
       setError("");
-    } catch (e) { if (!controller.signal.aborted) { setView(null); setGate(null); setError(e instanceof Error && e.name === "TimeoutError" ? "La lectura tardó demasiado. Reintenta." : e instanceof TypeError ? "No fue posible conectar con la experiencia. Revisa tu conexión y reintenta." : e instanceof Error ? e.message : "No fue posible abrir la experiencia."); } } })();
-    return () => controller.abort();
+    } catch (e) { if (!controller.signal.aborted) { blocked = true; clearInterval(timer); setView(null); setGate(null); setError(e instanceof Error && e.name === "TimeoutError" ? "La lectura tardó demasiado. Reintenta." : e instanceof TypeError ? "No fue posible conectar con la experiencia. Revisa tu conexión y reintenta." : e instanceof Error ? e.message : "No fue posible abrir la experiencia."); } }
+    finally { checking = false; }
+    }
+    const recheck = () => { if (document.visibilityState === "visible") void check(); };
+    void check(); window.addEventListener("focus", recheck); document.addEventListener("visibilitychange", recheck);
+    return () => { controller.abort(); clearInterval(timer); window.removeEventListener("focus", recheck); document.removeEventListener("visibilitychange", recheck); };
   }, [endpoint, attempt]);
   async function identify(e: React.FormEvent) {
     e.preventDefault(); setBusy(true); setError("");

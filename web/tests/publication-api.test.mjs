@@ -4,10 +4,11 @@ import {randomUUID} from 'node:crypto';
 import {load,owner,projectId,documentId} from './reinforcement-test-helpers.mjs';
 const schemas=load('lib/validations/publication.ts');
 const receipt={id:randomUUID(),documentId,version:1,name:'Approved QA publication',createdAt:new Date().toISOString(),publishedAt:null,url:null,
+ visibility:'private',visibilityVersion:0,visibilityUpdatedAt:new Date().toISOString(),
  counts:{reinforcements:2,media:0,quizzes:1},items:[{title:'Approved energy',pageNumber:1,quizTitle:'Approved quiz',mediaCount:0},{title:'Approved water',pageNumber:2,quizTitle:null,mediaCount:0}]};
 function fixture(options={}){
  const calls=[],db={from(){return{select(){return this},eq(){return this},maybeSingle:async()=>options.readError?{error:{}}:{data:options.foreign?null:{document_id:options.stale?randomUUID():documentId,status:options.deleting?'deleting':'pending'}}}},
-  async rpc(name,args){calls.push({name,args});if(options.throwRpc)throw Error('network');return options.rpcError?{error:{code:options.rpcError}}:{data:options.invalidReceipt?{snapshot:{correctIndex:1}}:receipt};}};
+  async rpc(name,args){calls.push({name,args});if(options.throwRpc)throw Error('network');const p=JSON.parse(args.p_payload),value=p.action==='visibility'?{...receipt,visibility:p.visibility}:receipt;return options.rpcError?{error:{code:options.rpcError}}:{data:options.invalidReceipt?{snapshot:{correctIndex:1}}:p.action==='management'?{latest:receipt,current:null,events:[]}:value};}};
  const api=load('lib/publications/service.ts',{
   '@/lib/auth/access':{checkPermission:async()=>options.denied?{ok:false,status:options.denied,message:'Denied'}:{ok:true,userId:owner}},
   '@/lib/supabase/server':{createClient:async()=>db},'@/lib/reinforcements/request-service':{reply:(v,status=200)=>Response.json(v,{status}),readSmallJson:async r=>({body:await r.json()})},
@@ -18,7 +19,7 @@ function fixture(options={}){
  return{calls,get:()=>api.getPublication(new Request('http://localhost/publication?documentId='+documentId),projectId),post:(body={action:'prepare',documentId,operationId:receipt.id},origin='http://localhost')=>api.postPublication(new Request('http://localhost/publication',{method:'POST',headers:{origin},body:JSON.stringify(body)}),projectId)};
 }
 test('HU032 checks owner, active document, origin and confirmation before signed database operations',async()=>{
- const input={action:'publish',documentId,operationId:receipt.id,confirmed:true};
+ const input={action:'publish',documentId,operationId:receipt.id,expectedVersion:0,confirmed:true};
  for(const [options,status]of [[{denied:401},401],[{denied:403},403],[{foreign:true},404],[{stale:true},409],[{deleting:true},409],[{readError:true},503]]){
   const f=fixture(options);assert.equal((await f.get()).status,status);assert.equal((await f.post()).status,status);assert.equal(f.calls.length,0);
  }
@@ -27,9 +28,16 @@ test('HU032 checks owner, active document, origin and confirmation before signed
  const missing=fixture({enabled:true,missingReader:true});assert.equal((await missing.post(input)).status,503);assert.equal(missing.calls.length,0);
 });
 test('HU032 owner API returns bounded receipts only and signs the configured origin with unchanged operation identity',async()=>{
- const f=fixture({enabled:true}),input={action:'publish',documentId,operationId:receipt.id,confirmed:true};
+ const f=fixture({enabled:true}),input={action:'publish',documentId,operationId:receipt.id,expectedVersion:0,confirmed:true};
  assert.equal((await f.post(input)).status,200);const signed=JSON.parse(f.calls[0].args.p_payload);assert.equal(signed.origin,'https://deployed.example');assert.equal(signed.operationId,receipt.id);assert.equal(signed.userId,owner);
  const status=await f.get(),body=await status.json();assert.equal(body.latest.id,receipt.id);assert.equal(body.canPublish,true);assert.doesNotMatch(JSON.stringify(body),/correctIndex|snapshot|storagePath/);
  for(const [code,status]of [['PT404',404],['PT409',409],['42501',403],['connection',503]])assert.equal((await fixture({rpcError:code}).post()).status,status);
  assert.equal((await fixture({throwRpc:true}).post()).status,503);assert.equal((await fixture({invalidReceipt:true}).post()).status,503);assert.equal((await fixture({invalidReceipt:true}).get()).status,503);
+});
+test('HU036 can restrict visibility without HTTPS, but public access, confirmation and saved version remain mandatory',async()=>{
+ const input={action:'visibility',documentId,publicationId:receipt.id,operationId:randomUUID(),visibility:'unpublished',expectedVersion:0,confirmed:true};
+ const f=fixture();assert.equal((await f.post(input)).status,200);const signed=JSON.parse(f.calls[0].args.p_payload);assert.equal(signed.publicationId,receipt.id);assert.equal(signed.expectedVersion,0);
+ assert.equal((await f.post({...input,confirmed:false})).status,400);assert.equal((await f.post({...input,expectedVersion:undefined})).status,400);
+ const blocked=fixture();assert.equal((await blocked.post({...input,visibility:'public'})).status,503);assert.equal(blocked.calls.length,0);
+ assert.equal((await fixture({rpcError:'PT409'}).post(input)).status,409);
 });
