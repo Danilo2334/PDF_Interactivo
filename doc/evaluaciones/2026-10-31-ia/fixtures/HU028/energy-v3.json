@@ -1,0 +1,12 @@
+{
+  "source": {
+    "title": "QA HU024 · Conservación de la energía revisada",
+    "text": "En un sistema aislado la energía total se conserva: no se crea ni se destruye, solo se transforma. En el péndulo ideal alterna entre energía potencial y energía cinética; sin rozamiento, su suma permanece constante. Por eso la energía no desaparece cuando cambia de forma.",
+    "concepts": [
+      "Sistema aislado",
+      "Energía potencial",
+      "Energía cinética"
+    ],
+    "hash": "f36ea062e474e6973dd13f8c0f78bf156a940977f20f97c0c38af835d823bc93"
+  }
+}
