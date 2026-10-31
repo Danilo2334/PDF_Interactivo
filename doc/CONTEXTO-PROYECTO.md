@@ -4514,3 +4514,16 @@ SUPABASE_SERVER_KEY, origen QA, URL de autenticación y epoch del hosting siguen
 sin configurarse. Despliegue y publicación siguen en espera por instrucción del
 usuario. HU030/032/033 y HU036 no se cierran por estas pruebas locales; tampoco
 se cierran sprints. No hubo consumo IA nuevo. Guía QA actualizada con este estado.
+
+Entrega HU036: commit de implementación f50cec5, publicado en PR#43 en borrador
+con base provisional en la rama de PR#42. Orden de revisión/integración futuro:
+#42→#43, solo cuando se autorice. Ninguno se ha fusionado en este encargo.
+Jira SCRUM-48/129/211/212/130 comprobados En curso: comentarios únicos10191–10195.
+Seis capturas reales vinculadas y verificadas en los cuerpos y attachments:
+129=10486/10487, 211=10489/10490, 212=10491, 130=10488. No se subieron duplicados.
+Comentarios existentes de226/42/44/45 actualizados conservando sus figuras y el
+número de comentarios. Esos enlaces no acreditan todavía la prueba pública.
+La comprobación de Jira fue por conector (cuerpos con mediaID y attachments con
+nombre/tamaño), no una inspección visual del sitio: Jira web solicita login.
+No se pidió otra autenticación al usuario ausente ni se afirma haber visto esas
+miniaturas renderizadas en Jira. Los archivos adjuntos sí quedaron persistidos.
