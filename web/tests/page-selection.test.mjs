@@ -44,10 +44,11 @@ function fixture(path, exportedName, initialProps) {
     compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.ReactJSX },
   });
   const exports = {};
-  runInNewContext(outputText, { exports, performance: { now: () => 0 }, require(name) {
+  runInNewContext(outputText, { exports, window: { scrollX: 12, scrollY: 345 }, performance: { now: () => 0 }, require(name) {
     if (name === 'react') return react;
     if (name === 'react/jsx-runtime') return require(name);
     if (name === '@/components/documents/reinforcement-card') return { ReinforcementCard: 'article' };
+    if (name === '@/components/documents/experience-preview') return { ExperiencePreview: 'preview' };
     if (name === '@/components/documents/pdf-viewer') return { PdfViewer: viewer };
     if (name === '@/components/documents/reinforcement-request-draft') return { ReinforcementRequestDraft: draftForm };
     if (name === '@/lib/validations/difficulty') return difficulty;
@@ -71,6 +72,20 @@ function fixture(path, exportedName, initialProps) {
   return { render, find: predicate => nodes(tree).find(predicate), get props() { return props; } };
 }
 const props = { projectId: 'project', documentId: 'document-a', documentName: 'original.pdf', canRequestReinforcement: true, reinforcements: [], reinforcementsError: false };
+
+test('HU031 entering and leaving preview retains the original viewer identity, selection and unsubmitted difficulty input',()=>{
+  const f=fixture('components/documents/project-workspace.tsx','ProjectWorkspace',props),original=f.find(n=>n.type===viewer);
+  original.props.onPageSelect(3);original.props.onVisiblePageChange(3);f.render();
+  const form=()=>f.find(n=>n.type===draftForm),input={category:'concept',need:'Este texto sin guardar debe seguir al regresar al editor.'};
+  form().props.onDifficultyChange(input);f.render();
+  const fragment={kind:'area',pageNumber:3,rect:{x:.1,y:.2,width:.3,height:.4}};f.find(n=>n.type===viewer).props.onFragmentSelect(fragment);f.render();
+  const before=JSON.stringify({selection:form().props.selection,fragment:form().props.fragment,input:form().props.difficultyInput});
+  f.find(n=>n.type===viewer).props.onOpenPreview();f.render();
+  const preview=f.find(n=>n.type==='preview');assert.equal(preview.props.initialPage,3);assert.equal(f.find(n=>n.type===viewer).key,original.key);assert.equal(f.find(n=>n.type===viewer).props.visible,false);
+  assert.equal(JSON.stringify({selection:form().props.selection,fragment:form().props.fragment,input:form().props.difficultyInput}),before);
+  preview.props.onClose();f.render();assert.equal(f.find(n=>n.type==='preview'),undefined);assert.equal(f.find(n=>n.type===viewer).props.visible,true);
+  assert.equal(JSON.stringify({selection:form().props.selection,fragment:form().props.fragment,input:form().props.difficultyInput}),before);
+});
 
 test('HU025 keeps the same viewer while switching panels and scopes published content to the visible page and document', () => {
   const items=[{id:'one',document_id:'document-a',page_number:1,title:'Página uno',content:{}},

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useId, useRef, useState, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useId, useRef, useState, type ReactNode, type Ref } from "react";
 import type { PDFDocumentLoadingTask, PDFDocumentProxy } from "pdfjs-dist";
 import { renderVisiblePages } from "@/lib/pdf/render-visible-pages";
 import type { PageRenderer } from "@/lib/pdf/render-visible-pages";
@@ -22,6 +22,8 @@ type ViewerProps = {
   onVisiblePageChange?: (number: number) => void;
   onOpenReinforcements?: (page: number, openedAt: number) => void;
   navigationKey?: number;
+  onOpenPreview?: () => void;
+  previewTriggerRef?: Ref<HTMLButtonElement>;
 };
 
 type ViewerStatus =
@@ -38,7 +40,7 @@ const viewerMessages = {
   ready: "PDF disponible. Usa los controles o desplázate para consultar sus páginas.",
 };
 
-export function PdfViewer({ projectId, initialPage = 1, initialFragment = null, onPageSelect, requestDraft, onFragmentSelect, fragmentResetKey, onTextSourceChange, visible = true, onVisiblePageChange, onOpenReinforcements, navigationKey = 0 }: ViewerProps) {
+export function PdfViewer({ projectId, initialPage = 1, initialFragment = null, onPageSelect, requestDraft, onFragmentSelect, fragmentResetKey, onTextSourceChange, visible = true, onVisiblePageChange, onOpenReinforcements, navigationKey = 0, onOpenPreview, previewTriggerRef }: ViewerProps) {
   const [attempt, setAttempt] = useState(0);
   // Only restore on mount; changing the selection must not reload the PDF.
   const [startingPage] = useState(initialPage);
@@ -57,6 +59,7 @@ export function PdfViewer({ projectId, initialPage = 1, initialFragment = null, 
       onTextSourceChange={onTextSourceChange}
       visible={visible} onVisiblePageChange={onVisiblePageChange} onOpenReinforcements={onOpenReinforcements}
       navigationKey={navigationKey} targetPage={initialPage} targetFragment={initialFragment}
+      onOpenPreview={onOpenPreview} previewTriggerRef={previewTriggerRef}
       onRetry={() => setAttempt((value) => value + 1)}
     />
   );
@@ -72,7 +75,7 @@ function PdfPages({
   fragmentResetKey,
   onTextSourceChange,
   onRetry,
-  visible = true, onVisiblePageChange, onOpenReinforcements, navigationKey = 0, targetPage, targetFragment,
+  visible = true, onVisiblePageChange, onOpenReinforcements, navigationKey = 0, targetPage, targetFragment, onOpenPreview, previewTriggerRef,
 }: ViewerProps & { onRetry: () => void; targetPage?: number; targetFragment?: FragmentSelection | null }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const navigationRef = useRef<HTMLDivElement>(null);
@@ -420,6 +423,8 @@ function PdfPages({
                 +
               </button>
             </div>
+            {onOpenPreview && <button ref={previewTriggerRef} type="button" disabled={status !== "ready"} onClick={onOpenPreview}
+              className="rounded-lg border border-blue-300 bg-blue-50 px-3 py-2 text-sm font-semibold text-blue-900 disabled:opacity-50">Vista previa de la experiencia</button>}
             {onOpenReinforcements && <button type="button" data-open-reinforcements disabled={status !== "ready"} onClick={() => onOpenReinforcements(currentPage, performance.now())}
               className="hidden rounded-lg bg-blue-700 px-3 py-2 text-sm font-semibold text-white disabled:opacity-50 lg:inline-flex">Ver refuerzos de página {currentPage}</button>}
           </div>

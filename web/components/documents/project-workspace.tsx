@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useLayoutEffect, useId, useRef, useState } from "react";
+import { useCallback, useLayoutEffect, useId, useRef, useState, type ReactNode } from "react";
 import type { PDFDocumentProxy } from "pdfjs-dist";
 import { PdfViewer } from "@/components/documents/pdf-viewer";
 import { ReinforcementRequestDraft, type PageSelection } from "@/components/documents/reinforcement-request-draft";
@@ -14,6 +14,7 @@ import { createSubmissionController, IDLE_SUBMISSION, type SubmissionState } fro
 import { RequestListPanel } from "@/components/documents/request-list-panel";
 import type { RequestRecord } from "@/lib/validations/request-list";
 import { ReinforcementCard } from "@/components/documents/reinforcement-card";
+import { ExperiencePreview } from "@/components/documents/experience-preview";
 
 type WorkspaceProps = {
   projectId: string;
@@ -22,6 +23,7 @@ type WorkspaceProps = {
   canRequestReinforcement: boolean;
   reinforcements: Reinforcement[];
   reinforcementsError: boolean;
+  editorHeader?: ReactNode;
 };
 
 const sections = [
@@ -37,11 +39,23 @@ export function ProjectWorkspace({
   canRequestReinforcement,
   reinforcements,
   reinforcementsError,
+  editorHeader,
 }: WorkspaceProps) {
   const [activeSection, setActiveSection] =
     useState<"pdf" | "requests" | "reinforcements">("pdf");
 
   const workspaceId = useId();
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewPage, setPreviewPage] = useState(1);
+  const previewButton = useRef<HTMLButtonElement>(null);
+  const previewPosition = useRef<{ x: number; y: number } | null>(null);
+  useLayoutEffect(() => {
+    if (previewOpen) { window.scrollTo({ top: 0, left: 0, behavior: "instant" }); return; }
+    if (previewPosition.current) {
+      window.scrollTo({ top: previewPosition.current.y, left: previewPosition.current.x, behavior: "instant" });
+      previewButton.current?.focus({ preventScroll: true });
+    }
+  }, [previewOpen]);
   const [selection, setSelection] = useState<PageSelection | null>(null);
   const [fragment, setFragment] = useState<DocumentFragmentSelection | null>(null);
   const [fragmentResetKey, setFragmentResetKey] = useState(0);
@@ -91,6 +105,9 @@ export function ProjectWorkspace({
   const reportReadingPage = useCallback((number: number) => setReadingPage(previous =>
     previous?.documentId === documentId && previous.number === number ? previous : { documentId, number }), [documentId]);
   const pageReinforcements = reinforcements.filter(item => item.document_id === documentId && item.page_number === activePage);
+  function openPreview() {
+    previewPosition.current = { x: window.scrollX, y: window.scrollY }; setPreviewPage(activePage); setPreviewOpen(true);
+  }
   const senderRef = useRef<ReturnType<typeof createSubmissionController> | null>(null);
   const draft = selection?.documentId === documentId ? selection : null;
   const currentFragment = fragment?.documentId === documentId && fragment.pageNumber === draft?.pageNumber ? fragment : null;
@@ -182,7 +199,12 @@ export function ProjectWorkspace({
   }
 
   return (
-    <div className="mt-8 min-w-0">
+    <div className="min-w-0">
+      <div hidden={previewOpen}>
+      {editorHeader}
+      <div className="mt-8 min-w-0">
+      {canRequestReinforcement && activeSection !== "pdf" && <button ref={previewButton} type="button" disabled={submission.status === "sending"} onClick={openPreview}
+        className="mb-4 rounded-lg border border-blue-300 bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-900 disabled:opacity-50">Vista previa de la experiencia</button>}
       <div
         role="group"
         aria-label="Secciones del proyecto"
@@ -222,7 +244,8 @@ export function ProjectWorkspace({
         </aside>}
         {(
           <PdfViewer key={`${projectId}-${documentId}`} projectId={projectId}
-            visible={activeSection === "pdf"} onVisiblePageChange={reportReadingPage} navigationKey={navigationKey}
+            onOpenPreview={canRequestReinforcement && submission.status !== "sending" ? openPreview : undefined} previewTriggerRef={previewButton}
+            visible={activeSection === "pdf" && !previewOpen} onVisiblePageChange={reportReadingPage} navigationKey={navigationKey}
             onOpenReinforcements={(page, openedAt) => { reportReadingPage(page); changeSection("reinforcements", openedAt, page); }}
             initialPage={draft?.pageNumber ?? 1} initialFragment={currentFragment} onPageSelect={canRequestReinforcement ? selectPage : undefined}
             onFragmentSelect={canRequestReinforcement ? selectFragment : undefined} fragmentResetKey={fragmentResetKey}
@@ -240,7 +263,7 @@ export function ProjectWorkspace({
 
       {canRequestReinforcement && <section id={`${workspaceId}-requests`} hidden={activeSection !== "requests"}>
         <RequestListPanel key={`${projectId}-${documentId}`} projectId={projectId} documentId={documentId}
-          active={activeSection === "requests"} onOpen={openRequest} />
+          active={activeSection === "requests" && !previewOpen} onOpen={openRequest} />
       </section>}
 
       <section
@@ -277,11 +300,14 @@ export function ProjectWorkspace({
           <div className="mt-4 space-y-4">
             {pageReinforcements.map((reinforcement) => (
               <ReinforcementCard key={`${reinforcement.id}-${reinforcement.card?.version ?? 0}-${reinforcement.approved_version_id ?? "legacy"}`}
-                reinforcement={reinforcement} projectId={projectId} canManage={canRequestReinforcement} onSource={openCardSource} />
+                reinforcement={reinforcement} projectId={projectId} canManage={canRequestReinforcement} active={!previewOpen} onSource={openCardSource} />
             ))}
           </div>
         )}
       </section>
+      </div>
+      </div>
+      {previewOpen && <ExperiencePreview projectId={projectId} documentId={documentId} initialPage={previewPage} onClose={() => setPreviewOpen(false)} />}
     </div>
   );
 }

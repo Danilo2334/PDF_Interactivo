@@ -80,6 +80,8 @@ export default async function ProjectPage({
   return (
     <main className="min-h-screen bg-slate-50 px-6 py-12">
       <div className="mx-auto max-w-4xl rounded-xl border border-slate-200 bg-white p-8">
+        <ProjectWorkspace
+          editorHeader={<>
         <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">
           Proyecto creado
         </p>
@@ -124,7 +126,7 @@ export default async function ProjectPage({
             </dd>
           </div>
         </dl>
-        <ProjectWorkspace
+          </>}
           projectId={project.id}
           documentId={project.document_id}
           documentName={document.original_name}
