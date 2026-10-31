@@ -10,8 +10,8 @@ function fixture(options={}){
   if(table==='documents')return{data:{id:documentId,owner_id:owner,status:'uploaded',storage_path:owner+'/original.pdf',size_bytes:100}};
   if(table==='experience_publications'){
    if(selection==='id')return{data:{id:options.superseded?other:publicationId}};
-   if(selection==='id,snapshot_hash')return{data:options.revoked?null:{id:publicationId,snapshot_hash:context.hash}};
-   return{data:options.foreign?null:{id:publicationId,owner_id:owner,project_id:projectId,document_id:documentId,version:4,snapshot:structuredClone(snapshot),snapshot_hash:context.hash,published_at:options.private?null:new Date().toISOString(),origin:'https://deployed.unit'}};
+   if(selection==='id,snapshot_hash,visibility,visibility_version,token')return{data:options.revoked?null:{id:publicationId,snapshot_hash:context.hash,visibility:options.withdrawDuringRead?'unpublished':options.visibility??'public',visibility_version:0,token:options.rotateDuringRead?'b'.repeat(48):'a'.repeat(48)}};
+   return{data:options.foreign?null:{id:publicationId,owner_id:owner,project_id:projectId,document_id:documentId,version:4,snapshot:structuredClone(snapshot),snapshot_hash:context.hash,published_at:options.private?null:new Date().toISOString(),origin:'https://deployed.unit',visibility:options.visibility??'public',visibility_version:0}};
   }throw Error(table);
  }}},storage:{from(bucket){return{createSignedUrl:async(path,seconds)=>{signed.push({bucket,path,seconds});return{data:{signedUrl:'https://storage.unit/'+bucket},error:null}}}}}};
  const repo=load('lib/readers/repository.ts',{'@supabase/supabase-js':{createClient:()=>db},'@/lib/publications/proof':{publicationOrigin:()=>options.noOrigin?null:'https://deployed.unit'},'@/lib/readers/model':model,'@/lib/validations/reader':schemas,'@/lib/auth/access':{checkPermission:async()=>options.denied?{ok:false,status:options.denied}:{ok:true,userId:owner}},'@/lib/supabase/server':{createClient:async()=>db}},{Date:{now:()=>now}});
@@ -26,6 +26,15 @@ test('HU033 production resolver rejects private/superseded publications, inactiv
   await assert.rejects(fixture({network:true}).repo.loadReader(request,'a'.repeat(48)),e=>e.status===503);
 
   delete process.env.SUPABASE_SERVER_KEY;await assert.rejects(fixture().repo.loadReader(request,'a'.repeat(48)),e=>e.status===503);
+ }finally{restore();}
+});
+test('HU036 resolves private links only through the owner session and denies withdrawn or rotated capabilities on the final check',async()=>{
+ const restore=localEnv();try{
+  const request=new Request('https://deployed.unit/api/read/'+'a'.repeat(48));
+  assert.equal((await fixture({visibility:'private'}).repo.loadReader(request,'a'.repeat(48))).privateTest,true);
+  for(const denied of [401,403])await assert.rejects(fixture({visibility:'private',denied}).repo.loadReader(request,'a'.repeat(48)),e=>e.status===denied);
+  for(const options of [{visibility:'unpublished'},{withdrawDuringRead:true},{rotateDuringRead:true}])await assert.rejects(fixture(options).repo.loadReader(request,'a'.repeat(48)),e=>e.status===404);
+  await assert.rejects(fixture({visibility:'unpublished'}).repo.loadReader(new Request(`http://localhost/api/projects/${projectId}/reader-test/${publicationId}`),'private_'+publicationId),e=>e.status===404);
  }finally{restore();}
 });
 test('HU033 private visual rehearsal always authenticates the owner and cannot be addressed through public token routes',async()=>{

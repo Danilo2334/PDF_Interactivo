@@ -4426,3 +4426,91 @@ La causa exacta del403 no está establecida: no asumir rol insuficiente, scopes
 concretos ni que otra reconexión lo resuelva. CLI Vercel no instalado; alternativa
 autenticada de CLI no disponible hoy. El acceso de lectura quedó resuelto, pero
 la creación por conector es ahora un bloqueo distinto y concreto para el QA.
+
+### 31/10/2026 — Vercel por CLI y HU036: visibilidad y retirada local real
+
+Encargo vigente: resolver el403 y preparar el lector HTTPS, implementar HU036,
+documentar pruebas reales; sin desplegar ni hacer merge. Rama descendiente de
+PR#42: `codex/scrum-48-hu036-visibilidad-despublicacion`, desde9ce568e. No se
+descartó trabajo, no se aplicó/eliminó stash d6406e0 ni se modificó main/develop.
+
+El usuario autorizó personalmente la CLI mediante device login. CLI oficial
+Vercel65.9.0 ejecutada desde caché npm, sin añadir dependencia al proyecto.
+`whoami` confirma Danilo2334 y equipo `team_I5CBYezIIEWl8FIlhW7vqMR4`, Hobby.
+Se creó únicamente `pdf-interactivo-qa`, ID`prj_pRui4rYL9DnbERflhyhplv2mIoJ3`.
+Lectura posterior: Next.js, raízweb, Node22.x, npmci/build, Gitlinknull y
+previewDeploymentsDisabled=true. `vercel list` confirma cero deployments.
+No se subió código, importó Git, configuraron secretos del hosting, contrató plan
+ni publicó contenido. El campo publicSource no se devuelve aunque se solicitó
+false: no darlo por acreditado. El conector sigue sin listar el proyecto y devuelve
+404 al consultar ese ID; el403 no está diagnosticado por dentro, pero la CLI del
+mismo titular resuelve el acceso operativo sin usar la cuenta de Francisco.
+
+HU036/SCRUM-48, subtareas129/211/212/130, pasan a En curso. Implementación:
+- Estados public/private/unpublished, versión de visibilidad y fecha. Confirmación
+  explícita, propiedad/sesión activa, documento actual, firma y control de versión
+  comprobados en servidor y BD. Reintento de una operación devuelve su mismo
+  recibo; reutilizarla con otros datos o desde un estado posterior se rechaza.
+- Gestión separada de la última instantánea preparada y la última compartida:
+  preparar otra no oculta los controles de retirada de la versión anterior.
+  Historial real de transiciones, sin registrar como cambio las operaciones vacías.
+- Privada solo permite al propietario autorizado el ensayo privado; despublicada
+  bloquea nuevas lecturas, PDF, multimedia e intentos, incluso ensayos privados.
+  Cada petición comprueba estado; respuestas private/no-store. El lector abierto
+  se revalida cada15s cuando está visible y al recuperar foco/visibilidad; deja de
+  mostrar contenido si se deniega acceso. No borra copias ya descargadas ni puede
+  recuperar bytes ya recibidos por un cliente.
+- Republicar exige HTTPS verificado, clave de servidor y versión más reciente;
+  rota el token. Se conserva published_at histórico para que retirar la nueva
+  publicación no reactive un enlace anterior. Esta variante pública se probó
+  únicamente en PostgreSQL aislado, no en el Supabase real ni desde Internet.
+
+Migración nueva creada con CLI Supabase2.122.0, ensayada en PGlite y aplicada una
+sola vez mediante MCP después de reconciliar el historial remoto. Versión real
+`20261031073708_publication_visibility_controls`, archivo local conciliado a esa
+versión. No ejecutar otra vez ni usar dbpush a ciegas. Tabla de operaciones con
+RLS, lectura solo de propietario activo, escrituras directas revocadas. Advisors
+antes/después conservan las advertencias previas; ninguna nueva en estas tablas.
+
+Verificación técnica:374/374 pruebas, lint y build de producción (TypeScript)
+correctos en Node22.23.3 / Next16.4.3. Cinco pruebas nuevas incluyen transiciones,
+idempotencia, concurrencia, firmas, RLS, acceso y preservación de intentos. Los
+positivos públicos de PGlite son fixtures aislados y no son evidencia de HTTPS.
+Se detectó durante ese ensayo y corrigió el bloqueo ausente del quiz privado
+despublicado antes de aplicar la migración; la regresión correspondiente pasa.
+
+Pruebas reales con sesión del propietario, navegador integrado y producción local:
+- Proyecto QA digital, instantánea v5 e5ddc59f-3d42-4145-a4e3-2788ef14da7a.
+  Estado privado precargado; tres opciones presentes, Pública deshabilitada sin
+  HTTPS. Cambiar la selección explica su efecto antes de confirmar; sin marcar
+  la confirmación no se habilita Aplicar. Dos ciclos privados completos por UI:
+  Privada→Despublicada→Privada, cambios1–4 e historial coherente al recargar.
+- Lector ya abierto deja de mostrar contenido tras retirada; GET lector/PDF,
+  imagen y estado de ambos quizzes pasan de200 a404, con private/no-store.
+  Restaurar Privada permite consultar de nuevo lector/PDF/recursos. Acceso a la
+  ruta privada sin sesión:401. No se enviaron respuestas nuevas a los quizzes.
+- Segunda pestaña con versión0 intenta guardar después de cambio1: rechazo409
+  y mensaje de actualizar; no sobrescribe el estado vigente. Cierre/reapertura
+  y recarga muestran el guardado. Restauración operada con flecha, Tab, espacio
+  y Enter. Vista estrecha solicitada390×844: controles/texto visibles sin corte
+  observado; el navegador reporta viewport CSS efectivo518 y documento503, por
+  lo que no se acredita un viewport CSS390 exacto. Override retirado al terminar.
+- Consola del lector restaurado sin warnings/errores en la observación final.
+  PDF SHA256 antes conocido y comprobación posterior iguales:
+  e7277d66afd7caba47385cfac2f0e55a2eeb4fb7aa7136409fa35300a6347946.
+  Las seis snapshot_hash conservan sus valores, siete refuerzos, ocho ensayos
+  privados, cero intentos de lector y cero publicaciones alguna vez públicas.
+  Solo v5 cambia visibilidad_version a4; termina Privada, con cuatro transiciones.
+
+Capturas originales fuera de Git en la carpeta externa de evidencias HU036:
+opciones/estado privado, confirmación, lector bloqueado, historial, conflicto
+entre pestañas, vista estrecha y restauración. Registrar en cada subtarea un
+único comentario, conservando evidencias anteriores; historia madre solo resumen.
+No se generaron plantillas ni capturas compuestas para acreditar estos resultados.
+
+Pendientes: prueba pública→privada, retirada/republicación y rotación de enlace
+con lectores anónimos/cuentas separadas, PDF/recursos/intentos externos y TLS real.
+SUPABASE_SERVER_KEY, origen QA, URL de autenticación y epoch del hosting siguen
+sin configurarse. Despliegue y publicación siguen en espera por instrucción del
+usuario. HU030/032/033 y HU036 no se cierran por estas pruebas locales; tampoco
+se cierran sprints. No hubo consumo IA nuevo. Guía QA actualizada con este estado.
