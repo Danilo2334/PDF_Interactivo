@@ -40,6 +40,7 @@ test('HU024 owner-controlled regeneration preserves approved versions across eve
       '20261027205032_fix_request_conflict_codes.sql','20261027223449_fix_analysis_conflict_codes.sql',
       readdirSync(migrationDir).find(n=>n.endsWith('_generate_explanation_drafts.sql')),readdirSync(migrationDir).find(n=>n.endsWith('_generate_example_drafts.sql')),readdirSync(migrationDir).find(n=>n.endsWith('_generate_visual_drafts.sql')),readdirSync(migrationDir).find(n=>n.endsWith('_generate_summary_drafts.sql')),readdirSync(migrationDir).find(n=>n.endsWith('_owner_reinforcement_regeneration.sql'))];
     for(const name of names)await db.exec(readFileSync(new URL(name,migrationDir),'utf8'));
+    await db.exec(readFileSync(new URL(readdirSync(migrationDir).find(n=>n.endsWith('_interactive_reinforcement_cards.sql')),migrationDir),'utf8'));
     const secret=(await db.query('select secret from private.reinforcement_request_secrets')).rows[0].secret;process.env.REINFORCEMENT_REQUEST_SECRET=secret;
     async function asUser(id=owner,role='authenticated'){await db.exec('reset role');await db.query("select set_config('request.jwt.claim.sub',$1,false)",[id]);await db.exec(`set role ${role}`);}
     async function signed(name,signer,input,mutate=x=>x){const args=mutate(signer(input));return(await db.query(`select public.${name}($1,$2) result`,[args.p_payload,args.p_signature])).rows[0].result;}
@@ -108,6 +109,31 @@ test('HU024 owner-controlled regeneration preserves approved versions across eve
       await db.exec('reset role');await db.query("update public.reinforcement_regenerations set lease_expires_at=clock_timestamp()-interval '1 second' where operation_id=$1",[old.operationId]);await asUser();
       const current=operation(input);await regenerate(current);await assert.rejects(regenerate(old,'finish',{status:'ready',content:explanation,model:'isolated-test'}),e=>e.code==='PT409');
       await regenerate(current,'finish',{status:'error',errorCode:'provider_unavailable'});assert.equal((await pubs(input)).length,0);assert.equal((await head(input)).current_version,1);
+    });
+    await t.test('HU026 card presentation retains approved content and source, serializes writes and enforces ownership',async()=>{
+      const input=await generated('example');input.kind='example';await review(input,'approve',1);
+      const published=(await pubs(input))[0],operation=randomUUID();
+      const save=(version,expanded,op=operation,approved=published.approved_version_id)=>db.query('select public.save_reinforcement_card($1,$2,$3,$4,$5,$6,$7) result',
+        [input.requestId,documentId,published.id,approved,version,expanded,op]).then(r=>r.rows[0].result);
+      const saved=await save(0,false);assert.equal(saved.version,1);assert.equal(saved.initial_expanded,false);
+      assert.deepEqual(await save(0,false),saved);await assert.rejects(save(0,true),e=>e.code==='PT409');
+      await assert.rejects(save(0,true,randomUUID()),e=>e.code==='PT409');
+      const updated=await save(1,true,randomUUID());assert.equal(updated.version,2);assert.equal(updated.initial_expanded,true);
+      await review(input,'edit',1,{title:'Un borrador posterior',text:example.text});await review(input,'discard',2);
+      assert.equal((await save(2,false,randomUUID())).version,3);assert.deepEqual((await pubs(input))[0],published);
+      await assert.rejects(save(3,false,randomUUID(),randomUUID()),e=>e.code==='PT409');
+      await assert.rejects(db.query('update public.reinforcement_cards set initial_expanded=true'),e=>e.code==='42501');
+      await asUser(other);assert.equal((await db.query('select * from public.reinforcement_cards')).rows.length,0);
+      await assert.rejects(save(3,true,randomUUID()),e=>e.code==='42501');
+      await asUser(owner,'anon');await assert.rejects(save(3,true,randomUUID()),e=>e.code==='42501');await asUser();
+      await db.exec('reset role');await db.query('update public.profiles set is_active=false where id=$1',[owner]);await asUser();
+      await assert.rejects(save(3,true,randomUUID()),e=>e.code==='42501');
+      await db.exec('reset role');await db.query('update public.profiles set is_active=true where id=$1',[owner]);
+      await db.query("update public.projects set status='deleting' where id=$1",[projectId]);await asUser();
+      await assert.rejects(save(3,true,randomUUID()),e=>['PT409','40001'].includes(e.code));
+      await db.exec('reset role');await db.query("update public.projects set status='pending' where id=$1",[projectId]);await asUser();
+      const pendingInput=await generated('example');
+      await assert.rejects(db.query('select public.save_reinforcement_card($1,$2,$3,$4,0,false,$5)',[pendingInput.requestId,documentId,published.id,published.approved_version_id,randomUUID()]),e=>e.code==='42501');
     });
   }finally{if(previous===undefined)delete process.env.REINFORCEMENT_REQUEST_SECRET;else process.env.REINFORCEMENT_REQUEST_SECRET=previous;await db.close();}
 });

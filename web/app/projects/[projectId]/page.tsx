@@ -60,7 +60,7 @@ export default async function ProjectPage({
   const { data: reinforcementRows, error: reinforcementsError } =
     await supabase
       .from("reinforcements")
-      .select("id, document_id, page_number, title, content")
+      .select("id, document_id, page_number, title, content, source_request_id, approved_version_id, card:reinforcement_cards(*), source:reinforcement_requests!source_request_id(id, project_id, document_id, page_number, selection)")
       .eq("document_id", project.document_id)
       .order("page_number", { ascending: true })
       .order("created_at", { ascending: true });
@@ -69,8 +69,12 @@ export default async function ProjectPage({
     console.error("Error consultando refuerzos:", reinforcementsError);
   }
 
-  const reinforcements =
-    (reinforcementRows ?? []) as Reinforcement[];
+  // The untyped client infers arrays for embedded relations. Both FKs are
+  // singular (card uses a unique PK); normalize also supports older API shapes.
+  const reinforcements = (reinforcementRows ?? []).map(row => ({ ...row,
+    card: Array.isArray(row.card) ? row.card[0] ?? null : row.card,
+    source: Array.isArray(row.source) ? row.source[0] ?? null : row.source,
+  })) as unknown as Reinforcement[];
 
   return (
     <main className="min-h-screen bg-slate-50 px-6 py-12">

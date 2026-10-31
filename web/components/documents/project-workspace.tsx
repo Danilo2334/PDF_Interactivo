@@ -13,8 +13,7 @@ import { contentFromDraft, requestContentKey } from "@/lib/validations/reinforce
 import { createSubmissionController, IDLE_SUBMISSION, type SubmissionState } from "@/lib/reinforcements/submission";
 import { RequestListPanel } from "@/components/documents/request-list-panel";
 import type { RequestRecord } from "@/lib/validations/request-list";
-import { VisualResource } from "@/components/documents/visual-resource";
-import { SummaryResource } from "@/components/documents/summary-resource";
+import { ReinforcementCard } from "@/components/documents/reinforcement-card";
 
 type WorkspaceProps = {
   projectId: string;
@@ -124,6 +123,15 @@ export function ProjectWorkspace({
     setNavigationKey(value => value + 1);
     // A saved selection is an explicit navigation, rather than a return to the old scroll position.
     readingPosition.current = null;
+    setActiveSection("pdf");
+  }
+  function openCardSource(item: Reinforcement) {
+    const source = item.source;
+    if (!source || source.id !== item.source_request_id || source.project_id !== projectId
+      || source.document_id !== documentId || source.page_number !== item.page_number) return;
+    setSelection({ documentId, pageNumber: source.page_number });
+    setFragment(source.selection); setDifficultyInput(null); setDifficultyDraft(null); setSelectionText(null);
+    setOpenedRequest(null); setNavigationKey(value => value + 1); readingPosition.current = null;
     setActiveSection("pdf");
   }
   const receiveTextSource = useCallback((pdf: PDFDocumentProxy | null) => {
@@ -268,31 +276,8 @@ export function ProjectWorkspace({
         ) : (
           <div className="mt-4 space-y-4">
             {pageReinforcements.map((reinforcement) => (
-              <article
-                key={reinforcement.id}
-                data-page-number={reinforcement.page_number}
-                className="rounded-lg border border-slate-200 bg-white p-5"
-              >
-                <p className="text-sm font-medium text-blue-700">
-                  Página {reinforcement.page_number}
-                </p>
-
-                <h3 className="mt-2 break-words font-semibold text-slate-900">
-                  {reinforcement.title}
-                </h3>
-                {reinforcement.content.generatedByAI === true && <p className="mt-2 text-sm font-medium text-green-900">
-                  Contenido generado por IA · Aprobado por ti{reinforcement.content.editedByOwner === true ? " · Editado por ti" : ""}
-                </p>}
-
-                {reinforcement.content.type === "visual" && <div className="mt-3"><VisualResource value={reinforcement.content.visual} title={reinforcement.title}
-                  description={typeof reinforcement.content.text === "string" ? reinforcement.content.text : undefined} /></div>}
-                {reinforcement.content.type === "summary" && <div className="mt-3"><SummaryResource value={reinforcement.content.summary} /></div>}
-                {reinforcement.content.type !== "visual" && reinforcement.content.type !== "summary" && typeof reinforcement.content.text === "string" && (
-                  <p className="mt-3 whitespace-pre-wrap break-words text-sm text-slate-700">
-                    {reinforcement.content.text}
-                  </p>
-                )}
-              </article>
+              <ReinforcementCard key={`${reinforcement.id}-${reinforcement.card?.version ?? 0}-${reinforcement.approved_version_id ?? "legacy"}`}
+                reinforcement={reinforcement} projectId={projectId} canManage={canRequestReinforcement} onSource={openCardSource} />
             ))}
           </div>
         )}
