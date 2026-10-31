@@ -44,6 +44,19 @@ test('invalid provider output, quota, refusal and timeout remain controlled and 
     e=>e.code===code&&e.quotaExhausted===quota&&!e.message.includes('sensitive'));assert.equal(calls,1);}
 });
 const {VisualResource}=load('components/documents/visual-resource.tsx',{react:React,'@/lib/validations/visual':schemas});
+
+test('a diagram connection skipping the middle node stays outside its box instead of disappearing behind it',()=>{
+ const value={...visual,scene:{kind:'diagram',nodes:[visual.scene.nodes[0],visual.scene.nodes[1],{...visual.scene.nodes[1],id:'n3',label:'Suma constante'}],edges:[{from:'n1',to:'n3',label:'Integra la suma'}]}};
+ const html=renderToStaticMarkup(React.createElement(VisualResource,{value}));
+ const positions=[...html.matchAll(/transform="translate\(([-\d.]+) ([-\d.]+)\)"/g)].map(m=>({x:Number(m[1]),y:Number(m[2])}));
+ const middle=positions[1];assert.ok(middle);
+ const route=/<path d="([^"]+)"[^>]*marker-end=/.exec(html)?.[1];assert.ok(route);
+ const values=route.match(/-?\d+(?:\.\d+)?/g).map(Number);assert.equal(values.length,8);
+ for(let i=1;i<20;i++){const t=i/20,u=1-t;const x=u**3*values[0]+3*u*u*t*values[2]+3*u*t*t*values[4]+t**3*values[6];const y=u**3*values[1]+3*u*u*t*values[3]+3*u*t*t*values[5]+t**3*values[7];
+  assert.equal(x>middle.x-125&&x<middle.x+125&&y>middle.y-62&&y<middle.y+62,false);
+ }
+ assert.match(html,/Integra la suma/);assert.match(html,/fill="none"/);
+});
 test('safe visual renderer has an accessible title/description and escaped labels, without accepting SVG markup or remote assets',()=>{
   const value={...visual,scene:{...visual.scene,nodes:[{...visual.scene.nodes[0],label:'<script>alert(1)</script>'},visual.scene.nodes[1]]}};
   const html=renderToStaticMarkup(React.createElement(VisualResource,{value}));assert.match(html,/role="img"/);assert.match(html,/<title/);assert.match(html,/<desc/);
