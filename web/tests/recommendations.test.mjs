@@ -39,7 +39,7 @@ test('eligible options require evidence in the saved topic, document and actual 
   assert.equal(schemas.rankRecommendations(input,context,diagnosis).length,2);
 });
 const response = (input, extra={}) => Response.json({ candidates:[{ finishReason:'STOP',content:{parts:[{text:JSON.stringify(input)}]} }],...extra });
-const config={ key:'test-not-real',model:'test-model' };
+const config={provider:'gemini',key:'test-not-real',model:'test-model' };
 test('Gemini structured recommendations use only saved context/diagnosis and isolate document instructions without tools', async () => {
   let sent;
   const output=await provider.recommendReinforcement(context,diagnosis,config,async(url,args)=>{
@@ -81,4 +81,12 @@ test('recommendation UI shows ordered reasons, no auto-selection, and reopens th
   assert.match(chosen,/checked=""/);assert.match(chosen,/<button[^>]*disabled/);
   const escaped=renderToStaticMarkup(React.createElement(RecommendationOptions,{view:{...view,recommendations:{...view.recommendations,options:[{...options[0],justification:'<script>hack</script>'}]}},disabled:false,onChoose(){}}));
   assert.doesNotMatch(escaped,/<script>/);assert.match(escaped,/&lt;script&gt;/);
+});
+
+test('interactive advice remains visible as an optional quiz after the reinforcement, without an unusable initial radio choice',()=>{
+ const {RecommendationOptions}=load('components/documents/recommendation-panel.tsx',{react:React,'@/lib/validations/recommendations':schemas,'@/lib/reinforcements/use-request-resource':{}});
+ const view={recommendations:{...result,status:'ready',options:[...options,{...options[0],type:'interaction'}]},choice:{type:'interaction'},choiceVersion:1,canChoose:true};
+ const html=renderToStaticMarkup(React.createElement(RecommendationOptions,{view,disabled:false,onChoose(){}}));
+ assert.equal((html.match(/type="radio"/g)||[]).length,2);assert.doesNotMatch(html,/value="interaction"/);assert.doesNotMatch(html,/checked=""/);
+ assert.match(html,/Mini quiz opcional/);assert.match(html,/Configurar mini quiz opcional/);
 });

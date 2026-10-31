@@ -14,6 +14,7 @@ export function load(relative, dependencies = {}, globals = {}) {
     require(name) {
       if (name in dependencies) return dependencies[name];
       if (name === 'server-only') return {};
+      if (['@/lib/reinforcements/ai-provider', '@/lib/reinforcements/gemini-provider', '@/lib/reinforcements/openai-provider'].includes(name)) return load(name.slice(2)+'.ts');
       if (['zod', 'node:crypto', 'react/jsx-runtime'].includes(name)) return require(name);
       throw Error(`Unexpected dependency: ${name}`);
     }, ...globals,

@@ -1,5 +1,39 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## IA de los refuerzos
+
+La integración usa llamadas de servidor con salida estructurada y validadores del
+dominio. Para seleccionar GPT Sol, configura de forma privada `web/.env.local`:
+
+```dotenv
+AI_PROVIDER=openai
+OPENAI_ANALYSIS_MODEL=gpt-6.1-sol
+```
+
+`OPENAI_API_KEY` debe existir en ese mismo archivo ignorado o en las variables del
+servidor. Nunca lleva `NEXT_PUBLIC_`, se versiona ni se envía al navegador.
+Encontrar una clave no cambia de proveedor automáticamente. Con
+`AI_PROVIDER=openai`, una clave/modelo ausente deshabilita la generación; no usa
+Gemini como respaldo ni cambia a otro modelo. La selección explícita
+`AI_PROVIDER=gemini` usa `GEMINI_API_KEY` y `GEMINI_ANALYSIS_MODEL`. Sin
+`AI_PROVIDER` se conserva la configuración Gemini de instalaciones anteriores.
+
+Las solicitudes OpenAI usan Responses API, `store:false`, razonamiento bajo,
+tarifa Standard, sin herramientas ni conversación previa, máximo de salida por
+tarea y timeout de hasta 45 segundos. Cada llamada se intenta una vez. El quiz
+incluye una segunda llamada acotada de auditoría semántica; no aprueba ni publica
+el resultado. La revisión del propietario sigue siendo necesaria.
+
+`AI_USAGE_LOG=1` activa únicamente metadatos de consumo en el servidor: proveedor,
+modelo y tokens de entrada, salida y entrada cacheada. No registra claves,
+documentos, prompts, respuestas ni identificadores de usuarios. Omítela para no
+emitir esos metadatos. Los tokens permiten estimar costo, no acreditan la factura.
+
+Conserva también las variables existentes de Supabase y
+`REINFORCEMENT_REQUEST_SECRET`; no generes otro secreto para sustituir el remoto.
+Consulta `doc/CONTEXTO-PROYECTO.md` desde la raíz para pruebas y dependencias de
+publicación. La integración local no implica un despliegue.
+
 ## Getting Started
 
 First, run the development server:

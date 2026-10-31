@@ -33,7 +33,7 @@ function fixture(settings={}) {
     '@/lib/reinforcements/request-service':access,'@/lib/documents/mutation-request':load('lib/documents/mutation-request.ts'),
     '@/lib/validations/contextual-analysis':analysisSchemas,'@/lib/validations/recommendations':schemas,
     '@/lib/reinforcements/recommendation-proof':{signRecommendationProof:input=>({p_payload:JSON.stringify(input),p_signature:'unit-test'})},
-    '@/lib/reinforcements/recommendation-provider':{...provider,getRecommendationConfiguration:()=>settings.configured===false?null:{key:'unit-test',model:'test-model'},
+    '@/lib/reinforcements/recommendation-provider':{...provider,getRecommendationConfiguration:()=>settings.configured===false?null:{provider:'gemini',key:'unit-test',model:'test-model'},
       recommendReinforcement:async(c,d)=>{providerCalls++;assert.equal(c.selectedText,context.selectedText);assert.equal(d.topic,diagnosis.topic);
         if(settings.failure)throw new provider.RecommendationFailure(settings.failure,settings.quota);return {options:settings.options??options,model:'test-model'};}},
   });
@@ -46,9 +46,15 @@ function fixture(settings={}) {
 }
 const choose={action:'choose',attemptId:result.attempt_id,type:'example',expectedVersion:0};
 
+test('interactive advice cannot strand a request as a base format; the optional quiz follows a generated reinforcement',async()=>{
+  const f=fixture();const response=await f.post({...choose,type:'interaction'});
+  assert.equal(response.status,400);assert.match((await response.json()).message,/mini quiz es opcional/);
+  assert.equal(f.rpc.length,0);assert.equal(f.providerCalls(),0);
+});
+
 test('recommendations persist a safe error and return a clear free-quota message without retrying Gemini',async()=>{
   const f=fixture({failure:'provider_unavailable',quota:true});const response=await f.post();const body=await response.json();
-  assert.equal(response.status,429);assert.match(body.message,/cuota gratuita/);assert.equal(body.recommendations.status,'error');assert.equal(f.providerCalls(),1);
+  assert.equal(response.status,429);assert.match(body.message,/cuota/);assert.equal(body.recommendations.status,'error');assert.equal(f.providerCalls(),1);
 });
 
 test('recommendation API rejects anonymous/inactive users, foreign projects, stale PDFs and cross-origin writes', async()=>{

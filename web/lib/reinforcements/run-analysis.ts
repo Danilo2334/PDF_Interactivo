@@ -96,5 +96,5 @@ export async function postAnalysis(request: Request, projectId: string, requestI
   if (saved.error) return rpcError(saved.error.code);
   const result = analysisRecordSchema.safeParse(saved.data?.analysis);
   return result.success ? reply({ analysis: result.data, available: true,
-    ...(quotaExhausted ? { message: "La cuota gratuita de Gemini se agotó. Espera a que se restablezca antes de reintentar; no se usará un proveedor de pago." } : {}) }, quotaExhausted ? 429 : 200) : rpcError();
+    ...(quotaExhausted ? { message: "La cuota del servicio de IA se agotó. Espera antes de reintentar; no se cambiará de proveedor automáticamente." } : {}) }, quotaExhausted ? 429 : 200) : rpcError();
 }

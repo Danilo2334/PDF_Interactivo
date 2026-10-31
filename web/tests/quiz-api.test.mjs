@@ -21,7 +21,7 @@ function fixture(options={}){
     '@/lib/reinforcements/request-service':{authorizeRequest:async()=>options.denied?{response:new Response('{}',{status:options.denied})}:{db,userId:record.owner_id,row:record},readSmallJson:async r=>({body:await r.json()}),reply:(data,status=200)=>Response.json(data,{status})},
     '@/lib/documents/mutation-request':{isSameOriginMutation:r=>r.headers.get('Origin')==='http://localhost'},'@/lib/validations/quiz':schemas,
     '@/lib/reinforcements/quiz-proof':{signQuizProof:p=>({p_payload:JSON.stringify(p),p_signature:'isolated-test'})},
-    '@/lib/reinforcements/quiz-provider':{getQuizConfiguration:()=>options.unavailable?null:{key:'isolated-key',model:'gemini-test'},QuizFailure,
+    '@/lib/reinforcements/quiz-provider':{getQuizConfiguration:()=>options.unavailable?null:{provider:'gemini',key:'isolated-key',model:'gemini-test'},QuizFailure,
       generateQuiz:async(...args)=>{ai.push(args);if(options.providerError)throw new QuizFailure(options.providerError,options.quota??false);return{content,model:'isolated-test'}}},
   });
   const url='http://localhost/quiz?documentId='+record.document_id+'&sourceVersionId='+source.versionId;

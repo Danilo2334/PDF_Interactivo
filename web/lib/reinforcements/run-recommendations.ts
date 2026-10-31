@@ -64,6 +64,7 @@ export async function postRecommendations(request: Request, projectId: string, r
   const access = await authorizeRequest(projectId, requestId, body.documentId);
   if (access.response) return access.response;
   if (body.action === "choose") {
+    if (body.type === "interaction") return reply({ message: "El mini quiz es opcional después de generar el refuerzo. Elige primero Explicación, Ejemplo, Resumen o Imagen." }, 400);
     let saved;
     try { saved = await access.db.rpc("choose_reinforcement_option", { p_request_id: requestId, p_document_id: body.documentId,
       p_attempt_id: body.attemptId, p_type: body.type, p_expected_version: body.expectedVersion }); }
@@ -99,5 +100,5 @@ export async function postRecommendations(request: Request, projectId: string, r
   if (saved.error) return failure(saved.error.code);
   const result = recommendationRecordSchema.safeParse(saved.data?.recommendations);
   return result.success ? reply({ recommendations: result.data,
-    ...(quotaExhausted ? { message: "La cuota gratuita de Gemini se agotó. Espera a que se restablezca antes de reintentar; no se usará un proveedor de pago." } : {}) }, quotaExhausted ? 429 : 200) : failure();
+    ...(quotaExhausted ? { message: "La cuota del servicio de IA se agotó. Espera antes de reintentar; no se cambiará de proveedor automáticamente." } : {}) }, quotaExhausted ? 429 : 200) : failure();
 }

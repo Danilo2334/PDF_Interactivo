@@ -12,5 +12,5 @@ export const result = { request_id: record.id, analysis_attempt_id: analysis.att
   started_at: analysis.started_at, updated_at: analysis.updated_at, lease_expires_at: analysis.lease_expires_at, finished_at: null, attempts: 1 };
 export const provider = load('lib/reinforcements/recommendation-provider.ts', {
   '@/lib/validations/recommendations': schemas, '@/lib/reinforcements/analysis-provider': { getAnalysisConfiguration: () => null },
-  '@/lib/reinforcements/gemini-provider': gemini,
+  '@/lib/reinforcements/ai-provider': gemini,
 });

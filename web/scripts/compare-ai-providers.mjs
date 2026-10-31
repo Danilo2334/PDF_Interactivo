@@ -85,7 +85,7 @@ for(const c of cases)for(const [task,jira,run]of tasks)for(const spec of specs){
  const prior=report.rows.filter(r=>r.case===c.id&&r.task===task&&r.model===spec.model).at(-1);
  if(prior&&prior.accepted!==undefined&&!(process.argv.includes('--retry-technical')&&prior.calls.some(c=>c.errorCode==='invalid_json_schema')))continue;
  const row={case:c.id,task,jira,model:spec.model,phase:prior?'schema_correction_or_interrupted_recovery':'initial',calls:[],startedAt:new Date().toISOString()};report.rows.push(row);const start=performance.now();
- try{row.result=await run(c,{key:'benchmark-transport-only',model:spec.model},transport(spec,row));row.accepted=true;}catch(e){row.accepted=false;row.failure=e.code??e.kind??e.name??'validation_error';}
+ try{row.result=await run(c,{key:'benchmark-transport-only',model:spec.model,provider:'gemini'},transport(spec,row));row.accepted=true;}catch(e){row.accepted=false;row.failure=e.code??e.kind??e.name??'validation_error';}
  row.ms=Math.round(performance.now()-start);await save();console.log(JSON.stringify({case:c.id,task,model:spec.model,accepted:row.accepted,failure:row.failure,ms:row.ms,usd:row.calls.reduce((n,x)=>n+(x.usd??0),0),openaiTotal:spend}));
  if(spend>=report.budgetUsd)break;
 }

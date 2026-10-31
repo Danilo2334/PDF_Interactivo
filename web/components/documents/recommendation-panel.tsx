@@ -15,18 +15,27 @@ export function RecommendationOptions({ view, disabled, onChoose }: { view: Reco
   const [draft, setDraft] = useState<ReinforcementType | null>(null);
   const current = view.recommendations;
   if (current?.status !== "ready") return null;
-  const selected = draft ?? view.choice?.type ?? null;
+  const previous = view.choice?.type === "interaction" ? null : view.choice?.type;
+  const selected = draft ?? previous ?? null;
+  const options = current.options.filter(option => option.type !== "interaction");
+  const interactive = current.options.find(option => option.type === "interaction");
   return <form onSubmit={event => { event.preventDefault(); if (selected && !disabled && view.canChoose)
     onChoose({ type: selected, attemptId: current.attempt_id, expectedVersion: view.choiceVersion }); }}>
     <fieldset disabled={disabled || !view.canChoose} className="space-y-3">
       <legend className="mb-2 text-sm font-medium text-slate-800">Elige una opción. Están ordenadas por pertinencia para el tema y tu dificultad.</legend>
-      {current.options.map((option, index) => <label key={option.type} className="block cursor-pointer rounded-lg border border-slate-200 p-3 text-sm text-slate-800">
+      {options.map((option, index) => <label key={option.type} className="block cursor-pointer rounded-lg border border-slate-200 p-3 text-sm text-slate-800">
         <span className="flex items-center gap-2"><input type="radio" name={name} value={option.type} checked={selected === option.type}
           onChange={() => setDraft(option.type)} /><span className="font-semibold">{index + 1}. {REINFORCEMENT_LABELS[option.type]}</span></span>
         <span className="mt-2 block break-words">{option.justification}</span>
       </label>)}
       <button type="submit" className={buttonClass} disabled={!selected || disabled || !view.canChoose || selected === view.choice?.type}>Guardar elección</button>
     </fieldset>
+    {interactive && <aside className="mt-3 rounded-lg bg-blue-50 p-3 text-sm text-slate-800">
+      <p className="font-semibold">Elemento interactivo · Mini quiz opcional</p>
+      <p className="mt-1 break-words">{interactive.justification}</p>
+      <p className="mt-1">Elige primero un formato de refuerzo. Después de generarlo, puedes abrir «Configurar mini quiz opcional» y decidir si creas sus preguntas. El quiz no sustituye la elección inicial.</p>
+    </aside>}
+    {!options.length && <p role="status" className="mt-2 text-sm">No hay un formato inicial recomendado. Prepara una solicitud con más contexto para generar primero el refuerzo.</p>}
   </form>;
 }
 
@@ -74,7 +83,8 @@ export function RecommendationPanel({ request, active, onChanged }: { request: R
     {!busy && current?.status === "processing" && <p role="status" className="text-sm">{view?.canRecommend ? "El intento anterior agotó su tiempo. Puedes reintentarlo." : "Preparando recomendaciones. Puedes seguir consultando el PDF."}</p>}
     {current?.status === "error" && <p role="alert" className="text-sm text-red-700">{RECOMMENDATION_MESSAGES[current.error_code ?? "invalid_recommendations"]}</p>}
     {current?.status === "empty" && <p role="status" className="text-sm text-slate-700">{current.empty_reason}</p>}
-    {view?.choice && <div role="status" className="rounded-lg bg-green-50 p-3 text-sm text-green-900">
+    {view?.choice?.type === "interaction" && <p role="status" className="text-sm">La elección anterior era un elemento interactivo. Elige un formato de refuerzo para continuar; el mini quiz se configura después.</p>}
+    {view?.choice && view.choice.type !== "interaction" && <div role="status" className="rounded-lg bg-green-50 p-3 text-sm text-green-900">
       <p className="font-semibold">Elección guardada: {REINFORCEMENT_LABELS[view.choice.type]}</p>
       <p className="mt-1 break-words">{view.choice.justification}</p>
       <p className="mt-1">El PDF original permanece intacto.</p>

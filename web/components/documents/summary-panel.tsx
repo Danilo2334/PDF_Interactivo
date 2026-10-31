@@ -41,7 +41,7 @@ export function SummaryPanel({request,active,onChanged}:{request:RequestRecord;a
       <button type="submit" className={buttonClass} disabled={!selected||saved}>Guardar extensión</button></fieldset></form>
       <button type="button" className={buttonClass} disabled={!active||busy||!view.canGenerate||!saved} onClick={()=>void execute("generate")}>{generation?.status==="error"||generation?.status==="processing"?"Reintentar resumen":"Generar resumen"}</button></>}
     {generation&&<p className="text-sm font-medium">Extensión guardada: {SUMMARY_LABELS[generation.mode]}</p>}
-    {view?.summaryChosen&&!view.providerAvailable&&<p className="text-sm">Gemini no está configurado. Guardar o revisar no consume IA.</p>}
+    {view?.summaryChosen&&!view.providerAvailable&&<p className="text-sm">El servicio de IA no está configurado. Guardar o revisar no consume IA.</p>}
     <button type="button" className={buttonClass} disabled={!active||busy} onClick={()=>{setError("");resource.refresh();onChanged()}}>Actualizar resumen</button>
     {busy&&<p role="status">Guardando o generando el resumen…</p>}
     {!busy&&generation?.status==="processing"&&<p role="status">El resumen está en proceso. Actualiza para consultar el resultado.</p>}

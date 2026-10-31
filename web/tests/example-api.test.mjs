@@ -21,7 +21,7 @@ function fixture(settings={}){
   const service=load('lib/reinforcements/run-example.ts',{'@/lib/reinforcements/request-service':access,
     '@/lib/documents/mutation-request':load('lib/documents/mutation-request.ts'),'@/lib/validations/contextual-analysis':analysisSchemas,
     '@/lib/validations/example':schemas,'@/lib/reinforcements/example-proof':{signExampleProof:input=>({p_payload:JSON.stringify(input),p_signature:'unit-test'})},
-    '@/lib/reinforcements/example-provider':{...provider,getExampleConfiguration:()=>settings.configured===false?null:{key:'unit-test',model:'test-model'},
+    '@/lib/reinforcements/example-provider':{...provider,getExampleConfiguration:()=>settings.configured===false?null:{provider:'gemini',key:'unit-test',model:'test-model'},
       generateExample:async(c,d,l)=>{calls++;assert.equal(c.selectedText,context.selectedText);assert.equal(d.topic,diagnosis.topic);assert.equal(l,'practical');
         if(settings.failure)throw new provider.ExampleFailure(settings.failure,settings.quota);return {content:example,model:'test-model'};}},
   });

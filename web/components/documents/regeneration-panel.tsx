@@ -54,7 +54,7 @@ export function RegenerationPanel({request,active,onChanged}:{request:RequestRec
     {busy&&<p role="status">Procesando el ajuste. Puedes seguir consultando el PDF…</p>}
     {processing&&<p role="status">Hay una regeneración en curso. Las decisiones esperan su resultado.</p>}
     {message&&<p role="status" className="break-words">{message}</p>}
-    {view.job?.status==="error"&&<p role="alert">{view.job.error_code==="timeout"?"El intento agotó su tiempo.":view.job.error_code==="provider_unavailable"?"Gemini no está disponible o su cuota gratuita se agotó; no se utilizará un proveedor de pago.":"El resultado no pudo verificarse con el PDF."} Se conservan el borrador y la versión aprobada anteriores.</p>}
+    {view.job?.status==="error"&&<p role="alert">{view.job.error_code==="timeout"?"El intento agotó su tiempo.":view.job.error_code==="provider_unavailable"?"El servicio de IA no está disponible o se agotó su cuota; no se cambiará de proveedor automáticamente.":"El resultado no pudo verificarse con el PDF."} Se conservan el borrador y la versión aprobada anteriores.</p>}
     {view.job&&<details><summary className="cursor-pointer font-medium">Último ajuste solicitado</summary><p>Versión de origen: {view.job.expected_version} · Por ti · {new Date(view.job.started_at).toLocaleString("es-CO")}</p><p className="whitespace-pre-wrap break-words">{view.job.instructions}</p><p>{view.job.status==="ready"?`Guardado como versión ${view.job.result_version}`:view.job.status==="error"?"No completado":"En proceso"}</p></details>}
     <button type="button" className={buttonClass} disabled={!active||busy} onClick={()=>{resource.refresh();onChanged()}}>Actualizar ajustes</button>
   </section>;

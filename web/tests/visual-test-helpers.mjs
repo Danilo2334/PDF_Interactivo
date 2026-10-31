@@ -2,7 +2,7 @@ import { load, analysisSchemas, context, diagnosis, analysis, record, schemas as
 import { schemas as explanationSchemas } from './explanation-test-helpers.mjs';
 export { load, analysisSchemas, context, diagnosis, analysis, record };
 export const schemas=load('lib/validations/visual.ts',{'@/lib/validations/explanation':explanationSchemas,'@/lib/validations/example':exampleSchemas});
-export const provider=load('lib/reinforcements/visual-provider.ts',{'@/lib/validations/visual':schemas,'@/lib/reinforcements/gemini-provider':load('lib/reinforcements/gemini-provider.ts')});
+export const provider=load('lib/reinforcements/visual-provider.ts',{'@/lib/validations/visual':schemas,'@/lib/reinforcements/ai-provider':load('lib/reinforcements/ai-provider.ts')});
 export const visual={title:'Transformaciones de la energía en un péndulo',text:'El péndulo ideal transforma energía potencial en cinética al bajar y realiza la transformación inversa al subir. Sin rozamiento, la suma permanece constante. Las flechas representan la transformación, no la creación de energía.',
  sourceQuote:context.selectedText,topicReference:diagnosis.topic,consistentWithSource:true,scene:{kind:'diagram',nodes:[
  {id:'n1',label:'Energía potencial',detail:'Mayor altura y menor velocidad en el extremo.',symbol:'pendulum'},

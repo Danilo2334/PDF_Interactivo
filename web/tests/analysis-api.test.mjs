@@ -34,7 +34,7 @@ function fixture(options = {}) {
     '@/lib/reinforcements/analysis-context': contextModule,
     '@/lib/pdf/read-analysis-page': { readAnalysisPage: async () => ({ pageText: options.pageText ?? context.nearbyText, areaText: '', pdfSha256: context.pdfSha256 }) },
     '@/lib/reinforcements/analysis-proof': { signAnalysisProof: input => ({ p_payload: JSON.stringify(input), p_signature: 'unit-test' }) },
-    '@/lib/reinforcements/analysis-provider': { ...provider, getAnalysisConfiguration: () => options.configured === false ? null : { key: 'unit-test', model: 'test-model' },
+    '@/lib/reinforcements/analysis-provider': { ...provider, getAnalysisConfiguration: () => options.configured === false ? null : {provider:'gemini',key: 'unit-test', model: 'test-model' },
       analyzeContext: async () => { providerCalls++; if (options.failure) throw new provider.AnalysisFailure(options.failure,options.quota);
         return { diagnosis: options.diagnosis ?? diagnosis, model: 'test-model' }; } },
   });
@@ -47,7 +47,7 @@ function fixture(options = {}) {
 
 test('Gemini free quota exhaustion is persisted safely and returned with a clear bounded retry message',async()=>{
   const f=fixture({failure:'provider_unavailable',quota:true});const response=await f.post();const body=await response.json();
-  assert.equal(response.status,429);assert.match(body.message,/cuota gratuita/);assert.match(body.message,/no se usará un proveedor de pago/);
+  assert.equal(response.status,429);assert.match(body.message,/cuota/);assert.match(body.message,/no se cambiará de proveedor automáticamente/);
   assert.equal(body.analysis.status,'error');assert.equal(body.analysis.error_code,'provider_unavailable');assert.equal(f.stats().providerCalls,1);
 });
 

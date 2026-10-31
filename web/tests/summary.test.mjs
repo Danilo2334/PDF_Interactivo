@@ -13,12 +13,12 @@ test('summary removes empty and accent/case duplicate concepts while rejecting f
  assert.throws(()=>schemas.validateSummary(summary,{...context,enough:false},diagnosis,'brief'));
 });
 test('provider has a configured character cap, sends only saved source and makes one call; invalid, quota, refusal and timeout are bounded',async()=>{
- let calls=0;await provider.generateSummary(context,diagnosis,'compact',{key:'test',model:'test-model'},async(url,init)=>{
+ let calls=0;await provider.generateSummary(context,diagnosis,'compact',{provider:'gemini',key:'test',model:'test-model'},async(url,init)=>{
  calls++;const body=JSON.parse(init.body),data=JSON.parse(body.contents[0].parts[0].text);assert.equal(data.selection,context.selectedText);assert.equal(data.ownerId,undefined);assert.equal(init.cache,'no-store');assert.equal(body.generationConfig.responseFormat.text.schema.properties.text.maxLength,350);
  return Response.json({candidates:[{finishReason:'STOP',content:{parts:[{text:JSON.stringify(summary)}]}}]});});assert.equal(calls,1);
  for(const [transport,code,quota] of [[async()=>new Response('sensitive',{status:429}),'provider_unavailable',true],[async()=>{const e=Error('sensitive');e.name='TimeoutError';throw e},'timeout',false],
  [async()=>Response.json({promptFeedback:{blockReason:'SAFETY'}}),'provider_refused',false],[async()=>Response.json({candidates:[{finishReason:'STOP',content:{parts:[{text:JSON.stringify({...summary,concepts:[]})}]}}]}),'invalid_summary',false]]){
- let count=0;await assert.rejects(provider.generateSummary(context,diagnosis,'brief',{key:'test',model:'test'},(...args)=>{count++;return transport(...args)}),e=>e.code===code&&e.quotaExhausted===quota&&!e.message.includes('sensitive'));assert.equal(count,1);}
+ let count=0;await assert.rejects(provider.generateSummary(context,diagnosis,'brief',{provider:'gemini',key:'test',model:'test'},(...args)=>{count++;return transport(...args)}),e=>e.code===code&&e.quotaExhausted===quota&&!e.message.includes('sensitive'));assert.equal(count,1);}
 });
 const {SummaryResource}=load('components/documents/summary-resource.tsx',{'@/lib/validations/summary':schemas});
 const {SummaryReviewPanel}=load('components/documents/summary-review-panel.tsx',{react:React,'@/lib/validations/summary':schemas});

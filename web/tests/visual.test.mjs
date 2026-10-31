@@ -13,9 +13,21 @@ test('visual contracts reject fabricated citations, wrong kind, executable conte
   assert.throws(()=>schemas.validateVisual(visual,context,diagnosis,'image'));
   assert.throws(()=>schemas.validateVisual(visual,{...context,enough:false},diagnosis,'diagram'));
 });
+
+test('new visual generations reject ellipses, soft hyphens and invisible truncation without altering historical content',()=>{
+ for(const label of ['Cinética cre…','Cinética cre...','Cinética cre\u00ad','Cinética cre\u200b','Cinética -']){
+  const value={...visual,scene:{...visual.scene,edges:[{...visual.scene.edges[0],label}]}};
+  assert.throws(()=>schemas.validateVisual(value,context,diagnosis,'diagram'));
+  assert.equal(schemas.visualContentSchema.safeParse(value).success,true);
+ }
+ const value={...visual,scene:{...visual.scene,edges:[{...visual.scene.edges[0],label:'Se transforma en'}]}};
+ assert.doesNotThrow(()=>schemas.validateVisual(value,context,diagnosis,'diagram'));
+ const layoutClaim={...visual,text:'Los dos nodos superiores representan las dos energías. El nodo inferior conserva su suma sin rozamiento.'};
+ assert.throws(()=>schemas.validateVisual(layoutClaim,context,diagnosis,'diagram'));
+});
 test('provider sends only persisted context, mode, brief and bounded instructions in one call; quote schema never splits a surrogate pair',async()=>{
   const unicodeContext={...context,selectedText:'a'.repeat(499)+'😀 al final'};let calls=0;
-  await provider.generateVisual(unicodeContext,diagnosis,'diagram',generation.visual_brief,'Aclarar la transformación.',{key:'test',model:'test-model'},async(url,init)=>{
+  await provider.generateVisual(unicodeContext,diagnosis,'diagram',generation.visual_brief,'Aclarar la transformación.',{provider:'gemini',key:'test',model:'test-model'},async(url,init)=>{
     calls++;const body=JSON.parse(init.body),input=JSON.parse(body.contents[0].parts[0].text);assert.equal(input.modality,'Diagrama');assert.equal(input.brief,generation.visual_brief);
     assert.equal(input.additionalInstructions,'Aclarar la transformación.');assert.equal(input.ownerId,undefined);assert.equal(init.cache,'no-store');
     assert.equal(body.generationConfig.responseFormat.text.schema.properties.sourceQuote.enum[0],'a'.repeat(499));
@@ -28,7 +40,7 @@ test('invalid provider output, quota, refusal and timeout remain controlled and 
     [async()=>{const e=Error('sensitive');e.name='TimeoutError';throw e},'timeout',false],
     [async()=>Response.json({promptFeedback:{blockReason:'SAFETY'}}),'provider_refused',false],
     [async()=>Response.json({candidates:[{finishReason:'STOP',content:{parts:[{text:JSON.stringify({...visual,consistentWithSource:false})}]}}]}),'invalid_visual',false],
-  ]){let calls=0;await assert.rejects(provider.generateVisual(context,diagnosis,'diagram',generation.visual_brief,'',{key:'test',model:'test-model'},(...args)=>{calls++;return transport(...args)}),
+  ]){let calls=0;await assert.rejects(provider.generateVisual(context,diagnosis,'diagram',generation.visual_brief,'',{provider:'gemini',key:'test',model:'test-model'},(...args)=>{calls++;return transport(...args)}),
     e=>e.code===code&&e.quotaExhausted===quota&&!e.message.includes('sensitive'));assert.equal(calls,1);}
 });
 const {VisualResource}=load('components/documents/visual-resource.tsx',{react:React,'@/lib/validations/visual':schemas});

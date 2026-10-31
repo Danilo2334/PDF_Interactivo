@@ -36,7 +36,7 @@ export function validateSummary(value: unknown, context: AnalysisContext, diagno
 export const SUMMARY_FAILURES = ["provider_unavailable", "provider_refused", "invalid_summary", "timeout"] as const;
 export type SummaryFailureCode = typeof SUMMARY_FAILURES[number];
 export const SUMMARY_MESSAGES: Record<SummaryFailureCode, string> = {
-  provider_unavailable: "Gemini no está disponible o su cuota gratuita se agotó. Espera antes de reintentar; no se usará un proveedor de pago.",
+  provider_unavailable: "El servicio de IA no está disponible o se agotó su cuota. Espera antes de reintentar; no se cambiará de proveedor automáticamente.",
   provider_refused: "No fue posible resumir este contenido. Revisa la selección y su dificultad.",
   invalid_summary: "El resumen o sus conceptos no pudieron verificarse con el PDF. No se publicaron; puedes reintentar.",
   timeout: "La generación agotó su tiempo. Puedes reintentar sin publicar contenido incompleto.",

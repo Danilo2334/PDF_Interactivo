@@ -24,7 +24,7 @@ test('HU028 choice is explicit and optional; unopened initial server markup cont
 test('HU028 reuses owner review decisions without exposing a plaintext editor; approval starts disabled and generation is bounded',()=>{
   const html=render(view);assert.match(html,/Cantidad de preguntas/);assert.match(html,/<option value="1"/);assert.match(html,/<option value="3"/);assert.match(html,/Respuesta correcta/);assert.match(html,/Explicación reservada/);
   assert.match(html,/He revisado estas preguntas/);assert.match(html,/disabled=""[^>]*>Aprobar esta versión/);assert.doesNotMatch(html,/Título del ejemplo|Texto del ejemplo/);assert.match(html,/Editar preguntas del quiz/);
-  const unavailable=render({...view,providerAvailable:false});assert.match(unavailable,/cuota gratuita/);assert.match(unavailable,/disabled=""[^>]*>Generar otra versión del quiz/);
+  const unavailable=render({...view,providerAvailable:false});assert.match(unavailable,/cuota/);assert.match(unavailable,/disabled=""[^>]*>Generar otra versión del quiz/);
 });
 test('HU028 discard and regeneration preserve the approved quiz in its private history',()=>{
   const html=render({...view,head:{...head,current_version:2,decision:'discarded',approved_version_id:record.id,approved_by:record.owner_id,approved_at:record.created_at},

@@ -4124,3 +4124,104 @@ SCRUM-182/185/196, sin crear duplicados. Lectura posterior confirmó un comentar
 por issue y nueva imagen renderizada por nombre. Medios de las tres subtareas:
 SCRUM-182 pasó de 6 a 7, SCRUM-185 de 2 a 3, SCRUM-196 de 4 a 5; todos los
 anteriores permanecen. No se cambiaron estados. Sin merge ni despliegue.
+
+## 2026-10-31 — Integración local de GPT Sol y correcciones de calidad
+
+Autorización del propietario: integrar Sol, corregir etiquetas cortadas y contexto
+insuficiente, revisar quizzes/refuerzos según Jira y probar/documentar sin merge
+ni despliegue. Rama `codex/ia-sol-integracion-contexto`, descendiente del PR #40.
+Se reutiliza la clave OpenAI ya creada en el archivo ignorado `web/.env.local`;
+no se imprime, renueva ni publica. Configuración privada explícita:
+`AI_PROVIDER=openai`, `OPENAI_ANALYSIS_MODEL=gpt-6.1-sol`. Gemini se conserva como
+configuración seleccionable, nunca como respaldo automático ante un error.
+
+Adaptador común de servidor y Responses API con salida estructurada, razonamiento
+bajo, `store:false`, Standard, sin herramientas, conversación previa ni reintentos
+automáticos. Conserva los contratos, citas literales, propiedad/sesión, firmas y
+flujos de revisión. El enum con cita multilínea se codifica como regex anclada
+equivalente y sigue validándose localmente. No hay migraciones ni escrituras SQL.
+Mensajes de disponibilidad/cuota son neutrales al proveedor. `AI_USAGE_LOG=1`
+registra solo modelo y tokens en el servidor para estas pruebas, sin contenido,
+claves o identificadores de usuarios; uso opcional documentado en `web/README.md`.
+
+La suficiencia semántica ahora se evalúa para responder la dificultad concreta,
+no solo reconocer el tema. Se rechazan nuevas etiquetas AI cortadas con elipsis,
+guiones blandos o caracteres invisibles. Una prueba real encontró además una
+descripción que decía «nodos superiores/inferiores» pese al dibujo en una fila:
+se corrigió el prompt con la disposición efectiva del renderizador y se rechaza
+esa afirmación de posición en nuevas generaciones. Las versiones históricas
+siguen siendo consultables; no se reescriben para presentar un resultado corregido.
+
+HU028 define el quiz como opcional después de un refuerzo. La sugerencia
+`interaction` podía elegirse como formato inicial sin generador directo. Ahora
+se conserva como consejo sobre el quiz posterior, no como radio de formato base;
+la API rechaza esa elección inicial antes de mutar. Una elección histórica de ese
+tipo se conserva y se orienta al propietario a elegir un formato soportado.
+No se implementan interacciones, videos u otras funciones de historias futuras.
+
+Pruebas reales de la integración inicial, en compilación de producción local:
+proyecto nuevo `QA-Sol-20261031-integracion`, ID
+`91b849b8-a5e7-4241-8cef-babb910d12ee`, copia del mismo PDF digital QA de comparación.
+Se extrae texto de la página y se confirma el mismo fragmento en el borrador.
+No se modifican documentos personales ni se fabrican estados con SQL.
+
+- Explicación detallada `33ad1c22-c95b-4e10-81a4-e5c72704149f`: análisis,
+  recomendaciones, elección y generación reales; modelo persistido
+  `gpt-6.1-sol`, contenido ready y aprobación pending. Revisión privada preparada.
+  Quiz opcional elegido expresamente, tres preguntas reales y auditoría semántica
+  separada: dos opciones por pregunta, claves/citas revisadas, tres relaciones
+  distintas (suma, compensación, condición). Quiz v1 y refuerzo siguen pendientes.
+- Agua `bee43241-30e9-446b-a6ce-1723d46d9f26`: Sol devuelve insufficient con razón
+  concreta (solo se nombran procesos, faltan definiciones); aviso persistido,
+  recomendaciones bloqueadas, recarga y móvil comprobados. No hay generación.
+- Diagrama con posiciones `fb1c0cce-3fc0-4294-a5df-11bab0774c41`: otro rechazo
+  real por contexto insuficiente; el texto no relaciona energía y posiciones.
+  Se conserva como negativo, sin relajar reglas para aprobarlo.
+- Diagrama conceptual `4716166b-8fcd-46a7-a0cc-d218eb36af36`: nueva dificultad
+  limitada a transformación/suma. Recomendación real de un único tipo, Imagen;
+  modo Diagrama elegido. Etiquetas completas «Alterna con» e «Integra la suma».
+  La descripción inicial tenía el defecto de disposición indicado arriba y no se
+  aprueba. Queda pendiente repetir con la última compilación y conservar v1.
+- Analogía `306f3764-dcc2-4b37-8250-8608873189e9`: fichas en dos compartimentos,
+  correspondencias y límites explícitos, referencia de potencial cero y fricción;
+  situación identificada como ilustrativa, no como hecho añadido al PDF. Pendiente.
+- Resumen `95a219f7-2473-4101-addf-763f58ddb1aa`: 219/700 caracteres, seis
+  conceptos con citas literales, ausencia de rozamiento conservada. Pendiente.
+
+Los seis análisis persistidos reportan el SHA-256 original
+`e7277d66afd7caba47385cfac2f0e55a2eeb4fb7aa7136409fa35300a6347946`.
+Se observaron respuestas autenticadas de la API desde el navegador (sin copiar
+cookies ni claves); algunos eventos antiguos fueron expulsados del buffer, por
+lo que no se presenta el archivo como una traza exhaustiva de todas las peticiones.
+Capturas originales y respuestas conservadas fuera de Git en
+`HU019/Integracion-Sol` del directorio QA habitual.
+
+Consumo de esta primera ejecución: 16 llamadas completadas, USD 0,080198 estimados
+por tokens Standard, no factura/saldo. El flujo de explicación + análisis +
+recomendaciones + quiz con auditoría costó USD 0,026274. El USD 0,419760 de la
+comparación anterior fue por las 16 tareas y 18 llamadas de Astra, no dos respuestas;
+Sol costó USD 0,082072 para ese conjunto anterior. No se activaron pagos nuevos.
+
+Último código: 368/368 pruebas automáticas, lint y build aprobados, TypeScript
+incluido. HTTP real de la primera compilación: login200, API sin sesión401,
+origen ajeno403. Móvil390×844, documento375px de ancho con contenido375px, sin
+desbordamiento en el caso insuficiente. Reinicio final necesario para cargar las
+dos correcciones descubiertas; `web/scripts/start-next.mjs` invalida la sesión.
+Se abrió login nuevo; falta ingreso personal y repetición del diagrama y consejo
+de quiz en esta compilación. No afirmar esa repetición como ejecutada todavía.
+Pendientes HTTPS/HU030/HU032/HU033 anteriores se mantienen separados.
+
+Revisión final del adaptador: el discriminador de proveedor es obligatorio también
+en tipos y se rechaza un valor ausente/desconocido antes de cualquier transporte,
+para no enviar una credencial a un host distinto por un llamador mal configurado.
+El banco de comparación declara explícitamente su transporte Gemini de pruebas
+con clave ficticia; el wrapper es quien hace las llamadas comparativas reales.
+
+Mientras se espera el ingreso personal, se ejecutó además una llamada directa real
+a la función de producción `generateVisual` del último código, con el contexto y
+diagnóstico QA efectivamente persistidos del diagrama conceptual. Resultado
+aceptado: «Transformación en ambos sentidos», «Forma parte de», «Forma parte de»;
+descripción sin nodos superiores/inferiores ni posiciones físicas no aportadas.
+USD 0,008184 estimados por esa llamada; total de esta validación USD 0,088382 en
+17 llamadas completadas. No escribió BD ni sustituye la repetición autenticada
+pendiente. Resultado original conservado en `visual-direct-final.json` del QA.
