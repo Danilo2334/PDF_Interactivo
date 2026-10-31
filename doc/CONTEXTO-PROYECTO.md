@@ -4380,3 +4380,8 @@ Jira: actualizar comentarios existentes SCRUM-226/42/44/45 conservando captura
 anterior y estados; registrar dependencia en un único comentario de SCRUM-48.
 No se adjuntan nuevas capturas porque no hubo una prueba visual/HTTPS nueva.
 Stash d6406e0 intacto. Sin merge de esta preparación, sin main ni cambios de BD.
+
+Entrega de preparación: commit 5baa3d9, PR #42 en borrador hacia develop.
+Jira actualizado en SCRUM-226/42/44/45 sin duplicar comentarios ni evidencias;
+SCRUM-48 conserva un único comentario de dependencia y sigue Por hacer.
+No hay hosting creado ni autorización de despliegue nueva.
