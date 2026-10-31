@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useRef, useState, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useId, useRef, useState, type ReactNode } from "react";
 import type { PDFDocumentLoadingTask, PDFDocumentProxy } from "pdfjs-dist";
 import { renderVisiblePages } from "@/lib/pdf/render-visible-pages";
 import type { PageRenderer } from "@/lib/pdf/render-visible-pages";
@@ -18,6 +18,10 @@ type ViewerProps = {
   onFragmentSelect?: (value: FragmentSelection | null) => void;
   fragmentResetKey?: number;
   onTextSourceChange?: (pdf: PDFDocumentProxy | null) => void;
+  visible?: boolean;
+  onVisiblePageChange?: (number: number) => void;
+  onOpenReinforcements?: (page: number, openedAt: number) => void;
+  navigationKey?: number;
 };
 
 type ViewerStatus =
@@ -34,7 +38,7 @@ const viewerMessages = {
   ready: "PDF disponible. Usa los controles o desplázate para consultar sus páginas.",
 };
 
-export function PdfViewer({ projectId, initialPage = 1, initialFragment = null, onPageSelect, requestDraft, onFragmentSelect, fragmentResetKey, onTextSourceChange }: ViewerProps) {
+export function PdfViewer({ projectId, initialPage = 1, initialFragment = null, onPageSelect, requestDraft, onFragmentSelect, fragmentResetKey, onTextSourceChange, visible = true, onVisiblePageChange, onOpenReinforcements, navigationKey = 0 }: ViewerProps) {
   const [attempt, setAttempt] = useState(0);
   // Only restore on mount; changing the selection must not reload the PDF.
   const [startingPage] = useState(initialPage);
@@ -51,6 +55,8 @@ export function PdfViewer({ projectId, initialPage = 1, initialFragment = null, 
       onFragmentSelect={onFragmentSelect}
       fragmentResetKey={fragmentResetKey}
       onTextSourceChange={onTextSourceChange}
+      visible={visible} onVisiblePageChange={onVisiblePageChange} onOpenReinforcements={onOpenReinforcements}
+      navigationKey={navigationKey} targetPage={initialPage} targetFragment={initialFragment}
       onRetry={() => setAttempt((value) => value + 1)}
     />
   );
@@ -66,7 +72,8 @@ function PdfPages({
   fragmentResetKey,
   onTextSourceChange,
   onRetry,
-}: ViewerProps & { onRetry: () => void }) {
+  visible = true, onVisiblePageChange, onOpenReinforcements, navigationKey = 0, targetPage, targetFragment,
+}: ViewerProps & { onRetry: () => void; targetPage?: number; targetFragment?: FragmentSelection | null }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const navigationRef = useRef<HTMLDivElement>(null);
   const rendererRef = useRef<PageRenderer | null>(null);
@@ -83,6 +90,16 @@ function PdfPages({
   const [errorMessage, setErrorMessage] = useState("");
   const [selectionMode, setSelectionMode] = useState<"text" | "area">("text");
   const [hasFragment, setHasFragment] = useState(false);
+  const visibleRef = useRef(visible), appliedNavigation = useRef(0);
+  useLayoutEffect(() => { visibleRef.current = visible; rendererRef.current?.setActive(visible); }, [visible]);
+  useLayoutEffect(() => {
+    if (!visible || status !== "ready" || !navigationKey || appliedNavigation.current === navigationKey) return;
+    appliedNavigation.current = navigationKey;
+    if (targetPage) rendererRef.current?.goToPage(targetPage);
+    if (targetFragment) {
+      fragmentsRef.current?.restore(targetFragment);
+    } else fragmentsRef.current?.clear();
+  }, [navigationKey, targetPage, targetFragment, status, visible]);
   useEffect(() => { fragmentsRef.current?.clear(); }, [fragmentResetKey]);
 
   const isLoading =
@@ -182,6 +199,7 @@ function PdfPages({
         const fragments = onFragmentSelect ? createPageFragments(pdfjs.TextLayer, value => {
           if (!active) return;
           setHasFragment(value !== null);
+          if (value) setSelectionMode(value.kind);
           if (value) renderer?.goToPage(value.pageNumber);
           onFragmentSelect(value);
         }) : null;
@@ -190,13 +208,13 @@ function PdfPages({
         renderer = renderVisiblePages(
           pdf,
           container!,
-          () => {
+          (visiblePage = 1) => {
             if (!active) return;
             setStatus("ready");
             if (!restoredSelection) {
               restoredSelection = true;
               const page = Number.isInteger(initialPage) && initialPage >= 1 && initialPage <= pdf.numPages ? initialPage : 1;
-              if (page === 1) onPageSelect?.(1);
+              if (page === 1) { onPageSelect?.(visiblePage); onVisiblePageChange?.(visiblePage); }
               else renderer?.goToPage(page);
               if (initialFragment?.pageNumber === page && fragments?.restore(initialFragment)) {
                 setSelectionMode(initialFragment.kind);
@@ -227,11 +245,16 @@ function PdfPages({
             setPageInputError("");
             fragments?.clearOtherPage(number);
             onPageSelect?.(number);
+            onVisiblePageChange?.(number);
           },
-          () => navigationRef.current?.getBoundingClientRect().height ?? 0,
+          () => {
+            const navigation = navigationRef.current;
+            return navigation && window.getComputedStyle?.(navigation).position === "sticky" ? navigation.getBoundingClientRect().height : 0;
+          },
           fragments?.decorate,
         );
         rendererRef.current = renderer;
+        renderer.setActive(visibleRef.current);
       } catch (error) {
         if (!active) return;
 
@@ -260,7 +283,7 @@ function PdfPages({
 
       container.replaceChildren();
     };
-  }, [projectId, initialPage, initialFragment, onPageSelect, onFragmentSelect, onTextSourceChange]);
+  }, [projectId, initialPage, initialFragment, onPageSelect, onFragmentSelect, onTextSourceChange, onVisiblePageChange]);
 
   return (
     <section
@@ -397,6 +420,8 @@ function PdfPages({
                 +
               </button>
             </div>
+            {onOpenReinforcements && <button type="button" data-open-reinforcements disabled={status !== "ready"} onClick={() => onOpenReinforcements(currentPage, performance.now())}
+              className="hidden rounded-lg bg-blue-700 px-3 py-2 text-sm font-semibold text-white disabled:opacity-50 lg:inline-flex">Ver refuerzos de página {currentPage}</button>}
           </div>
           {requestDraft}
           {onFragmentSelect && <div role="group" aria-label="Selección de fragmento" className="mt-3 border-t border-slate-200 pt-3">
@@ -431,7 +456,11 @@ function PdfPages({
           status === "error" ? "hidden" : "mt-4 space-y-6"
         }
       />
-
+      {onOpenReinforcements && status === "ready" && <button type="button" data-open-reinforcements
+        onClick={() => onOpenReinforcements(currentPage, performance.now())}
+        className="fixed bottom-4 right-4 z-20 rounded-lg bg-blue-700 px-4 py-3 text-sm font-semibold text-white shadow-lg lg:hidden">
+        Ver refuerzos de página {currentPage}
+      </button>}
     </section>
   );
 }

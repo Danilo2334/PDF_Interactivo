@@ -143,7 +143,7 @@ test('a failed temporary-object cleanup is not reported as a completed replaceme
 test('changing PDF identity remounts the viewer even when the project ID stays the same', () => {
   const viewer = () => null;
   const { ProjectWorkspace } = load('components/documents/project-workspace.tsx', {
-    react: { useId: () => 'workspace', useState: initial => [initial, () => {}], useCallback: callback => callback, useRef: initial => ({ current: initial }) },
+    react: { useLayoutEffect() {}, useId: () => 'workspace', useState: initial => [initial, () => {}], useCallback: callback => callback, useRef: initial => ({ current: initial }) },
     '@/components/documents/pdf-viewer': { PdfViewer: viewer },
     '@/components/documents/request-list-panel': { RequestListPanel: () => null },
     '@/components/documents/visual-resource': { VisualResource: () => null },

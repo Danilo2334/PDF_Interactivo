@@ -16,13 +16,14 @@ type PageSlot = {
 export type PageRenderer = {
   goToPage: (number: number) => boolean;
   setZoom: (percentage: number) => boolean;
+  setActive: (active: boolean) => void;
   dispose: () => void;
 };
 
 export function renderVisiblePages(
   pdf: PDFDocumentProxy,
   container: HTMLElement,
-  onReady: () => void,
+  onReady: (visiblePage: number) => void,
   onError: (error: unknown) => void,
   onPageChange: (number: number) => void,
   getViewportTop: () => number = () => 0,
@@ -32,6 +33,7 @@ export function renderVisiblePages(
   const requested = new Set<number>([1]);
 
   let stopped = false;
+  let enabled = true;
   let busy = false;
   let renderingPage = 0;
   let renderTask: RenderTask | null = null;
@@ -77,7 +79,7 @@ export function renderVisiblePages(
   }
 
   function releaseDistantPages() {
-    if (!firstPageRendered) return;
+    if (!enabled || !firstPageRendered) return;
     for (const number of requested) {
       const slot = slots.get(number)!;
       const rect = slot.figure.getBoundingClientRect();
@@ -150,9 +152,10 @@ export function renderVisiblePages(
   }
 
   function schedulePageUpdate() {
-    if (stopped || frameId !== null) return;
+    if (stopped || !enabled || frameId !== null) return;
     frameId = window.requestAnimationFrame(() => {
       frameId = null;
+      if (!enabled) return;
       // Un salto rápido puede pasar por una página antes de que el observer la detecte.
       releaseDistantPages();
       updateCurrentPage();
@@ -204,7 +207,7 @@ export function renderVisiblePages(
 
   const observer = new IntersectionObserver(
     (entries) => {
-      if (stopped) return;
+      if (stopped || !enabled) return;
 
       for (const entry of entries) {
         const figure = entry.target as HTMLElement;
@@ -233,7 +236,8 @@ export function renderVisiblePages(
   );
 
   const resizeObserver = new ResizeObserver(() => {
-    const width = container.clientWidth || 900;
+    if (!enabled || !container.clientWidth) return;
+    const width = container.clientWidth;
     if (width !== layoutWidth) refreshLayout(width);
     else schedulePageUpdate();
   });
@@ -242,11 +246,11 @@ export function renderVisiblePages(
   window.addEventListener("resize", schedulePageUpdate);
 
   async function renderRequested() {
-    if (busy || stopped) return;
+    if (busy || stopped || !enabled) return;
     busy = true;
 
     try {
-      while (!stopped) {
+      while (!stopped && enabled) {
         const preferred = priorityPage !== null && requested.has(priorityPage) &&
           slots.get(priorityPage)?.figure.dataset.renderState === "waiting"
           ? priorityPage : undefined;
@@ -319,7 +323,7 @@ export function renderVisiblePages(
           slot.caption.textContent =
             `Página ${number} de ${pdf.numPages}`;
           firstPageRendered = true;
-          onReady();
+          onReady(currentPage);
         } catch (error) {
           if (stopped) break;
 
@@ -379,6 +383,25 @@ export function renderVisiblePages(
   }
 
   return {
+    setActive(active) {
+      if (stopped || enabled === active) return;
+      enabled = active;
+      if (!active) {
+        revision++;
+        renderTask?.cancel();
+        if (frameId !== null) window.cancelAnimationFrame(frameId);
+        frameId = null;
+        return;
+      }
+      const width = container.clientWidth;
+      if (width && width !== layoutWidth) refreshLayout(width);
+      else {
+        requested.add(currentPage);
+        priorityPage = currentPage;
+        schedulePageUpdate();
+        void renderRequested();
+      }
+    },
     goToPage(number) {
       if (stopped || !Number.isInteger(number) || number < 1 || number > pdf.numPages) {
         return false;

@@ -2642,3 +2642,152 @@ Se continúa **HU025 / SCRUM-37**, autorizada por el último mensaje del usuario
 El PR #30 queda preparado para revisión e integración. HU025 se desarrollará
 en una rama descendiente para conservar el diff de cada historia mientras se
 revisa #30. No se ha integrado #30 ni se ha modificado main.
+
+## 2026-10-28 — Definición de rendimiento incorporada para HU025 / SCRUM-108
+
+El propietario definió **ahora**, durante la validación, un requisito que no
+estaba concretado para el panel de refuerzos. Se añadió a la descripción de
+SCRUM-108 conservando sus actividades anteriores; no se atribuye esta definición
+a documentos o decisiones antiguas.
+
+- Máximo **3 segundos** desde que se pulsa «Refuerzos» hasta que los refuerzos
+  guardados de la página activa, o su estado vacío, están visibles y consultables.
+- Un indicador de carga por sí solo no cuenta como apertura. Se incluyen las
+  consultas al servidor necesarias; se excluye generar refuerzos nuevos con IA.
+- Prueba con compilación de producción, sesión iniciada y PDF ya abierto:
+  **tres mediciones con refuerzos y tres sin refuerzos**.
+- Registrar equipo, navegador, red, cantidad/tipo de refuerzos, estado de caché,
+  primera apertura y posteriores, tiempos individuales y máximo.
+- **Cada medición** debe cumplir 3 segundos. Ante un incumplimiento, diagnosticar
+  y corregir; no aumentar el límite para aprobar.
+- Completar conservación de página, zoom, posición y PDF original, con capturas
+  reales y un único comentario breve de resultados.
+
+### HU025 / SCRUM-37: panel separado y lectura conservada
+
+Rama `codex/scrum-37-hu025-panel-refuerzo`, descendiente de HU024
+`3f203a9978e49a64018f8aa64cf125b452bacec1`. PR #30 sigue pendiente de revisión;
+el nuevo PR tendrá esa rama como base para mostrar solo HU025.
+
+- El visor permanece montado al alternar PDF, Solicitudes y Refuerzos. Se
+  pausan renderizado y observers mientras está oculto, conservando canvases,
+  documento abierto y zoom. Ocultar el contenedor no interpreta su ancho cero
+  como un cambio del tamaño del PDF.
+- Se guardan/restauran desplazamiento vertical de la ventana y horizontal de
+  la página. Abrir una solicitud guardada sigue siendo una navegación explícita
+  a su página/selección, sin recargar el PDF ni confirmar un borrador nuevo.
+- Refuerzos muestra únicamente los elementos del documento y página visibles.
+  Se conserva la autorización/RLS existente. Esta presentación de propietario
+  no anticipa la publicación y acceso lector de HU032–HU033.
+- Controles para abrir desde la lectura y cerrar/volver al PDF, con foco
+  recuperado sin desplazar la posición. En pantallas reducidas se añadió un
+  botón compacto fijo; la altura de la navegación solo se descuenta cuando
+  realmente está fija, para no ocultar contenido en móvil.
+- No se añadieron consultas ni escrituras de base de datos. Los refuerzos ya
+  vienen autorizados con el proyecto y se filtran por página en cliente. No se
+  cambiaron migraciones, secretos, permisos ni dependencias.
+
+### Verificación funcional real de HU025
+
+- Cuenta QA existente y PDF digital de 1580 bytes/dos páginas; página 1 con
+  cinco refuerzos aprobados y página 2 con dos recursos visuales. PDF escaneado
+  de 13899 bytes/una página sin refuerzos aprobados para el estado vacío.
+- Se comprobaron títulos/contenido/aprobación, aislamiento entre páginas y el
+  estado vacío del otro documento. Nunca se muestran los elementos de otra
+  página por el solo hecho de estar cargados en el proyecto.
+- Se mantuvieron **página 2, zoom 150 %, scroll vertical 2433,6001 y horizontal
+  120** al cerrar/reabrir. Tres ciclos de producción conservaron exactamente
+  esos valores. CDP registró **cero nuevas solicitudes del PDF** en los ciclos.
+- Móvil 390×844: botón compacto accesible desde la página 2, panel correspondiente,
+  ancho de documento 390/390 sin desbordamiento del cuerpo; cierre con teclado
+  conserva página 2, zoom 150 %, scroll vertical 1879,2000 y horizontal 120.
+- Se detectó que el clic automático de la herramienta desplazaba primero el
+  control sticky hacia su posición original y cambiaba la página. Se repitió
+  con clic de puntero en el control visible y coordenadas observadas; no se
+  presentó aquella interacción de automatización como resultado del producto.
+- Durante la validación se corrigió la pérdida de lectura por desmontaje y el
+  acceso fuera de vista en pantallas reducidas. Pruebas funcionales después de
+  estabilizar el código, sin cambios de desarrollo entre las capturas antes/
+  después. Cero errores de consola observados en la compilación de producción.
+
+### SCRUM-108: medición conforme al criterio definido ahora
+
+**Producción local** (`npm --prefix web run build` seguido de `run start`),
+sesión iniciada y PDF ya abierto. Intel Core i5-11400H 2,70 GHz, 15,77 GiB RAM
+(16 GB nominales), Windows de 64 bits, navegador integrado Chrome 156.0.0.0.
+Conexión Wi-Fi con enlace informado de 54 Mbps, sin limitación artificial.
+Caché del navegador habilitada y JS previamente cargado; recarga completa del
+proyecto por escenario. El PDF usa `cache:no-store` y termina de abrirse antes
+de iniciar el cronómetro. No es una prueba de carga ni de primera visita sin
+caché de toda la aplicación.
+
+Medición desde el clic literal en **Refuerzos** hasta contenido renderizado y
+dos `requestAnimationFrame`, verificando además visibilidad y cinco artículos
+consultables o el texto vacío completo. No se contó un indicador de carga. Los
+datos autorizados ya se cargan con el proyecto; abrir el panel no necesita una
+consulta adicional. Se incluye toda la operación requerida en este diseño y
+no se ejecutó IA para estas pruebas.
+
+| Escenario | Primera apertura | Posterior 1 | Posterior 2 | Máximo |
+| --- | ---: | ---: | ---: | ---: |
+| Página 1, cinco refuerzos guardados | 12,6 ms | 12,8 ms | 12,9 ms | 12,9 ms |
+| Página 1, sin refuerzos guardados | 13,0 ms | 13,6 ms | 11,2 ms | 13,6 ms |
+
+Los cinco refuerzos son un ejemplo, un diagrama, dos resúmenes y una explicación.
+Primera = primera apertura del panel tras recargar y abrir el PDF; posteriores
+= cerrar y reabrir en esa misma sesión. **Las seis mediciones cumplen 3000 ms;
+máximo global 13,6 ms (0,0136 s)**. No se aumentó el límite para aprobar.
+
+Como diagnóstico previo se conservaron mediciones con el navegador oculto:
+20,8/1883,9/1763,7 ms. La planificación de frames variaba en esa condición.
+Las seis mediciones de aceptación se hicieron con el navegador presentado,
+con su estado de visibilidad comprobado; no se ocultaron ni reemplazaron los
+datos del diagnóstico por supuestos resultados rápidos.
+
+Verificación automatizada: **310/310 pruebas**; tras el ajuste móvil se repitieron
+**59/59 casos afectados**, lint sin advertencias y build Turbopack/TypeScript.
+Scripts, mediciones, capturas y resultados reales permanecen fuera de Git en
+`HU019/HU025`. No se generan informes adicionales para Jira; se registrarán
+capturas y un único comentario breve por subtarea al enlazar el commit/PR.
+
+### Registro de pruebas y evidencias de HU025
+
+Se comprobó también en producción «Ver selección en el PDF» sobre la solicitud
+QA existente `806915fa-1acc-4701-99a7-7b5e2f5b9f43`: restaura página 1 y la
+zona rectangular guardada. No se cambió su contenido, estado ni generación.
+
+`hu025-source-check.mjs` pasó: 35 solicitudes y siete publicaciones, los 31/
+cuatro anteriores idénticos y hashes de ambos PDF conservados:
+
+- Digital: `e7277d66afd7caba47385cfac2f0e55a2eeb4fb7aa7136409fa35300a6347946`.
+- Escaneado: `b0bc1809351f249bd352032fbcdd193846e4c44e4199cf4bfbfec24326b71302`.
+
+Ocho capturas reales incorporadas en un único comentario por subtarea:
+SCRUM-107 **10145**, SCRUM-189 **10146**, SCRUM-190 **10147** y SCRUM-108
+**10148**, dos capturas cada uno. La lectura de `renderedBody` confirmó nombres
+y miniaturas resueltas sin duplicados. El script temporal de carga con grants
+se retiró después de subir los archivos. La definición nueva de los 3 segundos
+se leyó nuevamente en SCRUM-108 para comprobar su registro.
+
+Todos los criterios funcionales y las seis mediciones RNF están comprobados.
+Se enlazará el commit/PR en esos mismos comentarios y se registrará el estado
+final de entrega, conservando las imágenes existentes.
+
+### Entrega de HU025
+
+Commit funcional publicado **`92958c9a1c0883af2e08675ecbffc692522746cf`**.
+PR borrador **[#31](https://github.com/Danilo2334/PDF_Interactivo/pull/31)**
+sobre `codex/scrum-36-hu024-revision-regeneracion` (#30), con diff exclusivo
+de HU025. Tras integrar #30, cambiar la base de #31 a develop y revisar diff/
+checks antes de cualquier integración autorizada. No se integró #30 ni #31.
+
+SCRUM-37 **En revisión**, comentario madre único **10149**.
+SCRUM-107/SCRUM-189/SCRUM-190/SCRUM-108 **Finalizado**: los comentarios únicos
+10145/10146/10147/10148 incluyen el PR y commit. Lectura posterior: ocho imágenes
+resueltas, dos por subtarea, conservadas sin nuevas subidas al editar.
+El criterio RNF incorporado ahora quedó satisfecho sin aumentar el límite.
+
+Se continúa **HU026 / SCRUM-38**, tarjeta interactiva, desde una rama descendiente
+de HU025. Main y stash `d6406e0` permanecen intactos. La aplicación de producción
+local sigue activa; para el desarrollo siguiente se cambiará al servidor dev
+de este proyecto de forma controlada, conservando la configuración privada.
