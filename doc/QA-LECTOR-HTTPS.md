@@ -8,7 +8,7 @@ de configuración y documentación. HU030/HU032/HU033 siguen En curso.
 
 | Requisito | Comprobado hoy | Acción necesaria |
 | --- | --- | --- |
-| Hosting de Danilo | Conector Vercel de Francisco, sin equipos accesibles de Danilo. No se consultaron sus proyectos. | Conectar la cuenta personal correcta; confirmar scope/plan antes de crear recursos. |
+| Hosting de Danilo | Lectura y rol OWNER confirmados en el equipo correcto; cuenta personal Hobby activa. Crear proyecto vacío mediante el conector devuelve403. | Resolver el acceso de creación o usar un acceso oficial alternativo autenticado del mismo titular; no desplegar. |
 | Clave privada de servidor | `SUPABASE_SERVER_KEY` ausente en la configuración local. | Usar una clave existente del Supabase correcto, solo como Secret del futuro proyecto QA. No enviarla por chat. |
 | Dominio y sesión de despliegue | No hay origen QA asignado ni epoch compartido configurado para hosting. | Asignar dominio estable y UUID de despliegue común a sus funciones. El wrapper local ya genera su propio epoch. |
 | Retirada editorial | HU036 / SCRUM-48 y sus cuatro subtareas Por hacer; API solo prepare/publish. | Implementar y revisar HU036 para probar retirada real y dejar la muestra sin publicar al terminar. |
@@ -49,8 +49,21 @@ automatizadas aprobadas (incluye PostgreSQL aislado); no son intentos reales.
 ## Configuración futura del proyecto QA
 
 Proyecto separado `pdf-interactivo-qa` propuesto, aún sin ID ni URL reservados.
+Destino confirmado: equipo `danilo-carlosamas-projects`, ID
+`team_I5CBYezIIEWl8FIlhW7vqMR4`. La conexión correcta se llama **Danilo Carlosama**;
+la conexión anterior llamada Vercel corresponde a Francisco y no debe usarse.
+Consulta de identidad, equipo y proyectos correcta tras reiniciar Codex. La lista
+de miembros confirma `danilo2334` con rol OWNER. El intento de crear el proyecto
+vacío (sin repositorio, previews automáticas deshabilitadas) devolvió403:
+`You don't have permission to create the project`. Consulta posterior por nombre:
+cero proyectos. No atribuir la causa a un rol incorrecto ni afirmar que reconectar
+lo resuelve: la respuesta no concreta la causa. CLI Vercel no está instalado, por
+lo que no existe actualmente un acceso alternativo CLI autenticado comprobado.
+No se verificó consumo/cuota restante ni se creó ningún recurso.
 Vercel: Next.js, raíz `web`, Node22.x, `npm ci`, `npm run build`, salida estándar.
 No importar el repositorio ni asociar ramas ahora: eso puede iniciar despliegues.
+Si se resuelve la creación antes del despliegue, crear solamente el proyecto
+vacío en el equipo indicado y comprobar que tiene cero deployments.
 Mantener la publicación deshabilitada en el primer arranque. No tocar main.
 
 | Variable de hosting | Valor/origen requerido |
@@ -70,8 +83,9 @@ No reejecutar migraciones: la de intentos `20261029010922` ya fue conciliada.
 Si se prueba recuperación de cuenta, añadir el callback QA exacto en Supabase
 preservando los existentes. No abrir permisos ni desactivar RLS.
 
-Costo propuesto USD0 de hosting nuevo solo si la cuenta y el uso cumplen Hobby
-personal/no comercial y hay cuota; el plan de Danilo aún no puede verificarse.
+Costo propuesto USD0 de hosting nuevo solo si el uso cumple Hobby personal/no
+comercial y hay cuota. Se confirmó Hobby activo en la cuenta personal de Danilo;
+no se ha comprobado la cuota restante ni contratado un plan para el proyecto QA.
 Sin Pro, tarjetas, dominios comprados ni servicios adicionales.
 [Condiciones Hobby](https://vercel.com/docs/plans/hobby).
 

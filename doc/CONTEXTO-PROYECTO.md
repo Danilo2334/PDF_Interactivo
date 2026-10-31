@@ -4385,3 +4385,44 @@ Entrega de preparación: commit 5baa3d9, PR #42 en borrador hacia develop.
 Jira actualizado en SCRUM-226/42/44/45 sin duplicar comentarios ni evidencias;
 SCRUM-48 conserva un único comentario de dependencia y sigue Por hacer.
 No hay hosting creado ni autorización de despliegue nueva.
+
+### 31/10/2026 — Conexión Vercel de Danilo confirmada tras reiniciar Codex
+
+El usuario agregó la cuenta y reinició Codex. Las herramientas ahora exponen
+dos conexiones seleccionables: usar explícitamente **Danilo Carlosama**, no la
+anterior **Vercel** de Francisco. Consultas reales de solo lectura confirmaron:
+- Usuario `danilo2334`, cuenta personal Hobby activa.
+- Equipo `Danilo Carlosama's projects`, slug `danilo-carlosamas-projects`, ID
+  `team_I5CBYezIIEWl8FIlhW7vqMR4`, coincidente con el equipo por defecto del usuario.
+- Búsqueda por repositorio `Danilo2334/PDF_Interactivo` y por nombre
+  `pdf-interactivo` sin proyectos coincidentes en ese equipo.
+
+Queda resuelto el bloqueo de acceso a la cuenta de Danilo. No equivale a disponer
+de un proyecto QA creado, URL asignada, cuota comprobada ni permiso de despliegue.
+La respuesta de equipo es mínima; no se afirma haber ensayado escritura.
+`doc/QA-LECTOR-HTTPS.md` actualizado con el destino exacto y el estado actual.
+
+Se repitió el comprobador real de configuración local:5 checks correctos y4
+pendientes, salida1 esperada. Siguen faltando SUPABASE_SERVER_KEY, origen QA,
+URL del sitio coincidente y epoch explícito del futuro hosting. El wrapper local
+sí gestiona su epoch. Publicación continúa bloqueada. No se imprimieron valores
+de secretos, no se pidió una clave por chat ni se modificó .env.local.
+
+La dependencia de retirada HU036/SCRUM-48 permanece pendiente; no se inició en
+esta comprobación de acceso. Se conserva la guía de arranque cerrado, seguida
+de validación HTTPS y ensayo público solo cuando se autorice y exista retirada.
+Jira SCRUM-226/42/44/45: actualizar el comentario existente, conservando capturas
+y estados. PR#42 sigue en borrador; solo cambios documentales, sin repetir build
+ni las14 pruebas anteriores por no cambiar código. No hubo nuevas llamadas IA,
+creación de recursos, importación Git, pagos, despliegue, publicación ni merge.
+
+Comprobación posterior de escritura durante esta misma preparación: se intentó
+crear solamente `pdf-interactivo-qa` vacío, Next.js/raízweb/npmci/build,
+sin Git, previews automáticas deshabilitadas y código fuente no público. Vercel
+rechazó POST /v11/projects con403 `You don't have permission to create the project`.
+La lectura posterior de miembros confirma a Danilo como OWNER; nueva búsqueda
+por nombre devuelve cero proyectos. No se creó nada y no se repitió la escritura.
+La causa exacta del403 no está establecida: no asumir rol insuficiente, scopes
+concretos ni que otra reconexión lo resuelva. CLI Vercel no instalado; alternativa
+autenticada de CLI no disponible hoy. El acceso de lectura quedó resuelto, pero
+la creación por conector es ahora un bloqueo distinto y concreto para el QA.
