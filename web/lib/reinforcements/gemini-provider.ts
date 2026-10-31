@@ -17,11 +17,11 @@ const envelopeSchema = z.object({
 
 // One native Gemini call, with no tools, paid-provider fallback or automatic retry.
 export async function generateGeminiJson(config: NonNullable<ReturnType<typeof getGeminiConfiguration>>,
-  input: { instructions: string; data: object; schema: object; maxOutputTokens: number; maxTextLength: number }, transport: typeof fetch = fetch) {
+  input: { instructions: string; data: object; schema: object; maxOutputTokens: number; maxTextLength: number; timeoutMs?: number }, transport: typeof fetch = fetch) {
   try {
     const response = await transport(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(config.model)}:generateContent`, {
       method: "POST", headers: { "x-goog-api-key": config.key, "Content-Type": "application/json" },
-      signal: AbortSignal.timeout(45000), cache: "no-store", redirect: "error",
+      signal: AbortSignal.timeout(Math.min(45000, Math.max(1, input.timeoutMs ?? 45000))), cache: "no-store", redirect: "error",
       body: JSON.stringify({ systemInstruction: { parts: [{ text: input.instructions }] },
         contents: [{ role: "user", parts: [{ text: JSON.stringify(input.data) }] }],
         generationConfig: { candidateCount: 1, maxOutputTokens: input.maxOutputTokens, thinkingConfig: { thinkingLevel: "low" },

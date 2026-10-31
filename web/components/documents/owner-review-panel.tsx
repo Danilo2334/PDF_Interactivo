@@ -5,25 +5,28 @@ import type { ExampleView } from "@/lib/validations/example";
 export type ReviewAction = { action: "edit"; title: string; text: string; expectedVersion: number } | { action: "approve"; confirmed: true; expectedVersion: number } | { action: "discard"; expectedVersion: number };
 const buttonClass = "rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-800 disabled:opacity-50";
 
-export function OwnerReviewPanel({ view, disabled, onReview, visual = false, explanation = false }: { view: Pick<ExampleView, "review" | "versions" | "events">; disabled: boolean; onReview: (action: ReviewAction) => Promise<number | null>; visual?: boolean; explanation?: boolean }) {
+export function OwnerReviewPanel({ view, disabled, onReview, visual = false, explanation = false, readOnlyContent = false,
+  confirmationLabel = "He revisado esta versión y confirmo que es coherente con el PDF.", approvedLocation = "Refuerzos" }: {
+  view: Pick<ExampleView, "review" | "versions" | "events">; disabled: boolean; onReview: (action: ReviewAction) => Promise<number | null>;
+  visual?: boolean; explanation?: boolean; readOnlyContent?: boolean; confirmationLabel?: string; approvedLocation?: string }) {
   const current = view.versions.find(v => v.version === view.review?.current_version);
   const [draft, setDraft] = useState(() => current ? { version: current.version, title: current.title, text: current.text } : null);
   const [confirmed, setConfirmed] = useState(false), [discardVersion, setDiscardVersion] = useState<number | null>(null);
   const titleId = useId(), textId = useId();
   if (!current || !view.review) return null;
-  const outdated = !!draft && draft.version !== current.version;
-  const changed = !!draft && (draft.title !== current.title || draft.text !== current.text);
+  const outdated = !readOnlyContent && !!draft && draft.version !== current.version;
+  const changed = !readOnlyContent && !!draft && (draft.title !== current.title || draft.text !== current.text);
   const discarded = view.review.decision === "discarded";
   return <section aria-label="Revisión del propietario" className="space-y-3 rounded-lg border border-slate-300 p-3 text-sm">
     <h5 className="font-semibold">Tu revisión</h5>
-    {discarded ? <p role="status">Borrador descartado. El PDF permanece intacto.{view.review.approved_version_id ? " La versión aprobada anterior se conserva en Refuerzos." : " No se publicó contenido."}</p> : <>
+    {discarded ? <p role="status">Borrador descartado. El PDF permanece intacto.{view.review.approved_version_id ? ` La versión aprobada anterior se conserva en ${approvedLocation}.` : " No se publicó contenido."}</p> : <>
       <p>Versión {current.version} · {current.origin === "ai" ? "Generada por IA" : "Editada por ti"} · {view.review.decision === "approved" ? "Aprobada por ti" : "Pendiente de aprobación"}</p>
       {view.review.approved_at && <p>Última aprobación: {new Date(view.review.approved_at).toLocaleString("es-CO")}. Una edición nueva necesita su propia aprobación.</p>}
       {outdated && <div role="alert" className="rounded-lg bg-amber-50 p-3">
         <p>Hay una versión más reciente. Tus cambios siguen en estos campos; cópialos si los necesitas antes de cargar la versión actual.</p>
         <button type="button" className={buttonClass} disabled={disabled} onClick={() => { setDraft({ version: current.version, title: current.title, text: current.text }); setConfirmed(false); setDiscardVersion(null); }}>Cargar versión actual</button>
       </div>}
-      {draft && <form onSubmit={event => { event.preventDefault(); if (!disabled && !outdated && changed) {
+      {!readOnlyContent && draft && <form onSubmit={event => { event.preventDefault(); if (!disabled && !outdated && changed) {
         void onReview({ action: "edit", expectedVersion: draft.version, title: draft.title, text: draft.text }).then(version => {
           if (version !== null) { setDraft({ version, title: draft.title.trim(), text: draft.text.trim() }); setConfirmed(false); }
         });
@@ -39,7 +42,7 @@ export function OwnerReviewPanel({ view, disabled, onReview, visual = false, exp
       </form>}
       {view.review.decision === "pending" && <div className="space-y-2">
         <label className="flex items-start gap-2"><input type="checkbox" checked={confirmed} disabled={disabled || outdated || changed}
-          onChange={event => setConfirmed(event.target.checked)} /><span>He revisado esta versión y confirmo que es coherente con el PDF.</span></label>
+          onChange={event => setConfirmed(event.target.checked)} /><span>{confirmationLabel}</span></label>
         <button type="button" className={buttonClass} disabled={disabled || outdated || changed || !confirmed} onClick={() => onReview({ action: "approve", expectedVersion: current.version, confirmed: true })}>Aprobar esta versión</button>
         <button type="button" className={buttonClass} disabled={disabled || outdated} onClick={() => setDiscardVersion(current.version)}>Descartar borrador</button>
         {discardVersion === current.version && !outdated && <div className="space-y-2 rounded-lg bg-amber-50 p-3"><p>Se descartará este borrador sin modificar el PDF ni una versión aprobada anterior.</p>

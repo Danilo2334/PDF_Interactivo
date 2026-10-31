@@ -8,7 +8,7 @@ const schemas=load('lib/validations/regeneration.ts',{'@/lib/validations/example
 const {OwnerReviewPanel}=load('components/documents/owner-review-panel.tsx',{react:React});
 function render(view){const {RegenerationPanel}=load('components/documents/regeneration-panel.tsx',{react:React,'next/navigation':{useRouter:()=>({refresh(){}})},
   '@/lib/reinforcements/use-request-resource':{useRequestResource:()=>({result:{value:view},refresh(){}})},'@/lib/validations/regeneration':schemas,
-  '@/lib/validations/example':reviews,'@/components/documents/owner-review-panel':{OwnerReviewPanel}});
+  '@/lib/validations/example':reviews,'@/components/documents/owner-review-panel':{OwnerReviewPanel},'@/components/documents/quiz-panel':{QuizPanel:()=>null}});
   return renderToStaticMarkup(React.createElement(RegenerationPanel,{request:record,active:true,onChanged(){}}));}
 const view={kind:'explanation',ready:true,providerAvailable:true,processing:false,review:null,versions:[],events:[],job:null};
 test('older explanations enter review only through an explicit prepare action; unsupported formats do not expose regeneration',()=>{
