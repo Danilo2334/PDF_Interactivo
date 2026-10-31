@@ -3440,3 +3440,129 @@ true** conservado; energía **5 pendiente / false**, **3 aprobado / false** cons
 resumen `deeb737f…` aprobado 4 con elección omitir. No publicar los borradores
 6/5 ni los descartes del historial. Mantener control de propietario y aprobación
 fija en la futura publicación. Servidor de producción local en 3000.
+
+## 2026-10-28 — HU032 / SCRUM-44: versión privada preparada; despliegue en espera
+
+Se continúa desde HU031, rama `codex/scrum-44-hu032-publicacion-enlace` sobre
+`ec2082c`, sin merges de la cadena #30–#36. **El propietario pidió esperar antes
+del despliegue** al preguntar si ya se publicaría. No se ha desplegado, creado
+hosting, habilitado facturación ni publicado ningún enlace de experiencia.
+
+La consulta de las conexiones confirmó Vercel y Render bajo la cuenta de
+Francisco, sin proyecto PDF Interactivo en Vercel. No se usaron ni modificaron
+esos entornos. Para SCRUM-226 falta conectar el hosting de Danilo y acordar el
+despliegue. Esa configuración permanece pendiente; las pruebas siguientes son
+de producción **local**, no acreditan acceso externo ni certificado HTTPS.
+
+Implementación de preparación:
+
+- Migración **`20261028232413_immutable_experience_publications.sql`** aplicada
+  una vez y reconciliada con el historial remoto. Se creó inicialmente con la
+  CLI; se conservan todas las migraciones anteriores. La caché local de la CLI
+  queda ignorada en `.gitignore`.
+- `experience_publications` almacena versiones privadas inmutables del contenido,
+  su SHA-256 y la identidad del PDF original. Conserva la ruta privada del objeto;
+  **no duplica ni modifica los bytes del PDF**. Las escrituras solo pasan por un
+  RPC con firma de servidor, dominio de operación, caducidad, usuario activo,
+  propietario, documento actual y bloqueo del proyecto. Lectura RLS propia;
+  sin lectura/escritura anónima, sin inserción/actualización directa autenticada.
+- Un único statement selecciona las versiones aprobadas de refuerzos, recursos
+  aprobados de esa misma versión, tarjetas compatibles y el quiz aprobado de
+  esa fuente. Una edición pendiente no sustituye el quiz aprobado; omitir lo
+  excluye. No se preparan explicaciones privadas sin aprobación ni descartes.
+- El recibo del propietario devuelve títulos, páginas y cantidades; no claves
+  correctas, explicaciones privadas, citas del quiz ni rutas de Storage. La
+  instantánea completa solo es privada. La futura proyección de lector de HU033
+  debe volver a excluir esas claves; no reutilizar el JSON privado en el navegador.
+- Preparar es idempotente por operación y conserva versiones anteriores. La
+  base de publicación requiere confirmación explícita y origen HTTPS configurado
+  en servidor; no toma Host/X-Forwarded-Host ni produce URLs de localhost.
+  El token se crea una sola vez al publicar. Una preparación anterior a otra
+  nueva no se puede publicar por accidente.
+- `PUBLICATION_ORIGIN` y `PUBLICATION_HTTPS_VERIFIED` son exclusivamente de
+  servidor y **siguen sin habilitarse**. No establecer la verificación hasta
+  implementar HU033, desplegar el commit correcto y probar realmente el enlace,
+  PDF, recursos y aislamiento por HTTPS. Todavía no existe la ruta pública de
+  lectura de HU033; este avance prepara su fuente, no acredita el lector.
+- Panel de publicación bajo demanda, lista del contenido fijado, confirmación,
+  estado privado y botón bloqueado cuando falta el entorno publicado. Copiar
+  enlace y confirmación final tienen código, pero **no se probaron con una URL
+  publicada real** y no se dan por finalizados.
+
+Verificaciones:
+
+- **348/348** pruebas automatizadas tras incorporar API, instantánea PostgreSQL
+  aislada, origen, permisos y regresiones del workspace; lint y build/TypeScript
+  correctos. En el primer pase faltaba registrar PublicationPanel en dos fixtures
+  VM de tests: se corrigieron sus mapas de dependencias. No se atribuyen esos
+  16 fallos iniciales al producto.
+- En el proyecto digital se preparó por UI la versión privada **1**, id
+  `8af492b6-64e5-495e-a689-342bdaab1485`. Su hash conservado es
+  `a287c600d5fd4905a5dd806433e6114aa79e919aa75b07fe2e1847672f1fc0c8`.
+  Contiene **7 refuerzos / 2 recursos / 2 quizzes**. Energía fija el quiz aprobado
+  **3**, `4b356f05-1aca-4b7d-80aa-fb573d5d158a`; agua fija el aprobado **4**,
+  `05092a69-f076-4955-a23f-3cd196d90b0b`. No copia los borradores **5/6** ni la
+  explicación nativa de la solicitud personal `1201c3a3…`.
+- Se preparó la versión **2**, id `d87b6877-c681-4efa-af0f-549fddc14c79`,
+  cancelando únicamente la lectura de su respuesta HTTP después del 200 del RPC
+  confirmado. Consulta de BD acreditó la persistencia **antes** del reintento;
+  este devolvió el mismo ID y una sola fila. La primera instantánea/hash y seis
+  tablas de refuerzos/revisión/quiz/multimedia permanecieron idénticas.
+- Proyecto escaneado: versión privada **1**, id
+  `45d33e4d-13c5-4fde-ad5e-8affa90b7a67`, **0/0/0**; identidad diferente a la
+  digital. Ambas sin token, fecha de publicación ni URL. Recarga y reapertura
+  de UI recuperan la versión digital 2 y la escaneada 1.
+- HTTP real: **401** sin sesión GET/POST, **404** otra cuenta GET/POST,
+  **409** documento cambiado, **400** sin confirmación, **403** origen ajeno,
+  **503** al intentar publicar sin HTTPS configurado. RLS otra cuenta devuelve
+  cero filas; actualización directa y firma inválida fallan **42501**. No se
+  crearon estados públicos ni se falseó un dominio para aprobar la prueba.
+- En PostgreSQL **aislado** se probaron URL/token, repetición de publicación,
+  preparación antigua, aprobación/omisión, cambios posteriores y bloqueo de
+  alteración. Su dominio `isolated.example` es solo un fixture del contrato,
+  **no un despliegue ni evidencia real de acceso HTTPS**.
+- Prueba móvil **390×844**, ancho documental **375** sin desbordamiento.
+  Fallo visual detectado: acción flotante del PDF sobre el panel. Corregida
+  suprimiendo esa acción mientras se revisa la publicación, conservando el mismo
+  visor y limitando la supresión al documento actual. Repetición real: cero
+  acciones flotantes al abrir, una al cerrar; consola sin errores. Después del
+  ajuste: **37 casos afectados** y otros **23 del workspace** con nueva regresión,
+  lint y otro build correctos. Viewport restaurado.
+- Los SHA-256 de ambos PDF originales coinciden con HU028/HU031. Siguen las
+  **35 solicitudes digitales**, siete refuerzos y los 31/cuatro registros de
+  la línea base anterior sin cambios. No hubo llamadas de IA ni consumo nuevo.
+- Asesores de seguridad: mismos cuatro grupos anteriores; ninguna advertencia
+  nueva para las tablas/funciones de publicación. No se desactivó RLS ni controles.
+
+Scripts y salidas en `HU019/HU032`, fuera de Git. Se conservan las capturas reales
+de preparación, recarga, estado vacío, móvil y bloqueo HTTPS. Los archivos con
+grants de carga se eliminan tras usarlos. Se actualizarán los comentarios únicos
+de las subtareas con las imágenes y el PR de este avance.
+
+**Pendientes expresos**: despliegue pausado por el propietario, acceso de hosting
+de la cuenta correcta, HU033 lector, URL real única/resolución externa,
+confirmación/copia real, certificado/recursos y prueba de cambios posteriores en
+ese enlace. SCRUM-203/204/122/226 y la historia permanecen **En curso**. No dar
+por terminado HU032, HU031/SCRUM-120, HU029/SCRUM-198 ni HU028/SCRUM-114 por estas
+pruebas de preparación. No activar las variables de publicación ni hacer merges
+para sortear los pendientes. El stash `d6406e0` sigue intacto.
+
+### Entrega de la preparación de HU032
+
+Commit funcional **`75b697e26df02e5c4a22016fb954eee603b9c15a`**, publicado en
+**[PR #37](https://github.com/Danilo2334/PDF_Interactivo/pull/37)**, borrador sobre
+`codex/scrum-43-hu031-vista-previa` (#36). GitHub confirmó abierto, sin merge,
+sin conflictos. No se ha desplegado ni habilitado la publicación.
+
+SCRUM-121 **Finalizado**, comentario único **10175**, cuatro capturas reales
+(preparación, recarga, vacío y móvil corregido). SCRUM-203 **En curso**, **10176**;
+SCRUM-204 **En curso**, **10177**; SCRUM-122 **En curso**, **10178**;
+SCRUM-226 **En curso**, **10179**, una captura del bloqueo real. Lectura posterior
+confirmó los cinco archivos/miniaturas y un comentario por subtarea, enlazado
+al PR. La historia permanece **En curso** con resumen madre único **10180**.
+
+El servidor queda en producción local, puerto 3000. Próximo trabajo: preparar
+HU033 a partir de estas instantáneas privadas, sin activar su acceso público ni
+desplegar mientras el propietario pide esperar. Después de acordar hosting,
+desplegar y probar el lector real; completar HU030 y los pendientes cruzados
+con intentos reales. No sustituirlos con la vista previa ni pruebas aisladas.
