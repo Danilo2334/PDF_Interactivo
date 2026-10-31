@@ -4046,3 +4046,71 @@ Presentación mencionada como fecha tentativa: **martes 10/11/2026**, interpreta
 «de este martes en ocho»; confirmar la fecha definitiva antes de fijar un plan
 cerrado. La subvención observada en las capturas caduca el **24/11/2026**; la
 vigencia de la clave no prolonga ese crédito.
+
+## 2026-10-31 — Comparación real GPT/Gemini antes de cambiar la integración
+
+El propietario autoriza comparar con los mismos PDF y tareas Jira, medir calidad
+y costo y documentar, manteniendo merges y despliegues en espera. Rama separada
+`codex/ia-comparacion-gpt-gemini`, basada en `6a6d56f`; conserva HU030 y las tres
+entradas documentales locales previas. El stash `d6406e0` sigue intacto y sin
+aplicar. No se modifica el proveedor de la aplicación ni la base de datos.
+
+Evaluación auditada en
+`doc/evaluaciones/2026-10-31-ia/README.md`, con respuestas originales, métricas,
+corpus QA y capturas reales. Se consultaron HU018–HU023 y HU028 en Jira. Dos casos
+digitales: energía/péndulo y evaporación/condensación. Ocho tareas por caso:
+análisis, recomendación, explicación detallada, ejemplo práctico, analogía,
+diagrama, resumen breve y quiz. Modelos realmente llamados: Gemini
+`gemini-3.5-flash-lite`, `gpt-6.1-sol` y `gpt-6-astra`. Una muestra por combinación:
+48 resultados finales; 54 llamadas completadas con tokens, por la auditoría
+semántica adicional del quiz. Todos pasan los contratos actuales; eso no equivale
+a aprobación de calidad educativa.
+
+Funciones y validadores actuales, instrucciones/datos iguales comprobados por
+hash; diagnóstico de entrada y refuerzo fuente del quiz congelados para comparar
+componentes, no derivados de un modelo favorecido. Adaptador GPT exclusivamente
+en el script de evaluación, razonamiento bajo y `store:false`. Diez rechazos
+HTTP400 de esquema con cita multilínea se conservaron y repitieron tras codificar
+el enum como regex anclada equivalente; cita literal final igualmente exigida.
+Una petición diagnóstica HTTP400 adicional no tiene uso reportado. No se cuentan
+reservas de presupuesto ni errores sin tokens como costo real demostrado.
+Una interrupción/reanudación puede haber dejado una petición en vuelo sin traza
+de uso en la primera versión del script; no se afirma costo cero para ella. El
+script entregado persiste ahora `in_flight` antes del envío para conservarlo.
+
+Costo estimado por tokens completados a tarifas Standard oficiales: Sol
+USD0,082072 y Astra USD0,419760; total OpenAI USD0,501832, bajo el tope conservador
+de USD3 para la ejecución. Gemini permaneció configurado gratuito; equivalente
+de pago USD0,016259, no cobro acreditado. No se consultó factura/saldo ni se
+activaron pagos. Mediana/máximo por tarea: Gemini2,02/11,58s,
+Sol5,97/10,67s, Astra7,60/15,18s. Son mediciones de funciones/API, no apertura
+de panel ni SLA. El informe incluye tokens, tarifas y tiempos individuales.
+
+Revisión cualitativa de Codex, no ciega ni docente: Sol/Astra separan mejor suma
+mecánica de energía total y explicitan límites. Gemini produjo una analogía de
+agua con el error «burbujas de aire caliente» y dejó condensación sin aclarar.
+No ocultar defectos GPT: ambos cortan etiquetas del diagrama de energía; Sol
+interpreta mal el encabezado QA de página2 como contexto ajeno, y Astra repite
+esa lectura en su analogía. Hay distractores débiles en quizzes. El agua solo
+menciona procesos: GPT reconoce que no basta para definirlos bajo fuente
+exclusiva; cambiar modelo no crea contexto faltante. La revisión detalla cada
+salida sin convertir JSON válido en porcentaje de calidad.
+
+Recomendación: Sol como candidato para un piloto posterior; Astra costó 5,11 veces
+Sol sin mejora decisiva en estos dos temas. No se ha integrado todavía ninguno
+en la aplicación. Ampliar corpus, corregir límites/etiquetas y verificar recorrido
+autenticado antes de sustituir Gemini. No se probaron OCR, video, herramientas
+autónomas ni imágenes generativas. El PDF escaneado sigue sin texto digital;
+ningún modelo recibió sus imágenes. SHA-256 de ambos PDF antes/después idéntico.
+
+Evidencias de esta comparación: visor local explícitamente identificado como
+banco de evaluación, no UI de integración GPT. Capturas de diagnóstico de agua,
+analogía y quiz se vinculan a SCRUM-182/185/196 preservando el único comentario
+de resultados y sus imágenes previas; las madres reciben resumen sin duplicación
+de imágenes. No se transicionan estados por esta evaluación. Persisten los
+pendientes HTTPS/lector HU030/HU032/HU033 y la espera de merge/despliegue.
+
+Verificación de los scripts: sintaxis Node correcta, lint aprobado, preparación
+con las copias del corpus sin consumo de API y hashes iguales. No cambian rutas,
+APIs de Next ni componentes de producción; no se repite ni se atribuye a esta
+entrega el build o las pruebas autenticadas de historias anteriores.

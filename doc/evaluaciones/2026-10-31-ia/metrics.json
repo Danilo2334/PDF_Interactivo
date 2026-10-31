@@ -1,0 +1,155 @@
+[
+  {
+    "model": "gemini-3.5-flash-lite",
+    "accepted": 16,
+    "tasks": 16,
+    "calls": 18,
+    "estimatedUsd": 0.016259000000000003,
+    "medianMs": 2021.5,
+    "maxMs": 11583,
+    "byTask": [
+      {
+        "task": "analysis",
+        "jira": "SCRUM-30",
+        "usd": 0.0008817
+      },
+      {
+        "task": "recommendation",
+        "jira": "SCRUM-31",
+        "usd": 0.0030367
+      },
+      {
+        "task": "explanation",
+        "jira": "SCRUM-32",
+        "usd": 0.0017523999999999999
+      },
+      {
+        "task": "example",
+        "jira": "SCRUM-33",
+        "usd": 0.0021211
+      },
+      {
+        "task": "analogy",
+        "jira": "SCRUM-33",
+        "usd": 0.0021235000000000004
+      },
+      {
+        "task": "visual",
+        "jira": "SCRUM-34",
+        "usd": 0.0023771
+      },
+      {
+        "task": "summary",
+        "jira": "SCRUM-35",
+        "usd": 0.0013391
+      },
+      {
+        "task": "quiz",
+        "jira": "SCRUM-40",
+        "usd": 0.0026274000000000002
+      }
+    ]
+  },
+  {
+    "model": "gpt-6.1-sol",
+    "accepted": 16,
+    "tasks": 16,
+    "calls": 18,
+    "estimatedUsd": 0.082072,
+    "medianMs": 5968.5,
+    "maxMs": 10665,
+    "byTask": [
+      {
+        "task": "analysis",
+        "jira": "SCRUM-30",
+        "usd": 0.005324
+      },
+      {
+        "task": "recommendation",
+        "jira": "SCRUM-31",
+        "usd": 0.012484
+      },
+      {
+        "task": "explanation",
+        "jira": "SCRUM-32",
+        "usd": 0.008924000000000001
+      },
+      {
+        "task": "example",
+        "jira": "SCRUM-33",
+        "usd": 0.011608
+      },
+      {
+        "task": "analogy",
+        "jira": "SCRUM-33",
+        "usd": 0.010824
+      },
+      {
+        "task": "visual",
+        "jira": "SCRUM-34",
+        "usd": 0.012492
+      },
+      {
+        "task": "summary",
+        "jira": "SCRUM-35",
+        "usd": 0.007086
+      },
+      {
+        "task": "quiz",
+        "jira": "SCRUM-40",
+        "usd": 0.013330000000000002
+      }
+    ]
+  },
+  {
+    "model": "gpt-6-astra",
+    "accepted": 16,
+    "tasks": 16,
+    "calls": 18,
+    "estimatedUsd": 0.41976,
+    "medianMs": 7597,
+    "maxMs": 15176,
+    "byTask": [
+      {
+        "task": "analysis",
+        "jira": "SCRUM-30",
+        "usd": 0.02197
+      },
+      {
+        "task": "recommendation",
+        "jira": "SCRUM-31",
+        "usd": 0.06352
+      },
+      {
+        "task": "explanation",
+        "jira": "SCRUM-32",
+        "usd": 0.04407
+      },
+      {
+        "task": "example",
+        "jira": "SCRUM-33",
+        "usd": 0.058539999999999995
+      },
+      {
+        "task": "analogy",
+        "jira": "SCRUM-33",
+        "usd": 0.05852
+      },
+      {
+        "task": "visual",
+        "jira": "SCRUM-34",
+        "usd": 0.06631000000000001
+      },
+      {
+        "task": "summary",
+        "jira": "SCRUM-35",
+        "usd": 0.03148
+      },
+      {
+        "task": "quiz",
+        "jira": "SCRUM-40",
+        "usd": 0.07535
+      }
+    ]
+  }
+]
