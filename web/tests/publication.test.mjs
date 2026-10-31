@@ -53,7 +53,8 @@ test('HU032 real PostgreSQL snapshot filters approvals atomically, remains fixed
    insert into public.reinforcement_quiz_heads values('${requestId}','generate','${versionId}','${quizId}',2,'pending');
    insert into public.reinforcement_quiz_versions values('${quizId}','${requestId}',1,'${versionId}','{"documentId":"${documentId}"}','{"title":"Approved quiz","questions":[{"correctIndex":1,"explanation":"PRIVATE_KEY"}]}'),('${pendingQuizId}','${requestId}',2,'${versionId}','{"documentId":"${documentId}"}','{"title":"Pending quiz"}');`);
   const dir=new URL('../../supabase/migrations/',import.meta.url),file=readdirSync(dir).find(n=>n.endsWith('_immutable_experience_publications.sql'));
-  await db.exec(readFileSync(new URL(file,dir),'utf8'));process.env.REINFORCEMENT_REQUEST_SECRET='a'.repeat(64);
+  await db.exec(readFileSync(new URL(file,dir),'utf8'));
+  await db.exec(readFileSync(new URL(readdirSync(dir).find(n=>n.endsWith('_reader_identification_setting.sql')),dir),'utf8'));process.env.REINFORCEMENT_REQUEST_SECRET='a'.repeat(64);
   async function asUser(id=owner,role='authenticated'){await db.exec('reset role');await db.query("select set_config('request.jwt.claim.sub',$1,false)",[id]);await db.exec(`set role ${role}`);}
   async function call(action,operationId,extra={},mutate=x=>x){const signed=mutate(proof.signPublicationProof({action,operationId,projectId,documentId,userId:owner,...extra}));return(await db.query('select public.change_experience_publication($1,$2) result',[signed.p_payload,signed.p_signature])).rows[0].result;}
   const operation=randomUUID();await asUser();const receipt=await call('prepare',operation);
@@ -72,6 +73,8 @@ test('HU032 real PostgreSQL snapshot filters approvals atomically, remains fixed
   await db.exec('reset role');await db.exec(`update public.reinforcements set title='Changed after snapshot';update public.reinforcement_quiz_heads set choice='omit';update public.reinforcement_media set status='removed';`);
   await asUser();assert.deepEqual((await db.query('select snapshot,snapshot_hash from public.experience_publications where id=$1',[operation])).rows[0],first);
   const second=await call('prepare',randomUUID());assert.equal(second.version,2);assert.deepEqual(second.counts,{reinforcements:1,media:0,quizzes:0});
+  const identified=await call('prepare',randomUUID(),{requireIdentification:true});assert.equal(identified.requireIdentification,true);assert.equal(second.requireIdentification,false);
+  await assert.rejects(call('prepare',identified.id,{requireIdentification:false}),e=>e.code==='PT409');
   const oldPrepared=randomUUID();await call('prepare',oldPrepared);await call('prepare',randomUUID());await assert.rejects(call('publish',oldPrepared,{origin:'https://isolated.example',confirmed:true}),e=>e.code==='PT409');
   await db.exec('reset role');await db.exec(`update public.projects set document_id='${randomUUID()}'`);await asUser();await assert.rejects(call('prepare',randomUUID()),e=>e.code==='PT409');
  }finally{if(previous===undefined)delete process.env.REINFORCEMENT_REQUEST_SECRET;else process.env.REINFORCEMENT_REQUEST_SECRET=previous;await db.close();}

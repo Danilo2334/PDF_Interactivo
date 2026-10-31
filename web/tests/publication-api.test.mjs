@@ -13,6 +13,7 @@ function fixture(options={}){
   '@/lib/supabase/server':{createClient:async()=>db},'@/lib/reinforcements/request-service':{reply:(v,status=200)=>Response.json(v,{status}),readSmallJson:async r=>({body:await r.json()})},
   '@/lib/documents/mutation-request':{isSameOriginMutation:r=>r.headers.get('origin')==='http://localhost'},'@/lib/validations/publication':schemas,
   '@/lib/publications/proof':{signPublicationProof:p=>({p_payload:JSON.stringify(p),p_signature:'isolated'}),publicationOrigin:()=>options.enabled?'https://deployed.example':null},
+  '@/lib/readers/repository':{serverReaderConfigured:()=>!options.missingReader},
  });
  return{calls,get:()=>api.getPublication(new Request('http://localhost/publication?documentId='+documentId),projectId),post:(body={action:'prepare',documentId,operationId:receipt.id},origin='http://localhost')=>api.postPublication(new Request('http://localhost/publication',{method:'POST',headers:{origin},body:JSON.stringify(body)}),projectId)};
 }
@@ -23,6 +24,7 @@ test('HU032 checks owner, active document, origin and confirmation before signed
  }
  const f=fixture();assert.equal((await f.post({},'https://foreign.invalid')).status,403);assert.equal((await f.post({...input,confirmed:false})).status,400);assert.equal(f.calls.length,0);
  assert.equal((await f.post(input)).status,503);assert.equal(f.calls.length,0); // No misleading localhost publication.
+ const missing=fixture({enabled:true,missingReader:true});assert.equal((await missing.post(input)).status,503);assert.equal(missing.calls.length,0);
 });
 test('HU032 owner API returns bounded receipts only and signs the configured origin with unchanged operation identity',async()=>{
  const f=fixture({enabled:true}),input={action:'publish',documentId,operationId:receipt.id,confirmed:true};
