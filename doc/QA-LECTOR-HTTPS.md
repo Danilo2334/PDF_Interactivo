@@ -9,11 +9,14 @@ Cadena preparada para revisión: #42→#43→#44→#45. Código acumulado:392/39
 lint y build correctos. Ya hubo pruebas autenticadas privadas en1280/768/390px:
 indicadores/tarjetas, cantidades5/2/0, miniaturas/número, posición, teclado,
 gráficos, quiz y alternativas digitales/escaneado. Detectaron salto de página
-tras zoom y pérdida de foco del quiz; corregidos en d340243. Falta repetir esos
-casos en la compilación nueva: el reinicio exige otro login, ya solicitado.
-Historias/subtareas siguen En curso. Seis capturas reales nuevas adjuntas en
-SCRUM-125/207/208/126/210 y evidencias de bloqueo anteriores conservadas. Estas
-pruebas no acreditan lector anónimo ni HTTPS. No desplegar todavía.
+tras zoom y pérdida de foco del quiz; corregidos en d340243 y repetidos con éxito
+después del reingreso personal. Página2 conserva125→100→125→150%; reintentar
+enfoca primera respuesta y guardar enfoca Resultado. Ensayo privado4 guardado1/1;
+no es resultado de lector. Retorno móvil conserva página2, zoom100%, posición y
+foco. SHA del PDF intacto; consola limpia. Ocho subtareas Finalizado; HU034/HU035
+En revisión. Seis capturas finales adicionales adjuntas en125/208/127/209/128,
+con un comentario por issue y todas las anteriores conservadas. Estas pruebas
+no acreditan lector anónimo ni HTTPS. No desplegar todavía.
 
 ## Qué falta realmente
 

@@ -4716,3 +4716,71 @@ Retomar sin volver a reiniciar el servidor actual (producción local en3000):
 5. Actualizar los mismos comentarios conservando imágenes; finalizar solo al
    comprobar los criterios. No presentar como repetidos los dos fallos corregidos
    mientras falte login. No desplegar, fusionar ni cerrar sprints.
+
+### 31/10/2026 — Repetición final autenticada HU034/HU035 completada
+
+El usuario confirmó el reingreso. Se reutilizó producción local en3000 con
+d340243, sin reiniciarla ni cambiar código. Este apartado resuelve el pendiente
+de login/repetición del anterior. Windows personal, Node22.23.3, navegador
+integrado Chromium; pruebas con sesión propietaria y las instantáneas privadas
+QA existentes. No son pruebas de publicación anónima ni HTTPS.
+
+Resultados nuevos observados:
+- Página2 estable al completar render y decoraciones:125→100→125→150%; también
+  reducción posterior125/100. El fallo de salto a1 no se reproduce corregido.
+- Marcadores del péndulo conservan proporciones4/24/92/8 y44×44px tras cambiar
+  tamaño. Viewports1280×900,768×1024 y390×844: sin overflow del documento;
+  escritorio con PDF/panel simultáneos y separación20px, tableta/móvil adaptados.
+  El cambio de tamaño puede cambiar la página visible por reflujo; no se afirma
+  conservación de página entre dispositivos, sí sincronización con la visible.
+- Quiz de agua: cargar el resultado previo mantiene el foco de la tarjeta;
+  reintentar mediante Enter enfoca la primera respuesta sin marcar. Espacio y
+  flecha abajo seleccionan la respuesta correcta; Tab llega a Comprobar.
+  Envío real guarda ensayo privado4 el31/10/2026 a22:36:10,1/1 y enfoca el estado
+  Resultado,tabIndex-1. No se generó contenido IA ni se creó intento público.
+- Desde Resultado, seis Shift+Tab recorren Actualizar, Ver original, descripción,
+  ampliar recurso, encabezado y cerrar. Enter devuelve foco al marcador del agua.
+  Recorrido adicional de controles/indicador del péndulo/tarjeta/cierre, entrada
+  numérica2, indicador del agua/gráfico/descripción/reintento/respuesta/Comprobar
+  y cierre realizado con teclado. No se envió otra vez. Se esperó el render de
+  la página antes de continuar entre controles; los eventos sintéticos lanzados
+  mientras la página aún cargaba no se cuentan como fallos de usuario observados.
+- Apertura/cierre móvil medidos en el evento real: mismoID
+  r_1fe5dbacafcc675ea87af2e3f95d522d,página2,scrollX0,scrollY1077.599976,
+  desplazamiento horizontal interno0,zoom100%; valores iguales y foco restaurado.
+- PDF SHA256 posterior:
+  e7277d66afd7caba47385cfac2f0e55a2eeb4fb7aa7136409fa35300a6347946.
+  Una petición PDF de la UI antes de la comprobación de hash; navegación/zoom/
+  panel no descargaron otra copia. La petición expresa de QA añade la del hash.
+  Consola final sin errores ni advertencias. Emulación/viewport restablecidos.
+
+Se conservan los positivos previos de miniaturas/número,cantidades5/2/0,
+alternativas digital/escaneada y39 contrastes: no se presentan como una nueva
+auditoría completa ni se repiten verificaciones sin cambios. El desplazamiento
+vertical usado para comprobar actualización por scroll se provocó mediante
+window.scrollBy en el navegador real; la inyección de rueda no estaba soportada.
+
+Capturas nativas sin composición ni retoque, carpeta externa HU034-035-REAL/
+corregido. Para390px se usó captura CDP del viewport y escala de vista nativa0.8;
+no se modificó CSS ni contenido para la evidencia. Se excluyeron las capturas
+recortadas o con artefactos del API. Nuevos adjuntos comprobados por conector:
+125=10500(zoom150),208=10501(escritorio/zona/tarjeta),127=10502(tableta)/
+10503(móvil),209=10504(foco reintento),128=10505(foco resultado). Las seis
+capturas iniciales y las dos históricas del login siguen intactas. Readback:
+un comentario por issue, imágenes inline y adjuntos con nombre/tamaño; no se
+afirma inspección visual de Jira web sin su sesión propia.
+
+Jira: SCRUM-125/207/208/126 y127/209/210/128 Finalizado por criterios comprobados.
+HU034/SCRUM-46 yHU035/SCRUM-47 En revisión para revisar PR#44/#45 juntos:
+la corrección de página de HU034 está en el descendiente#45. Cadena42→43→44→45
+conservada, todos sin merge.392/392 pruebas, lint y build ya aprobados para
+d340243; al cambiar solo documentación no se repiten ni se reinicia el servidor.
+BD, solo lectura: seis instantáneas,siete refuerzos,cuatro eventos de visibilidad,
+cero intentos de lector,diez ensayos privados (antes9; este envío real añade1).
+Sin migraciones, secretos cambiados, despliegues, merges ni consumo IA.
+
+Próximo trabajo: revisión humana de la cadena y habilitación posterior del QA
+HTTPS con autorización de despliegue y configuración privada pendiente, según
+doc/QA-LECTOR-HTTPS.md. HU030/HU032/HU033 y validación pública de HU036 conservan
+sus pendientes propios; no cerrarlos por estas pruebas locales. Mantener stash
+d6406e0 intacto y no confundir las prácticas privadas con respuestas del lector.
