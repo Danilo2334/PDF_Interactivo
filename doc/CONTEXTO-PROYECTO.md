@@ -4628,3 +4628,13 @@ UI en escritorio/tableta/móvil, teclado completo, indicadores, alternativas,
 solapamientos, foco, conservación de posición/zoom/PDF y consola. No nuevas
 capturas de éxito autenticado, cambios de BD, llamadas IA ni consumo del crédito.
 No desplegar ni fusionar: cadena de revisión42→43→44→HU035. Stash d6406e0 intacto.
+
+Entrega HU035: commitfebac91 publicado en PR#45 en borrador sobre PR#44. Cadena
+actual42→43→44→45, sin merges. Jira47/127/209/210/128 conservan En curso y un
+único comentario de resultados; SCRUM-128 tiene adjunta la captura real del login
+en390px CSS. Readback de los comentarios comprueba uno por issue en ambas
+historias y una imagen en cada subtarea de verificación126/128. Las capturas
+acreditan el bloqueo; los positivos de interfaz siguen pendientes. No se suben
+imágenes de pruebas simuladas ni se sustituyen con capturas del código anterior.
+Servidor local de producción con código acumulado disponible en3000 y login
+abierto para retomar. No se generó ni compartió ninguna contraseña o token.

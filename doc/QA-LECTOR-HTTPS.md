@@ -4,6 +4,15 @@ Estado: preparación local, sin desplegar ni publicar. `develop` en `ee9f805`;
 PR #30–#41 integrados. PR #42 prepara QA; HU036 añade retirada editorial en una
 rama descendiente. HU030/HU032/HU033 y la validación pública de HU036 siguen abiertas.
 
+Continuación local: HU034 y HU035 implementadas en PR#44 y#45, sobre#43.
+Cadena preparada para revisión: #42→#43→#44→#45. Código acumulado:387/387 pruebas,
+lint y build correctos. El reinicio exige login y no hay autofill; las nuevas UI
+de indicadores/adaptabilidad siguen pendientes de prueba autenticada y sus
+historias/subtareas En curso. Capturas de bloqueo identificadas como tales en
+SCRUM-126/128; no son aprobación visual. La emulación CDP390×844 sí devuelve
+ancho CSS390 en login y se restableció después. Tras autenticar, comprobar primero
+estas UI locales antes de la futura fase HTTPS. No desplegar todavía.
+
 ## Qué falta realmente
 
 | Requisito | Comprobado hoy | Acción necesaria |
