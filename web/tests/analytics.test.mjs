@@ -40,7 +40,7 @@ test('HU041 changing filters hides old metrics/export immediately and losing aut
  function exportButton(){return nodes(tree).find(n=>n.type==='button'&&n.props.children==='Exportar CSV');}
  render();assert.equal(exportButton().props.disabled,true);const cleanup=effects.pop()();await tick();render();assert.equal(exportButton().props.disabled,false);assert.equal(nodes(tree).filter(n=>n.type==='dd').length,4);
  nodes(tree).find(n=>n.type==='input'&&n.props.id.endsWith('-from')).props.onChange({target:{value:'2020-01-02'}});cleanup();render();assert.equal(exportButton().props.disabled,true);assert.equal(nodes(tree).filter(n=>n.type==='dd').length,0);
- nodes(tree).find(n=>n.type==='input'&&n.props.id.endsWith('-to')).props.onChange({target:{value:'2020-01-02'}});render();status=401;effects.pop()();await tick();render();assert.equal(exportButton().props.disabled,true);assert.equal(nodes(tree).filter(n=>n.type==='dd').length,0);assert.ok(!nodes(tree).some(n=>n.type==='option'&&n.props.children===doc.name));
+ nodes(tree).find(n=>n.type==='input'&&n.props.id.endsWith('-to')).props.onChange({target:{value:'2020-01-02'}});render();status=401;effects.pop()();await tick();render();assert.equal(exportButton().props.disabled,true);assert.equal(nodes(tree).filter(n=>n.type==='dd').length,0);assert.ok(!nodes(tree).some(n=>n.type==='option'&&n.props.children===doc.name));assert.ok(nodes(tree).some(n=>n.type==='a'&&n.props.href==='/login'&&n.props.children==='Iniciar sesión'));assert.ok(nodes(tree).some(n=>n.type==='div'&&n.props.role==='alert'));
 });
 
 test('HU041 PostgreSQL aggregates all four sources across inclusive Bogota dates, above 10000 attempts, enforces RLS and cascades without persisted aggregates',async()=>{

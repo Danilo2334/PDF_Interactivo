@@ -7,6 +7,7 @@ export function DocumentAnalyticsPanel({ documents, initialFrom, initialTo }: { 
   const [from, setFrom] = useState(initialFrom), [to, setTo] = useState(initialTo), [refresh, setRefresh] = useState(0), [exporting, setExporting] = useState(false);
   const [resource, setResource] = useState<{ key: string; data?: DocumentAnalytics; error?: string } | null>(null);
   const [exportedKey, setExportedKey] = useState<string | null>(null);
+  const [accessError, setAccessError] = useState<number | null>(null);
   const selected = options.find(d => d.projectId === projectId), filter = analyticsFilterSchema.safeParse({ projectId, documentId: selected?.id, from, to });
   const url = filter.success ? "/api/analytics?" + new URLSearchParams({ projectId, documentId: filter.data.documentId, from, to }).toString() : null;
   const key = `${url}:${refresh}`, current = resource?.key === key ? resource : null, data = current?.data;
@@ -16,10 +17,10 @@ export function DocumentAnalyticsPanel({ documents, initialFrom, initialTo }: { 
     void (async () => { try {
       const response = await fetch(url, { cache: "no-store", signal: AbortSignal.any([controller.signal, AbortSignal.timeout(20000)]) });
       const body = await response.json();
-      if (!response.ok) { if ([401, 403].includes(response.status) && !controller.signal.aborted) setOptions([]); throw Error(body.message ?? "No fue posible consultar la analítica."); }
+      if (!response.ok) { if ([401, 403].includes(response.status) && !controller.signal.aborted) { setOptions([]); setAccessError(response.status); } throw Error(body.message ?? "No fue posible consultar la analítica."); }
       const parsed = documentAnalyticsSchema.parse(body), query = new URLSearchParams(url.split("?")[1]);
       if (parsed.document.id !== query.get("documentId") || parsed.document.projectId !== query.get("projectId") || parsed.from !== query.get("from") || parsed.to !== query.get("to")) throw Error("La respuesta no corresponde a los filtros actuales.");
-      if (!controller.signal.aborted) setResource({ key, data: parsed });
+      if (!controller.signal.aborted) { setResource({ key, data: parsed }); setAccessError(null); }
     } catch (e) { if (!controller.signal.aborted) setResource({ key, error: e instanceof Error && e.name === "TimeoutError" ? "La consulta tardó demasiado. Reintenta." : e instanceof TypeError ? "No fue posible conectar. Revisa tu conexión y reintenta." : e instanceof Error ? e.message : "No fue posible consultar la analítica." }); } })();
     return () => controller.abort();
   }, [url, key]);
@@ -28,7 +29,7 @@ export function DocumentAnalyticsPanel({ documents, initialFrom, initialTo }: { 
     setExporting(true); setExportedKey(null);
     try {
       const response = await fetch(`${url}&through=${encodeURIComponent(data.through)}&format=csv`, { cache: "no-store", signal: AbortSignal.timeout(20000) });
-      if (!response.ok) { const body = await response.json(); if ([401, 403].includes(response.status)) setOptions([]); throw Error(body.message ?? "No fue posible exportar la analítica."); }
+      if (!response.ok) { const body = await response.json(); if ([401, 403].includes(response.status)) { setOptions([]); setAccessError(response.status); } throw Error(body.message ?? "No fue posible exportar la analítica."); }
       if (!response.headers.get("content-type")?.startsWith("text/csv")) throw Error("No fue posible validar el archivo exportado.");
       const blob = await response.blob(), objectUrl = URL.createObjectURL(blob), anchor = document.createElement("a");
       anchor.href = objectUrl; anchor.download = `analitica-${data.document.id}-${data.from}-${data.to}.csv`; document.body.append(anchor); anchor.click(); anchor.remove();
@@ -51,7 +52,8 @@ export function DocumentAnalyticsPanel({ documents, initialFrom, initialTo }: { 
     <div className="flex flex-wrap gap-3"><button type="button" disabled={!url || exporting} onClick={() => setRefresh(n => n + 1)} className="min-h-11 rounded-lg border px-4 py-2 disabled:opacity-50">Actualizar indicadores</button>
       <button type="button" disabled={!data || exporting} onClick={() => void download()} className="min-h-11 rounded-lg bg-blue-700 px-4 py-2 font-semibold text-white disabled:opacity-50">{exporting ? "Exportando…" : "Exportar CSV"}</button></div>
     {exportedKey === key && data && <p role="status" className="rounded-lg bg-green-50 p-3 text-sm text-green-900">CSV preparado para {data.document.name}, del {data.from} al {data.to}. Revisa las descargas de tu navegador.</p>}
-    {!options.length && <p role="status">No tienes documentos disponibles para consultar analítica. Si tu sesión cambió, vuelve a iniciar sesión.</p>}
+    {accessError && <div role="alert" className="space-y-2 rounded-lg bg-red-50 p-4 text-sm text-red-800"><p>{accessError === 401 ? "Necesitas iniciar sesión de nuevo para consultar la analítica." : "Tu cuenta ya no tiene permiso para consultar esta analítica."}</p><a href={accessError === 401 ? "/login" : "/dashboard"} className="font-semibold underline">{accessError === 401 ? "Iniciar sesión" : "Volver al panel"}</a></div>}
+    {!accessError && !options.length && <p role="status">No tienes documentos disponibles para consultar analítica.</p>}
     {options.length > 0 && !filter.success && <p role="alert">Elige fechas válidas; la inicial no puede superar la final.</p>}
     {url && !current && <p role="status">Consultando los indicadores del documento…</p>}
     {current?.error && <p role="alert" className="break-words rounded-lg bg-red-50 p-4 text-red-800">{current.error}</p>}
