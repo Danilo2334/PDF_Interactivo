@@ -5639,3 +5639,65 @@ permisos/RLS, vigencia, asociación, control de comentarios y eliminación vincu
 Prueba de UI reproduce respuesta perdida/doble envío sin confirmar prematuramente.
 416/416 pruebas y build/TypeScript aprobados; lint final en curso. Aún faltan
 pruebas reales del formulario y evidencias Jira: no finalizar por estos checks.
+
+### 01/11/2026 — HU040: pruebas reales y límite de prueba táctil
+
+Commit080859f2778b688e546582b63ded9255253c345c,416/416 pruebas,lint y
+build/TypeScript aprobados. QA dpl_8SJ2CYGhRx56QyJNNwdR392asGHh READY en el
+mismo Hobby de Danilo, variables/epoch conservados. PR52 en borrador sobre51;
+cadena48→49→50→51→52, sin merges. Advisors sin avisos de seguridad nuevos para
+feedback; índices recién creados aún sin uso aparecen como información de rendimiento.
+
+Publicación sintética9 reactivada con API normal4→5, sin crear instantánea nueva.
+HTTP identificado:5 POST concurrentes de la misma operación devolvieron200 y el
+mismo recibo2664d03b…; SQL confirmó1 fila. Reenvío idéntico devuelve el original;
+contenido diferente409. Sin valoración/valoración múltiple/comentario1001/readerId
+de cliente400; página manipulada409,refuerzo ajeno404,sin identificación403 y
+origen externo403. El helper de cookies siempre fija Origin al QA: la prueba de
+origen externo se repitió con fetch directo y encabezado real, no con ese helper.
+Otra sesión lectora ve receipt:null. Propietario devuelve enabled:false. RLS con
+clientes normales:propietario4 filas,otra cuenta0,anónimo401.
+
+Navegador real con segunda cuenta QA:ninguna valoración premarcada,ratón selecciona,
+flechas cambian entre las2 opciones y Enter envía. Resumen página1 guardó Útil sin
+comentario. Explicación distinta guardó Sigue sin ser claro y comentario literal
+QA <b>Necesito otro ejemplo</b>; DOM sin nodos b/script/img en su comentario.
+Espacios,CRLF y control U+0001 normalizados antes de guardar en el caso HTTP;
+HTML se conserva como texto plano escapado, nunca se interpreta como contenido.
+Texto sin valoración mantuvo botón deshabilitado aunque hubiera comentario.
+
+Respuesta perdida real:Fetch de ese POST pausado en fase Response con200 después
+de persistir1a84b523…, se descartó únicamente su respuesta. La aplicación mostró
+error de conexión sin inventar éxito; SQL confirmó la fila. Consultar opinión
+guardada recuperó el recibo y recargar conservó la misma opinión, sin permitir
+otro envío. Interceptor limitado a ese recurso Fetch; patrones vaciados después.
+Esquema de página2 guardó otra opinión independiente. Total4 opiniones:3 útil,
+1 unclear,0 duplicados sesión/refuerzo/publicación.13 intentos y11 prácticas
+sin cambios. DOM390×844:ancho390/scroll375,botón44px,consulta por teclado correcta;
+no se presenta una imagen móvil fiable, persiste el límite IAB de capturas.
+
+SCRUM-137 permanece En curso por la comprobación táctil incompleta. CDP directo
+Input.dispatchTouchEvent no está disponible en IAB. Se probó la conversión oficial
+Emulation.setEmitTouchEventsForMouse:produjo pointerdown(pointerType=touch) y
+touchstart ambos isTrusted, pero Input.dispatchMouseEvent agotó el tiempo antes de
+terminar el gesto o seleccionar. NO acredita una selección/envío táctil completo.
+Emulación táctil/conversión se desactivaron,listener temporal se eliminó y esa
+pestaña se cerró. Pestaña limpia repitió ratón/teclado/envío correctamente; todos
+los overrides de ancho se retiraron. No volver a intentar el mismo fallo sin un
+cambio de capacidad. Falta una herramienta compatible o dispositivo táctil real;
+no requiere otra clave,pago o permiso rutinario. HU040 sigue En curso por137.
+
+138/219/220 Finalizado.137 comentario10222,138=10223,219=10224,220=10225;
+madre10221 actualizado, sin comentario adicional.8 capturas auténticas10565–10572,
+2 inline por subtarea y1 comentario cada una, nombres/tamaños/asociaciones
+comprobados.10572 descargado y92834bytes idénticos al JPEG original. Evidencia
+detallada enHU040-REAL fuera de Git; no se copiaron imágenes de otras subtareas.
+Sin afirmar miniaturas Jira vistas en UI:conector,nodos inline y binario verificados.
+
+Publicación9 retirada5→6:GET/POST feedback404,las4 opiniones sin cambio.0 públicas,
+16 visitas y49 aperturas (incluye este recorrido QA),13 intentos y11 prácticas.
+PDF original1580B ySHA256e7277d66afd7caba47385cfac2f0e55a2eeb4fb7aa7136409fa35300a6347946
+idéntico. Sesión de propietario sintético restaurada mediante login normal; sesión
+personal de localhost sin tocar. Sin llamadas IA,nuevas dependencias,pagos o merge.
+Se puede avanzar enHU041 sin fingir aprobado el gesto táctil de137; conservarlo
+como pendiente explícito para la revisión de compatibilidad deHU046.
