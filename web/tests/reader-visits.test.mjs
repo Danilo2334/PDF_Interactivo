@@ -6,6 +6,32 @@ import {PGlite} from '@electric-sql/pglite';
 import {pgcrypto} from '@electric-sql/pglite/contrib/pgcrypto';
 import {load,owner,other,projectId,documentId} from './reinforcement-test-helpers.mjs';
 const visits=load('lib/readers/visit-session.ts'),schemas=load('lib/validations/reader-visits.ts');
+test('HU037 totals clear a previously loaded metric when access expires, and recover only after a successful authorized query',async()=>{
+ const states=[],effects=[];let cursor=0,tree,status=200;
+ const api=load('components/documents/visit-totals-panel.tsx',{
+  react:{useState(initial){const i=cursor++;if(!(i in states))states[i]=initial;return[states[i],v=>{states[i]=typeof v==='function'?v(states[i]):v;}];},useEffect:f=>effects.push(f)},
+  '@/lib/validations/reader-visits':schemas,
+ },{fetch:async()=>Response.json(status===200?{total:2,lastVisitedAt:null,windowMinutes:30}:{message:'Unauthorized'},{status})});
+ function render(){cursor=0;tree=api.VisitTotalsPanel({projectId,documentId});}
+ function nodes(n){return !n||typeof n!=='object'?[]:[n,...[n.props?.children].flat(Infinity).flatMap(nodes)];}
+ async function loadResult(){effects.pop()();await new Promise(r=>setImmediate(r));render();}
+ render();await loadResult();assert.ok(nodes(tree).some(n=>n.props?.className==='text-2xl font-semibold'));
+ status=401;await loadResult();assert.ok(!nodes(tree).some(n=>n.props?.className==='text-2xl font-semibold'));assert.match(nodes(tree).find(n=>n.props?.role==='alert').props.children,/iniciar sesión nuevamente/);
+ status=200;await loadResult();assert.ok(nodes(tree).some(n=>n.props?.className==='text-2xl font-semibold'));assert.ok(!nodes(tree).some(n=>n.props?.role==='alert'));
+});
+test('HU037 browser reporting waits for a visible rendered PDF, excludes previews and retries failures with the same operation',async()=>{
+ function fixture({ready=true,privateTest=false,hidden=false,statuses=[200]}={}){
+  let effect,cleanup;const calls=[],listeners=new Map(),document={visibilityState:hidden?'hidden':'visible',addEventListener:(n,f)=>listeners.set(n,f),removeEventListener:n=>listeners.delete(n)};
+  const api=load('components/readers/reader-open-reporter.tsx',{react:{useState:f=>[f(),()=>{}],useRef:value=>({current:value}),useEffect:f=>{effect=f;}}},
+   {document,navigator:{locks:{request:async(n,options,send)=>send()}},fetch:async(url,init)=>{calls.push({url,operationId:JSON.parse(init.body).operationId});return new Response('',{status:statuses[Math.min(calls.length-1,statuses.length-1)]});}});
+  api.ReaderOpenReporter({endpoint:'/api/read/test',ready,privateTest});cleanup=effect();return{calls,document,listeners,cleanup};
+ }
+ for(const props of [{ready:false},{privateTest:true}]){const f=fixture(props);await new Promise(r=>setImmediate(r));assert.equal(f.calls.length,0);}
+ const hidden=fixture({hidden:true});assert.equal(hidden.calls.length,0);hidden.document.visibilityState='visible';await hidden.listeners.get('visibilitychange')();assert.equal(hidden.calls.length,1);await hidden.listeners.get('visibilitychange')();assert.equal(hidden.calls.length,1);hidden.cleanup();assert.equal(hidden.listeners.size,0);
+ const retried=fixture({statuses:[503,200]});await new Promise(r=>setImmediate(r));assert.equal(retried.calls.length,2);assert.equal(retried.calls[0].operationId,retried.calls[1].operationId);retried.cleanup();
+ const failed=fixture({statuses:[503]});await new Promise(r=>setImmediate(r));assert.equal(failed.calls.length,2);failed.cleanup();
+ const invalid=fixture({statuses:[404]});await new Promise(r=>setImmediate(r));assert.equal(invalid.calls.length,1);invalid.cleanup();
+});
 test('HU037 signed session is private, document-scoped, bounded and stable after a lost initial response',()=>{
  const previous=process.env.REINFORCEMENT_REQUEST_SECRET;process.env.REINFORCEMENT_REQUEST_SECRET='a'.repeat(64);
  try{

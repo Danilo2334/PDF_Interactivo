@@ -8,12 +8,16 @@ export function VisitTotalsPanel({ projectId, documentId }: { projectId: string;
     const controller = new AbortController();
     async function load() {
       setBusy(true); setError("");
+      let message = "No fue posible consultar las visitas. Reintenta.";
       try {
         const response = await fetch(`/api/projects/${projectId}/visits?documentId=${documentId}`, { cache: "no-store", signal: AbortSignal.any([controller.signal, AbortSignal.timeout(15000)]) });
+        if (response.status === 401) message = "Debes iniciar sesión nuevamente para consultar las visitas.";
+        else if (response.status === 403) message = "Ya no tienes permiso para consultar estas visitas.";
+        else if (response.status === 409) message = "El documento cambió. Actualiza el proyecto para consultar sus visitas.";
         const body = await response.json(), parsed = visitTotalsSchema.safeParse(body);
-        if (!response.ok || !parsed.success) throw Error("No fue posible consultar las visitas. Reintenta.");
+        if (!response.ok || !parsed.success) throw Error(message);
         if (!controller.signal.aborted) setTotals(parsed.data);
-      } catch { if (!controller.signal.aborted) setError("No fue posible consultar las visitas. Reintenta."); }
+      } catch { if (!controller.signal.aborted) { setTotals(null); setError(message); } }
       finally { if (!controller.signal.aborted) setBusy(false); }
     }
     void load(); return () => controller.abort();
