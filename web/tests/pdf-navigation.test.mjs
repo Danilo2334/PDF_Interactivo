@@ -349,7 +349,7 @@ test("a render error is reported and can be retried with a fresh renderer", asyn
 
 // Ejercitar los eventos reales del componente con estado y efectos controlados,
 // sin sustituir las pruebas visuales del navegador ni necesitar credenciales.
-function viewerFixture(total = 20, initialPage = 1, initialFragment = null, markers) {
+function viewerFixture(total = 20, initialPage = 1, initialFragment = null, markers, options={}) {
   const states = [], refs = [], effects = [], calls = [], requests = [], zooms = [], selections = [];
   let cursor = 0, refCursor = 0, effectStarted = false, callbacks, tree;
   const restored = [];
@@ -378,6 +378,7 @@ function viewerFixture(total = 20, initialPage = 1, initialFragment = null, mark
     "@/components/documents/pdf-thumbnails": { PdfThumbnails: () => null },
     "@/lib/pdf/page-fragments": { createPageFragments: () => ({ clear() {}, clearOtherPage() {}, setMode() {}, dispose() {}, restore(value) { restored.push(value); return true; } }) },
     "@/lib/pdf/reinforcement-markers": loadModule("lib/pdf/reinforcement-markers.ts"),
+    "@/lib/pdf/readable-page-text": { decorateReadablePageText: async () => () => {} },
     "@/lib/pdf/render-visible-pages": {
       renderVisiblePages(_pdf, _container, ready, error, changed) {
         callbacks = { ready, error, changed }; void Promise.resolve().then(ready);
@@ -394,7 +395,7 @@ function viewerFixture(total = 20, initialPage = 1, initialFragment = null, mark
     console: { error() {} },
   });
   const activated = [];
-  const outer = PdfViewer({ projectId: "test-project", initialPage, initialFragment, onFragmentSelect: initialFragment ? () => {} : undefined, onPageSelect: page => selections.push(page), reinforcementMarkers: markers, onReinforcementActivate: markers ? (id, page) => activated.push([id,page]) : undefined });
+  const outer = PdfViewer({ projectId: "test-project", initialPage, initialFragment, onFragmentSelect: initialFragment ? () => {} : undefined, onPageSelect: page => selections.push(page), reinforcementMarkers: markers, onReinforcementActivate: markers ? (id, page) => activated.push([id,page]) : undefined, ...options });
   states.length = 0;
   const Pages = outer.type;
   function nodes(node) {
@@ -541,4 +542,28 @@ test('HU034 controls and page input update the available reinforcement list with
   const button=f.nodes().find(n=>n.type==='button'&&Array.isArray(n.props.children)&&n.props.children.at(-1)==='Agua');button.props.onClick();assert.deepEqual(f.activated,[['other',2]]);
   f.enter('3');assert.deepEqual(titles(),[]);assert.ok(f.nodes().some(n=>n.type==='p'&&n.props.children==='Esta página no tiene refuerzos disponibles.'));
   f.callbacks.changed(1);f.render();assert.deepEqual(titles(),['Energía']);assert.equal(f.requests.length,1);
+});
+
+test('HU035 page controls remain operable with paused hidden canvases without scrolling a hidden PDF',async t=>{
+  const pages=[],f=viewerFixture(4,1,null,[],{visible:false,pagesHidden:true,onHiddenNavigate:n=>pages.push(n),floatingReinforcements:false});t.after(()=>f.dispose());await settle();f.render();
+  assert.equal(f.button('Siguiente').props.disabled,false);f.button('Siguiente').props.onClick();f.render();assert.equal(f.counter(),'Página 2 de 4');
+  f.enter('4');assert.deepEqual(pages,[2,4]);assert.equal(f.counter(),'Página 4 de 4');assert.deepEqual(f.calls,[]);assert.equal(f.requests.length,1);
+  assert.equal(f.labelled('Aumentar zoom').props.disabled,true);assert.equal(f.button('Mostrar miniaturas').props.disabled,true);
+  assert.ok(f.nodes().some(n=>n.props?.ref&&n.props.hidden===true));assert.ok(!f.nodes().some(n=>n.type==='button'&&n.props['data-open-reinforcements']!==undefined));
+});
+
+test('HU035 zoom keeps its active page through delayed decoration and reanchors after preceding page heights settle',async t=>{
+  let hold=false,finish;const heights={1:1000,2:1000};
+  const f=rendererFixture({count:3,heights,decorate:async page=>{if(hold&&page.pageNumber===2)await new Promise(resolve=>{finish=resolve;});return()=>{};}});t.after(()=>f.renderer.dispose());
+  await settle();f.renderer.goToPage(2);await settle();f.flush();hold=true;f.renderer.setZoom(125);await settle();
+  // Browser layout can temporarily clamp scroll while old page/text nodes go away.
+  f.browser.scrollTo({top:300});f.flush();assert.equal(f.changes.at(-1),2);
+  heights[1]=1400;finish();await settle();f.flush();assert.equal(f.changes.at(-1),2);assert.equal(f.browser.scrollY,300+1400+24-70);
+});
+
+test('HU035 an intentional wheel movement cancels the temporary zoom anchor',async t=>{
+  let hold=false,finish;
+  const f=rendererFixture({count:3,decorate:async page=>{if(hold&&page.pageNumber===2)await new Promise(resolve=>{finish=resolve;});return()=>{};}});t.after(()=>f.renderer.dispose());
+  await settle();f.renderer.goToPage(2);await settle();f.flush();hold=true;f.renderer.setZoom(125);await settle();
+  f.listeners.get('wheel')();f.scrollToPage(1);f.flush();assert.equal(f.changes.at(-1),1);finish();await settle();f.flush();assert.equal(f.changes.at(-1),1);
 });

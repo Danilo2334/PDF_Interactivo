@@ -44,6 +44,7 @@ export function renderVisiblePages(
   let zoom = 100;
   let revision = 0;
   let layoutWidth = container.clientWidth || 900;
+  let layoutAnchorPage: number | null = null;
 
   function displayWidth(slot: PageSlot) {
     return Math.min(layoutWidth, slot.naturalWidth) * zoom / 100;
@@ -63,6 +64,9 @@ export function renderVisiblePages(
   }
 
   function refreshLayout(width: number) {
+    // Text alternatives and page decorations settle asynchronously. Do not let
+    // an intermediate layout select the previous page while zoom is redrawing.
+    layoutAnchorPage = currentPage;
     layoutWidth = width;
     revision++;
     renderTask?.cancel();
@@ -81,6 +85,7 @@ export function renderVisiblePages(
   function releaseDistantPages() {
     if (!enabled || !firstPageRendered) return;
     for (const number of requested) {
+      if (number === layoutAnchorPage) continue;
       const slot = slots.get(number)!;
       const rect = slot.figure.getBoundingClientRect();
       if (rect.bottom >= -200 && rect.top <= window.innerHeight + 200) continue;
@@ -114,6 +119,7 @@ export function renderVisiblePages(
   }
 
   function updateCurrentPage() {
+    if (layoutAnchorPage !== null) return;
     const top = Math.max(0, getViewportTop());
     const bottom = window.innerHeight;
     if (top >= bottom) return;
@@ -219,6 +225,7 @@ export function renderVisiblePages(
         if (entry.isIntersecting) {
           requested.add(number);
         } else {
+          if (number === layoutAnchorPage) { requested.add(number); continue; }
           requested.delete(number);
 
           if (renderingPage === number) {
@@ -244,6 +251,9 @@ export function renderVisiblePages(
   resizeObserver.observe(container);
   window.addEventListener("scroll", schedulePageUpdate, { passive: true, capture: true });
   window.addEventListener("resize", schedulePageUpdate);
+  const cancelLayoutAnchor = () => { layoutAnchorPage = null; schedulePageUpdate(); };
+  window.addEventListener("wheel", cancelLayoutAnchor, { passive: true });
+  window.addEventListener("touchstart", cancelLayoutAnchor, { passive: true });
 
   async function renderRequested() {
     if (busy || stopped || !enabled) return;
@@ -351,6 +361,13 @@ export function renderVisiblePages(
       }
     } finally {
       busy = false;
+      if (!stopped && enabled && layoutAnchorPage !== null && slots.get(layoutAnchorPage)?.figure.dataset.renderState === "ready") {
+        const anchor = layoutAnchorPage;
+        scrollToPage(anchor);
+        layoutAnchorPage = null;
+        reportCurrentPage(anchor);
+        schedulePageUpdate();
+      }
     }
   }
 
@@ -370,6 +387,8 @@ export function renderVisiblePages(
     resizeObserver.disconnect();
     window.removeEventListener("scroll", schedulePageUpdate, true);
     window.removeEventListener("resize", schedulePageUpdate);
+    window.removeEventListener("wheel", cancelLayoutAnchor);
+    window.removeEventListener("touchstart", cancelLayoutAnchor);
     if (frameId !== null) window.cancelAnimationFrame(frameId);
     requested.clear();
     renderTask?.cancel();
@@ -387,6 +406,7 @@ export function renderVisiblePages(
       if (stopped || enabled === active) return;
       enabled = active;
       if (!active) {
+        layoutAnchorPage = null;
         revision++;
         renderTask?.cancel();
         if (frameId !== null) window.cancelAnimationFrame(frameId);
@@ -406,6 +426,8 @@ export function renderVisiblePages(
       if (stopped || !Number.isInteger(number) || number < 1 || number > pdf.numPages) {
         return false;
       }
+
+      layoutAnchorPage = null;
 
       // El espacio ya existe aunque su canvas todavía no se haya renderizado.
       scrollToPage(number);

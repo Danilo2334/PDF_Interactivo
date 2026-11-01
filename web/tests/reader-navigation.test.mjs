@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {load} from './reinforcement-test-helpers.mjs';
 
-function fixture(){
+function fixture(wide=false){
   class Element {
     isConnected=true;scrollLeft=72;focused=0;scrolled=0;
     focus(){this.focused++;document.activeElement=this;}
@@ -21,6 +21,7 @@ function fixture(){
       useRef(initial){return refs[refCursor++]??=( {current:initial} );},useCallback:f=>f,useMemo:f=>f(),useLayoutEffect:f=>effects.push(f),useEffect(){}},
     'next/image':{default:()=>null},'@/components/documents/pdf-viewer':{PdfViewer},'@/components/documents/visual-resource':{VisualResource:()=>null},
     '@/components/documents/summary-resource':{SummaryResource:()=>null},'@/lib/validations/reader':{},'@/components/readers/reader-quiz':{ReaderQuiz:()=>null},
+    '@/lib/readers/layout':{useWideReader:()=>wide},
   },{window,document,HTMLElement:Element,CSS:{escape:x=>x}});
   const view={name:'QA',version:1,privateTest:true,items:[{id:'first',title:'Energía',pageNumber:1,initialExpanded:false,selection:null},{id:'second',title:'Péndulo',pageNumber:1,initialExpanded:true,selection:null},{id:'other',title:'Agua',pageNumber:2,initialExpanded:false,selection:null}]};
   function nodes(n){if(!n||typeof n!=='object')return [];return[n,...[n.props?.children].flat(Infinity).flatMap(nodes)];}
@@ -50,4 +51,15 @@ test('HU034 opening the already selected panel cannot overwrite the saved readin
   f.button('Refuerzos').props.onClick();f.render();f.button('PDF original').props.onClick();f.render();assert.equal(f.window.scrollY,630);
   f.pdf().props.onVisiblePageChange(2);f.render();f.button('Refuerzos').props.onClick();f.render();f.cards()[0].props.onSource();f.render();
   assert.equal(f.pdf().props.initialPage,2);assert.equal(f.pdf().props.navigationKey,1);assert.equal(f.pdf().props.visible,true);
+});
+
+test('HU035 wide screens keep the PDF active beside the panel and narrow screens retain page controls with paused canvases',()=>{
+  for(const wide of [false,true]){
+    const f=fixture(wide);f.button('Refuerzos').props.onClick();f.render();
+    assert.equal(f.pdf().props.visible,wide);assert.equal(f.pdf().props.pagesHidden,!wide);assert.equal(f.pdf().props.floatingReinforcements,false);
+    assert.ok(f.nodes().filter(n=>n.props?.ref).every(n=>n.type!=='div'||n.props.hidden!==true));
+    f.pdf().props.onHiddenNavigate(2);f.render();assert.deepEqual(f.cards().map(n=>n.props.item.title),['Agua']);
+    f.window.scrollY=130;f.button('Cerrar refuerzos y volver al PDF').props.onClick();f.render();
+    assert.equal(f.pdf().props.visible,true);assert.equal(f.pdf().props.initialPage,2);assert.equal(f.pdf().props.navigationKey,1);assert.equal(f.window.scrollY,130);
+  }
 });

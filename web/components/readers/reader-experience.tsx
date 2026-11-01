@@ -7,6 +7,7 @@ import { SummaryResource } from "@/components/documents/summary-resource";
 import { readerReplySchema, type ReaderItem, type ReaderView } from "@/lib/validations/reader";
 import { ReaderQuiz } from "@/components/readers/reader-quiz";
 import type { FragmentSelection } from "@/lib/pdf/fragment-selection";
+import { useWideReader } from "@/lib/readers/layout";
 function ReaderCard({ item, endpoint, onSource, privateTest, expanded, onToggle }: { item: ReaderItem; endpoint: string; onSource: () => void; privateTest: boolean; expanded: boolean; onToggle: () => void }) {
   const id = useId();
   return <article data-reader-item={item.id} className="min-w-0 space-y-3 rounded-xl border border-slate-200 bg-white p-4">
@@ -24,42 +25,58 @@ function ReaderCard({ item, endpoint, onSource, privateTest, expanded, onToggle 
   </article>;
 }
 export function Reading({ view, endpoint }: { view: ReaderView; endpoint: string }) {
+  const wide = useWideReader();
   const [page, setPage] = useState(1), [panel, setPanel] = useState(false), [navigation, setNavigation] = useState<{ page: number; fragment: FragmentSelection | null; key: number }>({ page: 1, fragment: null, key: 0 });
-  const [selected, setSelected] = useState<string | null>(null), [expanded, setExpanded] = useState(() => new Set(view.items.filter(i => i.initialExpanded).map(i => i.id)));
+  const [activation, setActivation] = useState(0), [expanded, setExpanded] = useState(() => new Set(view.items.filter(i => i.initialExpanded).map(i => i.id)));
+  const selected = useRef<string | null>(null);
   const pdf = useRef<HTMLDivElement>(null), content = useRef<HTMLElement>(null), position = useRef<{ x: number; y: number; page: number; horizontal: number; trigger: HTMLElement | null; markerId?: string } | null>(null);
   const markers = useMemo(() => view.items.map(item => ({ id: item.id, title: item.title, pageNumber: item.pageNumber, selection: item.selection })), [view.items]);
   const reportPage = useCallback((page: number) => setPage(page), []);
   const openPanel = useCallback((currentPage: number, markerId?: string) => {
     const figure = pdf.current?.querySelector<HTMLElement>(`[data-pdf-page="${currentPage}"]`);
     position.current = { x: window.scrollX, y: window.scrollY, page: currentPage, horizontal: figure?.scrollLeft ?? 0, trigger: document.activeElement instanceof HTMLElement ? document.activeElement : null, markerId };
-    setSelected(markerId ?? null); setPage(currentPage);
+    selected.current = markerId ?? null; setPage(currentPage); setActivation(n => n + 1);
     if (markerId) setExpanded(previous => new Set(previous).add(markerId));
     setPanel(true);
   }, []);
   const openMarker = useCallback((id: string, currentPage: number) => openPanel(currentPage, id), [openPanel]);
   const openPagePanel = useCallback((currentPage: number) => openPanel(currentPage), [openPanel]);
+  const navigateFromPanel = useCallback((currentPage: number) => {
+    position.current = null; setPage(currentPage);
+    setNavigation(previous => ({ page: currentPage, fragment: null, key: previous.key + 1 }));
+  }, []);
   useLayoutEffect(() => {
     if (panel) {
-      const target = selected ? content.current?.querySelector<HTMLElement>(`[data-reader-item="${CSS.escape(selected)}"]`) : content.current;
-      target?.scrollIntoView({ block: "start", behavior: "instant" }); target?.querySelector<HTMLButtonElement>("button")?.focus({ preventScroll: true });
+      const target = selected.current ? content.current?.querySelector<HTMLElement>(`[data-reader-item="${CSS.escape(selected.current)}"]`) : content.current;
+      target?.scrollIntoView({ block: wide ? "nearest" : "start", behavior: "instant" }); target?.querySelector<HTMLButtonElement>("button")?.focus({ preventScroll: true });
     } else if (position.current) {
       const p = position.current, figure = pdf.current?.querySelector<HTMLElement>(`[data-pdf-page="${p.page}"]`);
       if (figure) figure.scrollLeft = p.horizontal;
       const trigger = p.trigger?.isConnected ? p.trigger : p.markerId ? pdf.current?.querySelector<HTMLElement>(`[data-reinforcement-id="${CSS.escape(p.markerId)}"]`) : null;
       trigger?.focus({ preventScroll: true }); window.scrollTo({ left: p.x, top: p.y, behavior: "instant" });
+    } else if (activation > 0) {
+      pdf.current?.querySelector<HTMLElement>("h2")?.focus({ preventScroll: true });
     }
-  }, [panel, selected]);
+  }, [panel, activation, wide]);
   return <>
     <div role="group" aria-label="Secciones de lectura" className="flex flex-wrap gap-2"><button type="button" aria-pressed={!panel} onClick={() => setPanel(false)} className="rounded-lg border px-3 py-2">PDF original</button><button type="button" aria-pressed={panel} onClick={() => { if (!panel) openPanel(page); }} className="rounded-lg border px-3 py-2">Refuerzos</button></div>
     <p role="status" className="text-sm text-slate-700">Página {page}: {view.items.filter(item => item.pageNumber === page).length} refuerzos disponibles.</p>
-    <div ref={pdf} hidden={panel}><PdfViewer key={endpoint} projectId="reader" sourceUrl={`${endpoint}/assets/pdf`} visible={!panel} initialPage={navigation.page} initialFragment={navigation.fragment} navigationKey={navigation.key}
-      onVisiblePageChange={reportPage} onOpenReinforcements={openPagePanel} reinforcementMarkers={markers} onReinforcementActivate={openMarker} /></div>
-    <section ref={content} hidden={!panel} aria-label={`Refuerzos de la página ${page}`} className="space-y-4"><button type="button" onClick={() => setPanel(false)} className="rounded-lg border px-3 py-2">Cerrar refuerzos y volver al PDF</button><h2 className="text-xl font-semibold">Refuerzos de la página {page}</h2>
+    <div className="reader-layout grid min-w-0 items-start gap-5 lg:grid-cols-[minmax(0,3fr)_minmax(18rem,2fr)]">
+    <div ref={pdf} className="min-w-0"><PdfViewer key={endpoint} projectId="reader" sourceUrl={`${endpoint}/assets/pdf`} visible={!panel || wide} pagesHidden={panel && !wide} onHiddenNavigate={navigateFromPanel} floatingReinforcements={false} includeReadableText initialPage={navigation.page} initialFragment={navigation.fragment} navigationKey={navigation.key}
+      onVisiblePageChange={reportPage} onOpenReinforcements={openPagePanel} reinforcementMarkers={markers} onReinforcementActivate={openMarker} />
+      {panel && !wide && <p className="mt-3 text-sm text-slate-700">Los controles de página siguen disponibles. Cierra los refuerzos para volver al PDF y ajustar el zoom conservado.</p>}
+    </div>
+    <section ref={content} hidden={!panel} aria-label={`Refuerzos de la página ${page}`} className="min-w-0 space-y-4 rounded-xl border border-slate-200 bg-white p-4 lg:sticky lg:top-4 lg:max-h-[calc(100dvh-2rem)] lg:overflow-y-auto"><button type="button" onClick={() => setPanel(false)} className="rounded-lg border px-3 py-2">Cerrar refuerzos y volver al PDF</button><h2 className="text-xl font-semibold">Refuerzos de la página {page}</h2>
       {!view.items.some(i => i.pageNumber === page) && <p>Esta página no tiene refuerzos publicados para consultar.</p>}
       {view.items.filter(i => i.pageNumber === page).map(item => <ReaderCard key={item.id} item={item} endpoint={endpoint} privateTest={view.privateTest} expanded={expanded.has(item.id)}
         onToggle={() => setExpanded(previous => { const next = new Set(previous); if (next.has(item.id)) next.delete(item.id); else next.add(item.id); return next; })}
         onSource={() => { position.current = null; setNavigation(p => ({ page: item.pageNumber, fragment: item.selection as FragmentSelection | null, key: p.key + 1 })); setPanel(false); }} />)}
     </section>
+    {!panel && wide && <aside aria-label="Ayuda de refuerzos" className="mt-8 rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-950">
+      <h2 className="font-semibold">Lee el PDF y consulta sus refuerzos</h2>
+      <p className="mt-2">Activa un indicador numerado o el botón Refuerzos. El contenido de la página aparecerá aquí, junto al PDF.</p>
+    </aside>}
+    </div>
   </>;
 }
 export function ReaderExperience({ token, endpointOverride }: { token: string; endpointOverride?: string }) {
@@ -93,7 +110,7 @@ export function ReaderExperience({ token, endpointOverride }: { token: string; e
       setName(""); setEmail(""); setGate(null); setAttempt(a => a + 1);
     } catch { setError("No fue posible completar la identificación. Reintenta."); } finally { setBusy(false); }
   }
-  return <main className="mx-auto min-w-0 max-w-5xl space-y-5 px-4 py-6 sm:px-6">
+  return <main className="reader-experience mx-auto min-w-0 max-w-7xl space-y-5 px-4 py-6 sm:px-6">
     <p className="font-semibold text-blue-800">PDF Interactivo · Lectura</p>
     <h1 className="break-words text-2xl font-bold">{view?.name ?? gate?.name ?? "Abrir experiencia"}</h1>
     {(view?.privateTest || gate?.privateTest) && <p role="status" className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm font-semibold">Prueba privada del lector con sesión del propietario. No acredita acceso anónimo ni publicación HTTPS.</p>}

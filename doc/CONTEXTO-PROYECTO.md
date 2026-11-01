@@ -4569,3 +4569,218 @@ páginas con distinta cantidad/vacío, zoom, miniaturas, teclado, foco y posici�
 SHA del original y consola. HU034 y sus subtareas siguen En curso; no presentar
 las capturas de la versión anterior como prueba del resultado nuevo. Se continúa
 con trabajo independiente de accesibilidad mientras se conserva este pendiente.
+
+Entrega HU034: commit54aa054 publicado en PR#44 en borrador sobre PR#43.
+Jira46/125/207/208/126 con un único comentario por issue y estados En curso.
+SCRUM-126 incluye la captura real del bloqueo de login de la compilación nueva;
+no se usó como evidencia de que los indicadores ya se vieron funcionar.
+
+### 31/10/2026 — HU035: disposición adaptable, teclado y alternativa digital
+
+Continuación autorizada sin intervención del usuario. HU035/SCRUM-47 y
+127/209/210/128 pasan a En curso. Rama
+`codex/scrum-47-hu035-accesibilidad-lector` descendiente de54aa054/PR#44.
+
+Implementación sobre el lector y el visor compartido, preservando valores por
+defecto del workspace del propietario:
+- Escritorio (media query64rem): PDF activo y panel en columnas con mínimos de
+  ancho explícitos; panel con scroll propio y ayuda cuando está cerrado. El
+  breakpoint usa useSyncExternalStore con snapshot seguro para SSR y limpieza
+  del listener. No se reinicia la descarga del PDF al abrir una tarjeta.
+- Pantallas menores: se pausan/ocultan solo las páginas al mostrar el panel,
+  conservando controles de página. Cambiar página actualiza los refuerzos y se
+  aplica al volver al PDF; no desplaza un canvas oculto ni restaura otra página.
+  Zoom y miniaturas permanecen visibles pero deshabilitados mientras las páginas
+  están ocultas, con explicación. Se quita el botón flotante del lector para
+  evitar cubrir contenido; el workspace mantiene su comportamiento previo.
+- Foco visible, controles/etiquetas de radio de44px, restauración al disparador
+  y foco en el encabezado PDF para navegación explícita. La activación de otro
+  indicador enfoca su tarjeta; cambiar página desde controles no roba el foco.
+  Textos largos ajustables, multimedia acotada al ancho y panel sin superposición
+  intencional sobre el PDF. La comprobación visual real sigue pendiente.
+- Alternativa desplegable con texto digital real de cada página, reutilizando
+  PDF.js y la extracción existente. El canvas referencia esa descripción.
+  Si no hay capa digital o falla, se informa y se conserva el original; no OCR,
+  transcripción inventada ni IA. Limpieza de alternativa al liberar/redibujar.
+  Imágenes mantienen alt descriptivo y gráficos SVG título/descripción y lista
+  textual de elementos; falta el recorrido visual/teclado autenticado completo.
+
+Comprobaciones:387/387 pruebas,36/36 del bloque específico, lint y build/TypeScript
+correctos. Cinco regresiones adicionales: breakpoint/SSR/limpieza de listener,
+disposición y navegación con canvases pausados, y alternativa con PDF.js real
+sobre un PDF de prueba cuyo SHA se conserva, sin capa digital y extracción fallida.
+Medición de colores definida en CSS: blanco sobre#1d4ed8, contraste6.702:1 para
+indicadores y foco interior. Esto no es una auditoría completa de toda la pantalla.
+Referencias consultadas: W3C WCAG2.2, contraste mínimo y foco visible:
+https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html
+https://www.w3.org/WAI/WCAG22/Understanding/focus-visible.html
+
+Producción local arrancada con el código nuevo: login200, lector privado sin
+sesión401. Sigue sin login disponible; no se solicitó otra intervención ni se
+eludieron controles. Se resolvió la limitación de emulación para futuras pruebas:
+CDP Emulation.setDeviceMetricsOverride(width390,height844,mobiletrue) devuelve
+innerWidth/clientWidth/scrollWidth390 en la pantalla real de login. Captura de ese
+bloqueo en carpeta externa HU035 y en SCRUM-128; no acredita al lector móvil.
+Emulación restablecida con clearDeviceMetricsOverride al terminar.
+
+HU034/HU035 y subtareas permanecen En curso hasta ejecutar con sesión la nueva
+UI en escritorio/tableta/móvil, teclado completo, indicadores, alternativas,
+solapamientos, foco, conservación de posición/zoom/PDF y consola. No nuevas
+capturas de éxito autenticado, cambios de BD, llamadas IA ni consumo del crédito.
+No desplegar ni fusionar: cadena de revisión42→43→44→HU035. Stash d6406e0 intacto.
+
+Entrega HU035: commitfebac91 publicado en PR#45 en borrador sobre PR#44. Cadena
+actual42→43→44→45, sin merges. Jira47/127/209/210/128 conservan En curso y un
+único comentario de resultados; SCRUM-128 tiene adjunta la captura real del login
+en390px CSS. Readback de los comentarios comprueba uno por issue en ambas
+historias y una imagen en cada subtarea de verificación126/128. Las capturas
+acreditan el bloqueo; los positivos de interfaz siguen pendientes. No se suben
+imágenes de pruebas simuladas ni se sustituyen con capturas del código anterior.
+Servidor local de producción con código acumulado disponible en3000 y login
+abierto para retomar. No se generó ni compartió ninguna contraseña o token.
+
+### 31/10/2026 — Pruebas reales HU034/HU035 y correcciones encontradas
+
+El usuario inició sesión y autorizó completar estas pruebas, Jira y continuidad,
+manteniendo prohibidos despliegue y merge. Producción local, código acumulado de
+PR#44/#45; lector privado QA v5, sin acreditar acceso anónimo ni HTTPS.
+
+Observado realmente antes de las correcciones:
+- Página1 muestra cinco refuerzos y página2 dos. Controles, entrada numérica y
+  miniaturas cambian la lista; los indicadores de zona/página abren y expanden
+  las tarjetas correctas (péndulo y ciclo del agua), enfocando su encabezado.
+- Zona del péndulo: x4%,y24%,ancho92%,alto8%, coherentes con la selección guardada
+  a100% y150%. Los controles no se superponen. A150%, retorno medido justo en el
+  evento nativo de activación: scrollX0,scrollY595.200012,scrollLeft336.799988,
+  zoom150% y foco en el mismo ID; todos iguales al cerrar. Medir antes de que
+  Playwright enfoque/desplace el control daba otro valor y no era el punto real
+  de activación; se corrigió el método de medida, no los datos de la aplicación.
+- Viewports CSS exactos1280×900,768×1024 y390×844; documento no excede esos anchos.
+  En móvil las páginas se ocultan/pausan, la navegación sigue visible y cambia
+  la página del panel; el cierre vuelve a la página elegida. Regreso de marcador
+  móvil conserva scrollY658.400024,scrollLeft0,zoom100% y foco. Escritorio muestra
+  PDF y panel simultáneos. Gráfico ampliado desplaza solo su región interna;
+  ArrowRight produjo scrollLeft40 sin crear desbordamiento del documento.
+- Recorrido con Tab/Enter/Espacio/flechas: controles, tarjeta, gráfico y descripción
+  textual, quiz y envío. Ensayo privado de agua número3 guardado, resultado1/1;
+  no es un intento de lector. Se conserva aparte de los resultados públicos.
+- Texto digital del PDF disponible, SVG con título/descripción/lista textual,
+  imagen con alt y nombres de controles. Medición sobre39 textos/controles HTML
+  visibles: sin fallos, contraste mínimo4.727:1. No es una certificación WCAG.
+- QA escaneado d313803d-f9b3-4004-86e3-2aa53f8666e6, instantánea privada
+  45d33e4d-13c5-4fde-ad5e-8affa90b7a67: cero refuerzos, estado vacío correcto y
+  aviso de ausencia de texto digital, sin OCR. PDF original sigue disponible.
+- PDF digital SHA256 e7277d66afd7caba47385cfac2f0e55a2eeb4fb7aa7136409fa35300a6347946.
+  Navegación/zoom/panel no descargan otra copia: dos entradas de PDF, una propia
+  de la UI y otra petición expresa de QA para calcular el SHA. Consola sin errores
+  ni warnings en la observación. Los observadores de medida se eliminaron.
+
+Fallos reales detectados, sin declararlos aprobados:
+1. Al redibujar tras zoom en página2, un layout intermedio puede seleccionar1.
+   Se conserva ahora una página ancla hasta completar render/decoraciones y se
+   desactiva el anclaje automático del navegador en el visor del lector. Una
+   rueda/touch intencional cancela ese anclaje temporal para respetar al usuario.
+2. Reintentar el quiz quitaba el botón enfocado y dejaba foco en BODY; también
+   pasaba al enviar y mostrar el resultado. Ahora el foco pasa a la primera
+   respuesta, al resultado nuevo o al botón de envío si falla la petición. Cargar
+   un resultado ya guardado no roba foco.
+
+Cinco regresiones adicionales: render/decoración tardía, cancelación de ancla por
+rueda y foco del quiz en reintento/éxito/error.392/392 pruebas, lint y build/TS
+correctos. Reinicio local necesario; se mantiene el control de epoch existente.
+Se solicitó un único reingreso personal para repetir los casos corregidos. No
+se finalizan las subtareas afectadas antes de observar esos resultados nuevos.
+Capturas originales y medidas externas en HU034-035-REAL; las capturas móviles
+que el API de screenshot reescala demasiado no se usarán como evidencia legible:
+obtener captura nativa del viewport sin alterar los píxeles de la aplicación.
+
+Correcciones publicadas: d340243, PR#45 actualizado sin merge; PR#44 describe la
+validación conjunta y la dependencia de la corrección en#45. Jira46/47 y ocho
+subtareas actualizados sin crear comentarios nuevos. Readback confirma uno por
+issue y preservación de las imágenes previas. Seis capturas nuevas persistidas:
+125=10494,207=10495,208=10496,126=10497,210=10498/10499.126 conserva10492 y128
+conserva10493 (login histórico). No se afirma inspección visual de Jira web sin
+su sesión; conector confirma medios en comentarios y attachments con nombre/tamaño.
+Verificación BD de solo lectura: cero publicaciones públicas, seis instantáneas,
+siete refuerzos, cuatro eventos de visibilidad y cero intentos reales de lector.
+Ensayos privados pasan de8 a9 por el envío real de teclado; no se borran resultados.
+
+Retomar sin volver a reiniciar el servidor actual (producción local en3000):
+1. Reingreso personal pendiente; consulta protegida seguía401 al último chequeo.
+2. Página2:100→125→100 y150%, esperar render/decoración completos y comprobar que
+   conserva página2. Repetir resize y scroll intencional sin perder navegación.
+3. Quiz de agua en v5: reintentar con teclado debe enfocar primera respuesta;
+   envío correcto debe enfocar Resultado. Cargar resultado guardado no roba foco.
+4. Repetir retornos desde indicador, geometría y ausencia de overflow en tres
+   anchos; capturas nativas legibles, SHA posterior y consola. No repetir IA.
+5. Actualizar los mismos comentarios conservando imágenes; finalizar solo al
+   comprobar los criterios. No presentar como repetidos los dos fallos corregidos
+   mientras falte login. No desplegar, fusionar ni cerrar sprints.
+
+### 31/10/2026 — Repetición final autenticada HU034/HU035 completada
+
+El usuario confirmó el reingreso. Se reutilizó producción local en3000 con
+d340243, sin reiniciarla ni cambiar código. Este apartado resuelve el pendiente
+de login/repetición del anterior. Windows personal, Node22.23.3, navegador
+integrado Chromium; pruebas con sesión propietaria y las instantáneas privadas
+QA existentes. No son pruebas de publicación anónima ni HTTPS.
+
+Resultados nuevos observados:
+- Página2 estable al completar render y decoraciones:125→100→125→150%; también
+  reducción posterior125/100. El fallo de salto a1 no se reproduce corregido.
+- Marcadores del péndulo conservan proporciones4/24/92/8 y44×44px tras cambiar
+  tamaño. Viewports1280×900,768×1024 y390×844: sin overflow del documento;
+  escritorio con PDF/panel simultáneos y separación20px, tableta/móvil adaptados.
+  El cambio de tamaño puede cambiar la página visible por reflujo; no se afirma
+  conservación de página entre dispositivos, sí sincronización con la visible.
+- Quiz de agua: cargar el resultado previo mantiene el foco de la tarjeta;
+  reintentar mediante Enter enfoca la primera respuesta sin marcar. Espacio y
+  flecha abajo seleccionan la respuesta correcta; Tab llega a Comprobar.
+  Envío real guarda ensayo privado4 el31/10/2026 a22:36:10,1/1 y enfoca el estado
+  Resultado,tabIndex-1. No se generó contenido IA ni se creó intento público.
+- Desde Resultado, seis Shift+Tab recorren Actualizar, Ver original, descripción,
+  ampliar recurso, encabezado y cerrar. Enter devuelve foco al marcador del agua.
+  Recorrido adicional de controles/indicador del péndulo/tarjeta/cierre, entrada
+  numérica2, indicador del agua/gráfico/descripción/reintento/respuesta/Comprobar
+  y cierre realizado con teclado. No se envió otra vez. Se esperó el render de
+  la página antes de continuar entre controles; los eventos sintéticos lanzados
+  mientras la página aún cargaba no se cuentan como fallos de usuario observados.
+- Apertura/cierre móvil medidos en el evento real: mismoID
+  r_1fe5dbacafcc675ea87af2e3f95d522d,página2,scrollX0,scrollY1077.599976,
+  desplazamiento horizontal interno0,zoom100%; valores iguales y foco restaurado.
+- PDF SHA256 posterior:
+  e7277d66afd7caba47385cfac2f0e55a2eeb4fb7aa7136409fa35300a6347946.
+  Una petición PDF de la UI antes de la comprobación de hash; navegación/zoom/
+  panel no descargaron otra copia. La petición expresa de QA añade la del hash.
+  Consola final sin errores ni advertencias. Emulación/viewport restablecidos.
+
+Se conservan los positivos previos de miniaturas/número,cantidades5/2/0,
+alternativas digital/escaneada y39 contrastes: no se presentan como una nueva
+auditoría completa ni se repiten verificaciones sin cambios. El desplazamiento
+vertical usado para comprobar actualización por scroll se provocó mediante
+window.scrollBy en el navegador real; la inyección de rueda no estaba soportada.
+
+Capturas nativas sin composición ni retoque, carpeta externa HU034-035-REAL/
+corregido. Para390px se usó captura CDP del viewport y escala de vista nativa0.8;
+no se modificó CSS ni contenido para la evidencia. Se excluyeron las capturas
+recortadas o con artefactos del API. Nuevos adjuntos comprobados por conector:
+125=10500(zoom150),208=10501(escritorio/zona/tarjeta),127=10502(tableta)/
+10503(móvil),209=10504(foco reintento),128=10505(foco resultado). Las seis
+capturas iniciales y las dos históricas del login siguen intactas. Readback:
+un comentario por issue, imágenes inline y adjuntos con nombre/tamaño; no se
+afirma inspección visual de Jira web sin su sesión propia.
+
+Jira: SCRUM-125/207/208/126 y127/209/210/128 Finalizado por criterios comprobados.
+HU034/SCRUM-46 yHU035/SCRUM-47 En revisión para revisar PR#44/#45 juntos:
+la corrección de página de HU034 está en el descendiente#45. Cadena42→43→44→45
+conservada, todos sin merge.392/392 pruebas, lint y build ya aprobados para
+d340243; al cambiar solo documentación no se repiten ni se reinicia el servidor.
+BD, solo lectura: seis instantáneas,siete refuerzos,cuatro eventos de visibilidad,
+cero intentos de lector,diez ensayos privados (antes9; este envío real añade1).
+Sin migraciones, secretos cambiados, despliegues, merges ni consumo IA.
+
+Próximo trabajo: revisión humana de la cadena y habilitación posterior del QA
+HTTPS con autorización de despliegue y configuración privada pendiente, según
+doc/QA-LECTOR-HTTPS.md. HU030/HU032/HU033 y validación pública de HU036 conservan
+sus pendientes propios; no cerrarlos por estas pruebas locales. Mantener stash
+d6406e0 intacto y no confundir las prácticas privadas con respuestas del lector.
