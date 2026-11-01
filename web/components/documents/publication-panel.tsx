@@ -54,7 +54,7 @@ export function PublicationPanel({ projectId, documentId, onOpenChange }: { proj
       {latest && latest.visibility !== "unpublished" && <a href={`/projects/${projectId}/reader-test/${latest.id}`} target="_blank" rel="noopener noreferrer" className="inline-block rounded-lg border border-slate-300 px-3 py-2">Probar lectura privada de esta versión</a>}
       {!canPublish && <p role="status" className="rounded-lg bg-amber-50 p-3 text-sm">La publicación por enlace todavía no está habilitada en este entorno. Puedes preparar la versión; permanecerá privada.</p>}
       {management && <PublicationVisibilityPanel endpoint={endpoint} documentId={documentId} management={management} busy={busy} setBusy={setBusy}
-        onSaved={(next) => { setManagement(next); setLatest(next.latest); setCanPublish(next.canPublish); }} />}
+        onSaved={(next) => { setMessage(""); setManagement(next); setLatest(next.latest); setCanPublish(next.canPublish); }} />}
       {latest?.url && <div className="space-y-2"><label htmlFor={`${id}-url`} className="block font-semibold">Enlace de publicación</label><input id={`${id}-url`} value={latest.url} readOnly className="w-full min-w-0 rounded-lg border p-2" onFocus={e => e.target.select()} /><button type="button" onClick={() => void copy()} className="rounded-lg border border-blue-300 px-3 py-2">Copiar enlace</button></div>}
       <button type="button" disabled={busy} onClick={() => { setOpen(false); onOpenChange?.(false); }} className="ml-3 rounded-lg border border-slate-300 px-3 py-2">Cerrar publicación</button>
     </div>}
