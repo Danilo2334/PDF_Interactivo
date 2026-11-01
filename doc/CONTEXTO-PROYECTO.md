@@ -5425,3 +5425,41 @@ quiz_practice_attempts, comprueba respuestas contra la instantánea evaluada,
 agrega aciertos por pregunta y respeta identificación/propiedad. No duplicar el
 registro ni recalificar con versiones posteriores. Después siguen HU040/041/045/046;
 SMTP233 y cargas grandes del hosting continúan pendientes de proyecto.
+
+### 01/11/2026 — Inicio de HU039: consolidación privada de resultados existentes
+
+HU038 quedó publicada en PR49 listo, head02792555f78b55681cef9a7d157faf8929d1cc90,
+sin integrar. Rama nueva codex/scrum-51-hu039-resultados desde ese head, árbol
+anterior limpio y stash intacto. SCRUM-51 y135/136/217/218 En curso; comentario
+único inicial10216. Sprint7 activo, sin cerrar otros sprints.
+
+Implementación inicial: GET privado quiz-results y panel del propietario reutilizan
+sólo quiz_reader_attempts. No nueva tabla, migración, escritor o recalificación.
+Comprueba publicación/hash/quiz/propietario, respuestas y feedback contra la copia
+inmutable evaluada, excluye inconsistencias avisando y evita duplicar indicadores.
+Agrega aciertos y distribución de opciones por pregunta y publicación/versión;
+detalle de intentos paginado20. Ensayos quiz_practice_attempts fuera. Consulta
+histórica admite publicaciones retiradas del documento actual; verifica documento
+disponible por RLS y vuelve a comprobar sustitución/eliminación antes de responder.
+No fallback privilegiado para leer respuestas ajenas, tampoco para admin.
+
+Privacidad preservada: el flujo existente nunca guardó nombres/correos en intentos
+y sólo retiene un hash de identidad en cookie. Se usan alias HMAC por documento,
+sin exponer reader_id; se indica si la publicación pedía identificación, también
+cuando el propietario no puede recuperar un nombre que nunca fue almacenado.
+No se incorpora recogida retroactiva de datos personales. Se prueban publicación
+con identificación y sin ella sin alterar esas reglas.
+
+Lectura servidor por lotes500 con corte temporal, detalle20 e indicadores completos.
+Presupuesto operacional actual: si alcanza10000 filas devuelve503 sin presentar
+un agregado parcial; queda explícito para optimización posterior del panel/exporte
+HU041. No se afirma escalabilidad ilimitada. Dataset remoto inicial:7 intentos
+de lector de publicación5,10 ensayos privados separados; no se modificaron.
+FK remotas document→publication→reader/practice ON DELETE CASCADE leídas y
+contrastadas. Regresión PostgreSQL aislada extendida para borrar documento y
+comprobar ausencia de respuestas, sin borrar fixtures remotos.
+
+Pruebas iniciales411/411; build detectó inferencia readonly del acumulador, corregida
+con tipo explícito mutable. En ejecución la batería final con eliminación vinculada
+y limpieza del panel al perder autorización, lint y build. Ninguna prueba visual
+HU039 ni captura nueva registrada todavía; no finalizar subtareas por estos checks.

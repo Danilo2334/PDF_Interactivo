@@ -18,6 +18,7 @@ import { ExperiencePreview } from "@/components/documents/experience-preview";
 import { PublicationPanel } from "@/components/documents/publication-panel";
 import { VisitTotalsPanel } from "@/components/documents/visit-totals-panel";
 import { ReinforcementUsagePanel } from "@/components/documents/reinforcement-usage-panel";
+import { QuizResultsPanel } from "@/components/documents/quiz-results-panel";
 
 type WorkspaceProps = {
   projectId: string;
@@ -208,6 +209,7 @@ export function ProjectWorkspace({
       {editorHeader}
       {canRequestReinforcement && <VisitTotalsPanel key={`visits-${documentId}`} projectId={projectId} documentId={documentId} />}
       {canRequestReinforcement && <ReinforcementUsagePanel key={`usage-${documentId}`} projectId={projectId} documentId={documentId} />}
+      {canRequestReinforcement && <QuizResultsPanel key={`quiz-results-${documentId}`} projectId={projectId} documentId={documentId} />}
       {canRequestReinforcement && <PublicationPanel key={`publication-${documentId}`} projectId={projectId} documentId={documentId} onOpenChange={open => setPublicationDocument(open ? documentId : null)} />}
       <div className="mt-8 min-w-0">
       {canRequestReinforcement && activeSection !== "pdf" && <button ref={previewButton} type="button" disabled={submission.status === "sending"} onClick={openPreview}

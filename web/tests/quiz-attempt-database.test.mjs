@@ -22,7 +22,7 @@ test('HU030 PostgreSQL grades immutable approved snapshots once, separates exerc
    create table private.reinforcement_request_secrets(singleton boolean,secret text);insert into private.reinforcement_request_secrets values(true,repeat('a',64));
    create table public.projects(id uuid primary key,owner_id uuid,document_id uuid,status text);
    create table public.documents(id uuid primary key,owner_id uuid,status text,storage_path text,size_bytes bigint);
-   create table public.experience_publications(id uuid primary key,project_id uuid,document_id uuid,owner_id uuid,version integer,snapshot jsonb,snapshot_hash text,token text,published_at timestamptz,origin text);
+   create table public.experience_publications(id uuid primary key,project_id uuid references public.projects(id) on delete cascade,document_id uuid references public.documents(id) on delete cascade,owner_id uuid,version integer,snapshot jsonb,snapshot_hash text,token text,published_at timestamptz,origin text);
    create table public.reinforcement_quiz_versions(id uuid primary key,source_version_id uuid,request_id uuid);
    insert into auth.users values('${owner}'),('${other}');insert into public.profiles values('${owner}',true,'owner'),('${other}',true,'owner');
    insert into public.projects values('${projectId}','${owner}','${documentId}','pending');insert into public.documents values('${documentId}','${owner}','uploaded','${owner}/original.pdf',100);
@@ -53,5 +53,9 @@ test('HU030 PostgreSQL grades immutable approved snapshots once, separates exerc
   await db.exec('reset role');snapshot.requireIdentification=true;await db.query('update public.experience_publications set snapshot=$1',[JSON.stringify(snapshot)]);
   await asUser('','service_role');await assert.rejects(call('submit',{readerId:secondReader},false),e=>e.code==='42501');assert.equal((await call('submit',{readerId:secondReader,identified:true},false)).number,1);
   await db.exec('reset role');await db.query('update public.experience_publications set published_at=null');await asUser('','service_role');await assert.rejects(call('status',{identified:true},false),e=>e.code==='PT404');
+  // HU039 introduces no result tables: document -> publication -> both existing attempt tables must still cascade.
+  await db.exec('reset role');await db.query('delete from public.documents where id=$1',[documentId]);
+  assert.equal((await db.query('select count(*) from public.quiz_reader_attempts')).rows[0].count,0);assert.equal((await db.query('select count(*) from public.quiz_practice_attempts')).rows[0].count,0);
+  await asUser();await assert.rejects(call('status'),e=>e.code==='PT404');
  }finally{if(previous===undefined)delete process.env.REINFORCEMENT_REQUEST_SECRET;else process.env.REINFORCEMENT_REQUEST_SECRET=previous;await db.close();}
 });
