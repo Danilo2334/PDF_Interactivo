@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-export function ReaderOpenReporter({ endpoint, ready, privateTest }: { endpoint: string; ready: boolean; privateTest: boolean }) {
+export function ReaderOpenReporter({ endpoint, ready, privateTest, onReceipt }: { endpoint: string; ready: boolean; privateTest: boolean; onReceipt?: (visitId: string | null) => void }) {
   const [operationId] = useState(() => crypto.randomUUID());
   const reported = useRef(false);
   useEffect(() => {
@@ -15,7 +15,14 @@ export function ReaderOpenReporter({ endpoint, ready, privateTest }: { endpoint:
           try {
             const response = await fetch(endpoint + "/visits", { method: "POST", headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ operationId }), cache: "no-store", signal: AbortSignal.any([controller.signal, AbortSignal.timeout(10000)]) });
-            if (response.ok) { reported.current = true; return; }
+            if (response.ok) {
+              if (onReceipt) {
+                const receipt = await response.json();
+                if (receipt.visitId !== null && !/^[a-f0-9-]{36}$/.test(receipt.visitId ?? "")) throw Error("Invalid visit receipt");
+                onReceipt(receipt.visitId);
+              }
+              reported.current = true; return;
+            }
             if (response.status < 500) return;
           } catch { if (controller.signal.aborted) return; }
         }
@@ -30,6 +37,6 @@ export function ReaderOpenReporter({ endpoint, ready, privateTest }: { endpoint:
     void record();
     document.addEventListener("visibilitychange", record);
     return () => { controller.abort(); document.removeEventListener("visibilitychange", record); };
-  }, [endpoint, ready, privateTest, operationId]);
+  }, [endpoint, ready, privateTest, operationId, onReceipt]);
   return null;
 }

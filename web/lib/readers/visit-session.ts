@@ -32,3 +32,7 @@ export function signReaderOpen(input: Record<string, unknown>) {
   const payload = JSON.stringify({ ...input, operation: "reader-open", expiresAt: Math.floor(Date.now() / 1000) + 300 });
   return { p_payload: payload, p_signature: digest(payload) };
 }
+export function signReinforcementOpen(input: Record<string, unknown>) {
+  const payload = JSON.stringify({ ...input, operation: "reinforcement-open", expiresAt: Math.floor(Date.now() / 1000) + 300 });
+  return { p_payload: payload, p_signature: digest(payload) };
+}

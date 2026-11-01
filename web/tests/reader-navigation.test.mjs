@@ -16,6 +16,7 @@ function fixture(wide=false){
   const window={scrollX:8,scrollY:630,scrollTo({left,top}){this.scrollX=left;this.scrollY=top;}};
   const document={activeElement:trigger},states=[],refs=[];let cursor=0,refCursor=0,effects=[],tree;
   function PdfViewer(){}
+  const opens=[];
   const api=load('components/readers/reader-experience.tsx',{
     react:{useId:()=> 'reader-nav',useState(initial){const i=cursor++;if(!(i in states))states[i]=typeof initial==='function'?initial():initial;return [states[i],v=>{states[i]=typeof v==='function'?v(states[i]):v;}];},
       useRef(initial){return refs[refCursor++]??=( {current:initial} );},useCallback:f=>f,useMemo:f=>f(),useLayoutEffect:f=>effects.push(f),useEffect(){}},
@@ -23,12 +24,25 @@ function fixture(wide=false){
     '@/components/documents/summary-resource':{SummaryResource:()=>null},'@/lib/validations/reader':{},'@/components/readers/reader-quiz':{ReaderQuiz:()=>null},
     '@/lib/readers/layout':{useWideReader:()=>wide},
     '@/components/readers/reader-open-reporter':{ReaderOpenReporter:()=>null},
+    '@/components/readers/use-reinforcement-opens':{useReinforcementOpens:()=>({opened:items=>opens.push(...items),acceptedVisit(){}})},
   },{window,document,HTMLElement:Element,CSS:{escape:x=>x}});
   const view={name:'QA',version:1,privateTest:true,items:[{id:'first',title:'Energía',pageNumber:1,initialExpanded:false,selection:null},{id:'second',title:'Péndulo',pageNumber:1,initialExpanded:true,selection:null},{id:'other',title:'Agua',pageNumber:2,initialExpanded:false,selection:null}]};
   function nodes(n){if(!n||typeof n!=='object')return [];return[n,...[n.props?.children].flat(Infinity).flatMap(nodes)];}
   function render(){cursor=0;refCursor=0;effects=[];tree=api.Reading({view,endpoint:'/private-qa'});for(const n of nodes(tree)){if(n.type==='div'&&n.props.ref)n.props.ref.current=root;if(n.type==='section'&&n.props.ref)n.props.ref.current=panel;}for(const f of effects)f();}
-  render();return {render,window,trigger,figure,first,other,panel,pdf:()=>nodes(tree).find(n=>n.type===PdfViewer),cards:()=>nodes(tree).filter(n=>n.type?.name==='ReaderCard'),button:name=>nodes(tree).find(n=>n.type==='button'&&n.props.children===name),nodes:()=>nodes(tree)};
+  render();return {render,window,trigger,figure,first,other,panel,opens,pdf:()=>nodes(tree).find(n=>n.type===PdfViewer),cards:()=>nodes(tree).filter(n=>n.type?.name==='ReaderCard'),button:name=>nodes(tree).find(n=>n.type==='button'&&n.props.children===name),nodes:()=>nodes(tree)};
 }
+
+test('HU038 only explicit opening reports visible content, not indicators, render, collapse, passive page changes or the already open panel',()=>{
+  const f=fixture();assert.equal(f.opens.length,0);
+  f.button('Refuerzos').props.onClick();f.render();assert.deepEqual(f.opens.map(x=>x.id),['second']);
+  f.button('Refuerzos').props.onClick();f.render();assert.equal(f.opens.length,1);
+  f.cards().find(x=>x.props.item.id==='first').props.onToggle();f.render();assert.equal(f.opens.at(-1).id,'first');
+  f.cards().find(x=>x.props.item.id==='first').props.onToggle();f.render();assert.equal(f.opens.length,2);
+  f.pdf().props.onVisiblePageChange(2);f.render();assert.equal(f.opens.length,2);
+  f.pdf().props.onReinforcementActivate('other',2);f.render();assert.equal(f.opens.at(-1).id,'other');assert.equal(f.opens.at(-1).pageNumber,2);
+  f.pdf().props.onReinforcementActivate('other',2);f.render();assert.equal(f.opens.length,3);
+  f.button('PDF original').props.onClick();f.render();f.button('Refuerzos').props.onClick();f.render();assert.equal(f.opens.length,4);
+});
 
 test('HU034 active page drives the exact list and indicator identity without changing the PDF source',()=>{
   const f=fixture(),source=f.pdf().props.sourceUrl;

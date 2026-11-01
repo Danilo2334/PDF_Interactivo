@@ -5259,3 +5259,40 @@ y no detenerse por pasos rutinarios. Próxima historia por orden del Sprint7:
 HU038/SCRUM-50, seguimiento de aperturas de refuerzo. Sprint7 permanece activo;
 no cerrar sprints ni inventar pruebas pendientes. Las credenciales se gestionan
 únicamente en mecanismos privados; no incluirlas en contexto, Git, Jira o capturas.
+
+### 01/11/2026 — HU038: implementación y comienzo de validación real
+
+Rama codex/scrum-50-hu038-consultas desde eaa75ec (HU037, PR48 todavía sin
+integrar). SCRUM-50 y133/134/215/216 En curso. Definición incorporada ahora en
+el comentario único10211: interacción explícita con indicador, tarjeta o panel,
+mediante clic o teclado; sólo los contenidos que se abren cuentan. Indicadores,
+renderizado, navegación pasiva y colapsar no suman. Reapertura real aumenta la
+frecuencia; porcentaje deduplica visita válida HU037+refuerzo. Periodo inicial:
+todo el historial del documento hasta la consulta, igual en ambos términos;
+filtros avanzados quedan en HU041. No se interpretan sesiones como personas.
+
+Eventos ligados a visita firmada del mismo documento y sesión. Servidor resuelve
+IDs opacos, valida página y versión pública vigente, identificación y propietario
+activo; SQL vuelve a contrastar todo atómicamente y rechaza asociaciones falsas.
+Propietario y pruebas privadas excluidos. UUID de interacción conserva idempotencia
+en reintentos; cola en memoria limitada a50 interacciones, dos intentos por envío,
+timeout10s, sin bloquear la lectura ni persistir cookies o identidad en el cliente.
+Panel de uso privado agrupado por página/refuerzo, incluye publicados sin aperturas,
+frecuencia y visitas distintas/denominador/porcentaje; cero seguro, errores de acceso
+limpian resultados. Consulta admin no amplía acceso al PDF o claves del quiz ajeno.
+
+Migración creada con CLI oficial y probada con PGlite/pgcrypto antes de aplicarla.
+Historial remoto de24 migraciones conciliado; única nueva aplicada, versión remota
+20261101220427_reader_reinforcement_opens y archivo local alineado. RLS activa,
+clientes sólo SELECT autorizado; escritura exclusivamente RPC invoker→definer
+privado con firma, purpose, vencimiento y search_path vacío. Sin db push ni repetir
+SQL anterior. Advisors anteriores conservan avisos de funciones históricas y Auth;
+no se debilitaron permisos ni se activaron prestaciones de pago para ocultarlos.
+
+Lint y build/TypeScript aprobados. Batería previa402/402 y diez casos específicos
+actuales aprobados (incluido panel sin denominador y pérdida de autorización);
+se ejecuta batería final después del último test. La cuenta sintética existente
+inició sesión por el formulario QA normal; no se usó ni guardó la contraseña
+personal enviada por chat. No se alteró la sesión de localhost ni su configuración.
+Pendiente antes de cerrar: publicación temporal QA, interacción visual real,
+conciliación de eventos y porcentajes, latencia no bloqueante, capturas y Jira.

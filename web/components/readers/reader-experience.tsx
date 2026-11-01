@@ -9,6 +9,7 @@ import { ReaderQuiz } from "@/components/readers/reader-quiz";
 import type { FragmentSelection } from "@/lib/pdf/fragment-selection";
 import { useWideReader } from "@/lib/readers/layout";
 import { ReaderOpenReporter } from "@/components/readers/reader-open-reporter";
+import { useReinforcementOpens } from "@/components/readers/use-reinforcement-opens";
 function ReaderCard({ item, endpoint, onSource, privateTest, expanded, onToggle }: { item: ReaderItem; endpoint: string; onSource: () => void; privateTest: boolean; expanded: boolean; onToggle: () => void }) {
   const id = useId();
   return <article data-reader-item={item.id} className="min-w-0 space-y-3 rounded-xl border border-slate-200 bg-white p-4">
@@ -27,6 +28,7 @@ function ReaderCard({ item, endpoint, onSource, privateTest, expanded, onToggle 
 }
 export function Reading({ view, endpoint }: { view: ReaderView; endpoint: string }) {
   const wide = useWideReader();
+  const { opened, acceptedVisit } = useReinforcementOpens(endpoint, view.privateTest);
   const [pdfReady, setPdfReady] = useState(false);
   const reportReady = useCallback(() => setPdfReady(true), []);
   const [page, setPage] = useState(1), [panel, setPanel] = useState(false), [navigation, setNavigation] = useState<{ page: number; fragment: FragmentSelection | null; key: number }>({ page: 1, fragment: null, key: 0 });
@@ -41,7 +43,8 @@ export function Reading({ view, endpoint }: { view: ReaderView; endpoint: string
     selected.current = markerId ?? null; setPage(currentPage); setActivation(n => n + 1);
     if (markerId) setExpanded(previous => new Set(previous).add(markerId));
     setPanel(true);
-  }, []);
+    opened(view.items.filter(item => item.pageNumber === currentPage && (panel ? item.id === markerId && !expanded.has(item.id) : item.id === markerId || expanded.has(item.id))).map(item => ({ id: item.id, pageNumber: item.pageNumber })));
+  }, [opened, view.items, expanded, panel]);
   const openMarker = useCallback((id: string, currentPage: number) => openPanel(currentPage, id), [openPanel]);
   const openPagePanel = useCallback((currentPage: number) => openPanel(currentPage), [openPanel]);
   const navigateFromPanel = useCallback((currentPage: number) => {
@@ -62,7 +65,7 @@ export function Reading({ view, endpoint }: { view: ReaderView; endpoint: string
     }
   }, [panel, activation, wide]);
   return <>
-    <ReaderOpenReporter endpoint={endpoint} ready={pdfReady} privateTest={view.privateTest} />
+    <ReaderOpenReporter endpoint={endpoint} ready={pdfReady} privateTest={view.privateTest} onReceipt={acceptedVisit} />
     <div role="group" aria-label="Secciones de lectura" className="flex flex-wrap gap-2"><button type="button" aria-pressed={!panel} onClick={() => setPanel(false)} className="rounded-lg border px-3 py-2">PDF original</button><button type="button" aria-pressed={panel} onClick={() => { if (!panel) openPanel(page); }} className="rounded-lg border px-3 py-2">Refuerzos</button></div>
     <p role="status" className="text-sm text-slate-700">Página {page}: {view.items.filter(item => item.pageNumber === page).length} refuerzos disponibles.</p>
     <div className="reader-layout grid min-w-0 items-start gap-5 lg:grid-cols-[minmax(0,3fr)_minmax(18rem,2fr)]">
@@ -73,7 +76,7 @@ export function Reading({ view, endpoint }: { view: ReaderView; endpoint: string
     <section ref={content} hidden={!panel} aria-label={`Refuerzos de la página ${page}`} className="min-w-0 space-y-4 rounded-xl border border-slate-200 bg-white p-4 lg:sticky lg:top-4 lg:max-h-[calc(100dvh-2rem)] lg:overflow-y-auto"><button type="button" onClick={() => setPanel(false)} className="rounded-lg border px-3 py-2">Cerrar refuerzos y volver al PDF</button><h2 className="text-xl font-semibold">Refuerzos de la página {page}</h2>
       {!view.items.some(i => i.pageNumber === page) && <p>Esta página no tiene refuerzos publicados para consultar.</p>}
       {view.items.filter(i => i.pageNumber === page).map(item => <ReaderCard key={item.id} item={item} endpoint={endpoint} privateTest={view.privateTest} expanded={expanded.has(item.id)}
-        onToggle={() => setExpanded(previous => { const next = new Set(previous); if (next.has(item.id)) next.delete(item.id); else next.add(item.id); return next; })}
+        onToggle={() => { if (!expanded.has(item.id)) opened([{ id: item.id, pageNumber: item.pageNumber }]); setExpanded(previous => { const next = new Set(previous); if (next.has(item.id)) next.delete(item.id); else next.add(item.id); return next; }); }}
         onSource={() => { position.current = null; setNavigation(p => ({ page: item.pageNumber, fragment: item.selection as FragmentSelection | null, key: p.key + 1 })); setPanel(false); }} />)}
     </section>
     {!panel && wide && <aside aria-label="Ayuda de refuerzos" className="mt-8 rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-950">
