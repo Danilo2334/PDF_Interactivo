@@ -5296,3 +5296,33 @@ inició sesión por el formulario QA normal; no se usó ni guardó la contraseñ
 personal enviada por chat. No se alteró la sesión de localhost ni su configuración.
 Pendiente antes de cerrar: publicación temporal QA, interacción visual real,
 conciliación de eventos y porcentajes, latencia no bloqueante, capturas y Jira.
+
+QA inicial dpl_FaiRZRoQ4FvrwtViMVdyh9hp9GwC READY, fuente1bb2f42; mismo proyecto
+Danilo/Hobby y variables sin cambiar.403/403 tests finales iniciales. Recorrido real:
+frecuencia4/visitas distintas2/denominador9=22,22% y otra página1/1/9=11,11%;
+cinco POST simultáneos de una operación insertan una sola fila. Reintento después
+de descartar el cuerpo HTTP ya procesado devuelve recorded=false sin duplicar;
+no se presenta como interrupción de paquetes. Página y refuerzo ajenos409,
+otra sesión403, referencia de documento extra400, falta cookie428, origen403,
+agregado anónimo401 y otro dueño404; documento actual incorrecto409.
+RLS real con clave pública: dueño5 eventos, otra cuenta0, anon401/42501 y RPC
+directo42501. Ensayo privado real y propietario no aumentaron los cinco eventos.
+Documento QA-Sol sin visitas ni publicaciones devuelve0 y vacío, comprobado en UI.
+Logout sólo de cuenta sintética QA confirma limpieza de métricas ante401.
+
+Lector IAB autenticado como segunda cuenta QA, distinta del propietario: renderizar
+indicadores conserva5 eventos; tres aperturas por clic/teclado producen6 filas
+(dos contenidos inicialmente expandidos) y navegar pasivamente a página2 conserva11.
+Medición inicial de panel con contenido561,1/8,4/39,1ms; primera petición de métricas
+pausada de forma controlada mediante CDP Fetch sólo para ese recurso, panel usable
+antes de continuar la petición real. Intercepción restaurada con patterns vacío;
+sin sustituir respuestas. Se repetirá la medición sobre la corrección final.
+
+Fallo visual observado: activar indicador de página2 podía devolver el estado a1
+porque scrollIntoView del panel también desplazaba su ancestro window y PDF.js
+detectaba otra página. Se corrige desplazando sólo el contenedor del panel en
+escritorio; teclado y cierre siguen conservando foco/posición. Regresión específica
+añadida y once casos afectados pasan. Se repiten batería, lint/build y QA del caso;
+no se declara resuelto visualmente antes de ese contraste. PR49 borrador apilado
+sobre PR48, publicado sin merge. Publicación escaneada QA2 temporalmente pública
+para tres aperturas sin refuerzos; restaurar su estado previo privado al terminar.

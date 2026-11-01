@@ -4,13 +4,15 @@ import {load} from './reinforcement-test-helpers.mjs';
 
 function fixture(wide=false){
   class Element {
-    isConnected=true;scrollLeft=72;focused=0;scrolled=0;
+    isConnected=true;scrollLeft=72;scrollTop=0;focused=0;scrolled=0;
     focus(){this.focused++;document.activeElement=this;}
     scrollIntoView(){this.scrolled++;window.scrollY=0;}
+    getBoundingClientRect(){return{top:this.top??0};}
     querySelector(){return this.button??this;}
   }
   const trigger=new Element(),figure=new Element(),first=new Element(),other=new Element(),root=new Element(),panel=new Element();
   first.button=new Element();other.button=new Element();panel.button=new Element();
+  first.top=400;other.top=700;panel.top=100;
   root.querySelector=selector=>selector.includes('data-pdf-page')?figure:trigger;
   panel.querySelector=selector=>selector.includes('"first"')?first:selector.includes('"other"')?other:panel.button;
   const window={scrollX:8,scrollY:630,scrollTo({left,top}){this.scrollX=left;this.scrollY=top;}};
@@ -77,4 +79,10 @@ test('HU035 wide screens keep the PDF active beside the panel and narrow screens
     f.window.scrollY=130;f.button('Cerrar refuerzos y volver al PDF').props.onClick();f.render();
     assert.equal(f.pdf().props.visible,true);assert.equal(f.pdf().props.initialPage,2);assert.equal(f.pdf().props.navigationKey,1);assert.equal(f.window.scrollY,130);
   }
+});
+
+test('HU038 desktop marker activation scrolls only inside the panel, preserving PDF position and active page',()=>{
+ const f=fixture(true);f.pdf().props.onVisiblePageChange(2);f.render();
+ f.pdf().props.onReinforcementActivate('other',2);f.render();assert.equal(f.window.scrollY,630);assert.equal(f.other.scrolled,0);assert.equal(f.panel.scrollTop,584);assert.equal(f.cards()[0].props.item.pageNumber,2);
+ f.button('Cerrar refuerzos y volver al PDF').props.onClick();f.render();assert.equal(f.window.scrollY,630);assert.equal(f.figure.scrollLeft,72);
 });

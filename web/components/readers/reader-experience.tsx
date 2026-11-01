@@ -54,7 +54,11 @@ export function Reading({ view, endpoint }: { view: ReaderView; endpoint: string
   useLayoutEffect(() => {
     if (panel) {
       const target = selected.current ? content.current?.querySelector<HTMLElement>(`[data-reader-item="${CSS.escape(selected.current)}"]`) : content.current;
-      target?.scrollIntoView({ block: wide ? "nearest" : "start", behavior: "instant" }); target?.querySelector<HTMLButtonElement>("button")?.focus({ preventScroll: true });
+      if (wide && content.current && target) {
+        // Scroll only the panel: scrolling its window ancestor can make PDF.js report another page.
+        content.current.scrollTop = target === content.current ? 0 : content.current.scrollTop + target.getBoundingClientRect().top - content.current.getBoundingClientRect().top - 16;
+      } else target?.scrollIntoView({ block: "start", behavior: "instant" });
+      target?.querySelector<HTMLButtonElement>("button")?.focus({ preventScroll: true });
     } else if (position.current) {
       const p = position.current, figure = pdf.current?.querySelector<HTMLElement>(`[data-pdf-page="${p.page}"]`);
       if (figure) figure.scrollLeft = p.horizontal;
