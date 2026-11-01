@@ -5352,3 +5352,76 @@ y alineándola al cerrar. Así el enfoque del botón de cierre no puede seleccio
 una página anterior parcialmente visible. La firma opcional del visor comunica
 la página aplicada, sin eventos analíticos ni nuevas descargas. Se vuelve a
 comprobar el caso sobre este código antes del cierre de134.
+
+### 01/11/2026 — HU038 entregada con evidencia HTTPS y métricas conciliadas
+
+Fuente final78881b278c74bb6eead80356c9a636f09238147c, QA
+dpl_H4PV6bxiBuTWd7v4CH3kQdsMrpVS READY en el mismo proyecto Hobby de Danilo.
+406/406 pruebas, lint y build/TypeScript aprobados; sin dependencias nuevas,
+variables/epoch modificados, pagos o llamadas IA. Sólo QA, sin merge ni cambios a
+main. PR49 apilado sobre48, que permanece sin integrar.
+
+Regresión final real: indicador de página2 estable después del callback tardío;
+cambio explícito de página y zoom con el panel abierto, cierre y espera posterior
+conservan página2/125%. En móvil390×844, registro del evento de apertura antes del
+handler (después del enfoque real del teclado): x0/y1080; retorno x0/y1080,
+página2/125%, scrollWidth390. Esto evita confundir el desplazamiento que provoca
+el enfoque del localizador con el retorno de la aplicación. Consola warn/error[];
+interceptores, observadores de medición y overrides de tamaño restaurados.
+
+Limitación explícita: la API de capturas de este IAB devolvió miniaturas móviles
+incompletas y falló la captura CDP nativa a390px. Se conservaron marcadas
+no-adjuntar, sin agrandarlas, reconstruirlas ni presentarlas como evidencia visual.
+El contraste móvil anterior es funcional por DOM/teclado y medidas reales, no una
+inspección de imagen móvil. Las siete imágenes adjuntas son capturas auténticas
+de escritorio de la aplicación, incluidas estado vacío, página2 y métricas finales.
+
+Rendimiento de apertura: producción HTTPS, sesión QA distinta del propietario y
+PDF ya abierto, IAB/Chromium156 en Windows, i5-11400H@2.70GHz/15,8GiB RAM,
+viewport1280×720. Red del equipo sin limitador; NetworkInformation estimó
+effectiveType4g, RTT50ms y downlink1,45Mb/s (estimaciones, no medición del enlace
+físico). Caché del navegador conservada, API no-store; primera apertura tras recarga
+y dos reaperturas. Página1 con5 refuerzos de7 publicados, explicación/ejemplo
+inicialmente expandidos, imagen/enlace aprobados y quiz opcional:
+2980,1 /1965,7 /1979,4ms. Escaneado QA de1 página sin refuerzos:
+1986,7 /1991,0 /1980,6ms. Máximo2980,1ms, seis casos<=3000ms.
+Medición conservadora en segundo plano hasta DOM visible, imágenes visibles listas
+y dos animation frames. Son muestras de6a5d96b; cambios posteriores sólo afectan
+retorno/enfoque, que se repitieron sobre78881b2. El envío asíncrono no cambió.
+Ensayo separado detuvo sólo Fetch/reinforcement-opens: panel utilizable antes de
+continuar la petición real. No se sustituyeron respuestas ni midió generación IA.
+
+Final por API y SQL:36 aperturas de refuerzo,10 visitas del documento digital,
+14 visitas globales (10 digital,2 personal QA,2 escaneado),7 intentos lector y10
+prácticas privadas, todos conservados. El resumen del documento muestra frecuencias
+11/11/4/10 en los cuatro refuerzos consultados; visitas distintas1/1/2/2 y
+porcentajes10/10/20/20 sobre10. Otros3 publicados tienen0. El punto anterior de
+medición9 visitas/4 aperturas/2 distintas=22,22% conserva su captura y su fecha;
+no se reemplaza por un resultado esperado del estado posterior.
+
+Publicaciones temporales restauradas mediante API normal: digital8→unpublished,
+escaneado2→private (su estado previo). Cero públicas globales; nueva lectura y
+escritura por el enlace digital retirado404, agregado privado conserva36 eventos.
+GET privado del original devuelve1580bytes y SHA-256
+e7277d66afd7caba47385cfac2f0e55a2eeb4fb7aa7136409fa35300a6347946,
+idéntico al anterior. Ningún estado de negocio inventado mediante SQL.
+
+Jira confirma Finalizado para HU038/SCRUM-50 y133/134/215/216. Comentarios únicos:
+madre10211,133=10213,134=10215,215=10214,216=10212. Siete adjuntos reales
+10541–10547, nombres/tamaños/media comprobados;10541 descargado y comparado byte
+a byte con el original.216 actualizado preservando sus dos nodos de imagen, sin
+duplicar adjuntos. No se afirma inspección visual de miniaturas dentro de Jira:
+se validan conector autorizado, inline media y archivo descargable. Madre sin
+imágenes duplicadas. Evidencias y resultados detallados fuera de Git en HU038-REAL.
+
+La cuenta sintética propietaria quedó abierta en el panel privado QA; la sesión
+personal de localhost no se utilizó ni modificó. No se guardaron contraseñas
+personales, cookies, tokens, .env o scripts temporales en Git/Jira. Stash d6406e0
+intacto. Sprint7 continúa activo, sin cierre automático.
+
+Siguiente historia por orden: HU039/SCRUM-51, subtareas135/136/217/218, leídas pero
+todavía sin implementar. Reutiliza quiz_reader_attempts de HU030, excluye
+quiz_practice_attempts, comprueba respuestas contra la instantánea evaluada,
+agrega aciertos por pregunta y respeta identificación/propiedad. No duplicar el
+registro ni recalificar con versiones posteriores. Después siguen HU040/041/045/046;
+SMTP233 y cargas grandes del hosting continúan pendientes de proyecto.
