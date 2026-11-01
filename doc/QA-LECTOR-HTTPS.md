@@ -1,11 +1,12 @@
 # Preparación del lector HTTPS — 31/10/2026
 
-Estado: preparación local, sin desplegar ni publicar. `develop` en `ee9f805`;
-PR #30–#41 integrados. PR #42 prepara QA; HU036 añade retirada editorial en una
-rama descendiente. HU030/HU032/HU033 y la validación pública de HU036 siguen abiertas.
+Estado: preparación local, sin desplegar ni publicar. PR #42→#43→#44→#45
+integrados en `develop`, merge final `886cbdb`. Incluye preparación QA, retirada
+editorial HU036 y navegación/accesibilidad HU034/HU035. HU030/HU032/HU033,
+SCRUM-226 y la validación pública de HU036 siguen abiertas.
 
-Continuación local: HU034 y HU035 implementadas en PR#44 y#45, sobre#43.
-Cadena preparada para revisión: #42→#43→#44→#45. Código acumulado:392/392 pruebas,
+Continuación local: HU034 y HU035 integradas en PR#44 y#45, después de#43.
+Cadena revisada e integrada: #42→#43→#44→#45. Código acumulado:392/392 pruebas,
 lint y build correctos. Ya hubo pruebas autenticadas privadas en1280/768/390px:
 indicadores/tarjetas, cantidades5/2/0, miniaturas/número, posición, teclado,
 gráficos, quiz y alternativas digitales/escaneado. Detectaron salto de página
@@ -13,8 +14,8 @@ tras zoom y pérdida de foco del quiz; corregidos en d340243 y repetidos con éx
 después del reingreso personal. Página2 conserva125→100→125→150%; reintentar
 enfoca primera respuesta y guardar enfoca Resultado. Ensayo privado4 guardado1/1;
 no es resultado de lector. Retorno móvil conserva página2, zoom100%, posición y
-foco. SHA del PDF intacto; consola limpia. Ocho subtareas Finalizado; HU034/HU035
-En revisión. Seis capturas finales adicionales adjuntas en125/208/127/209/128,
+foco. SHA del PDF intacto; consola limpia. Ocho subtareas y HU034/HU035 Finalizado
+tras la revisión e integración autorizada. Seis capturas finales adicionales en125/208/127/209/128,
 con un comentario por issue y todas las anteriores conservadas. Estas pruebas
 no acreditan lector anónimo ni HTTPS. No desplegar todavía.
 

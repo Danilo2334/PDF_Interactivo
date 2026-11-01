@@ -4784,3 +4784,50 @@ HTTPS con autorización de despliegue y configuración privada pendiente, según
 doc/QA-LECTOR-HTTPS.md. HU030/HU032/HU033 y validación pública de HU036 conservan
 sus pendientes propios; no cerrarlos por estas pruebas locales. Mantener stash
 d6406e0 intacto y no confundir las prácticas privadas con respuestas del lector.
+
+### 31/10/2026 — Revisión e integración PR42→43→44→45 a develop
+
+El usuario autorizó revisar y fusionar los cuatro PR en ese orden, conservando
+Jira y sin desplegar. Checkout limpio, stash d6406e0cdbc464c1c0301c058024b10dd27c4515
+intacto, sin aplicar ni eliminar. Se revisaron diffs y fuentes del comprobador,
+visibilidad/RLS/firma/idempotencia y bloqueo de recursos/intentos, indicadores,
+layout adaptable, texto digital, anclaje de página y foco del quiz. Sin hallazgos
+nuevos que bloqueen integración; los dos fallos visuales anteriores ya estaban
+corregidos y repetidos con éxito en d340243. Los PR no tenían hilos de revisión
+pendientes ni checks/statuses configurados en GitHub; no se presentan como CI verde.
+
+Verificación de revisión:392/392 pruebas y lint nuevamente correctos. Se conserva
+el build de producción/TypeScript previamente aprobado para el mismo contenido,
+sin reiniciar3000 ni invalidar otra vez la sesión. No se repitieron capturas ni
+llamadas IA innecesarias. Se consultaron las evidencias privadas reales existentes;
+estas no sustituyen las pruebas HTTPS pendientes. Migración20261031073708 ya
+aplicada/conciliada: no se volvió a ejecutar SQL ni se cambió configuración privada.
+
+Integración con merge commits, conservando historial y ramas:
+- PR#42 → develop:51cf9c722edd1b12915a3665febad2a59a745126.
+- PR#43, base cambiada a develop tras#42:
+  adb2035629d41d7bcfcf3e352aed089a43e746da.
+- PR#44, base cambiada a develop tras#43:
+  9cb5760359eddfed1edefaaa7c7feefd4dc367d1.
+- PR#45, base cambiada a develop tras#44:
+  886cbdbbce2600924ad06251e088288b776563be.
+
+Después de cada cambio de base se revisó el diff y se comprobó integración sin
+conflictos con merge-tree y estado de GitHub; merge protegido por SHA esperado.
+Los cuatro pasaron de borrador a listos y se fusionaron, sin squash/reescritura.
+El árbol de develop en886cbdb es exactamente el árbol validado7e2bf0e: git diff
+sin diferencias. El checkout local pasó a develop mediante fast-forward, sin
+descartar archivos ni tocar el stash. No se modificó main ni se desplegó.
+
+Jira: un único comentario por issue conservado. Se añadió resultado de revisión
+e integración en SCRUM-226/48/46/47, preservando cuerpos/medios anteriores.
+HU034/SCRUM-46 yHU035/SCRUM-47 Finalizado tras revisión/merge; sus ocho subtareas
+ya finalizadas conservan todas las capturas. SCRUM-226 yHU036/SCRUM-48 siguen
+En curso por configuración/pruebas públicas HTTPS; integrar código no cumple
+esos criterios. HU030/HU032/HU033 conservan pendientes del recorrido lector real.
+
+Siguiente paso sigue siendo preparar configuración privada y obtener autorización
+de despliegue QA antes de verificar TLS/publicación/lector/retirada/republicación.
+El proyecto QA vacío de Danilo conserva su preparación documentada; no se subió
+fuente, vinculó Git, activó publicación ni generó deployment durante esta revisión.
+Guía doc/QA-LECTOR-HTTPS.md actualizada al estado integrado.
