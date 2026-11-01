@@ -4958,3 +4958,17 @@ proyectos/datos QA de su cuenta; no modificar owner_id ni saltar RLS para reutil
 los de otra. Pendientes: autenticación personal, cookies/visor y fase pública de
 lector/HU036 con datos QA autorizados, recursos,aislamiento,intentos y retirada.
 Documentación posterior no requiere otro deployment: código desplegado sigue2922125.
+
+### 31/10/2026 — Corrección del formulario local de recuperación asistida
+
+El propietario envió el formulario temporal y recibió Origen no permitido; no
+se llegó a cambiar la contraseña. El primer proceso expiró sin RESET_COMPLETED.
+Se corrigió su Referrer-Policy de no-referrer a same-origin, conservando Host,
+Origin exacto y CSRF. El auxiliar externo se reinició en el mismo puerto; no se
+desplegó código ni se relajaron comprobaciones en la aplicación.
+Prueba real de formulario de diagnóstico sin campos de contraseña, desde el
+navegador: Origen correcto=true y Formato correcto=true. Origen ajeno y CSRF
+inválido siguen devolviendo403. No se envió un cambio de contraseña automático.
+Formulario raíz vacío abierto nuevamente para que el propietario escriba,
+confirme y envíe personalmente; no reutilizar ni recargar el POST/guardar fallido.
+El cambio de contraseña y el ingreso QA siguen pendientes de observar.

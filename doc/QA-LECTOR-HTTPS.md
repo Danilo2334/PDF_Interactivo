@@ -237,6 +237,11 @@ No hay endpoint administrativo añadido a la aplicación desplegada. El auxiliar
 no se versiona, expira a10min y se cierra al completar un cambio. Pruebas sin
 mutar credenciales:GET200,origen ajeno403,CSRF inválido403. Resultado real del
 cambio e inicio de sesión aún pendientes de confirmación personal.
+Primer envío personal rechazado por origen, sin cambio de contraseña. Auxiliar
+corregido a Referrer-Policy same-origin, manteniendo Origin/Host/CSRF estrictos.
+Diagnóstico real sin credenciales desde navegador: origen/formato correctos;
+origen ajeno y CSRF inválido403. Formulario vacío reabierto para nuevo envío
+personal. Esta corrección del auxiliar no requirió redeploy de la aplicación.
 
 Después del ingreso: comprobar proyectos de esa cuenta y preparar datos QA
 propios sin trasladar los registros de la otra cuenta. Completar cookies,PDF y
