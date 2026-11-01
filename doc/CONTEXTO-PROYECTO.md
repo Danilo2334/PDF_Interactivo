@@ -4693,3 +4693,26 @@ se finalizan las subtareas afectadas antes de observar esos resultados nuevos.
 Capturas originales y medidas externas en HU034-035-REAL; las capturas móviles
 que el API de screenshot reescala demasiado no se usarán como evidencia legible:
 obtener captura nativa del viewport sin alterar los píxeles de la aplicación.
+
+Correcciones publicadas: d340243, PR#45 actualizado sin merge; PR#44 describe la
+validación conjunta y la dependencia de la corrección en#45. Jira46/47 y ocho
+subtareas actualizados sin crear comentarios nuevos. Readback confirma uno por
+issue y preservación de las imágenes previas. Seis capturas nuevas persistidas:
+125=10494,207=10495,208=10496,126=10497,210=10498/10499.126 conserva10492 y128
+conserva10493 (login histórico). No se afirma inspección visual de Jira web sin
+su sesión; conector confirma medios en comentarios y attachments con nombre/tamaño.
+Verificación BD de solo lectura: cero publicaciones públicas, seis instantáneas,
+siete refuerzos, cuatro eventos de visibilidad y cero intentos reales de lector.
+Ensayos privados pasan de8 a9 por el envío real de teclado; no se borran resultados.
+
+Retomar sin volver a reiniciar el servidor actual (producción local en3000):
+1. Reingreso personal pendiente; consulta protegida seguía401 al último chequeo.
+2. Página2:100→125→100 y150%, esperar render/decoración completos y comprobar que
+   conserva página2. Repetir resize y scroll intencional sin perder navegación.
+3. Quiz de agua en v5: reintentar con teclado debe enfocar primera respuesta;
+   envío correcto debe enfocar Resultado. Cargar resultado guardado no roba foco.
+4. Repetir retornos desde indicador, geometría y ausencia de overflow en tres
+   anchos; capturas nativas legibles, SHA posterior y consola. No repetir IA.
+5. Actualizar los mismos comentarios conservando imágenes; finalizar solo al
+   comprobar los criterios. No presentar como repetidos los dos fallos corregidos
+   mientras falte login. No desplegar, fusionar ni cerrar sprints.

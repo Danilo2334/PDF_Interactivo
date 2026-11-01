@@ -5,13 +5,15 @@ PR #30–#41 integrados. PR #42 prepara QA; HU036 añade retirada editorial en u
 rama descendiente. HU030/HU032/HU033 y la validación pública de HU036 siguen abiertas.
 
 Continuación local: HU034 y HU035 implementadas en PR#44 y#45, sobre#43.
-Cadena preparada para revisión: #42→#43→#44→#45. Código acumulado:387/387 pruebas,
-lint y build correctos. El reinicio exige login y no hay autofill; las nuevas UI
-de indicadores/adaptabilidad siguen pendientes de prueba autenticada y sus
-historias/subtareas En curso. Capturas de bloqueo identificadas como tales en
-SCRUM-126/128; no son aprobación visual. La emulación CDP390×844 sí devuelve
-ancho CSS390 en login y se restableció después. Tras autenticar, comprobar primero
-estas UI locales antes de la futura fase HTTPS. No desplegar todavía.
+Cadena preparada para revisión: #42→#43→#44→#45. Código acumulado:392/392 pruebas,
+lint y build correctos. Ya hubo pruebas autenticadas privadas en1280/768/390px:
+indicadores/tarjetas, cantidades5/2/0, miniaturas/número, posición, teclado,
+gráficos, quiz y alternativas digitales/escaneado. Detectaron salto de página
+tras zoom y pérdida de foco del quiz; corregidos en d340243. Falta repetir esos
+casos en la compilación nueva: el reinicio exige otro login, ya solicitado.
+Historias/subtareas siguen En curso. Seis capturas reales nuevas adjuntas en
+SCRUM-125/207/208/126/210 y evidencias de bloqueo anteriores conservadas. Estas
+pruebas no acreditan lector anónimo ni HTTPS. No desplegar todavía.
 
 ## Qué falta realmente
 
