@@ -1,17 +1,17 @@
 "use client";
 import Image from "next/image";
-import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { PdfViewer } from "@/components/documents/pdf-viewer";
 import { VisualResource } from "@/components/documents/visual-resource";
 import { SummaryResource } from "@/components/documents/summary-resource";
 import { readerReplySchema, type ReaderItem, type ReaderView } from "@/lib/validations/reader";
 import { ReaderQuiz } from "@/components/readers/reader-quiz";
 import type { FragmentSelection } from "@/lib/pdf/fragment-selection";
-function ReaderCard({ item, endpoint, onSource, privateTest }: { item: ReaderItem; endpoint: string; onSource: () => void; privateTest: boolean }) {
-  const [expanded, setExpanded] = useState(item.initialExpanded), id = useId();
-  return <article className="min-w-0 space-y-3 rounded-xl border border-slate-200 bg-white p-4">
+function ReaderCard({ item, endpoint, onSource, privateTest, expanded, onToggle }: { item: ReaderItem; endpoint: string; onSource: () => void; privateTest: boolean; expanded: boolean; onToggle: () => void }) {
+  const id = useId();
+  return <article data-reader-item={item.id} className="min-w-0 space-y-3 rounded-xl border border-slate-200 bg-white p-4">
     <p className="text-sm text-blue-800">Página {item.pageNumber} · Contenido aprobado</p>
-    <h3><button type="button" aria-expanded={expanded} aria-controls={`${id}-content`} onClick={() => setExpanded(v => !v)} className="w-full rounded-lg py-2 text-left font-semibold break-words focus-visible:outline-2 focus-visible:outline-blue-700">{item.title} <span aria-hidden="true">{expanded ? "−" : "+"}</span></button></h3>
+    <h3><button type="button" aria-expanded={expanded} aria-controls={`${id}-content`} onClick={onToggle} className="w-full rounded-lg py-2 text-left font-semibold break-words focus-visible:outline-2 focus-visible:outline-blue-700">{item.title} <span aria-hidden="true">{expanded ? "−" : "+"}</span></button></h3>
     <div id={`${id}-content`} hidden={!expanded} className="space-y-4">
       {item.type === "visual" && item.visual ? <VisualResource value={item.visual} title={item.title} description={item.text} /> : item.type === "summary" && item.summary ? <SummaryResource value={item.summary} /> : <p className="whitespace-pre-wrap break-words text-sm">{item.text}</p>}
       <button type="button" onClick={onSource} className="rounded-lg border border-blue-300 px-3 py-2 text-sm">Ver {item.selection?.kind === "area" ? "zona" : item.selection?.kind === "text" ? "selección de texto" : "página"} original · Página {item.pageNumber}</button>
@@ -23,22 +23,42 @@ function ReaderCard({ item, endpoint, onSource, privateTest }: { item: ReaderIte
     </div>
   </article>;
 }
-function Reading({ view, endpoint }: { view: ReaderView; endpoint: string }) {
+export function Reading({ view, endpoint }: { view: ReaderView; endpoint: string }) {
   const [page, setPage] = useState(1), [panel, setPanel] = useState(false), [navigation, setNavigation] = useState<{ page: number; fragment: FragmentSelection | null; key: number }>({ page: 1, fragment: null, key: 0 });
-  const pdf = useRef<HTMLDivElement>(null), content = useRef<HTMLElement>(null), position = useRef<{ x: number; y: number; page: number; horizontal: number } | null>(null);
+  const [selected, setSelected] = useState<string | null>(null), [expanded, setExpanded] = useState(() => new Set(view.items.filter(i => i.initialExpanded).map(i => i.id)));
+  const pdf = useRef<HTMLDivElement>(null), content = useRef<HTMLElement>(null), position = useRef<{ x: number; y: number; page: number; horizontal: number; trigger: HTMLElement | null; markerId?: string } | null>(null);
+  const markers = useMemo(() => view.items.map(item => ({ id: item.id, title: item.title, pageNumber: item.pageNumber, selection: item.selection })), [view.items]);
   const reportPage = useCallback((page: number) => setPage(page), []);
-  function openPanel(currentPage = page) { const figure = pdf.current?.querySelector<HTMLElement>(`[data-pdf-page="${currentPage}"]`); position.current = { x: window.scrollX, y: window.scrollY, page: currentPage, horizontal: figure?.scrollLeft ?? 0 }; setPage(currentPage); setPanel(true); }
+  const openPanel = useCallback((currentPage: number, markerId?: string) => {
+    const figure = pdf.current?.querySelector<HTMLElement>(`[data-pdf-page="${currentPage}"]`);
+    position.current = { x: window.scrollX, y: window.scrollY, page: currentPage, horizontal: figure?.scrollLeft ?? 0, trigger: document.activeElement instanceof HTMLElement ? document.activeElement : null, markerId };
+    setSelected(markerId ?? null); setPage(currentPage);
+    if (markerId) setExpanded(previous => new Set(previous).add(markerId));
+    setPanel(true);
+  }, []);
+  const openMarker = useCallback((id: string, currentPage: number) => openPanel(currentPage, id), [openPanel]);
+  const openPagePanel = useCallback((currentPage: number) => openPanel(currentPage), [openPanel]);
   useLayoutEffect(() => {
-    if (panel) { content.current?.scrollIntoView({ block: "start", behavior: "instant" }); content.current?.querySelector<HTMLButtonElement>("button")?.focus({ preventScroll: true }); }
-    else if (position.current) { const p = position.current, figure = pdf.current?.querySelector<HTMLElement>(`[data-pdf-page="${p.page}"]`); if (figure) figure.scrollLeft = p.horizontal; window.scrollTo({ left: p.x, top: p.y, behavior: "instant" }); }
-  }, [panel]);
+    if (panel) {
+      const target = selected ? content.current?.querySelector<HTMLElement>(`[data-reader-item="${CSS.escape(selected)}"]`) : content.current;
+      target?.scrollIntoView({ block: "start", behavior: "instant" }); target?.querySelector<HTMLButtonElement>("button")?.focus({ preventScroll: true });
+    } else if (position.current) {
+      const p = position.current, figure = pdf.current?.querySelector<HTMLElement>(`[data-pdf-page="${p.page}"]`);
+      if (figure) figure.scrollLeft = p.horizontal;
+      const trigger = p.trigger?.isConnected ? p.trigger : p.markerId ? pdf.current?.querySelector<HTMLElement>(`[data-reinforcement-id="${CSS.escape(p.markerId)}"]`) : null;
+      trigger?.focus({ preventScroll: true }); window.scrollTo({ left: p.x, top: p.y, behavior: "instant" });
+    }
+  }, [panel, selected]);
   return <>
-    <div role="group" aria-label="Secciones de lectura" className="flex flex-wrap gap-2"><button type="button" aria-pressed={!panel} onClick={() => setPanel(false)} className="rounded-lg border px-3 py-2">PDF original</button><button type="button" aria-pressed={panel} onClick={() => openPanel()} className="rounded-lg border px-3 py-2">Refuerzos</button></div>
+    <div role="group" aria-label="Secciones de lectura" className="flex flex-wrap gap-2"><button type="button" aria-pressed={!panel} onClick={() => setPanel(false)} className="rounded-lg border px-3 py-2">PDF original</button><button type="button" aria-pressed={panel} onClick={() => { if (!panel) openPanel(page); }} className="rounded-lg border px-3 py-2">Refuerzos</button></div>
+    <p role="status" className="text-sm text-slate-700">Página {page}: {view.items.filter(item => item.pageNumber === page).length} refuerzos disponibles.</p>
     <div ref={pdf} hidden={panel}><PdfViewer key={endpoint} projectId="reader" sourceUrl={`${endpoint}/assets/pdf`} visible={!panel} initialPage={navigation.page} initialFragment={navigation.fragment} navigationKey={navigation.key}
-      onVisiblePageChange={reportPage} onOpenReinforcements={openPanel} /></div>
+      onVisiblePageChange={reportPage} onOpenReinforcements={openPagePanel} reinforcementMarkers={markers} onReinforcementActivate={openMarker} /></div>
     <section ref={content} hidden={!panel} aria-label={`Refuerzos de la página ${page}`} className="space-y-4"><button type="button" onClick={() => setPanel(false)} className="rounded-lg border px-3 py-2">Cerrar refuerzos y volver al PDF</button><h2 className="text-xl font-semibold">Refuerzos de la página {page}</h2>
       {!view.items.some(i => i.pageNumber === page) && <p>Esta página no tiene refuerzos publicados para consultar.</p>}
-      {view.items.filter(i => i.pageNumber === page).map(item => <ReaderCard key={item.id} item={item} endpoint={endpoint} privateTest={view.privateTest} onSource={() => { position.current = null; setNavigation(p => ({ page: item.pageNumber, fragment: item.selection as FragmentSelection | null, key: p.key + 1 })); setPanel(false); }} />)}
+      {view.items.filter(i => i.pageNumber === page).map(item => <ReaderCard key={item.id} item={item} endpoint={endpoint} privateTest={view.privateTest} expanded={expanded.has(item.id)}
+        onToggle={() => setExpanded(previous => { const next = new Set(previous); if (next.has(item.id)) next.delete(item.id); else next.add(item.id); return next; })}
+        onSource={() => { position.current = null; setNavigation(p => ({ page: item.pageNumber, fragment: item.selection as FragmentSelection | null, key: p.key + 1 })); setPanel(false); }} />)}
     </section>
   </>;
 }

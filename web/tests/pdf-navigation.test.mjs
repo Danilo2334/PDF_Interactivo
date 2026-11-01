@@ -349,7 +349,7 @@ test("a render error is reported and can be retried with a fresh renderer", asyn
 
 // Ejercitar los eventos reales del componente con estado y efectos controlados,
 // sin sustituir las pruebas visuales del navegador ni necesitar credenciales.
-function viewerFixture(total = 20, initialPage = 1, initialFragment = null) {
+function viewerFixture(total = 20, initialPage = 1, initialFragment = null, markers) {
   const states = [], refs = [], effects = [], calls = [], requests = [], zooms = [], selections = [];
   let cursor = 0, refCursor = 0, effectStarted = false, callbacks, tree;
   const restored = [];
@@ -377,6 +377,7 @@ function viewerFixture(total = 20, initialPage = 1, initialFragment = null) {
     "@/components/diagnostics/view-timing": { ViewTiming: () => null },
     "@/components/documents/pdf-thumbnails": { PdfThumbnails: () => null },
     "@/lib/pdf/page-fragments": { createPageFragments: () => ({ clear() {}, clearOtherPage() {}, setMode() {}, dispose() {}, restore(value) { restored.push(value); return true; } }) },
+    "@/lib/pdf/reinforcement-markers": loadModule("lib/pdf/reinforcement-markers.ts"),
     "@/lib/pdf/render-visible-pages": {
       renderVisiblePages(_pdf, _container, ready, error, changed) {
         callbacks = { ready, error, changed }; void Promise.resolve().then(ready);
@@ -392,7 +393,8 @@ function viewerFixture(total = 20, initialPage = 1, initialFragment = null) {
     },
     console: { error() {} },
   });
-  const outer = PdfViewer({ projectId: "test-project", initialPage, initialFragment, onFragmentSelect: initialFragment ? () => {} : undefined, onPageSelect: page => selections.push(page) });
+  const activated = [];
+  const outer = PdfViewer({ projectId: "test-project", initialPage, initialFragment, onFragmentSelect: initialFragment ? () => {} : undefined, onPageSelect: page => selections.push(page), reinforcementMarkers: markers, onReinforcementActivate: markers ? (id, page) => activated.push([id,page]) : undefined });
   states.length = 0;
   const Pages = outer.type;
   function nodes(node) {
@@ -410,7 +412,8 @@ function viewerFixture(total = 20, initialPage = 1, initialFragment = null) {
   }
   render(); const cleanups = effects.map((effect) => effect()); effectStarted = true;
   return {
-    calls, requests, zooms, selections, restored, render,
+    calls, requests, zooms, selections, restored, render, activated,
+    nodes: () => nodes(tree),
     get callbacks() { return callbacks; },
     button(label) { return nodes(tree).find((node) => node.type === "button" && node.props.children === label); },
     labelled(label) { return nodes(tree).find((node) => node.props?.["aria-label"] === label); },
@@ -528,4 +531,14 @@ test('disposing during pending text decoration releases a late result without re
   const f=rendererFixture({decorate:()=>new Promise(resolve=>{finish=()=>resolve(()=>released++);})});
   await settle();f.renderer.dispose();finish();await settle();
   assert.equal(released,1);assert.equal(f.container.children.length,0);assert.equal(f.listeners.size,0);
+});
+
+test('HU034 controls and page input update the available reinforcement list without another PDF download',async t=>{
+  const markers=[{id:'first',title:'Energía',pageNumber:1,selection:null},{id:'other',title:'Agua',pageNumber:2,selection:null}];
+  const f=viewerFixture(3,1,null,markers);t.after(()=>f.dispose());await settle();f.render();
+  const titles=()=>f.nodes().filter(n=>n.type==='button'&&Array.isArray(n.props.children)&&n.props.children.includes('. ')).map(n=>n.props.children.at(-1));
+  assert.deepEqual(titles(),['Energía']);f.button('Siguiente').props.onClick();f.render();assert.deepEqual(titles(),['Agua']);
+  const button=f.nodes().find(n=>n.type==='button'&&Array.isArray(n.props.children)&&n.props.children.at(-1)==='Agua');button.props.onClick();assert.deepEqual(f.activated,[['other',2]]);
+  f.enter('3');assert.deepEqual(titles(),[]);assert.ok(f.nodes().some(n=>n.type==='p'&&n.props.children==='Esta página no tiene refuerzos disponibles.'));
+  f.callbacks.changed(1);f.render();assert.deepEqual(titles(),['Energía']);assert.equal(f.requests.length,1);
 });
