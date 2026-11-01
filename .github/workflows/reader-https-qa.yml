@@ -1,0 +1,46 @@
+name: Reader HTTPS QA from an external machine
+
+on:
+  pull_request:
+    branches: [develop]
+    types: [opened, reopened, synchronize]
+    paths:
+      - .github/workflows/reader-https-qa.yml
+      - web/scripts/check-reader-external.mjs
+  workflow_dispatch:
+    inputs:
+      reader_url:
+        description: Existing public link of the synthetic PDF Interactivo QA fixture
+        required: true
+        type: string
+      expected_state:
+        description: Publication state being verified
+        required: true
+        default: public
+        type: choice
+        options: [public, retired]
+
+permissions:
+  contents: read
+
+jobs:
+  reader-https:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.pull_request.head.repo.full_name == github.repository &&
+       contains(github.event.pull_request.body, 'QA-Reader-URL:'))
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '22'
+      - name: Verify the real QA reader without credentials
+        env:
+          QA_PUBLIC_READER_URL: ${{ inputs.reader_url }}
+          QA_EXPECTED_STATE: ${{ inputs.expected_state }}
+          QA_RUNNER_ENVIRONMENT: ${{ runner.environment }}
+        run: node web/scripts/check-reader-external.mjs
