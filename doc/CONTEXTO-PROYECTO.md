@@ -5516,7 +5516,9 @@ optimización en HU041. No se afirma carga ilimitada.
 
 Retirada normal de9→unpublished: GET lector y POST del quiz404; grupos, respuestas,
 notas y13 intentos idénticos antes/después en la consulta del propietario. Original
-privado1580bytes y SHA completo e7277d66...67946 idéntico al registrado arriba.
+privado1580bytes y SHA-256
+e7277d66afd7caba47385cfac2f0e55a2eeb4fb7aa7136409fa35300a6347946,
+idéntico al registrado arriba.
 SQL final:0 instantáneas públicas,13 intentos lector,11 prácticas,15 visitas y42
 aperturas de refuerzo (incluye el recorrido QA deHU039). No se borraron evidencias
 ni se reiniciaron contadores para que parecieran menores. Eliminación vinculada
