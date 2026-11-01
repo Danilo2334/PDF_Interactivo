@@ -6,8 +6,9 @@ deployment `dpl_CxpcaJUdiDMAdvyTw8D5YRDqjFNE` READY, Production del proyecto QA
 separado de Danilo, Hobby sin activar pagos. `PUBLICATION_HTTPS_VERIFIED=true`.
 Las publicaciones sintéticas se retiraron al terminar: cero públicas, siete
 intentos de lector y diez prácticas privadas conservados. Sin llamadas IA.
-HU030, HU033, HU036 y sus subtareas verificadas están Finalizado. HU032 conserva
-SCRUM-122/203 En curso; pendientes concretos al final. PR #46 en borrador, sin merge.
+HU030, HU032, HU033, HU036 y sus subtareas verificadas están Finalizado.
+PR #46 integrado a develop en365d282; PR #47 contiene el verificador externo y
+su documentación, en borrador y sin merge. El QA conserva la misma aplicación.
 
 Las secciones de bootstrap del 31/10 describen el arranque anterior con el flag
 false y acceso pendiente; no son el estado actual. El registro del 01/11 al final
@@ -35,13 +36,15 @@ pantalla de login por HTTPS, no el recorrido completo de publicación/lector.
 | Hosting de Danilo | QA READY con corrección ecf721e; sin Git automático ni Pro. | Usar CLI con equipo/proyecto explícitos. No desplegar de nuevo por cambios solo documentales. |
 | Clave privada de servidor | Proporcionada privadamente por el propietario; lectura mínima aceptada200 y nueve comprobaciones de formato correctas. Ocho variables en Production. | Mantener tres variables de servidor como Secret; ninguna clave IA subida. |
 | Dominio y sesión de despliegue | TLS 1.3 válido, certificado Google Trust Services, HTTP→HTTPS308, login personal conservado y carga privada real. | SMTP de recuperación sigue bloqueado en SCRUM-233; no restablecer de nuevo ni extraer cookies personales. |
-| Retirada editorial | Pública→Privada→Despublicada, token nuevo al republicar, sustitución y rechazo de vista/PDF/imagen/intentos comprobados en HTTPS. | HU036 Finalizado; corrección visual en PR #46 pendiente de revisión e integración autorizada. |
-| Prueba del lector | Dos sesiones HTTP anónimas separadas, IAB de otra cuenta, identificación opcional, quizzes, móvil, teclado y recursos reales. | SCRUM-122/203: acreditar segundo equipo. Edición posterior de borrador ya comprobada. Los sondeos remotos no pudieron acreditarlo. |
+| Retirada editorial | Pública→Privada→Despublicada, token nuevo al republicar, sustitución y rechazo de vista/PDF/imagen/intentos comprobados en HTTPS. | HU036 Finalizado; corrección visual revisada e integrada en365d282, sin nuevo deployment. |
+| Prueba del lector | IAB real y dos sesiones HTTP independientes; además, runner GitHub externo/Linux:9 comprobaciones públicas y4 tras retirar. | HU032 y122/203 Finalizado. Prueba externa HTTP y recursos entregados; no se afirma automatizar un navegador remoto. |
 
 El recorrido positivo se comprobó contra el hosting HTTPS, no contra localhost.
-Un segundo equipo no se da por probado: la herramienta web no pudo abrir la URL y
-el conector Vercel devolvió403; la CLI de Danilo sí opera el QA. No reducir ese
-criterio ni declarar HU032 terminada por las restantes pruebas aprobadas.
+El acceso desde otro equipo se acredita ahora con el runner estándar de GitHub,
+sin sesión propietaria ni claves privadas. Ejecutó un cliente HTTP y descargó los
+recursos reales; la parte visual se comprobó en IAB por separado. Web y el conector
+Vercel habían fallado, pero no se rebajaron criterios ni se cambiaron protecciones:
+se utilizó otra máquina y otra vía de verificación. Ejecuciones al final.
 
 ## Comprobador privado — bootstrap del 31/10
 
@@ -314,3 +317,41 @@ node --env-file=web/.env.qa.local web/scripts/check-reader-qa.mjs --publication
 
 Los comandos --bootstrap anteriores documentan el arranque con publicación
 bloqueada; no son el modo de verificación del flag actual.
+
+## Cierre de HU032 y revisión del PR #46 — 01/11/2026
+
+PR #46 revisado sin hallazgos e integrado a develop en
+`365d282d820e807a942703cb9b9336335b7e2964`. QA sin redeploy: mismo código ecf721e,
+misma sesión/epoch y mismas variables privadas. Stash d6406e0 conservado.
+
+El pendiente externo se ejecutó en un runner estándar real de GitHub,
+github-hosted/Linux/x64, Node22.23.4; repositorio público existente, sin activar
+pagos. No usa cuentas de Francisco ni claves privadas. Su cliente HTTP descarga
+el HTML y recursos y comprueba la API; no automatiza un navegador remoto. Las
+pruebas visuales IAB de la aplicación se documentan por separado.
+
+- [Acceso público externo: PASS9](https://github.com/Danilo2334/PDF_Interactivo/actions/runs/41277921902).
+  TLS válido,308,HTML y12 assets813292bytes; versión7 con siete refuerzos aprobados,
+  dos cookies anónimas independientes, PDF1580bytes con SHA original, worker1264369,
+  imagen6424 y dos quizzes sin claves previas ni resultados heredados.
+- [Mismo enlace retirado: PASS4](https://github.com/Danilo2334/PDF_Interactivo/actions/runs/41278037051).
+  TLS/redirección/assets siguen válidos; API y PDF404. El HTML del lector200 es
+  la página inicial, no contenido publicado. Ningún intento nuevo.
+- JSON recuperados de logs en HTTPS-QA/external-github-public.json y
+  external-github-retired.json. Capturas21/22 reales; tres adjuntos nuevos en122/203,
+  un comentario por issue y todas las imágenes anteriores conservadas.
+- HU032/SCRUM-44 y122/203 Finalizado;121/204/226 ya Finalizado. Sin pendientes
+  funcionales de HU032. No se afirma resolver SMTP233 ni los límites de carga.
+
+El verificador y workflow están en [PR #47](https://github.com/Danilo2334/PDF_Interactivo/pull/47),
+sin merge. Sintaxis/lint y guardas de dominio/HTTPS/estado aprobadas. Solo Node
+integrado y Actions oficiales fijadas por SHA; no instala dependencias de la app.
+Ejecuta GET reales y no recibe secretos, propietario autenticado ni APIs de IA.
+El estado esperado debe coincidir con la fase: public prueba acceso; retired
+prueba revocación. No regenerar IA ni reactivar enlaces anteriores para repetirlo.
+
+El QA terminó retirado: cero públicas, siete intentos lector y diez prácticas
+privadas. La sesión personal queda conservada. No nuevo deployment ni cambio de
+protección. Para repetir acceso público, el agente republicará solo la instantánea
+sintética con confirmación normal y utilizará su enlace nuevo; al terminar retirará
+la publicación y verificará el mismo enlace en modo retired.
