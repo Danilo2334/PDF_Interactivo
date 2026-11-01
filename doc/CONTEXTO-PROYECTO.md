@@ -5540,3 +5540,69 @@ No asumir que están cerradas porque exista implementación o un PR integrado, n
 reimplementar desde una rama antigua. En Sprint7 siguen HU040/041/045/046, además
 de SMTP233/cargas grandes ya conocidos. No declarar terminado el proyecto o los
 sprints hasta conciliar esos pendientes reales.
+
+### 01/11/2026 — Auditoría de dependencias antiguas con lector HTTPS real
+
+Se resolvieron pendientes de aceptación que seguían abiertos tras integrar sus
+PR originales. No se reimplementaron historias ni se cambiaron estados de datos
+mediante SQL. Se usó QA de producción efa3237 y las cuentas sintéticas existentes;
+ninguna contraseña personal enviada por chat se utilizó o almacenó.
+
+HU017/SCRUM-29 y91/181/92 Finalizado:35 solicitudes reales,24 pendientes,
+4 generadas y7 aprobadas. Filtros Generada/Aprobada, actualización y restablecer
+al listado completo comprobados. Detalle167fe954… conserva página2, texto y estado
+al ir al PDF y volver. Historial real distingue generación automática del sistema
+y aprobación explícita del propietario el28/10 a00:13:40. Evidencias anteriores de
+vacío, paginación, error, reintento y restauración de zona/texto preservadas.
+
+HU028/SCRUM-40 y114 Finalizado: instantánea9 incluye solo quizzes aprobados3/4,
+con propietario y fecha persistidos. Excluye los2 borradores actuales5/6 y las3
+versiones descartadas realmente en su historial. Consulta SQL independiente y
+GET público coinciden; ninguna nueva aprobación, edición o generación para esta
+auditoría. El refuerzo privado1201c3a3… tampoco aparece en el lector público.
+
+HU029/SCRUM-41 y198 Finalizado: proyección pública solo id/title/allowRetries/
+questions y prompt/options, sin clave ni explicación antes del intento. Se
+referencian los resultados auténticos deHU039:1/2 sin reintento,0/1→1/1 permitido,
+409 al intentar otra operación no permitida y persistencia tras recargar. La
+captura anterior al envío, hasta ahora no adjunta, se vinculó únicamente a198;
+las imágenes de135/217 no se duplicaron.
+
+HU031/SCRUM-43 y120 Finalizado: se probó la vista previa del EDITOR, distinta de
+reader-test. Páginas1/2, esquema, paneles y quizzes privados5/6 evaluados2/2 y1/1.
+Antes/después13 intentos reales y11 prácticas: responder en esta vista no escribe
+en ninguna de esas tablas. Volver conservó el título temporal del formulario
+multimedia sin guardar; se limpió después, sin persistirlo. Comparación con lector9:
+7 refuerzos aprobados,2 medios y2 quizzes3/4 frente a8 refuerzos de vista previa y
+sus borradores. Otra cuenta404 y anónimo401 en GET preview. Consolas warn/error[].
+Se reutilizan las pruebas anteriores de multimedia; no se afirma haber repetido
+la carga de todos sus formatos en esta auditoría.
+
+Publicación9 se reactivó por API normal con expectedVersion2→3 y se retiró al
+terminar3→4. GET del enlace volvió404. No se crearon nuevas instantáneas ni se
+registraron nuevos intentos/visitas/aperturas:0 públicas,13 intentos,11 prácticas,
+15 visitas y42 aperturas. PDF privado descargado por API normal:1580bytes y SHA256
+e7277d66afd7caba47385cfac2f0e55a2eeb4fb7aa7136409fa35300a6347946, sin cambios.
+
+HU024/36,HU025/37 yHU026/38 Finalizado tras revisar sus criterios, subtareas ya
+finalizadas, evidencias reales y PR30/31/32 integrados. Contraste actual de
+contenido aprobado/tarjetas/páginas conservado. No sustituir la medición original
+del panel propietario108 (6 aperturas, máximo0,0136s) por métricas del lector.
+HU027/39 permanece En revisión: conserva4 subtareas finalizadas y sus pruebas
+locales de archivos/enlaces pequeños, pero el hosting4,5MB todavía no acredita
+imágenes5MiB/vídeo20MiB anunciados. Resolver cargas grandes con permisos intactos
+y prueba real antes del cierre alojado; no reducir el límite para aprobar.
+
+Jira:9 imágenes auténticas10556–10564, comentarios únicos actualizados sin borrar
+medios previos:91=10110 (4 imágenes totales),181=10111 (5),92=10112 (9),
+114=10163 (5),198=10167 (3),120=10173 (4). Se comprobaron conteos inline, nombres,
+tamaños y asociaciones de adjuntos; no se afirma haber visto miniaturas en la UI
+de Jira. Madres conservan sus comentarios únicos, sin duplicar imágenes.
+Evidencias y JSON sanitizados en AUDITORIA-REAL fuera de Git; la foto preenvío
+permanece enHU039-REAL. Móvil no se volvió a capturar; siguen sus límites IAB.
+
+Auditoría sin cambios de aplicación: siguen vigentes412/412,lint y build deefa3237.
+Sin dependencias/migraciones/pagos/llamadas IA nuevas ni merges. PR48→49→50 listos
+pero pendientes de integración autorizada; stash d6406e0 y configuración intactos.
+Siguiente trabajo:HU040/041/045/046, másHU027 cargas grandes ySMTP233. El proyecto
+no está terminado y no se cierra un sprint solo por esta conciliación.
