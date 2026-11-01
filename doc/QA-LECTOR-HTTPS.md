@@ -24,9 +24,9 @@ no acreditan lector anónimo ni HTTPS. No desplegar todavía.
 | Requisito | Comprobado hoy | Acción necesaria |
 | --- | --- | --- |
 | Hosting de Danilo | CLI oficial autenticada como Danilo2334: proyecto vacío creado y configurado; cero deployments. El conector aún no ve ese proyecto. | Usar CLI con equipo explícito; mantener sin Git ni despliegues. |
-| Clave privada de servidor | `SUPABASE_SERVER_KEY` ausente en la configuración local. | Usar una clave existente del Supabase correcto, solo como Secret del futuro proyecto QA. No enviarla por chat. |
-| Dominio y sesión de despliegue | No hay origen QA asignado ni epoch compartido configurado para hosting. | Asignar dominio estable y UUID de despliegue común a sus funciones. El wrapper local ya genera su propio epoch. |
-| Retirada editorial | HU036 implementada. Prueba real local privada→despublicada→privada, recarga, conflicto y bloqueo de lector/PDF/imagen/quizzes correctos. | Revisar el PR y ejecutar posteriormente la variante pública HTTPS; no darla por comprobada con localhost. |
+| Clave privada de servidor | `SUPABASE_SERVER_KEY` ausente tanto en local como en la preparación QA; hosting sin variables. | Copiar una clave existente del Supabase correcto a la preparación privada; después cargarla como Secret del QA autorizado. No enviarla por chat. |
+| Dominio y sesión de despliegue | Dominio `pdf-interactivo-qa.vercel.app` asignado y verificado por API. Origen, URL y UUID preparados localmente en `.env.qa.local`, no subidos. | Tras autorización, trasladar la configuración al proyecto QA. Aún no hay app/certificado/redirecciones probados. |
+| Retirada editorial | HU036 integrada y revisada en PR#43. Prueba real local privada→despublicada→privada, recarga, conflicto y bloqueo de lector/PDF/imagen/quizzes correctos. | Ejecutar posteriormente la variante pública HTTPS; no darla por comprobada con localhost. |
 | Prueba externa | No ejecutada. Publicación deshabilitada. | Autorizar después un despliegue QA y comprobar certificado, redirecciones y lector. |
 
 Desplegar sí es el siguiente paso de infraestructura para cerrar HTTPS, pero no
@@ -48,12 +48,37 @@ código 1 si falta configuración. No realiza red, escrituras ni llamadas IA.
 solo debe utilizarse después de verificar HTTPS realmente. El script no modifica
 ese flag ni demuestra por sí solo titularidad de claves, TLS o acceso externo.
 
-Resultado real con configuración local: cinco comprobaciones correctas y cuatro
+Resultado real con `.env.local`: cinco comprobaciones correctas y cuatro
 pendientes (clave servidor, origen, URL del sitio coincidente y epoch de hosting).
 El secreto de firma tiene formato correcto, el proyecto Supabase coincide y no
 se detectaron las credenciales de servidor conocidas con prefijo público. No se
 leyeron ni escribieron secretos remotos. La identidad de las nuevas claves secret
 debe comprobarse en el proyecto; su prefijo no demuestra a qué BD pertenecen.
+
+Preparación actual comprobada: `web/.env.qa.local`, archivo privado ignorado por
+Git, con ocho variables permitidas y sin claves IA. Reutiliza la clave pública y
+el secreto de firma existentes; no modifica `.env.local` ni la sesión local.
+Origen/URL son `https://pdf-interactivo-qa.vercel.app`, epoch UUID generado y flag
+`false`. El comprobador pasa **8/9**; únicamente falla `server_key_format`.
+Son comprobaciones de formato, no autorización de despliegue ni pruebas HTTPS.
+Repetir con ese archivo cuando se complete la clave, sin imprimir valores:
+
+```powershell
+node --env-file=web/.env.qa.local web/scripts/check-reader-qa.mjs --bootstrap
+```
+
+Para completar la única variable privada faltante: entrar personalmente al
+proyecto `zqodybtzssvqozrckfgw` de Supabase → Settings → API Keys y copiar una
+clave secret existente (o legacy service_role del mismo proyecto) como valor de
+`SUPABASE_SERVER_KEY` en ese archivo. No usar la publishable/anon, crear otra
+clave, rotar la remota ni pegarla en chat/Jira. La documentación oficial:
+https://supabase.com/docs/guides/getting-started/api-keys.
+
+No se ha cargado ninguna de estas variables a Vercel. Una vez autorizada esa fase,
+el agente comprobará la clave contra el proyecto mediante una lectura mínima y
+transferirá únicamente estas ocho variables al target Production del proyecto QA,
+usando Secret para credenciales, sin pasarlas como argumentos del proceso. No
+copiar todo `.env.local`, ni usar `env pull` sobre él: lo sobrescribe.
 
 Validación del comprobador: sintaxis y ESLint correctos; ensayo aislado de fases,
 rechazo de HTTP/local y credencial pública, y ausencia de valores en la salida.
@@ -77,6 +102,11 @@ proyecto correctas, siempre con equipo explícito. Cuenta/equipo Hobby.
 Configuración leída de vuelta: Next.js, raíz `web`, Node22.x, `npm ci`,
 `npm run build`, `previewDeploymentsDisabled=true`, `link=null`.
 `vercel list pdf-interactivo-qa --json` devuelve deployments=[] y count=0.
+Recomprobado después de integrar PR42–45: mismo ID/equipo/raíz/Node/comandos,
+sin Git, previews automáticas deshabilitadas, cero variables y cero deployments.
+CLI devuelve dominio `pdf-interactivo-qa.vercel.app`,verified=true,sin redirect.
+Protección actual `all_except_custom_domains`, sin modificarla; el ensayo externo
+debe usar el dominio Production del proyecto QA, no una Preview protegida.
 `publicSource=false` no aparece en la respuesta: no se afirma persistido ese
 campo. No hay fuente subida. No se verificó consumo/cuota restante.
 No importar el repositorio ni asociar ramas ahora: eso puede iniciar despliegues.
@@ -126,7 +156,9 @@ Consulta de solo lectura en Supabase, 31/10/2026, sin claves ni respuestas del q
 - Proyecto `QA-HU015-019-digital`, ID `3f600fbc-1b8a-4fbe-a5d1-8ac700c08585`.
   Cinco instantáneas privadas, versiones1–5, cada una con siete refuerzos y dos
   quizzes aprobados; uno permite reintentos y otro los bloquea. Cero intentos de
-  lector en todas. Hay ocho ensayos de propietario separados: v3=1, v4=4, v5=3.
+  lector en todas. Hay diez ensayos de propietario separados: v3=1, v4=4, v5=5.
+  Verificación posterior a HU035: PDF digital1580bytes, seis instantáneas totales
+  incluyendo escaneado, todas privadas y cero intentos de lector.
 - V3 exige identificación; v4/v5 no. **No publicar v3 directamente**: existen
   versiones posteriores y el servidor lo impide. Para probar identificación,
   preparar la próxima versión mediante UI con esa opción, sin alterar SQL.
@@ -168,3 +200,27 @@ Orden de cierre: SCRUM-226 (HTTPS), SCRUM-122/203/204 (publicación), SCRUM-123/
 124/205/206 (lector), SCRUM-117/118/199/200 (intentos), más los contrastes
 pendientes de SCRUM-114/198/120. La retirada depende de SCRUM-48 y sus subtareas
 129/130/211/212. Este documento no declara ejecutado ninguno de esos positivos.
+
+## Requisitos exactos para autorizar el QA, todavía sin desplegar
+
+1. Completar privadamente `SUPABASE_SERVER_KEY` como se indica arriba. El agente
+   puede comprobarla sin revelar el valor; no necesita otra clave IA para este QA.
+2. Autorizar explícitamente trasladar las ocho variables al proyecto QA de Danilo
+   y crear su primer deployment en el dominio verificado. Fuente candidata:
+   `develop`, código integrado en `adb3cd8642161cca0efe96fe9c2aac7fb99b5875`;
+   fijar SHA completo limpio al ejecutar, incluyendo la continuidad posterior.
+   No vincular Git, comprar dominio, activar Pro ni facturación. Hobby está activo;
+   cuota restante sin verificar, no prometer disponibilidad ilimitada.
+3. Para el primer despliegue: mantener `PUBLICATION_HTTPS_VERIFIED=false`, comprobar
+   HTTPS y rutas privadas. El propietario iniciará sesión personalmente en el
+   nuevo dominio cuando se requiera; las cookies de localhost no lo autentican allí.
+4. Tras validar TLS, autorizar habilitar la fase pública y publicar únicamente
+   los documentos QA identificados. Ejecutar el recorrido anterior y retirar las
+   publicaciones al terminar. No compartir documentos reales/ajenos ni sustituir
+   resultados del lector por prácticas privadas. El flag true solo después de TLS.
+
+Esto no exige configurar recuperación por correo para iniciar sesión con la
+cuenta existente. Si se incluye recuperación, añadir únicamente el callback
+`https://pdf-interactivo-qa.vercel.app/auth/callback?next=/reset-password` en
+Supabase preservando localhost y los anteriores; no cambiar ahora esa lista.
+La aplicación original/no QA y las cuentas de Francisco quedan fuera del alcance.

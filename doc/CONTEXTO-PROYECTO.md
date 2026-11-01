@@ -4831,3 +4831,53 @@ de despliegue QA antes de verificar TLS/publicación/lector/retirada/republicaci
 El proyecto QA vacío de Danilo conserva su preparación documentada; no se subió
 fuente, vinculó Git, activó publicación ni generó deployment durante esta revisión.
 Guía doc/QA-LECTOR-HTTPS.md actualizada al estado integrado.
+
+### 31/10/2026 — Preparación concreta QA HTTPS posterior a los merges
+
+El usuario pidió continuar la preparación de HU036/lector y detallar lo necesario,
+manteniendo expresamente la prohibición de desplegar. Revisión sin cambios de
+aplicación: develop limpio enadb3cd8; sesión/servidor local conservados. El
+conector Vercel de Danilo sigue404 al consultar el proyecto conocido; se usó
+la CLI oficial65.9.0 ya autenticada, con scope explícito del equipo correcto.
+
+Lecturas actuales: proyecto prj_pRui4rYL9DnbERflhyhplv2mIoJ3, equipo
+team_I5CBYezIIEWl8FIlhW7vqMR4, Hobby activo, raízweb/Node22.x/Next.js/comandos
+sin cambios. Sin Git conectado, previewDeploymentsDisabled=true, cero deployments
+y cero variables remotas. Dominio pdf-interactivo-qa.vercel.app ya asignado y
+verified=true, sin redirect. Esto verifica asociación del dominio, no TLS de la
+aplicación ausente. Protección all_except_custom_domains sin modificar.
+
+Se creó exclusivamente el archivo privado ignorado web/.env.qa.local, sin
+sobrescribir web/.env.local: allowlist de ocho variables, copia local de clave
+pública y secreto de firma existentes, origen/URL QA verificados como sintaxis,
+epoch UUID nuevo y PUBLICATION_HTTPS_VERIFIED=false. Sin claves OpenAI/Gemini ni
+subida a hosting. Comprobador existente: .env.local sigue5/9 y preparación QA8/9;
+solo falta SUPABASE_SERVER_KEY en el archivo QA. No se imprimieron valores ni
+se versionó el archivo. No se obtuvo, creó o rotó ninguna clave privada remota.
+
+Se necesita que el propietario copie privadamente una secret o service_role
+existente del Supabase zqodybtzssvqozrckfgw a ese campo. Después, y solo al
+autorizar el despliegue, el agente validará acceso mínimo y cargará la allowlist
+en Production del proyecto QA. Primer arranque con publicación bloqueada, TLS/
+redirecciones/permisos, login personal del propietario y posterior autorización
+de fase pública con los documentos QA. No nuevas claves IA, dominio comprado,
+Pro ni facturación. Hobby activo no demuestra cuota restante ilimitada.
+
+Historial remoto de migraciones leído: intentos20261029010922 y visibilidad
+20261031073708 ya aplicados; no reaplicados. BD, solo lectura: seis instantáneas,
+cero públicas,cero intentos lector,diez prácticas privadas; digital1580bytes,
+siete refuerzos en cada versión y distribución prácticasv3=1,v4=4,v5=5.
+Guía corregida a estos datos y al dominio ya existente. Se mantiene el límite
+de payload4.5MB de Functions documentado; este QA pequeño no acredita los límites
+completos de carga de la app. Fuentes oficiales consultadas de Vercel/Supabase,
+sin contratar ni cambiar protecciones. Recuperación por correo queda fuera de
+este recorrido; su callback QA exacto está preparado documentalmente, sin cambiar
+los callbacks existentes.
+
+HU036/SCRUM-48 y129/211/212/130, así como SCRUM-226, conservan En curso. Falta
+ejecutar las variantes públicas, sesiones aisladas, retirada/republicación y
+recursos/intentos en HTTPS real. Jira se actualiza sobre sus comentarios únicos,
+preservando capturas anteriores; no hay capturas nuevas ni se inventan pruebas
+de un despliegue inexistente. No nuevas llamadas IA, escrituras BD, merges ni
+deployments. La preparación completa y las intervenciones necesarias quedan en
+doc/QA-LECTOR-HTTPS.md; no pedir de nuevo conectar Vercel ni comprar dominio.
