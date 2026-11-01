@@ -5746,3 +5746,77 @@ SQL independiente concilia esos6 conteos. Otro propietario404,anónimo401.
 Referencia sanitizada enHU041-REAL/rpc-baseline.json fuera de Git. Pendientes
 despliegueQA,recorrido del panel,descargaCSV real,capturas y cierre de subtareas.
 HU040/137 sigue pendiente de gesto táctil completo,HU027 de cargas grandes ySMTP233.
+
+### 01/11/2026 — HU041 validada en QA HTTPS y Jira
+
+Implementación a39724fce3ea72f708d6bc43cc2d21c4984d2de4; ajuste de confirmación
+CSV 5eeedf6809be922e8105bf30188d1c825f0bfe2b; recuperación explícita de sesión
+e3dfd023aaa156294dab3a197e4a9905db7bbc50. QA final READY:
+dpl_9tJhQ9A1TywXaXiCmi7JEEwqkLDV, mismo proyecto Hobby y8 variables/epoch intactos.
+Builds intermedios dpl_7JcJVMsCpH9NiDjjGEyiSagdFc6p y
+dpl_57AFJSqDDMSKjhqLD1sdtt5GU72B, sin cambio de cuenta o plan.420/420 batería
+general;4/4 dirigidas,lint y build/TypeScript repetidos tras los ajustes finales.
+No repetir todo por cada captura: las correcciones finales sólo cambiaron UI
+de confirmación/acceso y su regresión correspondiente.
+
+Panel real:12 visitas,49 aperturas,13 intentos,10 correctas/18 preguntas=55,56%,
+4 opiniones(3 útil/1 unclear),0 inconsistencias. Coinciden API,CSV ySQL independiente.
+13 intentos incluyen publicaciones5/9 y sus versiones de quiz3/4;11 prácticas
+privadas excluidas. Selector con3 documentos propios:escaneado sólo2 visitas;
+Sol sin actividad. No se mezclan cuentas/proyectos. Todas las fechas reales de
+estas4 fuentes del digital corresponden al01/11 en America/Bogota; no se
+fabricaron registros remotos de otra fecha para completar la prueba de límites.
+
+Fechas30/10 vacías y01/11 con datos comprobadas en la aplicación. Periodo invertido
+02/11→01/11 oculta métricas anteriores y deshabilita consulta/exportación.
+Fecha inválida,periodo invertido y corte futuro400 por HTTP directo;documento
+de otro proyecto409,CSV de otro propietario404 ysin sesión401. El helper de campos
+de fecha cambia valor DOM sin disparar siempre el cambio React: las pruebas
+usaron teclas nativas arriba/abajo para confirmar el calendario; no se diagnosticó
+eso como fallo del servidor. Límites exactos de medianoche/final del día se
+probaron en PostgreSQL aislado, como consta arriba.
+
+Dos descargas nativas por botón Exportar CSV, archivos leídos sin modificar:
+digital01/11→01/11:11618 bytes,51 filas,14 columnas,UTF-8 BOM EFBBBF;
+vacío30/10→30/10:2162 bytes,11 filas,totales0 yporcentaje vacío. Todas las filas
+conservan documento,fechas yúnico corte temporal del panel. Un parser CSV
+independiente verificó columnas/valores,cabeceras con acentos yalcance;no contiene
+el comentario libre deHU040. La API CSV también se verificó directamente.
+La descarga inicial no tenía confirmación visible: se añadió mensaje CSV
+preparado yse repitió el recorrido. Exportar queda inhabilitado durante carga,
+filtros inválidos o acceso perdido. Comillas,saltos yprefijos de fórmula cubiertos
+en pruebas dirigidas;no se presentan como archivos maliciosos remotos ejecutados.
+Copias originales yhashes enHU041-REAL fuera de Git;se conservaron las descargas
+nativas en Downloads,no se alteró un archivo previo del usuario.
+
+Pérdida de sesión real de la cuenta sintética: antes se borraban datos pero
+el aviso parecía ausencia de documentos. Se corrigió a mensaje de sesión y
+enlace Iniciar sesión; se repitió en QA e3dfd02,cero métricas/opciones privadas
+yexportación bloqueada. Se siguió el enlace,login normal con cuenta QA yretorno
+a Analítica desde Dashboard recuperó12/49/13/4. Un formulario de login antiguo
+tras cambiar compilación requirió recargar antes de entrar; no se pidió ayuda
+al usuario ni se mostró contraseña en snapshot. Credenciales temporales del
+fixture se retiraron de variables; contraseña personal del chat nunca utilizada.
+
+Móvil390×844 verificado por DOM/teclado:documento375 px,regiones de tablas342 px,
+contenido608/672 px dentro de su scroll propio y foco accesible. No se afirma
+captura móvil fiable ni un gesto táctil completado. Override de tamaño retirado.
+Consola del recorrido normal sin warn/error;401 de cierre de sesión era esperado.
+
+HU041/SCRUM-53 y139/140/221/222 Finalizado. Comentarios únicos:
+madre10226,139=10227,140=10228,221=10229,222=10230.8 capturas10573–10580,
+2 inline por subtarea. Se comprobaron nombres,tamaños,asociaciones yconteos;
+al editar redacción se conservaron todos los nodos de media sin duplicar fotos.
+10579 descargado:54586 bytes idénticos a08-sesion-cerrada-recuperacion-clara.jpg.
+No afirmar miniaturas vistas en UI deJira;conector,HTML ybinario verificados.
+No se crearon informes adicionales en Jira ni se copiaron imágenes a la madre.
+
+No hay tablas/rollups persistidos nuevos enHU041;función invoker y2 índices.
+Las5 tablas fuente mantienen FK vinculadas. Eliminación de documento yrechazo
+posterior comprobados en PostgreSQL aislado con las migraciones reales; ningún
+documento remoto se borró para esa prueba. La referencia HU011/HU043 se conserva.
+0 publicaciones públicas;16 visitas globales,49 aperturas,13 intentos,11 prácticas
+y4 opiniones conservados. Este recorrido de analítica no genera eventos del lector.
+Sin generación IA,pagos,merge o cambio de main. PR53 preparado para revisión sobre52;
+cadena48→49→50→51→52→53.52 sigue en borrador por137,táctil pendiente;no se cierra
+HU040 al completarHU041. Aún faltan HU045,HU046,HU027 cargas grandes ySMTP233.
