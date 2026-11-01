@@ -4569,3 +4569,62 @@ páginas con distinta cantidad/vacío, zoom, miniaturas, teclado, foco y posici�
 SHA del original y consola. HU034 y sus subtareas siguen En curso; no presentar
 las capturas de la versión anterior como prueba del resultado nuevo. Se continúa
 con trabajo independiente de accesibilidad mientras se conserva este pendiente.
+
+Entrega HU034: commit54aa054 publicado en PR#44 en borrador sobre PR#43.
+Jira46/125/207/208/126 con un único comentario por issue y estados En curso.
+SCRUM-126 incluye la captura real del bloqueo de login de la compilación nueva;
+no se usó como evidencia de que los indicadores ya se vieron funcionar.
+
+### 31/10/2026 — HU035: disposición adaptable, teclado y alternativa digital
+
+Continuación autorizada sin intervención del usuario. HU035/SCRUM-47 y
+127/209/210/128 pasan a En curso. Rama
+`codex/scrum-47-hu035-accesibilidad-lector` descendiente de54aa054/PR#44.
+
+Implementación sobre el lector y el visor compartido, preservando valores por
+defecto del workspace del propietario:
+- Escritorio (media query64rem): PDF activo y panel en columnas con mínimos de
+  ancho explícitos; panel con scroll propio y ayuda cuando está cerrado. El
+  breakpoint usa useSyncExternalStore con snapshot seguro para SSR y limpieza
+  del listener. No se reinicia la descarga del PDF al abrir una tarjeta.
+- Pantallas menores: se pausan/ocultan solo las páginas al mostrar el panel,
+  conservando controles de página. Cambiar página actualiza los refuerzos y se
+  aplica al volver al PDF; no desplaza un canvas oculto ni restaura otra página.
+  Zoom y miniaturas permanecen visibles pero deshabilitados mientras las páginas
+  están ocultas, con explicación. Se quita el botón flotante del lector para
+  evitar cubrir contenido; el workspace mantiene su comportamiento previo.
+- Foco visible, controles/etiquetas de radio de44px, restauración al disparador
+  y foco en el encabezado PDF para navegación explícita. La activación de otro
+  indicador enfoca su tarjeta; cambiar página desde controles no roba el foco.
+  Textos largos ajustables, multimedia acotada al ancho y panel sin superposición
+  intencional sobre el PDF. La comprobación visual real sigue pendiente.
+- Alternativa desplegable con texto digital real de cada página, reutilizando
+  PDF.js y la extracción existente. El canvas referencia esa descripción.
+  Si no hay capa digital o falla, se informa y se conserva el original; no OCR,
+  transcripción inventada ni IA. Limpieza de alternativa al liberar/redibujar.
+  Imágenes mantienen alt descriptivo y gráficos SVG título/descripción y lista
+  textual de elementos; falta el recorrido visual/teclado autenticado completo.
+
+Comprobaciones:387/387 pruebas,36/36 del bloque específico, lint y build/TypeScript
+correctos. Cinco regresiones adicionales: breakpoint/SSR/limpieza de listener,
+disposición y navegación con canvases pausados, y alternativa con PDF.js real
+sobre un PDF de prueba cuyo SHA se conserva, sin capa digital y extracción fallida.
+Medición de colores definida en CSS: blanco sobre#1d4ed8, contraste6.702:1 para
+indicadores y foco interior. Esto no es una auditoría completa de toda la pantalla.
+Referencias consultadas: W3C WCAG2.2, contraste mínimo y foco visible:
+https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html
+https://www.w3.org/WAI/WCAG22/Understanding/focus-visible.html
+
+Producción local arrancada con el código nuevo: login200, lector privado sin
+sesión401. Sigue sin login disponible; no se solicitó otra intervención ni se
+eludieron controles. Se resolvió la limitación de emulación para futuras pruebas:
+CDP Emulation.setDeviceMetricsOverride(width390,height844,mobiletrue) devuelve
+innerWidth/clientWidth/scrollWidth390 en la pantalla real de login. Captura de ese
+bloqueo en carpeta externa HU035 y en SCRUM-128; no acredita al lector móvil.
+Emulación restablecida con clearDeviceMetricsOverride al terminar.
+
+HU034/HU035 y subtareas permanecen En curso hasta ejecutar con sesión la nueva
+UI en escritorio/tableta/móvil, teclado completo, indicadores, alternativas,
+solapamientos, foco, conservación de posición/zoom/PDF y consola. No nuevas
+capturas de éxito autenticado, cambios de BD, llamadas IA ni consumo del crédito.
+No desplegar ni fusionar: cadena de revisión42→43→44→HU035. Stash d6406e0 intacto.

@@ -9,6 +9,7 @@ import { PdfThumbnails } from "@/components/documents/pdf-thumbnails";
 import { createPageFragments, type PageFragments } from "@/lib/pdf/page-fragments";
 import type { FragmentSelection } from "@/lib/pdf/fragment-selection";
 import { decorateReinforcementMarkers, type PdfReinforcementMarker } from "@/lib/pdf/reinforcement-markers";
+import { decorateReadablePageText } from "@/lib/pdf/readable-page-text";
 
 type ViewerProps = {
   projectId: string;
@@ -28,6 +29,10 @@ type ViewerProps = {
   previewTriggerRef?: Ref<HTMLButtonElement>;
   reinforcementMarkers?: readonly PdfReinforcementMarker[];
   onReinforcementActivate?: (id: string, page: number) => void;
+  pagesHidden?: boolean;
+  onHiddenNavigate?: (number: number) => void;
+  floatingReinforcements?: boolean;
+  includeReadableText?: boolean;
 };
 
 type ViewerStatus =
@@ -44,7 +49,7 @@ const viewerMessages = {
   ready: "PDF disponible. Usa los controles o desplázate para consultar sus páginas.",
 };
 
-export function PdfViewer({ projectId, sourceUrl, initialPage = 1, initialFragment = null, onPageSelect, requestDraft, onFragmentSelect, fragmentResetKey, onTextSourceChange, visible = true, onVisiblePageChange, onOpenReinforcements, navigationKey = 0, onOpenPreview, previewTriggerRef, reinforcementMarkers, onReinforcementActivate }: ViewerProps) {
+export function PdfViewer({ projectId, sourceUrl, initialPage = 1, initialFragment = null, onPageSelect, requestDraft, onFragmentSelect, fragmentResetKey, onTextSourceChange, visible = true, onVisiblePageChange, onOpenReinforcements, navigationKey = 0, onOpenPreview, previewTriggerRef, reinforcementMarkers, onReinforcementActivate, pagesHidden, onHiddenNavigate, floatingReinforcements, includeReadableText }: ViewerProps) {
   const [attempt, setAttempt] = useState(0);
   // Only restore on mount; changing the selection must not reload the PDF.
   const [startingPage] = useState(initialPage);
@@ -66,6 +71,8 @@ export function PdfViewer({ projectId, sourceUrl, initialPage = 1, initialFragme
       navigationKey={navigationKey} targetPage={initialPage} targetFragment={initialFragment}
       onOpenPreview={onOpenPreview} previewTriggerRef={previewTriggerRef}
       reinforcementMarkers={reinforcementMarkers} onReinforcementActivate={onReinforcementActivate}
+      pagesHidden={pagesHidden} onHiddenNavigate={onHiddenNavigate} floatingReinforcements={floatingReinforcements}
+      includeReadableText={includeReadableText}
       onRetry={() => setAttempt((value) => value + 1)}
     />
   );
@@ -84,6 +91,8 @@ function PdfPages({
   onRetry,
   visible = true, onVisiblePageChange, onOpenReinforcements, navigationKey = 0, targetPage, targetFragment, onOpenPreview, previewTriggerRef,
   reinforcementMarkers, onReinforcementActivate,
+  pagesHidden = false, onHiddenNavigate, floatingReinforcements = true,
+  includeReadableText = false,
 }: ViewerProps & { onRetry: () => void; targetPage?: number; targetFragment?: FragmentSelection | null }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const navigationRef = useRef<HTMLDivElement>(null);
@@ -102,8 +111,8 @@ function PdfPages({
   const [selectionMode, setSelectionMode] = useState<"text" | "area">("text");
   const [hasFragment, setHasFragment] = useState(false);
   const visibleRef = useRef(visible), appliedNavigation = useRef(0);
-  const markerConfig = useRef({ markers: reinforcementMarkers, activate: onReinforcementActivate });
-  useLayoutEffect(() => { markerConfig.current = { markers: reinforcementMarkers, activate: onReinforcementActivate }; }, [reinforcementMarkers, onReinforcementActivate]);
+  const markerConfig = useRef({ markers: reinforcementMarkers, activate: onReinforcementActivate, readable: includeReadableText, textId: pageInputId });
+  useLayoutEffect(() => { markerConfig.current = { markers: reinforcementMarkers, activate: onReinforcementActivate, readable: includeReadableText, textId: pageInputId }; }, [reinforcementMarkers, onReinforcementActivate, includeReadableText, pageInputId]);
   useLayoutEffect(() => { visibleRef.current = visible; rendererRef.current?.setActive(visible); }, [visible]);
   useLayoutEffect(() => {
     if (!visible || status !== "ready" || !navigationKey || appliedNavigation.current === navigationKey) return;
@@ -121,6 +130,12 @@ function PdfPages({
     status === "rendering";
 
   function navigateToPage(number: number) {
+    if (!visible && onHiddenNavigate) {
+      if (status !== "ready" || !Number.isInteger(number) || number < 1 || number > totalPages) return;
+      setCurrentPage(number); setPageInput(String(number)); setPageInputError("");
+      onHiddenNavigate(number);
+      return;
+    }
     if (status !== "ready" || !rendererRef.current?.goToPage(number)) return;
     setPageInput(String(number));
     setPageInputError("");
@@ -269,7 +284,8 @@ function PdfPages({
             const config = markerConfig.current;
             const clearMarkers = config.activate ? decorateReinforcementMarkers(page.pageNumber, body, viewport, config.markers ?? [],
               (id, number) => markerConfig.current.activate?.(id, number)) : undefined;
-            return () => { clearMarkers?.(); clearFragment?.(); };
+            const clearText = config.readable ? await decorateReadablePageText(page, body, `${config.textId}-text-${page.pageNumber}`) : undefined;
+            return () => { clearText?.(); clearMarkers?.(); clearFragment?.(); };
           },
         );
         rendererRef.current = renderer;
@@ -313,7 +329,7 @@ function PdfPages({
         <ViewTiming metric="primera-pagina-pdf" items={totalPages} />
       )}
 
-      <h2 className="text-xl font-semibold text-slate-900">
+      <h2 tabIndex={-1} className="text-xl font-semibold text-slate-900">
         PDF original
       </h2>
 
@@ -408,7 +424,7 @@ function PdfPages({
             </form>
             <button
               type="button"
-              disabled={status !== "ready"}
+              disabled={status !== "ready" || !visible}
               aria-expanded={showThumbnails}
               aria-controls={`${pageInputId}-thumbnails`}
               onClick={() => setShowThumbnails((value) => !value)}
@@ -420,7 +436,7 @@ function PdfPages({
               <button
                 type="button"
                 aria-label="Reducir zoom"
-                disabled={status !== "ready" || zoom <= 50}
+                disabled={status !== "ready" || !visible || zoom <= 50}
                 onClick={() => changeZoom(zoom - 25)}
                 className="rounded-lg border border-slate-300 px-3 py-2 font-semibold text-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
               >
@@ -432,7 +448,7 @@ function PdfPages({
               <button
                 type="button"
                 aria-label="Aumentar zoom"
-                disabled={status !== "ready" || zoom >= 200}
+                disabled={status !== "ready" || !visible || zoom >= 200}
                 onClick={() => changeZoom(zoom + 25)}
                 className="rounded-lg border border-slate-300 px-3 py-2 font-semibold text-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
               >
@@ -462,7 +478,7 @@ function PdfPages({
               {pageInputError}
             </p>
           )}
-          {showThumbnails && status === "ready" && pdfDocument && (
+          {showThumbnails && visible && status === "ready" && pdfDocument && (
             <div id={`${pageInputId}-thumbnails`}>
               <PdfThumbnails pdf={pdfDocument} currentPage={currentPage} onNavigate={navigateToPage} />
             </div>
@@ -470,7 +486,7 @@ function PdfPages({
         </div>
       )}
 
-      {reinforcementMarkers && status === "ready" && <details className="mt-3 min-w-0 rounded-lg border border-blue-200 bg-white p-3">
+      {reinforcementMarkers && !pagesHidden && status === "ready" && <details className="mt-3 min-w-0 rounded-lg border border-blue-200 bg-white p-3">
         <summary className="cursor-pointer font-semibold">Refuerzos de página {currentPage} ({reinforcementMarkers.filter(m => m.pageNumber === currentPage).length})</summary>
         {reinforcementMarkers.some(m => m.pageNumber === currentPage) ? <ul className="mt-2 space-y-2">
           {reinforcementMarkers.filter(m => m.pageNumber === currentPage).map((marker, index) => <li key={marker.id}>
@@ -482,12 +498,13 @@ function PdfPages({
       </details>}
       <div
         ref={containerRef}
+        hidden={pagesHidden}
         aria-busy={isLoading}
         className={
           status === "error" ? "hidden" : "mt-4 space-y-6"
         }
       />
-      {onOpenReinforcements && status === "ready" && <button type="button" data-open-reinforcements
+      {onOpenReinforcements && floatingReinforcements && !pagesHidden && status === "ready" && <button type="button" data-open-reinforcements
         onClick={() => onOpenReinforcements(currentPage, performance.now())}
         className="fixed bottom-4 right-4 z-20 rounded-lg bg-blue-700 px-4 py-3 text-sm font-semibold text-white shadow-lg lg:hidden">
         Ver refuerzos de página {currentPage}
