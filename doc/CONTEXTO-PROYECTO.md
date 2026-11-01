@@ -4527,3 +4527,45 @@ La comprobación de Jira fue por conector (cuerpos con mediaID y attachments con
 nombre/tamaño), no una inspección visual del sitio: Jira web solicita login.
 No se pidió otra autenticación al usuario ausente ni se afirma haber visto esas
 miniaturas renderizadas en Jira. Los archivos adjuntos sí quedaron persistidos.
+
+### 31/10/2026 — HU034: indicadores y navegación sincronizada, validación visual pendiente
+
+El usuario autoriza continuar autónomamente las issues; se conservan las esperas
+de despliegue y merge. Inventario Jira consultado, sin cerrar historias por su
+código existente. Siguiente historia independiente de HTTPS: HU034/SCRUM-46,
+subtareas125/207/208/126. Todas pasan a En curso. Rama
+`codex/scrum-46-hu034-navegacion-sincronizada` desde b16b0a9 (PR#43).
+
+Antes del cambio se abrió realmente el lector privado QA v5: PDF disponible,
+controles funcionales y ausencia de indicadores sobre las selecciones. Captura
+original de ese diagnóstico, no evidencia de aprobación del código nuevo.
+Implementación: indicadores numerados asociados a ID opaco/página, resaltados
+proporcionales de texto o zona, posición recalculada al renderizar con zoom/resize.
+Controles de44px sin superposición; páginas densas conservan la lista completa
+accesible por teclado. Coordenadas inválidas o de otra página no crean marcas.
+Refuerzos de página completa reciben indicador diferenciado. No se modifica PDF.
+
+El cambio de página por scroll, controles, miniaturas o número reutiliza el
+PDF cargado y filtra la lista del lector. Activar un indicador abre y expande
+su tarjeta, desplaza a ella y enfoca su encabezado. Al cerrar se restaura foco,
+posición vertical/horizontal, desplazamiento interno y zoom del visor conservado.
+Volver al original desde una tarjeta es navegación explícita a su página;
+no se confunde con cerrar/restaurar. Pulsar Refuerzos estando abierto no reemplaza
+la posición guardada. No hay llamadas nuevas de IA, SQL, migraciones ni registros
+de quiz por esta implementación. Se mantienen permisos y proyección sin claves.
+
+Verificación:382/382 pruebas,35/35 del bloque específico, lint y build/TypeScript
+de producción correctos. Ocho regresiones nuevas comprueban geometría a distintas
+escalas, colisiones, datos inválidos, limpieza de eventos, correspondencia de ID,
+filtrado/vacío, foco y restauración de posición. Son pruebas automatizadas con
+DOM/estado controlados; no sustituyen navegador autenticado.
+
+Tras arrancar la compilación nueva, el control existente de epoch exige login.
+El navegador no dispone de autofill de correo/contraseña. No se solicitó ayuda
+al usuario ausente, no se reutilizó un epoch anterior, extrajeron credenciales ni
+saltaron controles de sesión. Captura real del login documenta ese bloqueo.
+Falta ejecutar la nueva UI autenticada con los PDFs QA: varios indicadores,
+páginas con distinta cantidad/vacío, zoom, miniaturas, teclado, foco y posición,
+SHA del original y consola. HU034 y sus subtareas siguen En curso; no presentar
+las capturas de la versión anterior como prueba del resultado nuevo. Se continúa
+con trabajo independiente de accesibilidad mientras se conserva este pendiente.
