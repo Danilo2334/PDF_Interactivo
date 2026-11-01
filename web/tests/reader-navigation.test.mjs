@@ -84,5 +84,6 @@ test('HU035 wide screens keep the PDF active beside the panel and narrow screens
 test('HU038 desktop marker activation scrolls only inside the panel, preserving PDF position and active page',()=>{
  const f=fixture(true);f.pdf().props.onVisiblePageChange(2);f.render();
  f.pdf().props.onReinforcementActivate('other',2);f.render();assert.equal(f.window.scrollY,630);assert.equal(f.other.scrolled,0);assert.equal(f.panel.scrollTop,584);assert.equal(f.cards()[0].props.item.pageNumber,2);
+ assert.equal(f.pdf().props.initialPage,2);assert.equal(f.pdf().props.navigationKey,1);
  f.button('Cerrar refuerzos y volver al PDF').props.onClick();f.render();assert.equal(f.window.scrollY,630);assert.equal(f.figure.scrollLeft,72);
 });

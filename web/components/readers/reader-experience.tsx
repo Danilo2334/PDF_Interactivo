@@ -42,9 +42,12 @@ export function Reading({ view, endpoint }: { view: ReaderView; endpoint: string
     position.current = { x: window.scrollX, y: window.scrollY, page: currentPage, horizontal: figure?.scrollLeft ?? 0, trigger: document.activeElement instanceof HTMLElement ? document.activeElement : null, markerId };
     selected.current = markerId ?? null; setPage(currentPage); setActivation(n => n + 1);
     if (markerId) setExpanded(previous => new Set(previous).add(markerId));
+    // A marker can be visible on the next page while the previous page still occupies more of the viewport.
+    // Align the requested PDF page so a delayed visibility update cannot replace the chosen panel.
+    if (markerId && wide) setNavigation(previous => ({ page: currentPage, fragment: null, key: previous.key + 1 }));
     setPanel(true);
     opened(view.items.filter(item => item.pageNumber === currentPage && (panel ? item.id === markerId && !expanded.has(item.id) : item.id === markerId || expanded.has(item.id))).map(item => ({ id: item.id, pageNumber: item.pageNumber })));
-  }, [opened, view.items, expanded, panel]);
+  }, [opened, view.items, expanded, panel, wide]);
   const openMarker = useCallback((id: string, currentPage: number) => openPanel(currentPage, id), [openPanel]);
   const openPagePanel = useCallback((currentPage: number) => openPanel(currentPage), [openPanel]);
   const navigateFromPanel = useCallback((currentPage: number) => {

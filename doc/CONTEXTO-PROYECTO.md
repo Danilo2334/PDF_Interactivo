@@ -5326,3 +5326,11 @@ añadida y once casos afectados pasan. Se repiten batería, lint/build y QA del 
 no se declara resuelto visualmente antes de ese contraste. PR49 borrador apilado
 sobre PR48, publicado sin merge. Publicación escaneada QA2 temporalmente pública
 para tres aperturas sin refuerzos; restaurar su estado previo privado al terminar.
+
+La primera corrección37d4e36 pasó404/404, lint/build y llegó al QA. La repetición
+reveló además el caso de marcador de página2 parcialmente visible mientras la1
+ocupa más viewport: un callback posterior de visibilidad sigue eligiendo1 aunque
+el panel no desplace window. Se amplía la corrección alineando explícitamente
+la página PDF del indicador en escritorio; no se congela el seguimiento de páginas
+ni se recarga el PDF. El test exige también initialPage2/navigationKey. Repetir
+clic/teclado y esperar el callback tardío antes de dar el fallo por resuelto.
