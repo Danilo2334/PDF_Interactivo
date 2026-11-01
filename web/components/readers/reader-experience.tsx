@@ -37,6 +37,7 @@ export function Reading({ view, endpoint }: { view: ReaderView; endpoint: string
   const pdf = useRef<HTMLDivElement>(null), content = useRef<HTMLElement>(null), position = useRef<{ x: number; y: number; page: number; horizontal: number; trigger: HTMLElement | null; markerId?: string } | null>(null);
   const markers = useMemo(() => view.items.map(item => ({ id: item.id, title: item.title, pageNumber: item.pageNumber, selection: item.selection })), [view.items]);
   const reportPage = useCallback((page: number) => setPage(page), []);
+  const keepCurrentPosition = useCallback(() => { position.current = null; }, []);
   const openPanel = useCallback((currentPage: number, markerId?: string) => {
     const figure = pdf.current?.querySelector<HTMLElement>(`[data-pdf-page="${currentPage}"]`);
     position.current = { x: window.scrollX, y: window.scrollY, page: currentPage, horizontal: figure?.scrollLeft ?? 0, trigger: document.activeElement instanceof HTMLElement ? document.activeElement : null, markerId };
@@ -77,7 +78,7 @@ export function Reading({ view, endpoint }: { view: ReaderView; endpoint: string
     <p role="status" className="text-sm text-slate-700">Página {page}: {view.items.filter(item => item.pageNumber === page).length} refuerzos disponibles.</p>
     <div className="reader-layout grid min-w-0 items-start gap-5 lg:grid-cols-[minmax(0,3fr)_minmax(18rem,2fr)]">
     <div ref={pdf} className="min-w-0"><PdfViewer key={endpoint} projectId="reader" sourceUrl={`${endpoint}/assets/pdf`} visible={!panel || wide} pagesHidden={panel && !wide} onHiddenNavigate={navigateFromPanel} floatingReinforcements={false} includeReadableText initialPage={navigation.page} initialFragment={navigation.fragment} navigationKey={navigation.key}
-      onVisiblePageChange={reportPage} onOpenReinforcements={openPagePanel} reinforcementMarkers={markers} onReinforcementActivate={openMarker} onFirstPageRendered={reportReady} />
+      onVisiblePageChange={reportPage} onOpenReinforcements={openPagePanel} reinforcementMarkers={markers} onReinforcementActivate={openMarker} onFirstPageRendered={reportReady} onReadingNavigate={keepCurrentPosition} />
       {panel && !wide && <p className="mt-3 text-sm text-slate-700">Los controles de página siguen disponibles. Cierra los refuerzos para volver al PDF y ajustar el zoom conservado.</p>}
     </div>
     <section ref={content} hidden={!panel} aria-label={`Refuerzos de la página ${page}`} className="min-w-0 space-y-4 rounded-xl border border-slate-200 bg-white p-4 lg:sticky lg:top-4 lg:max-h-[calc(100dvh-2rem)] lg:overflow-y-auto"><button type="button" onClick={() => setPanel(false)} className="rounded-lg border px-3 py-2">Cerrar refuerzos y volver al PDF</button><h2 className="text-xl font-semibold">Refuerzos de la página {page}</h2>

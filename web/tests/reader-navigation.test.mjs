@@ -87,3 +87,9 @@ test('HU038 desktop marker activation scrolls only inside the panel, preserving 
  assert.equal(f.pdf().props.initialPage,2);assert.equal(f.pdf().props.navigationKey,1);
  f.button('Cerrar refuerzos y volver al PDF').props.onClick();f.render();assert.equal(f.window.scrollY,630);assert.equal(f.figure.scrollLeft,72);
 });
+
+test('HU038 explicit PDF page or zoom navigation while the panel is open replaces the old return position',()=>{
+ const f=fixture(true);f.button('Refuerzos').props.onClick();f.render();
+ f.pdf().props.onReadingNavigate();f.pdf().props.onVisiblePageChange(2);f.window.scrollY=1400;f.figure.scrollLeft=90;f.render();
+ f.button('Cerrar refuerzos y volver al PDF').props.onClick();f.render();assert.equal(f.window.scrollY,1400);assert.equal(f.figure.scrollLeft,90);assert.equal(f.cards()[0].props.item.pageNumber,2);
+});

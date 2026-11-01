@@ -5334,3 +5334,15 @@ el panel no desplace window. Se amplía la corrección alineando explícitamente
 la página PDF del indicador en escritorio; no se congela el seguimiento de páginas
 ni se recarga el PDF. El test exige también initialPage2/navigationKey. Repetir
 clic/teclado y esperar el callback tardío antes de dar el fallo por resuelto.
+
+En QA6a5d96b el indicador conserva finalmente la página2, también tras callbacks
+tardíos y zoom por teclado125%. El clic automatizado en el control fijo puede
+desplazar antes la ventana hacia su posición DOM; se contrastó con Enter y medidas
+reales del control visible, sin congelar el seguimiento automático del PDF.
+Se observó otro retorno obsoleto: si el lector cambia página/zoom con el panel
+abierto, cerrar restauraba la posición de antes de esas acciones explícitas.
+Se invalida ese retorno sólo tras una navegación/zoom aplicado por el usuario;
+callbacks pasivos y alineación de indicadores no lo invalidan. Dos regresiones
+verifican el contrato y que no se vuelva a descargar el PDF. Repetir ese cierre
+en QA antes de finalizar134. El abrir/cerrar sin cambiar PDF sigue restaurando
+la posición original. Métricas y pruebas de servidor permanecen iguales.
