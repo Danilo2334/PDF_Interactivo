@@ -6,6 +6,7 @@ import { VisualResource } from "@/components/documents/visual-resource";
 import { SummaryResource } from "@/components/documents/summary-resource";
 import { readerReplySchema, type ReaderItem, type ReaderView } from "@/lib/validations/reader";
 import { ReaderQuiz } from "@/components/readers/reader-quiz";
+import { ReaderFeedback } from "@/components/readers/reader-feedback";
 import type { FragmentSelection } from "@/lib/pdf/fragment-selection";
 import { useWideReader } from "@/lib/readers/layout";
 import { ReaderOpenReporter } from "@/components/readers/reader-open-reporter";
@@ -23,6 +24,7 @@ function ReaderCard({ item, endpoint, onSource, privateTest, expanded, onToggle 
           : m.kind === "image" ? <Image src={`${endpoint}/assets/${m.id}`} alt={m.title} width={640} height={360} unoptimized className="h-auto max-h-80 w-full object-contain" />
             : <video src={`${endpoint}/assets/${m.id}`} aria-label={m.title} controls playsInline preload="metadata" className="max-h-80 w-full" />}</div>)}</section>}
       {item.quiz && <section aria-label={`Mini quiz: ${item.quiz.title}`}><ReaderQuiz quiz={item.quiz} endpoint={endpoint} privateTest={privateTest} active={expanded} /></section>}
+      {!privateTest && <ReaderFeedback endpoint={endpoint} itemId={item.id} pageNumber={item.pageNumber} active={expanded} />}
     </div>
   </article>;
 }

@@ -5606,3 +5606,36 @@ Sin dependencias/migraciones/pagos/llamadas IA nuevas ni merges. PR48→49→50 
 pero pendientes de integración autorizada; stash d6406e0 y configuración intactos.
 Siguiente trabajo:HU040/041/045/046, másHU027 cargas grandes ySMTP233. El proyecto
 no está terminado y no se cierra un sprint solo por esta conciliación.
+
+### 01/11/2026 — HU040/SCRUM-52: valoración del lector en implementación
+
+Rama codex/scrum-52-hu040-valoracion, posterior al PR51 de auditoría. Sprint7
+ya activo en Jira (id8);52 y137/138/219/220 En curso. Comentario madre10221.
+Opciones Útil/Sigue sin ser claro, sin premarcar; comentario opcional normalizado
+NFC, saltos de línea y controles, máximo1000 caracteres, tratado siempre como
+texto escapado por React. No se interpreta HTML ni se almacena identidad declarada.
+
+GET/POST público por refuerzo opaco; servidor resuelve documento,página,ID y versión
+desde instantánea inmutable, valida sesión firmada/identificación/origen/vigencia.
+El propietario y la prueba privada no registran opiniones de lectores. UI consulta
+el estado al expandir, conserva operationId al reintentar el mismo envío, bloquea
+doble clic y sólo confirma tras recibo persistido; botón independiente recupera
+la opinión si se pierde la respuesta. Ningún reintento automático ilimitado.
+
+Tabla reader_reinforcement_feedback inmutable por sesión/refuerzo/publicación,
+asociación completa y fuente aprobada; RLS SELECT sólo propietario activo (incluye
+admin de su propio documento), sin INSERT/UPDATE/DELETE de cliente. RPC con prueba
+HMAC de propósito específico y caducidad, sólo service_role; vuelve a comprobar
+publicación/token/accessVersion/hash/origen/documento/propietario dentro del bloqueo
+transaccional. Reenvío idéntico devuelve el primer recibo; otro contenido409.
+Comentarios de otros lectores nunca se devuelven por este endpoint. FK elimina
+feedback con su documento/publicación, sin modificar notas ni métricas existentes.
+
+CLI oficial creó20261101231149_reader_reinforcement_feedback.sql. Historia remota
+comprobada con25 migraciones y tabla ausente. Aplicada por herramienta oficial;
+su registro nuevo automático20261101231455 se alineó únicamente a20261101231149,
+sin tocar migraciones anteriores. PostgreSQL aislado valida deduplicación,
+permisos/RLS, vigencia, asociación, control de comentarios y eliminación vinculada.
+Prueba de UI reproduce respuesta perdida/doble envío sin confirmar prematuramente.
+416/416 pruebas y build/TypeScript aprobados; lint final en curso. Aún faltan
+pruebas reales del formulario y evidencias Jira: no finalizar por estos checks.
