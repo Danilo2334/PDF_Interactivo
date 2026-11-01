@@ -5,6 +5,7 @@ import { requireActiveUser } from "@/lib/auth/require-active-user";
 import { redirect } from "next/navigation";
 import { LogoutButton } from "@/components/auth/logout-button";
 import { createClient } from "@/lib/supabase/server";
+import { hasPermission } from "@/lib/auth/permissions";
 
 export const metadata: Metadata = {
   title: "Panel | PDF Interactivo",
@@ -12,7 +13,7 @@ export const metadata: Metadata = {
 };
 
 export default async function DashboardPage() {
-  await requireActiveUser();
+  const { role } = await requireActiveUser();
 
   const supabase = await createClient();
   const { data, error } = await supabase.auth.getClaims();
@@ -82,6 +83,7 @@ export default async function DashboardPage() {
               Administración
             </Link>
           )}
+          {hasPermission(role, "documents.manage.own") && <Link href="/analytics" className="rounded-lg border border-blue-300 bg-white px-5 py-3 font-semibold text-blue-700 hover:bg-blue-50">Analítica</Link>}
         </nav>
       </section>
     </main>

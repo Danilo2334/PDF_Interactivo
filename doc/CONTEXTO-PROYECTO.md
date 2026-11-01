@@ -5701,3 +5701,48 @@ idéntico. Sesión de propietario sintético restaurada mediante login normal; s
 personal de localhost sin tocar. Sin llamadas IA,nuevas dependencias,pagos o merge.
 Se puede avanzar enHU041 sin fingir aprobado el gesto táctil de137; conservarlo
 como pendiente explícito para la revisión de compatibilidad deHU046.
+
+### 01/11/2026 — HU041/SCRUM-53: panel de analítica en implementación
+
+Rama codex/scrum-53-hu041-analitica, posterior a52.53 y139/140/221/222 En curso
+en Sprint7 activo; comentario madre10226. No cerrar por pruebas automáticas.
+Página privada/analytics enlazada desde Dashboard, selector de documentos propios,
+fechas inclusivas America/Bogota y exportación CSV UTF-8 del mismo corte temporal.
+No devuelve identidades,comentarios libres,claves de quiz o rutas de Storage.
+CSV entrecomilla campos y neutraliza prefijos de fórmula. Cambiar filtros oculta
+métricas anteriores y deshabilita exportar hasta recibir respuesta correspondiente;
+perder autorización quita los datos y las opciones privadas de documento.
+
+RPC get_document_analytics SECURITY INVOKER con RLS,propiedad activa y disponibilidad
+del documento; sin cliente privilegiado o bypass de admin ajeno. Agrega visitas,
+aperturas,intentos reales y valoraciones en PostgreSQL,sin descargar todas las
+filas al servidor web. Dos índices de periodo; sin nueva tabla ni agregado
+persistido. Cada indicador usa su fecha,ventana[from00:00,hasta+1día00:00),más
+corte through compartido con CSV. Una apertura cuyo inicio de visita ocurrió en
+otra fecha cuenta según su propia fecha; no se divide por un denominador que
+pueda mezclar periodos. Quizzes agrupados por publicación y versión evaluada;
+ensayos privados excluidos e intentos sin correspondencia de instantánea advertidos.
+
+CLI oficial generó20261101232623_document_analytics.sql. Historia remota26 antes,
+función/índices ausentes comprobados. Aplicada por herramienta oficial y sólo su
+registro nuevo automático20261101233144 alineado a20261101232623; ninguna migración
+anterior tocada. PostgreSQL aislado validó límites exactos de medianoche Bogota,
+periodos vacíos,corte temporal,propietario ajeno/inactivo,documento eliminándose,
+10.001 intentos agregados sin truncar,exclusión de prácticas y CASCADE de los5
+tipos de datos al borrar el documento. No se borraron datos remotos para esa prueba.
+La antigua consulta detallada HU039 conserva su presupuesto de10.000 filas;
+este panel agregado elimina ese límite para sus totales,no afirma haber ampliado
+todavía el detalle individual deHU039.
+
+Pruebas dirigidas4/4,lint y build/TypeScript aprobados. Primera batería general
+detectó2 mocks incompletos tras los imports nuevos (URLSearchParams y permisos);
+corregidos; batería final420/420 aprobada. Se amplió la regresión de acceso de páginas
+para incluir/analytics antes de cualquier consulta. Advisors sin avisos de
+seguridad nuevos relacionados con esta función.
+
+RPC real con cliente normal del dueño:12 visitas,49 aperturas,13 intentos,
+10 correctas/18 respondidas=55,56%,4 opiniones(3 útil/1 unclear),0 inconsistentes.
+SQL independiente concilia esos6 conteos. Otro propietario404,anónimo401.
+Referencia sanitizada enHU041-REAL/rpc-baseline.json fuera de Git. Pendientes
+despliegueQA,recorrido del panel,descargaCSV real,capturas y cierre de subtareas.
+HU040/137 sigue pendiente de gesto táctil completo,HU027 de cargas grandes ySMTP233.
