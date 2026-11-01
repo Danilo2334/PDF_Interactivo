@@ -22,6 +22,7 @@ function fixture(wide=false){
     'next/image':{default:()=>null},'@/components/documents/pdf-viewer':{PdfViewer},'@/components/documents/visual-resource':{VisualResource:()=>null},
     '@/components/documents/summary-resource':{SummaryResource:()=>null},'@/lib/validations/reader':{},'@/components/readers/reader-quiz':{ReaderQuiz:()=>null},
     '@/lib/readers/layout':{useWideReader:()=>wide},
+    '@/components/readers/reader-open-reporter':{ReaderOpenReporter:()=>null},
   },{window,document,HTMLElement:Element,CSS:{escape:x=>x}});
   const view={name:'QA',version:1,privateTest:true,items:[{id:'first',title:'Energía',pageNumber:1,initialExpanded:false,selection:null},{id:'second',title:'Péndulo',pageNumber:1,initialExpanded:true,selection:null},{id:'other',title:'Agua',pageNumber:2,initialExpanded:false,selection:null}]};
   function nodes(n){if(!n||typeof n!=='object')return [];return[n,...[n.props?.children].flat(Infinity).flatMap(nodes)];}

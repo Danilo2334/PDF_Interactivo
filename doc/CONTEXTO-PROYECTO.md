@@ -5159,3 +5159,13 @@ confirmados por lectura de BD. Sin modificar PDF original ni borrar datos. Sesi�
 personal y servidor local preservados; d6406e0 intacto. No hubo despliegues nuevos,
 pagos, IA, avance a otra historia ni cierre de sprint. SMTP233 y el límite de
 cargas grandes del hosting siguen pendientes del proyecto, fuera de este cierre.
+
+### 01/11/2026 — Revisión e integración de PR #47; inicio de HU037
+
+PR #47 revisado en el head 961b8c9552acb417f5e32a4883f6fdf6d32342a6: checks CI aprobados, sin conflictos ni comentarios pendientes, sin hallazgos bloqueantes. Integrado a develop con control del SHA; merge 2e5030f091d28fc1ff90bc14f7b28ea12c0e5a7c a las 05:59:25 UTC. Se conserva main, la sesión personal, los datos y el stash d6406e0cdbc464c1c0301c058024b10dd27c4515.
+
+HU037 / SCRUM-49 y subtareas 131,213,214,132 pasan a En curso. Sprint 7 (id8) iniciado el 01/11/2026 06:01:21 UTC, hasta 08/11 06:01:21 UTC, según la instrucción previa del usuario. No se cerraron otros sprints. Rama codex/scrum-49-hu037-visitas desde el merge anterior.
+
+Definición incorporada ahora y registrada en SCRUM-213: apertura tras renderizar la primera página del PDF publicado en una pestaña visible; como máximo una por documento y sesión dentro de 30 minutos desde la última aceptada. Reaperturas posteriores y sesiones diferentes cuentan. Cambiar zoom, navegar, recargar, versiones publicadas o repetir la misma operación no duplica. Cookie firmada HttpOnly/Secure/SameSite=Lax de 12 horas, sin IP, nombre, correo ni user agent; HMAC distinto por documento, sin guardar el nonce original. No pretende identificar personas únicas entre navegadores o dispositivos. Vistas previas, ensayos privados y apertura autenticada del propietario excluidos. La escritura requiere publicación vigente, documento actual, sesión lector e identificación cuando corresponda. El total sólo lo consultan propietario activo o admin autorizado; su consulta no amplía el acceso al PDF ajeno.
+
+Migración reader_open_visits generada con CLI oficial, probada en PostgreSQL aislado y aplicada tras leer y conciliar las 23 migraciones remotas. Supabase asignó versión 20261101061105; archivo local alineado, sin volver a aplicar versiones anteriores. RLS activa, sin INSERT/UPDATE/DELETE directo para clientes; RPC firmado por servidor y función definer en esquema privado con search_path vacío. Reintentos idempotentes y bloqueo transaccional de deduplicación. Totales preservados al retirar/republicar mientras exista el documento. Build/TypeScript y lint aprobados. La batería inicial detectó dependencias de montaje nuevas ausentes; se actualizaron los montajes y los 41 casos afectados pasan. Se prepara prueba HTTPS con tiempo real para la ventana de 30 minutos; aún no se declara cumplida. Sin pagos ni IA.

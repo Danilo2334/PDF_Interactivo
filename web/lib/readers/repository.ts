@@ -29,7 +29,7 @@ export function serverReaderConfigured() {
   try { privileged ||= JSON.parse(Buffer.from(key?.split(".")[1] ?? "", "base64url").toString()).role === "service_role"; } catch { /* New secret keys need no JWT decoding. */ }
   return !!url && !!key && !!privileged;
 }
-function serverClient() {
+export function serverClient() {
   if (!serverReaderConfigured()) throw new ReaderUnavailable(503);
   return createSupabaseClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVER_KEY!, { auth: { persistSession: false, autoRefreshToken: false } });
 }
