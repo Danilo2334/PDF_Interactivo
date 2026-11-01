@@ -4972,3 +4972,104 @@ inválido siguen devolviendo403. No se envió un cambio de contraseña automáti
 Formulario raíz vacío abierto nuevamente para que el propietario escriba,
 confirme y envíe personalmente; no reutilizar ni recargar el POST/guardar fallido.
 El cambio de contraseña y el ingreso QA siguen pendientes de observar.
+
+### 01/11/2026 — Sesiones separadas, HU036 y lector HTTPS real
+
+El propietario completó personalmente el cambio asistido y el login al QA; se
+observó su dashboard autenticado. No se extrajeron cookies ni contraseñas, no se cerró
+su sesión ni se reinició localhost. El auxiliar dejó confirmación de cambio
+completado. Esto resuelve su acceso actual, no el correo de recuperación:
+SCRUM-233 sigue En curso por SMTP550/Resend en modo pruebas.
+
+Se resolvió la separación usando las cuentas QA existentes y su archivo privado
+ya documentado: loginAction real y almacenes HTTP de cookies independientes,
+solo en memoria. Sin sesiones administrativas fabricadas, cambio de owner_id ni
+relajación de RLS. IAB conservó la cuenta personal, distinta del propietario
+del fixture rico: las capturas muestran lector de otra cuenta; el acceso sin
+sesión se acredita con dos almacenes HTTP anónimos, no dos pestañas del mismo
+perfil. No insistir con Chrome nativo ni pedir otro login para este caso.
+
+Tras TLS real se habilitó PUBLICATION_HTTPS_VERIFIED=true solo en Production del
+QA y en .env.qa.local ignorado. Resto de variables y epoch común conservados:
+la sesión personal sobrevivió a los deployments. Segunda fase del mismo2922125:
+dpl_ECCeEFBLMSSfXfWrb4wK8TXEjuiU. La prueba visual encontró el aviso de preparación
+privada obsoleto después de publicar. Se corrigió limpiándolo al guardar
+visibilidad en PublicationPanel, commit ecf721e018b6a862e7b325124e060541176fdfc5,
+rama codex/scrum-211-qa-https-verificacion, PR #46 en borrador hacia develop.
+
+QA actual: dpl_CxpcaJUdiDMAdvyTw8D5YRDqjFNE READY, fuente ecf721e,
+https://pdf-interactivo-qa.vercel.app. CLI de Danilo con equipo/proyecto explícitos,
+Hobby, sin pagos, claves IA ni llamadas nuevas. Sin merge ni cambios en main.
+Arreglo:392/392 pruebas, lint y build/TypeScript aprobados. Comprobador privado
+--publication9/9; por sí solo no acredita recorrido. Regresión UI real
+preparar→publicar: aviso obsoleto ausente, estado/confirmación/URL correctos;
+portapapeles comprobado devolviendo solo si coincide con el enlace QA, sin
+mostrar contenido. Se conservó la confirmación obligatoria y el control de versión.
+
+HTTPS observado: TLS1.3 autorizado, certificado *.vercel.app de Google Trust
+Services válido31/10/2026–29/01/2027, HTTP→HTTPS308. Carga privada real por UI:
+QA-HTTPS-privado.pdf,1580bytes, proyecto f5cf675b-fe8f-404b-8490-4832d8130100,
+sin publicación. Descarga propietaria200, anónimo401 y cuenta ajena404.
+Original antes/después y descarga publicada comparten SHA-256:
+e7277d66afd7caba47385cfac2f0e55a2eeb4fb7aa7136409fa35300a6347946.
+Sin recursos DOM HTTP ni errores/warnings del lector observados. Logs del último
+deployment:0 errores/fatales en04:54:40.750–05:19:40.750UTC, sin paginación.
+El archivo pequeño no acredita los límites de carga completos ya documentados.
+
+Fixture3f600fbc: versión5 pública sin identificación, siete refuerzos, dos recursos
+y dos quizzes aprobados. PDF e imagen200, respuestas private,no-store, proyección
+sin respuestas correctas, explicaciones de evaluación ni rutas privadas.
+Interfaz: energía1/2, correcta/incorrecta y explicación, recarga conserva resultado
+y no ofrece reintento. Agua0/1→reintentar sin selección→1/1, dos intentos guardados.
+Navegación, teclado y móvil390×844 sin desbordamiento; viewport restaurado.
+Versión6 con identificación: formulario declara que no verifica identidad, vacío400,
+PDF previo403, lectura200 tras nombre QA y ruta privada401. Preparar otra versión
+conservó la compartida; publicar la7 sustituyó la6 y bloqueó el enlace anterior.
+
+Intentos públicos: doble envío de una operación devolvió el mismo ID; dos
+operaciones concurrentes sin reintentos dieron200/409 y un registro. Para probar
+respuesta perdida se destruyó el socket al recibir cabeceras200, después de
+persistir y sin consumir resultado; consulta/reenvío recuperaron el mismo ID.
+Reintento nuevo prohibido409, nota aportada por cliente400, quiz/publicación ajenos
+o retirados rechazados. Lector B no recuperó resultados de A. BD final de solo
+lectura: siete intentos lector, diez prácticas privadas intactas, diez instantáneas,
+cinco despublicadas y cero públicas. Hashes de las seis instantáneas anteriores
+intactos. Sin SQL de escritura, migraciones nuevas, borrados ni generación IA.
+
+HU036: opciones/efectos/estado vigente comprobados. Sin confirmar400, origen ajeno403,
+otra cuenta404, anónimo401, versión antigua409. Pública→Privada bloquea nuevas
+vistas/PDF/imagen/intentos con401 o404, propietario200 como ensayo privado.
+Despublicada devuelve404 también al propietario y a recursos/intentos conocidos.
+Republicar la6 rotó token y mantuvo anterior404. Pestaña abierta perdió contenido
+al revalidar; recarga mantuvo bloqueo. Retirada final de5/6/7 del fixture y1/2 del
+proyecto sintético personal; documentos y resultados conservados. No se promete
+eliminar las copias que un lector ya hubiera descargado.
+
+Jira:21 comentarios existentes actualizados, sin añadir otros. Once capturas
+originales dan21 adjuntos entre16 subtareas. Readback: un comentario por issue,
+todos los media IDs anteriores conservados, JPEG con tamaño no nulo. Captura10519
+recuperada de Jira:113941bytes idénticos al original. Verificación mediante
+conector/archivo; no se utilizó una sesión web autenticada de Jira. Registro
+técnico externo HU034-035-REAL/HTTPS-QA/resultados-https-2026-11-01.json:
+33 comprobaciones HTTP/TLS/datos aprobadas, sin sesiones ni secretos.
+
+Finalizado confirmado por Jira: HU036/SCRUM-48 y129/211/212/130; HU033/SCRUM-45
+y123/124/205/206; HU030/SCRUM-42 y117/199/200/118; además226 y204 de HU032.
+HU032/SCRUM-44,122 y203 En curso: falta acreditar recorrido desde otro equipo.
+Web no pudo acceder a la URL y el conector Vercel devolvió403 en
+read_protection_bypass. No son pruebas aprobadas ni un fallo demostrado del
+lector; la CLI autorizada sí opera el QA. No reducir criterios para cerrar.
+
+No hubo merge, pagos, avance a otra historia ni cierre del sprint. Stash d6406e0
+intacto. PR #46 conserva la corrección y esta continuidad para revisión; documentos
+posteriores al arreglo no requieren nuevo deployment.
+
+Comprobación adicional de122 completada antes de entregar: se republicó la versión7,
+se editó por la API normal el refuerzo QA de la solicitud163a3097-633b-4159-98ef-db7bcd1873c5
+y la revisión3 quedó pending. Proyección pública antes/después idéntica, sin título
+ni texto del cambio no aprobado. Después se descartó solo esa nueva revisión: el
+refuerzo activo y approved_version_id anteriores permanecieron idénticos; su
+historial conserva versión2 aprobada y nueva3 discarded. No nueva aprobación ni IA.
+Captura20 añadida al comentario existente de122 y resumen44 actualizado. La versión7
+se retiró otra vez; BD confirma siete intentos, diez prácticas y cero públicas.
+El único pendiente de122/203 es ahora acreditar el recorrido desde otro equipo.

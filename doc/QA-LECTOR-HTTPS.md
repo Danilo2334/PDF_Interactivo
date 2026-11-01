@@ -1,11 +1,17 @@
-# QA del lector HTTPS — 31/10/2026
+# QA del lector HTTPS — 01/11/2026
 
-Estado: primer QA autorizado desplegado, READY en
-https://pdf-interactivo-qa.vercel.app. Código2922125f9054ab1d10b2ce312054c2ea089e64d4,
-deployment `dpl_FjRhBZDrJPDMKrRPzZQJNKDdNYTp`, Production del proyecto QA separado
-de Danilo. No es entrega final. PUBLICATION_HTTPS_VERIFIED=false; sin contenido
-publicado ni llamadas IA. HU030/HU032/HU033,SCRUM-226 y validación pública de
-HU036 siguen abiertas hasta sus pruebas autenticadas y de lector real.
+Estado actual: recorrido real de lector y HU036 ejecutado en
+https://pdf-interactivo-qa.vercel.app. Código `ecf721e018b6a862e7b325124e060541176fdfc5`,
+deployment `dpl_CxpcaJUdiDMAdvyTw8D5YRDqjFNE` READY, Production del proyecto QA
+separado de Danilo, Hobby sin activar pagos. `PUBLICATION_HTTPS_VERIFIED=true`.
+Las publicaciones sintéticas se retiraron al terminar: cero públicas, siete
+intentos de lector y diez prácticas privadas conservados. Sin llamadas IA.
+HU030, HU033, HU036 y sus subtareas verificadas están Finalizado. HU032 conserva
+SCRUM-122/203 En curso; pendientes concretos al final. PR #46 en borrador, sin merge.
+
+Las secciones de bootstrap del 31/10 describen el arranque anterior con el flag
+false y acceso pendiente; no son el estado actual. El registro del 01/11 al final
+actualiza esos resultados sin presentar una sesión del propietario como anónima.
 
 Continuación local: HU034 y HU035 integradas en PR#44 y#45, después de#43.
 Cadena revisada e integrada: #42→#43→#44→#45. Código acumulado:392/392 pruebas,
@@ -22,21 +28,22 @@ con un comentario por issue y todas las anteriores conservadas. Estas pruebas
 no acreditan lector anónimo. El bootstrap externo descrito abajo sí acredita la
 pantalla de login por HTTPS, no el recorrido completo de publicación/lector.
 
-## Qué falta realmente
+## Estado actual y pendientes
 
 | Requisito | Comprobado hoy | Acción necesaria |
 | --- | --- | --- |
-| Hosting de Danilo | Primer deployment READY, fuente limpia2922125, sin Git automático ni Pro. | Usar CLI con equipo/proyecto explícitos. No desplegar de nuevo por cambios solo documentales. |
+| Hosting de Danilo | QA READY con corrección ecf721e; sin Git automático ni Pro. | Usar CLI con equipo/proyecto explícitos. No desplegar de nuevo por cambios solo documentales. |
 | Clave privada de servidor | Proporcionada privadamente por el propietario; lectura mínima aceptada200 y nueve comprobaciones de formato correctas. Ocho variables en Production. | Mantener tres variables de servidor como Secret; ninguna clave IA subida. |
-| Dominio y sesión de despliegue | Login HTTPS200 y HTTP→HTTPS308. Origen, URL y epoch común cargados. Callback exacto QA añadido, preservando localhost. | Falta login personal y cookies/visor/recorrido autenticado; no basta ver el login. |
-| Retirada editorial | HU036 integrada y revisada en PR#43. Prueba real local privada→despublicada→privada, recarga, conflicto y bloqueo de lector/PDF/imagen/quizzes correctos. | Ejecutar posteriormente la variante pública HTTPS; no darla por comprobada con localhost. |
-| Prueba externa | Bootstrap externo comprobado; publicación aún deshabilitada. | Completar acceso personal y fase pública QA; después retirada, recursos e intentos. |
+| Dominio y sesión de despliegue | TLS 1.3 válido, certificado Google Trust Services, HTTP→HTTPS308, login personal conservado y carga privada real. | SMTP de recuperación sigue bloqueado en SCRUM-233; no restablecer de nuevo ni extraer cookies personales. |
+| Retirada editorial | Pública→Privada→Despublicada, token nuevo al republicar, sustitución y rechazo de vista/PDF/imagen/intentos comprobados en HTTPS. | HU036 Finalizado; corrección visual en PR #46 pendiente de revisión e integración autorizada. |
+| Prueba del lector | Dos sesiones HTTP anónimas separadas, IAB de otra cuenta, identificación opcional, quizzes, móvil, teclado y recursos reales. | SCRUM-122/203: acreditar segundo equipo. Edición posterior de borrador ya comprobada. Los sondeos remotos no pudieron acreditarlo. |
 
-El despliegue inicial ya está hecho. No resuelve por sí mismo la despublicación.
-Falta la fase pública QA después del acceso propietario; HU036 ya está integrada.
-No cerrar historias por localhost ni por ver únicamente el login desplegado.
+El recorrido positivo se comprobó contra el hosting HTTPS, no contra localhost.
+Un segundo equipo no se da por probado: la herramienta web no pudo abrir la URL y
+el conector Vercel devolvió403; la CLI de Danilo sí opera el QA. No reducir ese
+criterio ni declarar HU032 terminada por las restantes pruebas aprobadas.
 
-## Comprobador privado preparado
+## Comprobador privado — bootstrap del 31/10
 
 Desde la raíz, con Node 22.x y el archivo privado correspondiente:
 
@@ -57,7 +64,7 @@ se detectaron las credenciales de servidor conocidas con prefijo público. No se
 leyeron ni escribieron secretos remotos. La identidad de las nuevas claves secret
 debe comprobarse en el proyecto; su prefijo no demuestra a qué BD pertenecen.
 
-Preparación actual comprobada: `web/.env.qa.local`, archivo privado ignorado por
+Preparación inicial comprobada (31/10/2026): `web/.env.qa.local`, archivo privado ignorado por
 Git, con ocho variables permitidas y sin claves IA. Reutiliza la clave pública y
 el secreto de firma existentes; no modifica `.env.local` ni la sesión local.
 Origen/URL son `https://pdf-interactivo-qa.vercel.app`, epoch UUID generado y flag
@@ -247,3 +254,63 @@ Después del ingreso: comprobar proyectos de esa cuenta y preparar datos QA
 propios sin trasladar los registros de la otra cuenta. Completar cookies,PDF y
 fase pública/recorrido anterior antes de finalizar las historias. Mantener las
 publicaciones QA retiradas al terminar y no publicar documentos reales/ajenos.
+
+## Recorrido ejecutado — 01/11/2026
+
+La recuperación asistida y el login personal se completaron; SMTP233 sigue
+pendiente. Separación resuelta mediante loginAction real de las cuentas QA
+existentes y cookies HTTP independientes, sin extraer las personales. Las capturas
+IAB usan otra cuenta respecto al propietario del fixture; las pruebas anónimas
+usan dos almacenes HTTP distintos. No confundir esos alcances.
+
+Tras verificar TLS se habilitó el flag conservando el epoch; la cuenta personal
+siguió activa. Se corrigió el aviso privado obsoleto después de publicar (ecf721e),
+desplegándolo solo al QA.392/392 pruebas, lint, build y --publication9/9 correctos.
+Regresión UI preparar→publicar sin aviso contradictorio, URL y copia verificadas.
+
+Recorrido real: carga privada1580bytes, PDF público idéntico al original, imagen,
+dos quizzes, notas1/2 y0/1→1/1, explicaciones, recarga, teclado y móvil390×844.
+Sin claves previas de respuestas. Idempotencia, concurrencia200/409, aislamiento A/B
+y recuperación al cortar la respuesta tras cabeceras200 comprobados. Identificación
+declarada solo cuando la versión la exige: vacío400, PDF previo403, lectura posterior200
+y sin autorización privada. Se conservaron las restricciones de la aplicación.
+
+Pública→Privada y Despublicada bloquean nuevas entregas e intentos, incluyendo PDF
+e imagen conocidos. Privada permite ensayo del propietario; despublicada lo rechaza.
+Token nuevo al republicar y anterior inválido; versión sustituida inaccesible.
+Final: cero públicas, siete intentos lector y diez prácticas privadas conservados.
+Sin SQL de escritura ni IA. Copias descargadas previamente fuera de la revocación.
+
+TLS1.3 autorizado, certificado *.vercel.app de Google Trust Services válido hasta
+29/01/2027, HTTP→HTTPS308. Sin recursos DOM HTTP ni avisos de consola observados.
+Runtime0 errores/fatales en04:54:40.750–05:19:40.750UTC. SHA original:
+`e7277d66afd7caba47385cfac2f0e55a2eeb4fb7aa7136409fa35300a6347946`.
+
+Jira conserva21 comentarios únicos y sus imágenes previas. Once capturas nuevas
+dan21 adjuntos en16 subtareas; media/metadatos comprobados y una captura recuperada
+con bytes idénticos. HU036, HU033 y HU030 y sus subtareas verificadas Finalizado;
+226 y204 también. Corrección y continuidad en
+[PR #46](https://github.com/Danilo2334/PDF_Interactivo/pull/46), sin merge.
+
+Pendiente de122/203: prueba desde otro equipo. La edición posterior sin aprobar
+ya se contrastó con la publicación, sin cambios en su proyección. Web no pudo abrir el recurso y el conector Vercel
+devolvió403; no acreditan ese recorrido. La CLI autorizada de Danilo sí opera el QA.
+HU032 En curso. SMTP233 y límite de cargas grandes documentado siguen pendientes;
+no activar pagos ni suponer que el archivo pequeño acredita los límites completos.
+Para repetir otra prueba hay que republicar y usar el enlace nuevo: los enlaces
+anteriores quedan retirados. No reiniciar localhost ni rotar el epoch del QA.
+
+Prueba adicional122: edición normal del refuerzo QA después de publicar la7;
+revisión3 pending excluida de la proyección pública. Se descartó únicamente esa
+revisión nueva, conservando intactos el refuerzo activo y la versión2 aprobada.
+La publicación7 se retiró de nuevo. Captura20 en122, mismo comentario; registro
+externo actualizado a33 comprobaciones, todas aprobadas.
+
+Comprobación de configuración de la fase actual (solo nombres/booleanos):
+
+```powershell
+node --env-file=web/.env.qa.local web/scripts/check-reader-qa.mjs --publication
+```
+
+Los comandos --bootstrap anteriores documentan el arranque con publicación
+bloqueada; no son el modo de verificación del flag actual.
