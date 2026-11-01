@@ -4881,3 +4881,80 @@ preservando capturas anteriores; no hay capturas nuevas ni se inventan pruebas
 de un despliegue inexistente. No nuevas llamadas IA, escrituras BD, merges ni
 deployments. La preparación completa y las intervenciones necesarias quedan en
 doc/QA-LECTOR-HTTPS.md; no pedir de nuevo conectar Vercel ni comprar dominio.
+
+### 31/10/2026 — Primer despliegue QA HTTPS autorizado y acceso personal pendiente
+
+El usuario autorizó el despliegue de prueba y completó privadamente la clave de
+Supabase. Comprobador QA9/9; lectura mínima con clave servidor aceptada200 sobre
+el proyecto correcto. No se imprimieron valores. Se cargaron por stdin ocho
+variables solo en Production del proyecto QA: clave servidor,secreto de firma y
+epoch como Secret; claves públicas/origen/URL/flag como Config. Sin variables IA,
+Pro, facturación nueva ni cuentas ajenas. El sitio QA usa la misma BD existente;
+no se trasladaron datos ni reaplicaron migraciones.
+
+Fuente fijada:2922125f9054ab1d10b2ce312054c2ea089e64d4. Exportación Git a una
+carpeta temporal limpia, sin el entorno privado del checkout. CLI65.9.0 vinculó
+solo esa copia al proyecto prj_pRui4rYL9DnbERflhyhplv2mIoJ3/equipo
+team_I5CBYezIIEWl8FIlhW7vqMR4. Manifest dry-run:549 archivos,8750396bytes;
+sin.env/.git/.pem/.zip privados. CLI link creó un.env.local temporal vacío que
+la subida ignoró. No se conectó Git ni se usó build precompilado de Windows.
+
+Deployment dpl_FjRhBZDrJPDMKrRPzZQJNKDdNYTp,Production del proyecto QA separado,
+READY en107129ms. URL estable https://pdf-interactivo-qa.vercel.app y alias
+pdf-interactivo-qa-danilo-carlosamas-projects.vercel.app. BuilderLinux,Node22.x,
+Next16.4.3,CLI65.4.0,2cores/8GB. Compilación y TypeScript correctos. El build
+avisó16 moderadas en árbol completo; auditoría local --omit=dev dio0 de todas
+las severidades. No se ejecutó audit fix ni cambiaron dependencias.
+
+Pruebas reales externas del bootstrap: login HTTPS200; HTTP→HTTPS308;
+dashboard anónimo307→/login; API privada401; token/asset inexistentes404;
+POST de identificación desde origen ajeno403. Login sin recursos DOM HTTP ni
+errores/warnings de consola. HTML y diez chunks del login no contienen los
+valores de clave servidor/secreto de firma; alcance limitado a esos recursos.
+Runtime,consulta20min04:20:48–04:40:48UTC:0 errores/fatales, sin paginación.
+PUBLICATION_HTTPS_VERIFIED=false: aún no se publicó ningún documento ni se
+ejecutaron positivos de lector/quiz público. No inferirlos de la pantalla login.
+Captura nativa de login real y callback guardadas en Jira226, preservando previas
+y comentario único. Historia/subtarea226 yHU036 permanecen En curso.
+
+El usuario indicó iniciar cada sprint al comenzar. Inventario: Sprint4 ya activo
+con HU017/SCRUM-29 En curso yHU024/SCRUM-36 En revisión; no se cerró. Se inició
+Sprint6(ID7) el31/10/2026 a23:38:07 de Bogotá, end07/11/2026 a23:38:07, usando
+cadencia semanal existente. Herramienta confirma active; se mantienen ambos
+activos sin trasladar issues ni fechas retrospectivas. No iniciar Sprint7 por
+adelantado. Sprints1/5 históricos no se fabricaron como ejecutados/cerrados.
+
+Sobre cambio de Jira: se explicó diferencia entre otra cuenta del mismo sitio
+y migración a otro sitio. Aún no hay destino/cuenta elegida ni autorización para
+invitar usuarios o mover datos. No se migró ni alteró autoría/evidencias.
+
+Acceso del propietario: eligió danilocarlosama96@gmail.com y olvidó su contraseña;
+no se conocen ni adivinaron sus credenciales. Su petición explícita de recuperación
+requirió añadir en Supabase únicamente
+https://pdf-interactivo-qa.vercel.app/auth/callback?next=/reset-password.
+Readback confirma http://localhost:3000/** y callback local intactos; Site URL
+global sigue localhost. Captura segura de configuración, sin tokens.
+
+Solicitud real de correo desde QA falló. Auth logs04:43:54UTC:unexpected_failure,
+SMTP550 de Resend en modo pruebas, destinatario permitido diferente. Se conserva
+el bloqueo ya registrado en SCRUM-233/HU004-SCRUM-16; no se activaron pagos,
+cambió remitente ni se insistió enviando correos. Jira233 actualizado sobre su
+comentario existente con captura real del error, sin contraseñas ni otros correos.
+
+Tras pedir el usuario restablecer su cuenta se preparó, fuera del repositorio,
+un auxiliar temporal solo en127.0.0.1 y ligado a su UUID/email comprobado con API
+administrativa oficial getUserById/updateUserById. No es una modificación del
+flujo público de recuperación ni de Mi perfil: requiere al propietario introducir,
+confirmar y enviar personalmente la clave. No se escriben claves en archivos,
+logs o chat; el secreto servidor se carga del archivo privado, no se envía al
+navegador. Controles:Host/Origin exactos,CSRF,body4KB,CSP,no-store,un solo cambio,
+cierre al éxito y caducidad10min. HTTP sin mutar credenciales:GET200,origen ajeno403,
+CSRF inválido403. Formulario vacío abierto, esperando acción personal; aún no
+hay confirmación de cambio ni login. No declarar SCRUM-233 resuelto por ello.
+
+La instantánea QA v5 pertenece a la cuenta temporal anterior, no al propietario
+personal elegido ahora (consulta de solo lectura). Al ingresar se comprobarán
+proyectos/datos QA de su cuenta; no modificar owner_id ni saltar RLS para reutilizar
+los de otra. Pendientes: autenticación personal, cookies/visor y fase pública de
+lector/HU036 con datos QA autorizados, recursos,aislamiento,intentos y retirada.
+Documentación posterior no requiere otro deployment: código desplegado sigue2922125.
