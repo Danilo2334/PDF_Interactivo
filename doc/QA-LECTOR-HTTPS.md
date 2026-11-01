@@ -1,17 +1,17 @@
 # Preparación del lector HTTPS — 31/10/2026
 
-Estado: preparación local, sin desplegar ni publicar. Código de aplicación de
-`develop` en `ee9f805`; PR #30–#41 integrados. Esta rama solo añade comprobación
-de configuración y documentación. HU030/HU032/HU033 siguen En curso.
+Estado: preparación local, sin desplegar ni publicar. `develop` en `ee9f805`;
+PR #30–#41 integrados. PR #42 prepara QA; HU036 añade retirada editorial en una
+rama descendiente. HU030/HU032/HU033 y la validación pública de HU036 siguen abiertas.
 
 ## Qué falta realmente
 
 | Requisito | Comprobado hoy | Acción necesaria |
 | --- | --- | --- |
-| Hosting de Danilo | Lectura y rol OWNER confirmados en el equipo correcto; cuenta personal Hobby activa. Crear proyecto vacío mediante el conector devuelve403. | Resolver el acceso de creación o usar un acceso oficial alternativo autenticado del mismo titular; no desplegar. |
+| Hosting de Danilo | CLI oficial autenticada como Danilo2334: proyecto vacío creado y configurado; cero deployments. El conector aún no ve ese proyecto. | Usar CLI con equipo explícito; mantener sin Git ni despliegues. |
 | Clave privada de servidor | `SUPABASE_SERVER_KEY` ausente en la configuración local. | Usar una clave existente del Supabase correcto, solo como Secret del futuro proyecto QA. No enviarla por chat. |
 | Dominio y sesión de despliegue | No hay origen QA asignado ni epoch compartido configurado para hosting. | Asignar dominio estable y UUID de despliegue común a sus funciones. El wrapper local ya genera su propio epoch. |
-| Retirada editorial | HU036 / SCRUM-48 y sus cuatro subtareas Por hacer; API solo prepare/publish. | Implementar y revisar HU036 para probar retirada real y dejar la muestra sin publicar al terminar. |
+| Retirada editorial | HU036 implementada. Prueba real local privada→despublicada→privada, recarga, conflicto y bloqueo de lector/PDF/imagen/quizzes correctos. | Revisar el PR y ejecutar posteriormente la variante pública HTTPS; no darla por comprobada con localhost. |
 | Prueba externa | No ejecutada. Publicación deshabilitada. | Autorizar después un despliegue QA y comprobar certificado, redirecciones y lector. |
 
 Desplegar sí es el siguiente paso de infraestructura para cerrar HTTPS, pero no
@@ -48,22 +48,24 @@ automatizadas aprobadas (incluye PostgreSQL aislado); no son intentos reales.
 
 ## Configuración futura del proyecto QA
 
-Proyecto separado `pdf-interactivo-qa` propuesto, aún sin ID ni URL reservados.
+Proyecto separado `pdf-interactivo-qa` creado vacío, ID
+`prj_pRui4rYL9DnbERflhyhplv2mIoJ3`. Sin fuente subida, Git asociado ni deployments.
 Destino confirmado: equipo `danilo-carlosamas-projects`, ID
 `team_I5CBYezIIEWl8FIlhW7vqMR4`. La conexión correcta se llama **Danilo Carlosama**;
 la conexión anterior llamada Vercel corresponde a Francisco y no debe usarse.
-Consulta de identidad, equipo y proyectos correcta tras reiniciar Codex. La lista
-de miembros confirma `danilo2334` con rol OWNER. El intento de crear el proyecto
-vacío (sin repositorio, previews automáticas deshabilitadas) devolvió403:
-`You don't have permission to create the project`. Consulta posterior por nombre:
-cero proyectos. No atribuir la causa a un rol incorrecto ni afirmar que reconectar
-lo resuelve: la respuesta no concreta la causa. CLI Vercel no está instalado, por
-lo que no existe actualmente un acceso alternativo CLI autenticado comprobado.
-No se verificó consumo/cuota restante ni se creó ningún recurso.
-Vercel: Next.js, raíz `web`, Node22.x, `npm ci`, `npm run build`, salida estándar.
+La lista de miembros confirma a Danilo como OWNER. El conector devolvió403 al
+crear; después de la creación por CLI, sigue listando cero proyectos y devuelve404
+al consultar ese ID. No se conoce la causa exacta del fallo del conector.
+Alternativa comprobada: CLI oficial65.9.0 desde caché npm, autenticada por el
+usuario mediante device login. `whoami`, creación, actualización y consulta del
+proyecto correctas, siempre con equipo explícito. Cuenta/equipo Hobby.
+Configuración leída de vuelta: Next.js, raíz `web`, Node22.x, `npm ci`,
+`npm run build`, `previewDeploymentsDisabled=true`, `link=null`.
+`vercel list pdf-interactivo-qa --json` devuelve deployments=[] y count=0.
+`publicSource=false` no aparece en la respuesta: no se afirma persistido ese
+campo. No hay fuente subida. No se verificó consumo/cuota restante.
 No importar el repositorio ni asociar ramas ahora: eso puede iniciar despliegues.
-Si se resuelve la creación antes del despliegue, crear solamente el proyecto
-vacío en el equipo indicado y comprobar que tiene cero deployments.
+No volver a crear el proyecto ni ejecutar `vercel` sin subcomando: puede desplegar.
 Mantener la publicación deshabilitada en el primer arranque. No tocar main.
 
 | Variable de hosting | Valor/origen requerido |
@@ -79,7 +81,8 @@ Mantener la publicación deshabilitada en el primer arranque. No tocar main.
 
 No copiar `.env.local` completo. OpenAI/Gemini no son necesarios para responder
 los quizzes ya guardados. No habrá llamadas nuevas de IA para este recorrido.
-No reejecutar migraciones: la de intentos `20261029010922` ya fue conciliada.
+No reejecutar migraciones: intentos `20261029010922` y visibilidad
+`20261031073708_publication_visibility_controls` ya están aplicadas y conciliadas.
 Si se prueba recuperación de cuenta, añadir el callback QA exacto en Supabase
 preservando los existentes. No abrir permisos ni desactivar RLS.
 

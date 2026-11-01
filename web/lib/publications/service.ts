@@ -5,7 +5,7 @@ import { checkPermission } from "@/lib/auth/access";
 import { createClient } from "@/lib/supabase/server";
 import { reply, readSmallJson } from "@/lib/reinforcements/request-service";
 import { isSameOriginMutation } from "@/lib/documents/mutation-request";
-import { publicationInputSchema, publicationReceiptSchema } from "@/lib/validations/publication";
+import { publicationInputSchema, publicationReceiptSchema, publicationManagementSchema } from "@/lib/validations/publication";
 import { publicationOrigin, signPublicationProof } from "@/lib/publications/proof";
 import { serverReaderConfigured } from "@/lib/readers/repository";
 async function authorize(projectId: string, documentId: string | null) {
@@ -23,10 +23,10 @@ export async function getPublication(request: Request, projectId: string) {
     const documentId = new URL(request.url).searchParams.get("documentId"), access = await authorize(projectId, documentId);
     if (access.response) return access.response;
     // Never serialize the private snapshot or answer configuration into this response.
-    const result = await access.db!.rpc("change_experience_publication", signPublicationProof({ action: "status", projectId, documentId, userId: access.userId, operationId: randomUUID() }));
+    const result = await access.db!.rpc("change_experience_publication", signPublicationProof({ action: "management", projectId, documentId, userId: access.userId, operationId: randomUUID() }));
     if (result.error) return reply({ message: "No fue posible consultar la publicación." }, 503);
-    const latest = publicationReceiptSchema.nullable().parse(result.data);
-    return reply({ latest, canPublish: !!publicationOrigin() && serverReaderConfigured() });
+    const management = publicationManagementSchema.parse(result.data);
+    return reply({ ...management, canPublish: !!publicationOrigin() && serverReaderConfigured() });
   } catch { return reply({ message: "No fue posible consultar la publicación." }, 503); }
 }
 export async function postPublication(request: Request, projectId: string) {
@@ -36,7 +36,8 @@ export async function postPublication(request: Request, projectId: string) {
   try {
     const access = await authorize(projectId, parsed.data.documentId); if (access.response) return access.response;
     const origin = publicationOrigin();
-    if (parsed.data.action === "publish" && (!origin || !serverReaderConfigured())) return reply({ message: "La publicación por enlace todavía no está habilitada en este entorno. La versión preparada permanece privada." }, 503);
+    const opening = parsed.data.action === "publish" || parsed.data.action === "visibility" && parsed.data.visibility === "public";
+    if (opening && (!origin || !serverReaderConfigured())) return reply({ message: "La publicación por enlace todavía no está habilitada en este entorno. La versión preparada permanece privada." }, 503);
     const proof = signPublicationProof({ ...parsed.data, projectId, userId: access.userId, ...(origin ? { origin } : {}) });
     const result = await access.db!.rpc("change_experience_publication", proof);
     if (result.error) {
@@ -44,7 +45,8 @@ export async function postPublication(request: Request, projectId: string) {
       return reply({ message: status === 409 ? "La versión o el documento cambió. Actualiza antes de continuar." : "No fue posible confirmar la publicación. Reintenta sin cambiar la operación." }, status);
     }
     const receipt = publicationReceiptSchema.safeParse(result.data);
-    if (!receipt.success) return reply({ message: "No fue posible verificar el resultado. Actualiza la publicación." }, 503);
+    if (!receipt.success || receipt.data.documentId !== parsed.data.documentId
+      || parsed.data.action === "visibility" && (receipt.data.id !== parsed.data.publicationId || receipt.data.visibility !== parsed.data.visibility)) return reply({ message: "No fue posible verificar el resultado. Actualiza la publicación." }, 503);
     return reply({ receipt: receipt.data, canPublish: !!origin && serverReaderConfigured() });
   } catch { return reply({ message: "No fue posible confirmar la publicación. Reintenta sin cambiar la operación." }, 503); }
 }
