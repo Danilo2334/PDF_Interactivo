@@ -4638,3 +4638,58 @@ acreditan el bloqueo; los positivos de interfaz siguen pendientes. No se suben
 imágenes de pruebas simuladas ni se sustituyen con capturas del código anterior.
 Servidor local de producción con código acumulado disponible en3000 y login
 abierto para retomar. No se generó ni compartió ninguna contraseña o token.
+
+### 31/10/2026 — Pruebas reales HU034/HU035 y correcciones encontradas
+
+El usuario inició sesión y autorizó completar estas pruebas, Jira y continuidad,
+manteniendo prohibidos despliegue y merge. Producción local, código acumulado de
+PR#44/#45; lector privado QA v5, sin acreditar acceso anónimo ni HTTPS.
+
+Observado realmente antes de las correcciones:
+- Página1 muestra cinco refuerzos y página2 dos. Controles, entrada numérica y
+  miniaturas cambian la lista; los indicadores de zona/página abren y expanden
+  las tarjetas correctas (péndulo y ciclo del agua), enfocando su encabezado.
+- Zona del péndulo: x4%,y24%,ancho92%,alto8%, coherentes con la selección guardada
+  a100% y150%. Los controles no se superponen. A150%, retorno medido justo en el
+  evento nativo de activación: scrollX0,scrollY595.200012,scrollLeft336.799988,
+  zoom150% y foco en el mismo ID; todos iguales al cerrar. Medir antes de que
+  Playwright enfoque/desplace el control daba otro valor y no era el punto real
+  de activación; se corrigió el método de medida, no los datos de la aplicación.
+- Viewports CSS exactos1280×900,768×1024 y390×844; documento no excede esos anchos.
+  En móvil las páginas se ocultan/pausan, la navegación sigue visible y cambia
+  la página del panel; el cierre vuelve a la página elegida. Regreso de marcador
+  móvil conserva scrollY658.400024,scrollLeft0,zoom100% y foco. Escritorio muestra
+  PDF y panel simultáneos. Gráfico ampliado desplaza solo su región interna;
+  ArrowRight produjo scrollLeft40 sin crear desbordamiento del documento.
+- Recorrido con Tab/Enter/Espacio/flechas: controles, tarjeta, gráfico y descripción
+  textual, quiz y envío. Ensayo privado de agua número3 guardado, resultado1/1;
+  no es un intento de lector. Se conserva aparte de los resultados públicos.
+- Texto digital del PDF disponible, SVG con título/descripción/lista textual,
+  imagen con alt y nombres de controles. Medición sobre39 textos/controles HTML
+  visibles: sin fallos, contraste mínimo4.727:1. No es una certificación WCAG.
+- QA escaneado d313803d-f9b3-4004-86e3-2aa53f8666e6, instantánea privada
+  45d33e4d-13c5-4fde-ad5e-8affa90b7a67: cero refuerzos, estado vacío correcto y
+  aviso de ausencia de texto digital, sin OCR. PDF original sigue disponible.
+- PDF digital SHA256 e7277d66afd7caba47385cfac2f0e55a2eeb4fb7aa7136409fa35300a6347946.
+  Navegación/zoom/panel no descargan otra copia: dos entradas de PDF, una propia
+  de la UI y otra petición expresa de QA para calcular el SHA. Consola sin errores
+  ni warnings en la observación. Los observadores de medida se eliminaron.
+
+Fallos reales detectados, sin declararlos aprobados:
+1. Al redibujar tras zoom en página2, un layout intermedio puede seleccionar1.
+   Se conserva ahora una página ancla hasta completar render/decoraciones y se
+   desactiva el anclaje automático del navegador en el visor del lector. Una
+   rueda/touch intencional cancela ese anclaje temporal para respetar al usuario.
+2. Reintentar el quiz quitaba el botón enfocado y dejaba foco en BODY; también
+   pasaba al enviar y mostrar el resultado. Ahora el foco pasa a la primera
+   respuesta, al resultado nuevo o al botón de envío si falla la petición. Cargar
+   un resultado ya guardado no roba foco.
+
+Cinco regresiones adicionales: render/decoración tardía, cancelación de ancla por
+rueda y foco del quiz en reintento/éxito/error.392/392 pruebas, lint y build/TS
+correctos. Reinicio local necesario; se mantiene el control de epoch existente.
+Se solicitó un único reingreso personal para repetir los casos corregidos. No
+se finalizan las subtareas afectadas antes de observar esos resultados nuevos.
+Capturas originales y medidas externas en HU034-035-REAL; las capturas móviles
+que el API de screenshot reescala demasiado no se usarán como evidencia legible:
+obtener captura nativa del viewport sin alterar los píxeles de la aplicación.

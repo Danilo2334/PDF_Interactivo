@@ -551,3 +551,19 @@ test('HU035 page controls remain operable with paused hidden canvases without sc
   assert.equal(f.labelled('Aumentar zoom').props.disabled,true);assert.equal(f.button('Mostrar miniaturas').props.disabled,true);
   assert.ok(f.nodes().some(n=>n.props?.ref&&n.props.hidden===true));assert.ok(!f.nodes().some(n=>n.type==='button'&&n.props['data-open-reinforcements']!==undefined));
 });
+
+test('HU035 zoom keeps its active page through delayed decoration and reanchors after preceding page heights settle',async t=>{
+  let hold=false,finish;const heights={1:1000,2:1000};
+  const f=rendererFixture({count:3,heights,decorate:async page=>{if(hold&&page.pageNumber===2)await new Promise(resolve=>{finish=resolve;});return()=>{};}});t.after(()=>f.renderer.dispose());
+  await settle();f.renderer.goToPage(2);await settle();f.flush();hold=true;f.renderer.setZoom(125);await settle();
+  // Browser layout can temporarily clamp scroll while old page/text nodes go away.
+  f.browser.scrollTo({top:300});f.flush();assert.equal(f.changes.at(-1),2);
+  heights[1]=1400;finish();await settle();f.flush();assert.equal(f.changes.at(-1),2);assert.equal(f.browser.scrollY,300+1400+24-70);
+});
+
+test('HU035 an intentional wheel movement cancels the temporary zoom anchor',async t=>{
+  let hold=false,finish;
+  const f=rendererFixture({count:3,decorate:async page=>{if(hold&&page.pageNumber===2)await new Promise(resolve=>{finish=resolve;});return()=>{};}});t.after(()=>f.renderer.dispose());
+  await settle();f.renderer.goToPage(2);await settle();f.flush();hold=true;f.renderer.setZoom(125);await settle();
+  f.listeners.get('wheel')();f.scrollToPage(1);f.flush();assert.equal(f.changes.at(-1),1);finish();await settle();f.flush();assert.equal(f.changes.at(-1),1);
+});
