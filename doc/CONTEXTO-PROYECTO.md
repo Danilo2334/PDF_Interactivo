@@ -5346,3 +5346,9 @@ callbacks pasivos y alineación de indicadores no lo invalidan. Dos regresiones
 verifican el contrato y que no se vuelva a descargar el PDF. Repetir ese cierre
 en QA antes de finalizar134. El abrir/cerrar sin cambiar PDF sigue restaurando
 la posición original. Métricas y pruebas de servidor permanecen iguales.
+
+El retorno se refuerza conservando la página de la última navegación/zoom explícito
+y alineándola al cerrar. Así el enfoque del botón de cierre no puede seleccionar
+una página anterior parcialmente visible. La firma opcional del visor comunica
+la página aplicada, sin eventos analíticos ni nuevas descargas. Se vuelve a
+comprobar el caso sobre este código antes del cierre de134.

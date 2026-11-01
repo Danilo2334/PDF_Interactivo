@@ -34,7 +34,7 @@ type ViewerProps = {
   floatingReinforcements?: boolean;
   includeReadableText?: boolean;
   onFirstPageRendered?: () => void;
-  onReadingNavigate?: () => void;
+  onReadingNavigate?: (page: number) => void;
 };
 
 type ViewerStatus =
@@ -145,14 +145,14 @@ function PdfPages({
       return;
     }
     if (status !== "ready" || !rendererRef.current?.goToPage(number)) return;
-    onReadingNavigate?.();
+    onReadingNavigate?.(number);
     setPageInput(String(number));
     setPageInputError("");
   }
 
   function changeZoom(percentage: number) {
     if (status !== "ready" || !rendererRef.current?.setZoom(percentage)) return;
-    onReadingNavigate?.();
+    onReadingNavigate?.(currentPage);
     setZoom(percentage);
   }
 

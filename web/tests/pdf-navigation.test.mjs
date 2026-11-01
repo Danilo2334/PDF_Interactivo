@@ -485,11 +485,12 @@ test("zoom controls show the applied percentage and disable their respective lim
 });
 
 test('HU038 return-position invalidation runs only on explicit PDF navigation or applied zoom, without refetching',async t=>{
- let navigations=0;const f=viewerFixture(20,1,null,[],{onReadingNavigate:()=>navigations++});t.after(()=>f.dispose());await settle();f.render();
+ let navigations=0;const pages=[];const f=viewerFixture(20,1,null,[],{onReadingNavigate:page=>{navigations++;pages.push(page);}});t.after(()=>f.dispose());await settle();f.render();
  f.callbacks.changed(3);f.render();assert.equal(navigations,0);
  f.enter('0');assert.equal(navigations,0);
  f.button('Siguiente').props.onClick();f.render();assert.equal(navigations,1);
  f.labelled('Aumentar zoom').props.onClick();f.render();assert.equal(navigations,2);assert.equal(f.requests.length,1);
+ assert.deepEqual(pages,[4,4]);
 });
 
 test("both viewer direction buttons are disabled for a single-page PDF", async (t) => {

@@ -37,8 +37,15 @@ export function Reading({ view, endpoint }: { view: ReaderView; endpoint: string
   const pdf = useRef<HTMLDivElement>(null), content = useRef<HTMLElement>(null), position = useRef<{ x: number; y: number; page: number; horizontal: number; trigger: HTMLElement | null; markerId?: string } | null>(null);
   const markers = useMemo(() => view.items.map(item => ({ id: item.id, title: item.title, pageNumber: item.pageNumber, selection: item.selection })), [view.items]);
   const reportPage = useCallback((page: number) => setPage(page), []);
-  const keepCurrentPosition = useCallback(() => { position.current = null; }, []);
+  const intentionalPage = useRef<number | null>(null);
+  const keepCurrentPosition = useCallback((page: number) => { position.current = null; intentionalPage.current = page; }, []);
+  const closePanel = useCallback(() => {
+    const destination = intentionalPage.current; intentionalPage.current = null;
+    if (destination !== null) { setPage(destination); setNavigation(previous => ({ page: destination, fragment: null, key: previous.key + 1 })); }
+    setPanel(false);
+  }, []);
   const openPanel = useCallback((currentPage: number, markerId?: string) => {
+    intentionalPage.current = null;
     const figure = pdf.current?.querySelector<HTMLElement>(`[data-pdf-page="${currentPage}"]`);
     position.current = { x: window.scrollX, y: window.scrollY, page: currentPage, horizontal: figure?.scrollLeft ?? 0, trigger: document.activeElement instanceof HTMLElement ? document.activeElement : null, markerId };
     selected.current = markerId ?? null; setPage(currentPage); setActivation(n => n + 1);
@@ -74,18 +81,18 @@ export function Reading({ view, endpoint }: { view: ReaderView; endpoint: string
   }, [panel, activation, wide]);
   return <>
     <ReaderOpenReporter endpoint={endpoint} ready={pdfReady} privateTest={view.privateTest} onReceipt={acceptedVisit} />
-    <div role="group" aria-label="Secciones de lectura" className="flex flex-wrap gap-2"><button type="button" aria-pressed={!panel} onClick={() => setPanel(false)} className="rounded-lg border px-3 py-2">PDF original</button><button type="button" aria-pressed={panel} onClick={() => { if (!panel) openPanel(page); }} className="rounded-lg border px-3 py-2">Refuerzos</button></div>
+    <div role="group" aria-label="Secciones de lectura" className="flex flex-wrap gap-2"><button type="button" aria-pressed={!panel} onClick={closePanel} className="rounded-lg border px-3 py-2">PDF original</button><button type="button" aria-pressed={panel} onClick={() => { if (!panel) openPanel(page); }} className="rounded-lg border px-3 py-2">Refuerzos</button></div>
     <p role="status" className="text-sm text-slate-700">Página {page}: {view.items.filter(item => item.pageNumber === page).length} refuerzos disponibles.</p>
     <div className="reader-layout grid min-w-0 items-start gap-5 lg:grid-cols-[minmax(0,3fr)_minmax(18rem,2fr)]">
     <div ref={pdf} className="min-w-0"><PdfViewer key={endpoint} projectId="reader" sourceUrl={`${endpoint}/assets/pdf`} visible={!panel || wide} pagesHidden={panel && !wide} onHiddenNavigate={navigateFromPanel} floatingReinforcements={false} includeReadableText initialPage={navigation.page} initialFragment={navigation.fragment} navigationKey={navigation.key}
       onVisiblePageChange={reportPage} onOpenReinforcements={openPagePanel} reinforcementMarkers={markers} onReinforcementActivate={openMarker} onFirstPageRendered={reportReady} onReadingNavigate={keepCurrentPosition} />
       {panel && !wide && <p className="mt-3 text-sm text-slate-700">Los controles de página siguen disponibles. Cierra los refuerzos para volver al PDF y ajustar el zoom conservado.</p>}
     </div>
-    <section ref={content} hidden={!panel} aria-label={`Refuerzos de la página ${page}`} className="min-w-0 space-y-4 rounded-xl border border-slate-200 bg-white p-4 lg:sticky lg:top-4 lg:max-h-[calc(100dvh-2rem)] lg:overflow-y-auto"><button type="button" onClick={() => setPanel(false)} className="rounded-lg border px-3 py-2">Cerrar refuerzos y volver al PDF</button><h2 className="text-xl font-semibold">Refuerzos de la página {page}</h2>
+    <section ref={content} hidden={!panel} aria-label={`Refuerzos de la página ${page}`} className="min-w-0 space-y-4 rounded-xl border border-slate-200 bg-white p-4 lg:sticky lg:top-4 lg:max-h-[calc(100dvh-2rem)] lg:overflow-y-auto"><button type="button" onClick={closePanel} className="rounded-lg border px-3 py-2">Cerrar refuerzos y volver al PDF</button><h2 className="text-xl font-semibold">Refuerzos de la página {page}</h2>
       {!view.items.some(i => i.pageNumber === page) && <p>Esta página no tiene refuerzos publicados para consultar.</p>}
       {view.items.filter(i => i.pageNumber === page).map(item => <ReaderCard key={item.id} item={item} endpoint={endpoint} privateTest={view.privateTest} expanded={expanded.has(item.id)}
         onToggle={() => { if (!expanded.has(item.id)) opened([{ id: item.id, pageNumber: item.pageNumber }]); setExpanded(previous => { const next = new Set(previous); if (next.has(item.id)) next.delete(item.id); else next.add(item.id); return next; }); }}
-        onSource={() => { position.current = null; setNavigation(p => ({ page: item.pageNumber, fragment: item.selection as FragmentSelection | null, key: p.key + 1 })); setPanel(false); }} />)}
+        onSource={() => { position.current = null; intentionalPage.current = null; setNavigation(p => ({ page: item.pageNumber, fragment: item.selection as FragmentSelection | null, key: p.key + 1 })); setPanel(false); }} />)}
     </section>
     {!panel && wide && <aside aria-label="Ayuda de refuerzos" className="mt-8 rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-950">
       <h2 className="font-semibold">Lee el PDF y consulta sus refuerzos</h2>
