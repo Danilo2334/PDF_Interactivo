@@ -5073,3 +5073,89 @@ historial conserva versión2 aprobada y nueva3 discarded. No nueva aprobación n
 Captura20 añadida al comentario existente de122 y resumen44 actualizado. La versión7
 se retiró otra vez; BD confirma siete intentos, diez prácticas y cero públicas.
 El único pendiente de122/203 es ahora acreditar el recorrido desde otro equipo.
+
+### 01/11/2026 — Revisión del PR #46 e integración; cierre de HU032 desde un equipo externo
+
+El usuario autorizó revisar/integrar #46 y continuar los pendientes de HU032,
+sin activar pagos. Worktree limpio, stash d6406e0 conservado. Revisión del head
+f2b325549b9477c57a9342d48cf04254a9baab77 contra develop2f5d516: una línea funcional
+que limpia el aviso anterior al guardar visibilidad y dos documentos. Sin hallazgos,
+conflictos, revisiones ni comentarios inline pendientes. No había checks CI
+configurados en ese PR; se revisaron los registros392/392, lint y build del mismo
+código y la regresión visual ya ejecutada. No se fingió una nueva ejecución.
+
+#46 pasó de borrador a listo y se integró con control del SHA revisado.
+GitHub confirma MERGED el01/11/2026 a05:36:48UTC, merge
+365d282d820e807a942703cb9b9336335b7e2964. develop local actualizado por fast-forward;
+sin borrar ramas ni tocar main. El QA dpl_CxpcaJUdiDMAdvyTw8D5YRDqjFNE sigue
+sirviendo ecf721e: su código de aplicación coincide con lo integrado. No se necesitó
+otro deployment, reinicio de localhost, cambio de epoch ni login personal.
+
+Se resolvió el pendiente de122/203 con una máquina externa real: GitHub Actions
+estándar, github-hosted/Linux/x64, Node22.23.4, repositorio ya público. No se cambió
+visibilidad del repo, plan, protección de Vercel ni se activaron pagos. Sin artifacts
+de Actions; reportes JSON recuperados de sus logs. Documentación oficial:
+https://docs.github.com/en/actions/concepts/billing-and-usage.
+El 403 del conector Vercel no se declara corregido: dejó de bloquear esta prueba
+al utilizar una vía externa distinta, sin saltar la autenticación de la app.
+
+Verificador añadido en web/scripts/check-reader-external.mjs y workflow
+.github/workflows/reader-https-qa.yml, commit821380cb56edacffffa889b6bd4c885c7dfd2c6e.
+Destino limitado a https://pdf-interactivo-qa.vercel.app/read/<token>, fixture QA
+digital conocido y SHA original; rechaza HTTP, otro dominio y estado desconocido
+antes de enviar red. Tres guardas negativas verificadas, node --check y lint
+correctos. Sin nuevas dependencias. Actions oficiales checkout/setup-node fijadas
+por SHA, token con contents:read y persist-credentials:false. No secretos del
+propietario, Supabase, proveedor IA ni cookies personales en el runner.
+
+Se republicó temporalmente la instantánea QA7 por la API normal autenticada de
+su cuenta sintética. La prueba externa no usa ese login: dos almacenes anónimos
+distintos. Alcance explícito: cliente HTTP y recursos reales; no automatiza un
+navegador remoto. Las pruebas visuales reales IAB, con otra cuenta respecto al
+propietario del fixture, se conservan y se repitió la lectura del refuerzo aprobado.
+
+Ejecución pública:
+https://github.com/Danilo2334/PDF_Interactivo/actions/runs/41277921902
+PASS9 comprobaciones,05:41:55.598–05:41:58.111UTC. Certificado TLS1.3 validado,
+HTTP→HTTPS308, HTML y12 assets iniciales813292bytes; API200, versión7 y siete
+refuerzos sin campos privados. Dos cookies lector distintas Secure/HttpOnly/
+SameSite=Lax. PDF1580bytes, SHA idéntico al original; worker1264369bytes,
+imagen6424bytes y dos recursos aprobados. Dos quizzes sin respuestas correctas
+previas; ambas sesiones ven cero intentos y ningún resultado ajeno. No POST de
+quiz ni nuevas llamadas IA. Source del cliente en el merge virtual de PR:
+b9de12c253769478e9f1f76d56ef129d5cfc5f36, head821380c; no confundirlo con fuente
+desplegada ecf721e.
+
+Tras retirar la misma publicación se ejecutó desde GitHub el modo retired:
+https://github.com/Danilo2334/PDF_Interactivo/actions/runs/41278037051
+PASS4 comprobaciones,05:43:51.375–05:43:53.731UTC. TLS/redirección/assets válidos;
+proyección y PDF404 para el mismo fingerprint del enlace. El HTML inicial del
+lector sigue200, pero no entrega el contenido retirado. No presentarlo como fallo
+ni como PDF disponible. Reportes externos guardados en HTTPS-QA/
+external-github-public.json y external-github-retired.json, sin tokens/cookies.
+
+Jira:122,203 y44 actualizados sobre sus comentarios únicos con ambos enlaces,
+alcance HTTP explícito y resultados. Capturas auténticas de aplicación y ejecución
+GitHub:21-lector-hu032-publicacion-real.jpg y22-github-runner-externo-publico.jpg.
+Tres adjuntos nuevos10530/10531/10532, tamaños/MIME/media IDs comprobados; imágenes
+anteriores conservadas. No se duplicó en122 la captura de contenido que ya tenía.
+211 y48 registran revisión y merge de#46 en sus mismos comentarios.
+
+Jira confirma Finalizado para122,203 yHU032/SCRUM-44. Sus otras subtareas121,204 y226
+ya estaban Finalizado y se conservaron. Con ello queda resuelto el pendiente de
+acceso externo, sumado a unicidad, aprobación fija, edición posterior privada,
+confirmación/copia e integración de HU033 comprobados anteriormente.
+No se inventaron estados ni respuestas de proveedor para terminar.
+
+PR #47: https://github.com/Danilo2334/PDF_Interactivo/pull/47, borrador hacia develop,
+rama codex/scrum-44-hu032-verificacion-externa. Contiene verificador y continuidad;
+no se integró porque la autorización de merge correspondía a#46. Las ejecuciones
+usan el valor explícito QA-Expected-State: public o retired; no confundir un PASS
+de revocación con acceso público. El workflow admite ejecución manual para repetir
+el QA autorizado y no usa npm ci, servidor local ni credenciales de servicio.
+
+Final: siete intentos lector, diez prácticas privadas y cero publicaciones públicas
+confirmados por lectura de BD. Sin modificar PDF original ni borrar datos. Sesión
+personal y servidor local preservados; d6406e0 intacto. No hubo despliegues nuevos,
+pagos, IA, avance a otra historia ni cierre de sprint. SMTP233 y el límite de
+cargas grandes del hosting siguen pendientes del proyecto, fuera de este cierre.
