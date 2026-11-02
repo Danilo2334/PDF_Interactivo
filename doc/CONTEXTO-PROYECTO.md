@@ -6308,3 +6308,53 @@ con el resultado API anterior 0/0/404. El comentario 10158 se aclaró, sin borra
 texto ni imágenes; ahora tiene cinco imágenes (dos anteriores y tres nuevas).
 SCRUM-111 conserva cuatro. Total nuevo de esta corrección: cinco capturas en
 Jira. La madre y el PR reflejan ese total. No se repitieron subidas grandes ni IA.
+
+### 2026-11-02 — SCRUM-235: PDF grandes en carga y reemplazo
+
+El usuario pidió continuar hacia el cierre. Consulta actual: 46 historias,
+43 Finalizado, HU027 En revisión y HU040/HU046 En curso. Ese recuento no acredita
+que todas las correcciones estén integradas ni sustituye sus pendientes reales.
+Se abrió SCRUM-235, tarea de regresión de hosting bajo EP02, En curso en Sprint 7
+(id 8). No se reabrieron historias ni sprints cerrados de HU006/HU011. Jira tenía
+varios sprints activos, por lo que la asignación se resolvió explícitamente a 8.
+Rama `codex/scrum-pdf-transferencias-grandes`, descendiente de PR #56 / 754ecd6.
+
+El selector y el reemplazo envían ahora JSON pequeño, transfieren el PDF a su
+bucket privado con la sesión del propietario y solicitan validación en servidor.
+Tamaño, MIME, SHA-256, estructura PDF, cifrado y páginas se verifican sobre el
+objeto almacenado antes de crear registros o cambiar el documento vigente.
+La carga reutiliza el recibo firmado y el tombstone de HU045. El reemplazo usa
+una identidad estable ligada al archivo y al contexto confirmado; recupera el
+resultado si otro envío idéntico ya lo confirmó. No sobrescribe el original.
+Los resultados ambiguos conservan bytes; la limpieza solo toca identidades que
+todavía no son documentos y comunica sus fallos. Multipart anterior compatible.
+La clave privada, las comprobaciones de sesión/propiedad y RLS se conservan.
+Se usa transferencia estándar limitada, no se promete reanudación TUS.
+
+Migración generada primero con CLI: 20261102055747_direct_pdf_transfers.sql.
+Después de pasar PGlite se aplicó una vez con apply_migration. El historial
+remoto asignó 20261102060403, y el archivo local se alineó a esa versión real.
+No se reaplicaron las migraciones anteriores ni se ejecutó db push. Solo cambia
+la función privada existente para admitir pageCount=0 (desconocido) al reservar;
+commit sigue exigiendo páginas positivas y firma vigente. El recibo de reserva
+no inventa páginas. CREATE OR REPLACE conserva los ACL. Se comprobaron el wrapper
+invoker público, la función privada definer con search_path vacío y sus grants.
+Advisors antes/después sin avisos nuevos: 2 INFO privados sin políticas, avisos
+existentes de funciones definer y protección de contraseñas filtradas. No se
+presentan esos avisos existentes como corregidos por esta tarea.
+
+Documentación oficial de Storage estándar, changelog, guías Supabase/Postgres,
+Next local route/revalidatePath y checklist React revisados. Sin cambios de Node,
+dependencias, facturación o configuración IA. 445/445 pruebas, lint y build
+correctos, incluidos los rechazos y la recuperación en PostgreSQL.
+
+Fixtures técnicos reales de texto, con espacio válido entre trailer y startxref
+para alcanzar el límite; prueban volumen e integridad, no complejidad gráfica:
+- QA-SCRUM235-original-20MiB.pdf: 20.971.520 B, 2 páginas, SHA-256
+  `9a352b78549dd2765f2219873bf3f0d0501c33d16d97bf8356dfb9d3854177ce`.
+- QA-SCRUM235-reemplazo-20MiB.pdf: 20.971.520 B, 3 páginas, SHA-256
+  `076945b23e2c3e87b64a6eb37850c806be171fb0a27cb2010a742e6cbc0bc85a`.
+En producción local 127.0.0.1:3001 ya se observó la carga completada y el visor
+con 2 páginas del proyecto QA 467e7ffd-d93a-4f62-8872-48377a45b0bd. Pruebas del
+reemplazo y QA alojado en curso: todavía no se declaran aprobadas aquí. Evidencias
+privadas fuera de Git en `SCRUM-235-PDF-GRANDES`. Stash d6406e0 intacto.

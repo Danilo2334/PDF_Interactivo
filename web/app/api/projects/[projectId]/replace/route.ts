@@ -6,6 +6,7 @@ import { checkPermission } from "@/lib/auth/access";
 import { databaseRolledBack, isSameOriginMutation } from "@/lib/documents/mutation-request";
 import { createClient } from "@/lib/supabase/server";
 import { validatePdfFile } from "@/lib/validations/pdf-file";
+import { directPdfReplacement } from "@/lib/documents/direct-pdf-transfer";
 
 const identifiers = z.object({ projectId: z.uuid(), documentId: z.uuid() });
 const bucket = "pdf-documents";
@@ -18,6 +19,11 @@ async function handlePOST(request: Request, { params }: { params: Promise<{ proj
   const access = await checkPermission("documents.manage.own");
   if (!access.ok) return result(access.message, access.status);
   const { projectId } = await params;
+  if (request.headers.get("Content-Type")?.startsWith("application/json")) {
+    const response = await directPdfReplacement(request, projectId, await createClient(), access.userId);
+    if (response.ok) { revalidatePath("/documents"); revalidatePath(`/projects/${projectId}`); }
+    return response;
+  }
   let form: FormData;
   try { form = await request.formData(); } catch { return result("No fue posible leer la solicitud.", 400); }
   const ids = identifiers.safeParse({ projectId, documentId: form.get("documentId") });

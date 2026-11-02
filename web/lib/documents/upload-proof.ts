@@ -3,6 +3,10 @@ import { createHmac, createHash } from "node:crypto";
 
 export function uploadFingerprint(file: { name: string; size: number }, bytes: ArrayBuffer) {
   const sha256 = createHash("sha256").update(Buffer.from(bytes)).digest("hex");
+  return uploadFingerprintFromDigest(file, sha256);
+}
+
+export function uploadFingerprintFromDigest(file: { name: string; size: number }, sha256: string) {
   return createHash("sha256").update(JSON.stringify([file.name, file.size, sha256])).digest("hex");
 }
 
