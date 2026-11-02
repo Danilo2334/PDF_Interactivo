@@ -48,12 +48,13 @@ export function ContextualAnalysisPanel({ request, active, onChanged }: {
       const response = await fetch(endpoint, { method: "POST", credentials: "same-origin", cache: "no-store",
         headers: { "Content-Type": "application/json" }, body: JSON.stringify({ documentId: request.document_id, action }), signal: controller.signal });
       const body = await response.json();
+      if (response.ok && typeof body.reference === "string") setError(`La operación no se completó. Revisa el aviso y reintenta cuando corresponda. Referencia: ${body.reference}.`);
       if (!response.ok) throw Error(typeof body.message === "string" ? body.message : "No fue posible completar la operación.");
       if (controller.signal.aborted) return;
       if (action === "prepare") setPreview(analysisContextSchema.parse(body.context));
       else { analysisRecordSchema.parse(body.analysis); }
     } catch (cause) {
-      if (!controller.signal.aborted) setError(cause instanceof Error ? cause.message : "No fue posible completar la operación.");
+      if (!controller.signal.aborted) setError(cause instanceof Error && cause.name === "Error" ? cause.message : "No se pudo confirmar la operación. Se conserva lo guardado. Actualiza antes de reintentar con los mismos datos.");
     } finally {
       if (actionRef.current === controller) {
         actionRef.current = null; setBusy(null);

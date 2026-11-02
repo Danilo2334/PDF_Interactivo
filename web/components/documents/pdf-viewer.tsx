@@ -117,6 +117,8 @@ function PdfPages({
   const [selectionMode, setSelectionMode] = useState<"text" | "area">("text");
   const [hasFragment, setHasFragment] = useState(false);
   const visibleRef = useRef(visible), appliedNavigation = useRef(0);
+  const latestNavigationKey = useRef(navigationKey);
+  useLayoutEffect(() => { latestNavigationKey.current = navigationKey; }, [navigationKey]);
   const markerConfig = useRef({ markers: reinforcementMarkers, activate: onReinforcementActivate, readable: includeReadableText, textId: pageInputId });
   const firstPageCallback = useRef(onFirstPageRendered);
   useLayoutEffect(() => { firstPageCallback.current = onFirstPageRendered; }, [onFirstPageRendered]);
@@ -252,6 +254,10 @@ function PdfPages({
             if (!restoredSelection) {
               restoredSelection = true;
               firstPageCallback.current?.();
+              // A saved request may be opened while the first canvas is still
+              // loading in a hidden tab. Its explicit target takes priority over
+              // the viewer's original mount page; don't reset its parent to 1.
+              if (latestNavigationKey.current) return;
               const page = Number.isInteger(initialPage) && initialPage >= 1 && initialPage <= pdf.numPages ? initialPage : 1;
               if (page === 1) { onPageSelect?.(visiblePage); onVisiblePageChange?.(visiblePage); }
               else renderer?.goToPage(page);

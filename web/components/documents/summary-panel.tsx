@@ -25,10 +25,11 @@ export function SummaryPanel({request,active,onChanged}:{request:RequestRecord;a
     const controller=new AbortController();controllerRef.current=controller;setBusy(true);setError("");let success=false,version:number|null=null;
     try {
       const response=await fetch(`${base}/summary${review?"/review":""}`,{method:"POST",credentials:"same-origin",cache:"no-store",signal:controller.signal,headers:{"Content-Type":"application/json"},body:JSON.stringify({...input,...(review?{operationId:operationRef.current.id}:{})})});
-      const body=await response.json();if(!response.ok)throw Error(typeof body.message==="string"?body.message:"No fue posible completar la operación.");
+      const body=await response.json();
+      if (response.ok && typeof body.reference === "string") setError(`La operación no se completó. Revisa el aviso y reintenta cuando corresponda. Referencia: ${body.reference}.`);if(!response.ok)throw Error(typeof body.message==="string"?body.message:"No fue posible completar la operación.");
       if(review)version=reviewHeadSchema.parse(body.review).current_version;else summaryRecordSchema.parse(body.generation);
       success=true;if(action==="configure")setMode(null);if(review&&action.action==="approve")router.refresh();
-    }catch(cause){if(!controller.signal.aborted)setError(cause instanceof Error?cause.message:"No fue posible completar la operación.")}
+    }catch(cause){if(!controller.signal.aborted)setError(cause instanceof Error&&cause.name==="Error"?cause.message:"No se pudo confirmar la operación. Se conserva lo guardado. Actualiza antes de reintentar con los mismos datos.")}
     finally{if(controllerRef.current===controller){controllerRef.current=null;setBusy(false);if(success){resource.refresh();onChanged()}}}
     return success?version:null;
   }

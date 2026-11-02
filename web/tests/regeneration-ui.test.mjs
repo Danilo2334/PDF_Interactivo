@@ -21,3 +21,29 @@ test('regeneration needs owner instructions, targets the saved version, retains 
   assert.match(ready,/versión guardada 2/);assert.match(ready,/Se conserva la última aprobada/);assert.match(ready,/disabled=""[^>]*>Regenerar con instrucciones/);assert.match(ready,/disabled=""[^>]*>Aprobar esta versión/);
   const busy=render({...view,review:head,versions:[version],processing:true});assert.match(busy,/Hay una regeneración en curso/);assert.match(busy,/disabled=""[^>]*>Guardar nueva versión/);
 });
+
+test('HU045 a lost response recovered from the same saved job blocks another generation until an explicit new adjustment',async()=>{
+ const job={operation_id:record.id,status:'ready',result_version:3},head={current_version:3,decision:'pending',approved_version_id:record.id};
+ let requests=0,refIndex=0,stateIndex=0;const refs=[{current:null},{current:{fingerprint:'original request',id:record.id}}],states=[];
+ const fakeReact={useId:()=> 'qa-id',useEffect(){},useRef:()=>refs[refIndex++],useState:initial=>{const index=stateIndex++;states[index]=index===0?'Conservar el fragmento confirmado':index===3?record.id:initial;return[states[index],v=>{states[index]=v}]}};
+ const mod=load('components/documents/regeneration-panel.tsx',{react:fakeReact,'next/navigation':{useRouter:()=>({refresh(){}})},
+  '@/lib/reinforcements/use-request-resource':{useRequestResource:()=>({result:{value:{...view,review:head,job}},refresh(){}})},'@/lib/validations/regeneration':schemas,
+  '@/lib/validations/example':reviews,'@/components/documents/owner-review-panel':{OwnerReviewPanel:()=>null},'@/components/documents/quiz-panel':{QuizPanel:()=>null}}, {fetch:async()=>{requests++;throw Error('must not call AI')}});
+ const tree=mod.RegenerationPanel({request:record,active:true,onChanged(){}}),all=[];
+ function visit(n){if(!n||typeof n!=='object')return;if(n.type)all.push(n);for(const c of [n.props?.children].flat(Infinity))visit(c)}visit(tree);
+ const submit=all.find(n=>n.type==='button'&&n.props.type==='submit');assert.equal(submit.props.disabled,true);
+ all.find(n=>n.type==='form').props.onSubmit({preventDefault(){}});await Promise.resolve();assert.equal(requests,0);
+ assert.ok(all.some(n=>n.type==='p'&&String(n.props.children).includes('Se recuperó la versión 3 ya guardada')));
+ const next=all.find(n=>n.type==='button'&&n.props.children==='Preparar otro ajuste');assert.ok(next);next.props.onClick();assert.equal(refs[1].current,null);assert.equal(states[0],'');
+});
+
+test('HU045 a browser network error retains generation inputs and shows a recovery action instead of technical fetch text',async()=>{
+ let stateIndex=0;const states=[],refs=[],instructions='Mantener las dos etapas del fragmento';
+ const fakeReact={useId:()=> 'qa-id',useEffect(){},useRef:value=>{const ref={current:value};refs.push(ref);return ref},useState:initial=>{const index=stateIndex++;states[index]=index===0?instructions:initial;return[states[index],v=>{states[index]=v}]}};
+ const mod=load('components/documents/regeneration-panel.tsx',{react:fakeReact,'next/navigation':{useRouter:()=>({refresh(){}})},
+  '@/lib/reinforcements/use-request-resource':{useRequestResource:()=>({result:{value:{...view,review:{current_version:2,decision:'approved',approved_version_id:record.id}}},refresh(){}})},'@/lib/validations/regeneration':schemas,
+  '@/lib/validations/example':reviews,'@/components/documents/owner-review-panel':{OwnerReviewPanel:()=>null},'@/components/documents/quiz-panel':{QuizPanel:()=>null}}, {fetch:async()=>{throw new TypeError('Failed to fetch')}});
+ const tree=mod.RegenerationPanel({request:record,active:true,onChanged(){}}),all=[];function visit(n){if(!n||typeof n!=='object')return;if(n.type)all.push(n);for(const c of [n.props?.children].flat(Infinity))visit(c)}visit(tree);
+ all.find(n=>n.type==='form').props.onSubmit({preventDefault(){}});await new Promise(r=>setTimeout(r,0));
+ assert.equal(states[0],instructions);assert.match(states[2],/Se conserva lo guardado.*Actualiza antes de reintentar/);assert.doesNotMatch(states[2],/Failed to fetch|TypeError/);assert.ok(refs[1].current?.id);
+});

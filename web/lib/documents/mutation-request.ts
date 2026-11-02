@@ -1,5 +1,16 @@
 export function isSameOriginMutation(request: Request) {
-  return request.headers.get("origin") === new URL(request.url).origin;
+  const target = new URL(request.url);
+  // Next's internal request URL can use its bind hostname. The incoming Host
+  // remains the browser's target; never use a caller-supplied forwarded host.
+  const host = request.headers.get("host");
+  if (host) {
+    try {
+      const incoming = new URL(`${target.protocol}//${host}`);
+      if (incoming.host !== host || incoming.pathname !== "/" || incoming.username || incoming.password) return false;
+      target.host = incoming.host;
+    } catch { return false; }
+  }
+  return request.headers.get("origin") === target.origin;
 }
 
 export function databaseRolledBack(code?: string) {

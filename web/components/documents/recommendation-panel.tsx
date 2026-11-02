@@ -56,11 +56,12 @@ export function RecommendationPanel({ request, active, onChanged }: { request: R
       const response = await fetch(endpoint, { method: "POST", credentials: "same-origin", cache: "no-store", signal: controller.signal,
         headers: { "Content-Type": "application/json" }, body: JSON.stringify({ documentId: request.document_id, action, ...choice }) });
       const body = await response.json();
+      if (response.ok && typeof body.reference === "string") setError(`La operación no se completó. Revisa el aviso y reintenta cuando corresponda. Referencia: ${body.reference}.`);
       if (!response.ok) throw Error(typeof body.message === "string" ? body.message : "No fue posible completar la operación.");
       if (controller.signal.aborted) return;
       if (action === "choose") choiceReceiptSchema.parse(body); else recommendationRecordSchema.parse(body.recommendations);
     } catch (cause) {
-      if (!controller.signal.aborted) setError(cause instanceof Error ? cause.message : "No fue posible completar la operación.");
+      if (!controller.signal.aborted) setError(cause instanceof Error && cause.name === "Error" ? cause.message : "No se pudo confirmar la operación. Se conserva lo guardado. Actualiza antes de reintentar con los mismos datos.");
     } finally {
       if (controllerRef.current === controller) { controllerRef.current = null; setBusy(null); resource.refresh(); }
     }

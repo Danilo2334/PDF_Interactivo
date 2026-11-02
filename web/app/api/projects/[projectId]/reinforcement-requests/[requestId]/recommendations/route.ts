@@ -1,3 +1,4 @@
+import { withOperationDiagnostics } from "@/lib/diagnostics/operation";
 import { getRecommendations, postRecommendations } from "@/lib/reinforcements/run-recommendations";
 
 export const runtime = "nodejs";
@@ -7,7 +8,9 @@ export async function GET(request: Request, { params }: Context) {
   const { projectId, requestId } = await params;
   return getRecommendations(request, projectId, requestId);
 }
-export async function POST(request: Request, { params }: Context) {
+async function handlePOST(request: Request, { params }: Context) {
   const { projectId, requestId } = await params;
   return postRecommendations(request, projectId, requestId);
 }
+
+export const POST = withOperationDiagnostics("reinforcement.recommendations", handlePOST);

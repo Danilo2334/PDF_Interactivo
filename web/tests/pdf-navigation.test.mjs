@@ -350,7 +350,7 @@ test("a render error is reported and can be retried with a fresh renderer", asyn
 // Ejercitar los eventos reales del componente con estado y efectos controlados,
 // sin sustituir las pruebas visuales del navegador ni necesitar credenciales.
 function viewerFixture(total = 20, initialPage = 1, initialFragment = null, markers, options={}) {
-  const states = [], refs = [], effects = [], calls = [], requests = [], zooms = [], selections = [];
+  const states = [], refs = [], effects = [], layouts = [], calls = [], requests = [], zooms = [], selections = [];
   let cursor = 0, refCursor = 0, effectStarted = false, callbacks, tree;
   const restored = [];
   const dependencies = {
@@ -368,7 +368,7 @@ function viewerFixture(total = 20, initialPage = 1, initialFragment = null, mark
         return refs[index] ??= { current: initial };
       },
       useEffect(effect) { if (!effectStarted) effects.push(effect); },
-      useLayoutEffect(effect) { if (!effectStarted) effects.push(effect); },
+      useLayoutEffect(effect) { layouts.push(effect); },
     },
     "pdfjs-dist": {
       GlobalWorkerOptions: {}, version: "test",
@@ -381,7 +381,7 @@ function viewerFixture(total = 20, initialPage = 1, initialFragment = null, mark
     "@/lib/pdf/readable-page-text": { decorateReadablePageText: async () => () => {} },
     "@/lib/pdf/render-visible-pages": {
       renderVisiblePages(_pdf, _container, ready, error, changed) {
-        callbacks = { ready, error, changed }; void Promise.resolve().then(ready);
+        callbacks = { ready, error, changed }; if (!options.deferFirstReady) void Promise.resolve().then(ready);
         return { setActive() {}, dispose() {}, goToPage(number) { calls.push(number); changed(number); return true; }, setZoom(value) { zooms.push(value); return true; } };
       },
     },
@@ -398,18 +398,22 @@ function viewerFixture(total = 20, initialPage = 1, initialFragment = null, mark
   const outer = PdfViewer({ projectId: "test-project", initialPage, initialFragment, onFragmentSelect: initialFragment ? () => {} : undefined, onPageSelect: page => selections.push(page), reinforcementMarkers: markers, onReinforcementActivate: markers ? (id, page) => activated.push([id,page]) : undefined, ...options });
   states.length = 0;
   const Pages = outer.type;
+  let pageProps = { ...outer.props };
   function nodes(node) {
     if (!node || typeof node !== "object") return [];
     return [node, ...[node.props?.children].flat(Infinity).flatMap((child) => nodes(child))];
   }
-  function render() {
+  function render(nextProps) {
+    if (nextProps) pageProps = { ...pageProps, ...nextProps };
+    layouts.length = 0;
     cursor = 0; refCursor = 0;
-    tree = Pages(outer.props);
+    tree = Pages(pageProps);
     for (const node of nodes(tree)) {
       if (node.props?.ref) node.props.ref.current = {
         replaceChildren() {}, getBoundingClientRect: () => ({ height: 70 }),
       };
     }
+    for (const layout of layouts) layout();
   }
   render(); const cleanups = effects.map((effect) => effect()); effectStarted = true;
   return {
@@ -428,6 +432,13 @@ function viewerFixture(total = 20, initialPage = 1, initialFragment = null, mark
     dispose() { for (const cleanup of cleanups) cleanup?.(); },
   };
 }
+
+test('HU045 opening a saved request before the hidden first canvas finishes cannot reset its page to the mount page',async t=>{
+ const f=viewerFixture(2,1,null,undefined,{visible:false,deferFirstReady:true});t.after(()=>f.dispose());await settle();
+ f.render({visible:true,navigationKey:1,targetPage:2});assert.deepEqual(f.calls,[]);
+ f.callbacks.ready(1);f.render();f.render();
+ assert.deepEqual(f.selections,[2]);assert.equal(f.counter(),'Página 2 de 2');assert.equal(f.requests.length,1);
+});
 
 test('saved fragments restore once on their valid page and never on a fallback page', async t => {
   const area = { kind: 'area', pageNumber: 3, rect: { x: .1, y: .1, width: .3, height: .3 } };

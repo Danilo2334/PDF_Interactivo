@@ -27,11 +27,12 @@ export function ExplanationPanel({ request, active, onChanged }: { request: Requ
         headers: { "Content-Type": "application/json" }, body: JSON.stringify({ documentId: request.document_id, action,
           expectedVersion: generation?.version ?? 0, choiceVersion: view.choiceVersion, ...(action === "configure" ? { level: selected } : {}) }) });
       const body = await response.json();
+      if (response.ok && typeof body.reference === "string") setError(`La operación no se completó. Revisa el aviso y reintenta cuando corresponda. Referencia: ${body.reference}.`);
       if (!response.ok) throw Error(typeof body.message === "string" ? body.message : "No fue posible completar la explicación.");
       explanationRecordSchema.parse(body.generation);
       if (!controller.signal.aborted && action === "configure") setDraft(null);
     } catch (cause) {
-      if (!controller.signal.aborted) setError(cause instanceof Error ? cause.message : "No fue posible completar la operación.");
+      if (!controller.signal.aborted) setError(cause instanceof Error && cause.name === "Error" ? cause.message : "No se pudo confirmar la operación. Se conserva lo guardado. Actualiza antes de reintentar con los mismos datos.");
     } finally {
       if (controllerRef.current === controller) { controllerRef.current = null; setBusy(null); resource.refresh(); onChanged(); }
     }
