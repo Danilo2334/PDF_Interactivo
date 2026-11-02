@@ -10,25 +10,25 @@ no de un user agent modificado. No hay resultado real de Safari en este equipo.
 
 ## Matriz de navegadores y actualización
 
-Para esta matriz se registran las dos publicaciones estables generales más
-recientes de escritorio por navegador. Se excluyen Beta, Nightly y Early Stable.
-No confundir dos parches de una rama con cobertura de su versión mayor anterior:
-antes de liberar debe resolverse también la cobertura N/N−1 si esa es la política
-académica requerida. No se ha reducido el requisito para aprobar una prueba.
+La cobertura objetivo es N/N−1: las dos ramas mayores estables generales más
+recientes de escritorio, con su último parche publicado. Se excluyen Beta,
+Nightly y Early Stable. Las actualizaciones dentro de una rama se registran
+sin sustituir la prueba de la rama anterior. Cada fila conserva el pendiente
+de ejecución real; la política no cambia un resultado no ejecutado en aprobado.
 
 | Navegador | Versiones concretas consultadas | Sistema de prueba | Estado real |
 | --- | --- | --- | --- |
-| Chrome | 156.0.8078.80 y156.0.8078.74 | Windows del equipo local | Pendiente en esas versiones exactas; instalado156.0.8078.48. |
-| Edge | 156.0.4314.58 y156.0.4314.56 | Windows del equipo local | .58 instalado, recorrido formal pendiente; .56 no disponible en la sesión. |
+| Chrome | 156.0.8078.80 y155.0.8059.85 | Windows del equipo local | Pendiente en esas versiones exactas; instalado156.0.8078.48. |
+| Edge | 156.0.4314.58 y155.0.4283.62 | Windows del equipo local | .58 instalado, recorrido formal pendiente;155 no disponible en la sesión. |
 | Firefox | 159.0 y158.0.1 | Windows del equipo local | Pendiente; instalado88.0, que no satisface la matriz. |
-| Safari | 27.2(20625.2.8) y27.1(20625.1.29) | macOS/iOS compatible, equipo real por registrar | No hay dispositivo Apple ni sesión de Safari disponible. Pendiente. |
+| Safari | 27.2(20625.2.8) y26.6(20624.4.5) | macOS/iOS compatible, equipo real por registrar | No hay dispositivo Apple ni sesión de Safari disponible. Pendiente. |
 | Navegador integrado | UA reducido Chrome156.0.0.0,Win32 | Windows del equipo local | Recorridos reales anteriores en HU038–HU045; cobertura complementaria. No sustituye las cuatro marcas/versiones. |
 
 Fuentes oficiales consultadas, conservadas también fuera de Git en HU046-REAL:
 
 - [Chrome Stable de29/10](https://chromereleases.googleblog.com/2026/10/stable-channel-update-for-desktop_02107719452.html)
-  y[27/10](https://chromereleases.googleblog.com/2026/10/stable-channel-update-for-desktop_0562499947.html).
-  Las publicaciones indican pares .79/.80 y.73/.74 para Windows/Mac. El catálogo
+  y[rama155 de15/10](https://chromereleases.googleblog.com/2026/10/stable-channel-update-for-desktop_01886704284.html).
+  Las publicaciones indican pares .79/.80 y.84/.85 para Windows/Mac. El catálogo
   VersionHistory también lista157 Early Stable; no se presenta como despliegue
   estable general. Registrar la versión completa del ejecutable realmente usado.
 - [Edge Security Updates](https://learn.microsoft.com/en-us/deployedge/microsoft-edge-relnotes-security):
@@ -40,7 +40,8 @@ Fuentes oficiales consultadas, conservadas también fuera de Git en HU046-REAL:
   El historial stability incluye ESR: no elegir las primeras filas por fecha
   como si fueran las últimas ramas Release.
 - [Safari Release Notes, Markdown oficial](https://developer.apple.com/documentation/safari-release-notes.md):
-  27.2 publicado26/10 y27.1 publicado23/10. La página indexada por el buscador
+  27.2 publicado26/10 y26.6 publicado27/07. La actualización27.1 es de23/10 dentro
+  de la rama27. La página indexada por el buscador
   conservaba contenido anterior; se consultó directamente la fuente actual.
 
 Actualizar antes de cada liberación y cuando el proveedor publique un estable:
@@ -128,3 +129,48 @@ preparar una corrección hacia adelante o un plan de datos explícito antes de a
 Este apartado es el procedimiento; los resultados reales de su ejecución se
 registrarán al final con SHA/deployments/reporte. No se presenta como prueba ya
 realizada ni se finaliza HU046 con la matriz pendiente.
+
+## Ejecución real del01/11/2026
+
+Código `86dec12e467fad5e270bead9d3ce0e7a7d0a166a`:432/432 pruebas,lint ybuild.
+Exportación Git limpia; construcción en Vercel con revisión embebida, Node22,
+máquina basic de2 cores/8GB. Se conservó equipo/proyecto ylas8 variables QA;
+no se subieron claves IA ni se activó facturación. No hubo llamadas IA enHU046.
+CLIautenticada accedió al candidato protegido; no se desactivó Deployment
+Protection ni se expuso su credencial. Ese acceso autenticado no se contó como
+prueba de acceso público.
+
+| Fase real | Resultado de sondeo anónimo | Máximo HTTP observado |
+| --- | --- | --- |
+| Baseline anterior,4 casos,sin health |4/4,0 fallos |2289,07ms |
+| Candidato,5 casos,revisión exacta |5/5,0 fallos |2057,96ms |
+| Revisión esperada deliberadamente incorrecta |Salida1,alerta CONTRACT_MISMATCH solo en liveness_revision |586,38ms |
+| Reversión al anterior,4 casos,sin health |4/4,0 fallos |1866,92ms |
+| Promoción final del candidato,5 casos,revisión exacta |5/5,0 fallos |1691,78ms |
+
+Anterior:`dpl_9tJhQ9A1TywXaXiCmi7JEEwqkLDV`,
+`pdf-interactivo-d5rpy73ay-danilo-carlosamas-projects.vercel.app`, código e3dfd023.
+Candidato y estado final:`dpl_8BYoFrHQJppTM331CDQBHuZoubHQ`,
+`pdf-interactivo-bxjqz38es-danilo-carlosamas-projects.vercel.app`, código86dec12.
+Se comprobó por CLI que el alias estable volvió al anterior y quedó finalmente
+en el candidato. El anterior carece de/api/health: por eso el sondeo de reversión
+usa explícitamente4 contratos y su identidad se verifica por deployment, no
+mediante una revisión inventada en el endpoint.
+
+La revisión incorrecta fue una inyección controlada en el PARÁMETRO del sondeo;
+no se desplegó una aplicación rota ni se simuló una respuesta. El20% de esa
+muestra son1/5 comprobaciones fallidas deliberadas, no una tasa real de errores
+del servicio. El código de salida1 permite detener la liberación. La reversión
+y posterior promoción se ejecutaron realmente por CLI, sin merges ni SQL inverso.
+
+El panel privado siguió autenticado después de ambos cambios. Indicadores reales
+del documento digital:12 visitas,49 aperturas,13 intentos y4 opiniones, conservados.
+Capturas nativas01/02/03 y reportes reales enHU046-REAL fuera deGit. El endpoint
+fue comprobado también por el cliente anónimo contra el dominio estable.
+Estos resultados no acreditan compatibilidad de las8 versiones, vigilancia24/7,
+notificaciones recibidas ni objetivos de degradación aún no acordados.
+
+Intento de abrir Edge con perfil QA separado desde terminal: rechazado por el
+control automático con «blocked by policy», sin detalle adicional. No se repitió
+el comando ni se declaró el navegador probado. La herramienta de navegador
+habilitada solo ofreció IAB yMCP Apps. Se preservaron las ventanas personales.

@@ -5938,3 +5938,50 @@ sin duplicados. Nombres,tamaños,asociaciones y conteo de comentarios comprobado
 haber inspeccionado miniaturas en la UI de Jira; se verificaron conector,HTML y
 binario. El Sprint7 ya estaba activo, desde2026-11-01 hasta2026-11-08; no se alteró.
 Cadena pendiente de integración48→49→50→51→52→53→54;52 continúa en borrador por137.
+
+### 2026-11-01 — HU046/SCRUM-58: sondeo y reversión real del QA
+
+Rama `codex/scrum-58-hu046-operacion`, sobreHU045. Código86dec12e467fad5e270bead9d3ce0e7a7d0a166a:
+432/432 pruebas,lint ybuild. `/api/health` público soloacredita liveness yrevisión
+Git válida; no consulta dependencias ni expone variables. APP_BUILD_REVISION
+se embebe en la construcción; no es una clave ni se copian otros valores.
+`web/scripts/check-operations.mjs` comprueba login,redirect privado,PDF401,
+origen ajeno403 yrevisión esperada. Cliente sin cookies personales ni escrituras
+aceptadas/IA. Registra tiempos HTTP,muestras yalertas por contrato; salida1
+impide darporcorrecta la versión. Workflow manual preparado, sincron externo.
+
+`doc/OPERACION-Y-COMPATIBILIDAD.md` conserva fuentes RNF146/comentario10078
+(3s listado,5s PDF2,02MB,10s PDF19MB) y108(3s panel). No se trasladan aAPI ni
+se inventa99,9%, ventana de error oSLO de degradación. Monitoreo continuo,
+notificaciones ySLO de disponibilidad/tasaerrores siguen pendientes en232.
+MatrizN/N−1 de fuentes oficiales:Chrome156.0.8078.80/155.0.8059.85,
+Edge156.0.4314.58/155.0.4283.62,Firefox159.0/158.0.1,Safari27.2/26.6.
+VersionHistory incluía Chrome157 EarlyStable yel buscador conservaba Safari
+antiguo: se distinguieron canales yse leyó elMarkdown oficial actual.
+Windows11 Home SingleLanguage10.0.26200. InstaladosChrome156.0.8078.48,
+Edge156.0.4314.58,Firefox88.0. IABUA reducidoChrome156.0.0.0 no equivale a
+pruebas de lascuatro marcas. Safari/dispositivoApple no disponible.149/231
+Encurso, sinfirmar compatibilidad noejecutada. La apertura deEdge con perfilQA
+por terminal fue rechazada automáticamente como «blocked by policy»; no se
+repitió ni se dio por ejecutada. Ventanas personales conservadas.
+
+Despliegue QA real autorizado, Danilo,Hobby, sinpagos ni merges. Fuente desde
+git archive limpio; mismas8variables, sinclavesIA. Candidato con--skip-domain
+primero comprobado medianteCLI autenticada sin desactivar protección. Después
+promoción,sondeo anónimo,fallo controlado delparámetro SHA esperado,reversión
+real al anterior,sondeo ypromoción final verificada. El fallo controlado no
+cambió una respuesta ni introdujo código roto. No hubo SQL inverso/restauración
+de datos. La migraciónHU045 es aditiva yel anterior siguió funcionando.
+
+Anterior:e3dfd023,dpl_9tJhQ9A1TywXaXiCmi7JEEwqkLDV,hostname d5rpy73ay.
+Final:86dec12,dpl_8BYoFrHQJppTM331CDQBHuZoubHQ,hostname bxjqz38es,dominio estable
+https://pdf-interactivo-qa.vercel.app. Baseline4/4 máximo2289,07ms;candidato5/5
+máximo2057,96ms;reversión4/4 máximo1866,92ms;final5/5 máximo1691,78ms.
+Anterior sinhealth:modo--legacy explícito,identidadporCLI. Fallo SHA esperado:
+1/5deliberado,salida1 yCONTRACT_MISMATCH;no presentarlo comoerrorrate real.
+La sesión privada sobrevivió la reversión ypromoción;panel conservó12/49/13/4.
+No se publicaron experiencias ni se hicieron llamadasIA enHU046.
+Tres capturas nativas yreportes reales enHU046-REAL.150 cumple la reversión
+comprobada;pendiente vincular evidencia yPR.58/149/231/232 permanecenEncurso.
+No declarar terminadoSprint7/proyecto:además siguen137 táctil,HU027 cargas
+grandes delhosting ySMTP233. Stashd6406e0 conservado.
