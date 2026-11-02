@@ -10,7 +10,8 @@ export const profileSchema = z.object({
     .regex(
       /^[\p{L}\p{M}' -]+$/u,
       "El nombre contiene caracteres no permitidos.",
-    ),
+    )
+    .regex(/\p{L}/u, "El nombre debe incluir al menos una letra."),
 });
 
 export type ProfileInput = z.input<typeof profileSchema>;
