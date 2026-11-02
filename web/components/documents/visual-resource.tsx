@@ -1,5 +1,6 @@
 import { useId, useState } from "react";
 import { visualContentSchema, VISUAL_RELATION_LABELS, type VisualContent } from "@/lib/validations/visual";
+import { IllustratedVisual } from "@/components/documents/illustrated-visual";
 
 function lines(text: string, width = 23) {
   const words = text.match(new RegExp(`.{1,${width}}(?:\\s|$)|.{1,${width}}`, "g")) ?? [text];
@@ -43,7 +44,7 @@ export function VisualResource({ value, title, description }: { value: unknown; 
     {expanded && <p className="text-sm text-slate-700">Desplázate horizontalmente para ver todo el recurso. Con teclado, enfoca el gráfico y usa las flechas.</p>}
     <div id={`${id}-viewport`} role="region" aria-label="Vista del recurso visual" tabIndex={expanded ? 0 : undefined}
       className="max-w-full overflow-x-auto rounded-xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700">
-    <svg role="img" fontFamily="sans-serif" aria-labelledby={`${id}-title ${id}-description`} viewBox={`0 0 960 ${height}`}
+    {content.scene.artwork ? <div className={expanded ? "min-w-[60rem]" : ""}><IllustratedVisual artwork={content.scene.artwork} id={id}/></div> : <svg role="img" fontFamily="sans-serif" aria-labelledby={`${id}-title ${id}-description`} viewBox={`0 0 960 ${height}`}
       className={`h-auto w-full rounded-xl border border-slate-300 bg-white${expanded ? " min-w-[60rem]" : ""}`} xmlns="http://www.w3.org/2000/svg">
       <title id={`${id}-title`}>{title ?? content.title}</title><desc id={`${id}-description`}>{description ?? content.text}</desc>
       <rect width="960" height={height} fill="white" />
@@ -79,7 +80,7 @@ export function VisualResource({ value, title, description }: { value: unknown; 
         {!image && compositionTargets.has(node.id) && !content.scene.edges.some(edge => edge.from===node.id) &&
           <text textAnchor="middle" fontSize="16" fill="#334155" y="92">{lines(node.detail,34).map((line,j)=><tspan key={j} x="0" dy={j ? 19 : 0}>{line}</tspan>)}</text>}
       </g>)}
-    </svg>
+    </svg>}
     </div>
     <figcaption className="whitespace-pre-wrap break-words text-sm text-slate-800">{description ?? content.text}</figcaption>
     <div className="text-sm"><h4 className="font-semibold">Descripción de los elementos</h4>

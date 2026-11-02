@@ -2,6 +2,7 @@ import { z } from "zod";
 import { explanationRecordSchema } from "@/lib/validations/explanation";
 import { reviewHeadSchema, reviewVersionSchema, reviewEventSchema } from "@/lib/validations/example";
 import type { AnalysisContext, ContextDiagnosis } from "@/lib/validations/contextual-analysis";
+import { visualArtworkSchema } from "@/lib/validations/visual-artwork";
 
 export const VISUAL_MODES = ["image", "diagram"] as const;
 export type VisualMode = typeof VISUAL_MODES[number];
@@ -24,8 +25,8 @@ function checkScene(scene: { kind: string; nodes: {id: string}[]; edges: {from: 
 }
 // Older owner-reviewed versions remain readable; new generations require both fields.
 export const visualSceneSchema = z.object({ ...sceneShape,
-  edges: z.array(visualEdgeSchema.partial({relationType: true, evidence: true})).max(8) }).strict().superRefine(checkScene);
-const generatedSceneSchema = z.object({ ...sceneShape, edges: z.array(visualEdgeSchema).max(8) }).strict().superRefine(checkScene);
+  edges: z.array(visualEdgeSchema.partial({relationType: true, evidence: true})).max(8),artwork:visualArtworkSchema.optional() }).strict().superRefine(checkScene);
+const generatedSceneSchema = z.object({ ...sceneShape, edges: z.array(visualEdgeSchema).max(8),artwork:visualArtworkSchema }).strict().superRefine(checkScene);
 export const visualContentSchema = z.object({ title: z.string().trim().min(3).max(160), text: z.string().trim().min(80).max(1600),
   sourceQuote: z.string().trim().min(8).max(500), topicReference: z.string().min(3).max(200), consistentWithSource: z.boolean(), scene: visualSceneSchema }).strict();
 export const generatedVisualContentSchema = visualContentSchema.extend({scene: generatedSceneSchema});
@@ -43,6 +44,7 @@ export function validateVisual(value: unknown, context: AnalysisContext, diagnos
   const nodeLabels = output.scene.nodes.map(node => normalize(node.label).toLocaleLowerCase("es"));
   if (new Set(nodeLabels).size !== nodeLabels.length) throw Error("Visual repeats concept labels");
   const sources = [context.selectedText, context.nearbyText].map(normalize), links = new Set<string>();
+  if(new TextEncoder().encode(JSON.stringify(output)).length>30000)throw Error("Visual exceeds the storage budget");
   for (const edge of output.scene.edges) {
     if (!sources.some(source => source.includes(normalize(edge.evidence)))) throw Error("Visual relation has no source evidence");
     if (/^(?:se relaciona con|relacionad[oa] con|conecta con|conduce a|permite|contiene|integra(?: la suma)?|alterna con)$/iu.test(edge.label.trim()))
@@ -56,6 +58,27 @@ export function validateVisual(value: unknown, context: AnalysisContext, diagnos
     for (let pass = 0; pass < output.scene.nodes.length; pass++) for (const edge of output.scene.edges)
       if (connected.has(edge.from) || connected.has(edge.to)) { connected.add(edge.from); connected.add(edge.to); }
     if (connected.size !== output.scene.nodes.length) throw Error("Visual contains disconnected concepts");
+  }
+  const art=output.scene.artwork,ids=new Set(output.scene.nodes.map(n=>n.id)),covered=new Set<string>();
+  const prose=[output.title,output.text,...output.scene.nodes.flatMap(n=>[n.label,n.detail]),art.objective,art.takeaway,art.scopeNote,...art.legend.map(l=>l.label),
+    ...art.figures.flatMap(f=>[f.title,f.explanation,...f.annotations.flatMap(a=>[a.label,a.explanation])])];
+  // Detect generation artifacts in Spanish explanations, without rejecting
+  // legitimate non-Latin source terms that actually occur in the PDF.
+  const sourceText=sources.join(" ");
+  if(prose.some(text=>/[\uFFFD\u00ad\u200b-\u200d\ufeff]/u.test(text)||Array.from(text).some(char=>/[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]/u.test(char)&&!sourceText.includes(char))))
+    throw Error("Illustration contains corrupted text");
+  const checkEvidence=(quote:string)=>{if(!sources.some(source=>source.includes(normalize(quote))))throw Error("Illustration has no source evidence");};
+  for(const figure of art.figures){
+    if([figure.explanation,...figure.annotations.map(a=>a.explanation)].some(text=>!/[.!?][»"')\]]?$/u.test(text.trim())))throw Error("Illustration has an unfinished explanation");
+    if(figure.conceptIds.some(id=>!ids.has(id)))throw Error("Illustration refers to a foreign concept");
+    figure.conceptIds.forEach(id=>covered.add(id));checkEvidence(figure.evidence);
+    figure.annotations.forEach(a=>checkEvidence(a.evidence));
+    if([...figure.annotations.map(a=>a.label),figure.title].some(label=>/[\u00ad\u200b-\u200d\ufeff]|(?:…|\.{3})\s*$/u.test(label)))throw Error("Illustration has an incomplete label");
+  }
+  if(covered.size!==ids.size)throw Error("Illustration omits a concept");
+  if(art.layout==="process")for(let i=1;i<art.figures.length;i++){
+    const previous=art.figures[i-1].conceptIds,next=art.figures[i].conceptIds;
+    if(!output.scene.edges.some(e=>previous.includes(e.from)&&next.includes(e.to)&&["cause","sequence","transformation"].includes(e.relationType)))throw Error("Illustration invents a process order");
   }
   return output;
 }

@@ -6546,3 +6546,104 @@ HU046/10236,matriz149/10238,regresiones231/10239 ysupervisión232/10240.
 Comprobados por API el texto anterior, un comentario por tarea y las dos imágenes
 anteriores de232. Los cierres históricos de HU022 siguen intactos. Se conservaron
 el stashd6406e0 ylas variables privadas ignoradas; no entraron en Git.
+
+### 2026-11-02 — SCRUM-236: ilustraciones didácticas para los nuevos recursos visuales
+
+El propietario precisó que la primera corrección no bastaba: quiere dibujos
+explicados para los distintos temas, no tres recuadros unidos por líneas.
+Se incorporó esa precisión a SCRUM-236, sin abrir otra tarea ni modificar los
+cierres o evidencias históricos de HU022. Rama
+codex/scrum-236-ilustraciones-didacticas desde af63fff, después de PR #59.
+
+El contrato común de Imagen/Diagrama ahora exige artwork para nuevas generaciones
+y regeneraciones: objetivo, conclusión, alcance, leyenda y entre una y tres
+figuras con dibujos originales, explicaciones y llamadas numeradas. GPT compone
+el dibujo mediante geometría acotada; no se ejecuta SVG, HTML, código ni URLs
+del modelo. Cada figura admite 3–16 primitivas y 1–3 anotaciones. Se conserva
+el guion de conceptos/relaciones y su respaldo. Cada figura y anotación debe
+citar literalmente el contexto guardado; las figuras cubren sus conceptos y
+un proceso necesita un orden respaldado. No se añade OCR, vídeo ni otro formato.
+
+El visor dibuja esas escenas, conserva texto accesible, muestra la explicación
+sin desplegables y ofrece las citas aparte. Las columnas dependen del espacio
+del recurso, no solo del ancho de la ventana. Líneas de color con más contraste,
+etiquetas completas, llamadas ordenadas y ampliación con teclado. El formato
+anterior sigue siendo legible: no se reinterpretan ni regeneran automáticamente
+versiones aprobadas. La base de datos ya conserva este JSON; sin migración,
+alteración de RLS, firmas, sesiones, propiedad o aprobación. Persistencia real
+y PostgreSQL aislado comprobados. Se mantiene un presupuesto de contenido y
+una única llamada de generación limitada a 6000 tokens/45 s, sin fallback.
+
+Fallos encontrados durante las pruebas, no resultados esperados:
+- El primer envío fue rechazado por la unión oneOf del esquema de primitivas.
+  z.union produce anyOf compatible; el test inspecciona la petición OpenAI real.
+- En varias figuras GPT agotaba m1–m16 y repetía ids. Se aclaró su alcance por
+  figura y se admite numeración hasta m48, manteniendo 16 marcas como máximo
+  por figura y referencias locales únicas. La respuesta duplicada se rechazó.
+- La leyenda de agua v1 contenía caracteres corruptos. Se conserva v1 y una
+  regeneración real corrigió la leyenda en v2. Se rechazan artefactos de texto
+  en nuevas explicaciones en español; términos no latinos del PDF siguen admitidos.
+- Una explicación de fotosíntesis v1 terminaba en «en los». Se exigen frases
+  completas con puntuación y se pide reformular, nunca cortar para caber. Una
+  regeneración rechazada no avanzó la versión; la siguiente guardó v2 completa.
+- Un intento de fotosíntesis agotó 45 s. Se mantuvo el error y el reintento fue
+  explícito. El prompt favorece una sola escena cuando basta, sin duplicar dibujos.
+- Se separaron llamadas coincidentes por altura/posición para evitar cruces
+  en el punto más bajo del péndulo. Se comprobó nuevamente en el navegador.
+Los diagnósticos opcionales de rechazo solo registran códigos fijos, nunca
+texto del PDF, respuesta del modelo, excepciones arbitrarias o credenciales.
+
+Pruebas reales con PDFs QA nuevos, PDF.js y cuenta sintética existente, aislada
+de la cuenta personal. No se pidieron ni utilizaron sus credenciales personales:
+- Péndulo: proyecto0fbb3a7a-efa0-494d-ac02-214b8cc91723, solicitudb39b7d6e.
+  Análisis, recomendación, elección y generación reales. Tres escenas: extremo,
+  descenso/ascenso y punto más bajo. Se revisaron altura frente a velocidad,
+  sentidos del movimiento, transformación y suma sin rozamiento. v1 pendiente.
+- Agua: proyecto0449ed26-e664-4831-9478-40eb780c89f0, solicitud77eb3684.
+  Dos ilustraciones comparan líquido/vapor y vapor/gotas, sin inventar un ciclo
+  completo. v2 revisada y aprobada expresamente solo como dato QA. Se abrió
+  en la vista previa privada del lector; v1 y el historial siguen conservados.
+- Fotosíntesis: proyecto69bdded6-e81e-4b56-a2d7-1b9041de85d3, solicitud7e5836b5.
+  Escena de planta/hoja con 14 marcas: agua desde raíces, CO2 desde aire, luz,
+  azúcares y oxígeno. Las explicaciones distinguen sustancias de energía y
+  almacenamiento en azúcares; no aportan cantidades o reacciones internas. v2 pendiente.
+- Contexto insuficiente: proyecto643b4c24-f927-4f01-b999-a668b6a00df5,
+  solicitud421c6ad2. PDF con «QA Agua. Vapor.»: análisis insufficient, model null,
+  aviso real y generación rechazada con HTTP409. No se fabricó un dibujo.
+El texto y los resultados se guardaron mediante las rutas normales autenticadas,
+no mediante inserciones SQL ni respuestas simuladas. SHA-256 del PDF descargado
+igual al archivo de origen en los cuatro casos. Se volvieron a validar las
+versiones de revisión actuales: generation.content conserva la primera salida
+y no debe confundirse con la versión revisada vigente.
+
+Browser Use volvió a estar disponible en IAB. Prueba en Windows, escritorio
+1280×720 y viewport móvil390×844: raíz375 px sin desbordamiento; al ampliar,
+solo el recurso desplaza sus 960 px. Enter y flechas mantuvieron el foco y
+desplazaron 0→40→80 px; se restauró el viewport. Recarga y reapertura conservaron
+contenido/versiones. No se observaron errores de consola en el recorrido final.
+Es emulación de viewport, no prueba táctil ni certificación de Chrome/Firefox/Safari.
+El nuevo layout process tiene comprobación automática; los casos reales eligieron
+comparison e illustration. Tres temas no garantizan calidad para todo PDF:
+la revisión pedagógica y aprobación explícita continúan siendo necesarias.
+
+Suite completa461/461, después del último ajuste de llamadas17/17 casos visuales,
+lint y build de producción con TypeScript aprobados. Se detuvo únicamente el
+servidor QA propio3001 para compilar y se inició producción local en127.0.0.1:3001.
+El reinicio invalidó solo esa sesión QA; se inició nuevamente con su cuenta
+sintética. La sesión personal y la pestaña del QA HTTPS no se manipularon.
+
+Consumo observado:14 respuestas con métricas recuperadas,34244 tokens entrada,
+29913 salida,7436 de entrada en caché; estimación parcial USD0,3534896 usando
+USD2/M entrada,USD10/M salida yUSD0,1/M caché. No es una factura ni el total:
+no se retuvo la métrica de un análisis y el timeout no devolvió uso. Las tres
+generaciones aceptadas antes de ajustes rondaron USD0,033–0,039 cada una; las
+correcciones requirieron llamadas adicionales. Se reutilizó OpenAI/gpt-6.1-sol
+y la clave autorizada, sin activar pagos ni cambiar a otro proveedor.
+
+PDFs, respuestas y capturas reales en el directorio externo
+SCRUM-236-ILUSTRACIONES de la carpeta de evidencias de Codex. Son capturas de la
+aplicación, no plantillas ni renders SSR. Se conservan también capturas parciales
+de trabajo; solo las inspeccionadas y seleccionadas se vinculan a Jira.
+SCRUM-236 permanece En curso para revisión del nuevo alcance; el lector público
+HTTPS no se ejecutó con este código porque no se autorizó otro despliegue.
+No se hizo merge, despliegue ni avance a otra historia. Stashd6406e0 intacto.
