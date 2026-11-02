@@ -3,6 +3,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import Image from "next/image";
 import { z } from "zod";
 import type { Reinforcement } from "@/lib/types/reinforcement";
+import { transferMediaFile } from "@/lib/reinforcements/media-transfer";
 import { allowedMediaUrl, MEDIA_DOMAINS, mediaFileMetadata, mediaRecordSchema, type MediaRecord } from "@/lib/validations/reinforcement-media";
 
 function MediaAsset({ item, fileUrl, canManage, onRemove, busy }: { item: MediaRecord; fileUrl: string; canManage: boolean; busy: boolean; onRemove: () => void }) {
@@ -22,6 +23,8 @@ function MediaAsset({ item, fileUrl, canManage, onRemove, busy }: { item: MediaR
 export function ReinforcementMedia({ reinforcement: item, projectId, canManage }: { reinforcement: Reinforcement; projectId: string; canManage: boolean }) {
   const id = useId(), fileInput = useRef<HTMLInputElement>(null);
   const [items, setItems] = useState<MediaRecord[]>(item.media ?? []);
+  const [pendingItems, setPendingItems] = useState<MediaRecord[]>([]);
+  const [progress, setProgress] = useState("");
   const [kind, setKind] = useState<"image" | "video" | "link">("image");
   const [file, setFile] = useState<File | null>(null), [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [url, setUrl] = useState(""), [title, setTitle] = useState(""), [approved, setApproved] = useState(false);
@@ -31,6 +34,15 @@ export function ReinforcementMedia({ reinforcement: item, projectId, canManage }
   useEffect(() => {
     return () => { if (previewUrl) URL.revokeObjectURL(previewUrl); };
   }, [previewUrl]);
+  useEffect(() => {
+    if (!canManage) return;
+    const controller = new AbortController();
+    void fetch(endpoint, { cache: "no-store", signal: controller.signal }).then(response => response.ok ? response.json() : null).then(body => {
+      const parsed = z.array(mediaRecordSchema).safeParse(body?.pendingItems);
+      if (!controller.signal.aborted && parsed.success) setPendingItems(parsed.data);
+    }).catch(() => {});
+    return () => controller.abort();
+  }, [endpoint, canManage]);
   function clear() { setFile(null); setPreviewUrl(null); setUrl(""); setTitle(""); setApproved(false); setReady(false); operation.current = null; if (fileInput.current) fileInput.current.value = ""; }
   function choose(file: File | null) {
     setApproved(false); setReady(false); setMessage(""); operation.current = null;
@@ -45,6 +57,8 @@ export function ReinforcementMedia({ reinforcement: item, projectId, canManage }
       const parsed = z.array(mediaRecordSchema).safeParse(body.items);
       if (!response.ok || !parsed.success) { setMessage(body.message ?? "No fue posible actualizar los recursos."); return; }
       setItems(parsed.data);
+      const pending = z.array(mediaRecordSchema).safeParse(body.pendingItems);
+      if (pending.success) setPendingItems(pending.data);
     } catch { setMessage("No fue posible actualizar los recursos. Reintenta."); } finally { setBusy(false); }
   }
   const link = kind === "link" ? allowedMediaUrl(url.trim()) : null;
@@ -54,23 +68,36 @@ export function ReinforcementMedia({ reinforcement: item, projectId, canManage }
     if (!canSave) return;
     const key = JSON.stringify([title.trim(), kind, link, file?.name, file?.size, file?.lastModified]);
     if (operation.current?.key !== key) operation.current = { key, id: crypto.randomUUID() };
-    const form = new FormData(); form.set("metadata", JSON.stringify({ documentId: item.document_id, reinforcementId: item.id,
-      approvedVersionId: item.approved_version_id, assetId: operation.current.id, kind, title: title.trim(), approved: true, ...(kind === "link" ? { url: link } : {}) }));
-    if (file) form.set("file", file);
-    setBusy(true); setMessage("");
+    const metadata = { documentId: item.document_id, reinforcementId: item.id,
+      approvedVersionId: item.approved_version_id!, assetId: operation.current.id, kind, title: title.trim(), approved: true as const,
+      ...(kind === "link" && link ? { url: link } : {}) };
+    setBusy(true); setMessage(""); setProgress("");
     try {
-      const response = await fetch(endpoint, { method: "POST", body: form, signal: AbortSignal.timeout(60000) }); const body = await response.json();
-      const parsed = mediaRecordSchema.safeParse(body.item);
-      if (!response.ok || !parsed.success) { setMessage(body.message ?? "No fue posible confirmar el recurso. Reintenta sin cambiar los datos."); return; }
-      setItems(previous => [...previous.filter(value => value.id !== parsed.data.id), parsed.data]); clear(); setMessage("Recurso aprobado y guardado en este refuerzo.");
-    } catch { setMessage("No se pudo confirmar la carga. Reintenta sin cambiar los datos; no se duplicará la operación."); } finally { setBusy(false); }
+      let saved: MediaRecord;
+      if (kind !== "link" && file) saved = await transferMediaFile(endpoint, metadata, file, setProgress,
+        pending => setPendingItems(previous => [...previous.filter(value => value.id !== pending.id), pending]));
+      else {
+        const form = new FormData(); form.set("metadata", JSON.stringify(metadata));
+        const response = await fetch(endpoint, { method: "POST", body: form, signal: AbortSignal.timeout(60000) }); const body = await response.json();
+        const parsed = mediaRecordSchema.safeParse(body.item);
+        if (!response.ok || !parsed.success) { setMessage(body.message ?? "No fue posible confirmar el recurso. Reintenta sin cambiar los datos."); return; }
+        saved = parsed.data;
+      }
+      setItems(previous => [...previous.filter(value => value.id !== saved.id), saved]);
+      setPendingItems(previous => previous.filter(value => value.id !== saved.id));
+      clear(); setMessage("Recurso aprobado y guardado en este refuerzo.");
+    } catch (error) { setMessage(error instanceof Error ? error.message : "No se pudo confirmar la carga. Reintenta sin cambiar los datos; no se duplicará la operación."); }
+    finally { setBusy(false); setProgress(""); }
   }
   async function remove(resource: MediaRecord) {
     setBusy(true); setMessage("");
     try { const response = await fetch(endpoint, { method: "POST", headers: { "Content-Type": "application/json" }, signal: AbortSignal.timeout(20000),
       body: JSON.stringify({ action: "remove", documentId: item.document_id, reinforcementId: item.id, assetId: resource.id }) });
       const body = await response.json(); if (!response.ok || body.removed !== true) { setMessage(body.message ?? "No se confirmó la retirada. Actualiza antes de reintentar."); return; }
-      setItems(previous => previous.filter(value => value.id !== resource.id)); setMessage("Recurso retirado del refuerzo.");
+      setItems(previous => previous.filter(value => value.id !== resource.id));
+      setPendingItems(previous => previous.filter(value => value.id !== resource.id));
+      if (operation.current?.id === resource.id) operation.current = null;
+      setMessage("Recurso retirado del refuerzo.");
     } catch { setMessage("No se confirmó la retirada. Actualiza los recursos para comprobar el estado."); } finally { setBusy(false); }
   }
   return <section aria-labelledby={`${id}-title`} className="mt-5 min-w-0 space-y-3 border-t border-slate-200 pt-4">
@@ -79,6 +106,14 @@ export function ReinforcementMedia({ reinforcement: item, projectId, canManage }
     {items.length ? <ul className="space-y-3">{items.map(resource => <MediaAsset key={resource.id} item={resource} canManage={canManage} busy={busy}
       fileUrl={`/api/projects/${projectId}/reinforcement-requests/${item.source_request_id}/media/${resource.id}?documentId=${item.document_id}`} onRemove={() => void remove(resource)} />)}</ul>
       : <p className="text-sm text-slate-600">Este refuerzo todavía no tiene recursos multimedia aprobados.</p>}
+    {canManage && pendingItems.length > 0 && <div className="space-y-2 rounded-lg border border-amber-300 p-3">
+      <h5 className="text-sm font-semibold">Transferencias pendientes</h5>
+      <p className="text-sm">Estos archivos todavía no están aprobados. Reintenta el mismo envío o retira la transferencia que ya no necesites.</p>
+      <ul className="space-y-2">{pendingItems.map(resource => <li key={resource.id} className="break-words text-sm">
+        <p>{resource.title} · {resource.file_name} · {(resource.size_bytes / 1024 / 1024).toFixed(2)} MB</p>
+        <button type="button" disabled={busy} onClick={() => void remove(resource)} className="rounded-lg border border-red-300 px-3 py-2 text-red-800">Retirar transferencia: {resource.title}</button>
+      </li>)}</ul>
+    </div>}
     {canManage && item.approved_version_id && <fieldset disabled={busy} className="min-w-0 space-y-3 rounded-lg bg-slate-50 p-3">
       <legend className="text-sm font-semibold">Agregar recurso al refuerzo</legend>
       <label className="block text-sm" htmlFor={`${id}-kind`}>Tipo de recurso</label>
@@ -106,6 +141,7 @@ export function ReinforcementMedia({ reinforcement: item, projectId, canManage }
       <div className="flex flex-wrap gap-2"><button type="button" disabled={!canSave} onClick={() => void save()} className="rounded-lg bg-blue-700 px-3 py-2 text-sm font-semibold text-white disabled:opacity-60">{busy ? "Guardando recurso…" : "Guardar recurso aprobado"}</button>
         <button type="button" onClick={() => { clear(); setMessage("Recurso del formulario retirado sin guardar."); }} className="rounded-lg border border-slate-300 px-3 py-2 text-sm">Retirar recurso del formulario</button></div>
     </fieldset>}
+    {progress && <p role="status" className="break-words text-sm text-slate-800">{progress}</p>}
     {message && <p role="status" className="break-words text-sm text-slate-800">{message}</p>}
   </section>;
 }

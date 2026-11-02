@@ -6179,3 +6179,44 @@ las herramientas utilizadas; no acredita cada herramienta ni búsquedas Rovo
 enriquecidas. El desarrollo de HU027 continúa PAUSADO hasta nueva instrucción.
 Stash d6406e0 conservado y migración vacía sin aplicar; sin merge, despliegue,
 cambios de credenciales ni llamadas IA durante este cambio de plan.
+
+### 2026-11-01 — Reanudación de HU027: transferencia privada de archivos grandes
+
+El usuario pidió continuar después del cambio a Jira Free. Se retomó la rama
+`codex/scrum-39-hu027-transferencias` desde HU046, conservando el stash d6406e0.
+El respaldo/cambio de plan quedó separado en el commit documental c3afdfa.
+No se reimplementó HU027 ni se ampliaron sus formatos o límites.
+
+El navegador envía ahora metadatos pequeños a Next, transfiere el archivo con
+su sesión a Supabase privado y solicita la confirmación al servidor. Se reutiliza
+la reserva de `reinforcement_media`, su firma, idempotencia y RLS existentes.
+El servidor descarga el objeto privado y comprueba tamaño, MIME, estructura y
+SHA-256 antes de aprobar; reservar o terminar de transferir no equivale a aprobar.
+El destino está fijado al origen Supabase configurado y a la ruta del propietario;
+no se expone clave privada ni URL firmada de escritura. El cliente SSR público
+no inicia otro bucle de renovación en segundo plano. Progreso real de subida,
+tiempos limitados, comprobación tras respuesta perdida y pendientes retirables.
+Los enlaces y clientes multipart anteriores mantienen su validación. No hay TUS
+ni promesa de reanudación por fragmentos; el reintento conserva la operación.
+
+No se necesita DDL: la migración vacía generada antes de la pausa nunca se aplicó
+y se preservó fuera del directorio de migraciones, en las evidencias privadas de
+HU027-TRANSFERENCIAS-20261101. No se ejecutó db push ni se cambió RLS.
+Documentación oficial revisada: Supabase Storage standard uploads/access-control,
+SSR creating-a-client y changelog; Next local use-client/route; límite de entrada
+de Vercel Functions de 4,5 MB. No se cambiaron Node ni dependencias.
+
+Verificación inicial de esta corrección: 438/438 pruebas, lint y build de
+producción correctos. En producción local 127.0.0.1:3001, cuenta QA sintética y
+refuerzo aprobado 90b997ec-7e72-4797-be12-39fc9f997f30, se transfirieron:
+- PNG de ruido determinista 1060×1500: 5.034.365 bytes, SHA-256
+  `2c697ad2a3c05db65d0a9458c32d9730517448a3f742560e41af86b7bb3a43bb`.
+- MP4 de 20.971.520 bytes, SHA-256
+  `b5b93b677d274e0dcdd3ab6991009f576f0e4ae770d9e8964571275d973253b9`.
+  Clip técnico existente 960×540, 5,055 s, más caja MP4 `free` válida: acredita
+  volumen y decodificación, no 20 MiB de escenas distintas ni calidad pedagógica.
+Ambos se guardaron y decodificaron desde almacenamiento privado. Consola sin
+errores/avisos durante este recorrido. La comprobación alojada y el registro final
+en Jira se documentarán después de ejecutarlos; no se declaran aprobados aquí.
+Este cambio cubre medios HU027: la carga/reemplazo de PDF de 20 MiB sigue siendo
+otro pendiente del hosting. Sin merge, pagos ni nuevas llamadas de IA.
