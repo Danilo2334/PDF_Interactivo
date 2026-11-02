@@ -6647,3 +6647,24 @@ de trabajo; solo las inspeccionadas y seleccionadas se vinculan a Jira.
 SCRUM-236 permanece En curso para revisión del nuevo alcance; el lector público
 HTTPS no se ejecutó con este código porque no se autorizó otro despliegue.
 No se hizo merge, despliegue ni avance a otra historia. Stashd6406e0 intacto.
+
+Entrega del incremento: commitc260aabfc12edddac0655383757781482e368347,
+PR #60 en borrador sobre codex/calidad-graficos-ia / PR #59. GitHub confirmó
+la baseaf63fff, autorDanilo2334, sin merge y sin conflictos en esa base.
+La compilación local de producción volvió a abrir el recurso aprobado tras
+recarga real; sin una llamada IA adicional. Ningún error de consola observado.
+
+Jira: comentario único10242 actualizado mediante HTML conservando íntegramente
+su cuerpo e imagen anteriores; HU022/10136 resume el incremento sin duplicar
+capturas y conserva Finalizado. SCRUM-236 continúa En curso. Se comprobaron
+por API los seis adjuntos y sus tamaños y, además, se abrieron las cinco
+capturas nuevas en el visor de Jira con la cuenta correcta:
+- 10613:10-fotosintesis-ilustrada.jpg,145761B.
+- 10611:13-pendulo-transformacion.jpg,130480B.
+- 10614:07-agua-movil-390.jpg,58734B.
+- 10612:16-contexto-insuficiente.jpg,162617B.
+- 10610:15-agua-lector-produccion-local.jpg,139219B.
+El adjunto10609,energia-component-v4.png,37925B sigue intacto. Las imágenes
+anteriores y el resultado SSR están identificados como iteraciones previas;
+las nuevas son capturas reales de la aplicación. Comprobaciones del visor
+guardadas fuera de Git como17-jira-fotosintesis-visible.jpg y siguientes.
