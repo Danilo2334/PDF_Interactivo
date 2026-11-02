@@ -6358,3 +6358,70 @@ En producción local 127.0.0.1:3001 ya se observó la carga completada y el viso
 con 2 páginas del proyecto QA 467e7ffd-d93a-4f62-8872-48377a45b0bd. Pruebas del
 reemplazo y QA alojado en curso: todavía no se declaran aprobadas aquí. Evidencias
 privadas fuera de Git en `SCRUM-235-PDF-GRANDES`. Stash d6406e0 intacto.
+
+#### Resultado de la validación SCRUM-235 — 02/11/2026
+
+La validación pendiente del apartado anterior quedó comprobada. Commit funcional
+`c4508f218cfb2142f8b7d7e5753d688b77636ec4`, publicado en PR #57 sobre #56.
+PR #57 listo para revisión, sin merge. SCRUM-235 pasó a En revisión en Sprint 7;
+no se reabrieron ni se alteraron los cierres históricos de HU006/HU011.
+
+En producción local (127.0.0.1:3001) se reemplazó el PDF del proyecto
+`467e7ffd-d93a-4f62-8872-48377a45b0bd` por el documento
+`5930c64f-0463-4719-a397-fa36e11ee727`: ambos de 20.971.520 B, visor de 2 y luego
+3 páginas. Se conservaron proyecto, propietario, título y las dos versiones.
+En QA HTTPS se observó el mismo recorrido en el proyecto
+`5ed288a9-2c28-46bb-ac97-7d79910e9108`, nuevo documento
+`fd339579-d3be-4651-bf70-fd893a598361`. Se descargaron los cuatro objetos privados
+y sus tamaños y SHA-256 coincidieron exactamente con los dos fixtures originales.
+
+El candidato limpio de c4508f2 quedó READY y se promovió al alias
+`https://pdf-interactivo-qa.vercel.app`. Despliegue
+`dpl_GXtWpykpve985kw6ipvqg5nZtb2B`, cuenta Danilo2334 / proyecto pdf-interactivo-qa,
+Hobby, Node 22. Se verificó revisión c4508f2 en health antes de promover.
+Punto de retorno anterior: `dpl_Bjv6sbNHzrHS9PuGJ6YHBkYFwisp` (a6390af).
+No se cambiaron variables privadas, controles de sesión, pagos ni integración IA.
+
+Pruebas reales adicionales:
+- Doble clic en la carga: una operación. Se cortó mediante CDP únicamente la
+  respuesta 200 después de persistir, conservando archivo e identidad en la UI.
+  Reintentar recuperó el mismo proyecto con una reserva JSON, sin otra subida.
+- Reemplazo de 20 MiB con progreso real; limitación temporal de subida a
+  512 KiB/s para observarlo, restaurada antes de finalizar. Cinco confirmaciones
+  HTTP concurrentes del mismo reemplazo devolvieron 200 y el mismo documento.
+  La petición de UI continuó después; al cortar solo su respuesta persistida,
+  el reintento recuperó ese ID sin otra transferencia y abrió sus tres páginas.
+- En ambos entornos: sesión ausente 401, cuenta ajena 404, origen ajeno 403,
+  confirmación inválida 400, identidad igual a la vigente 400, versión antigua
+  409 y tamaño excesivo 400. PDF con contenido inválido: 422; sin documento
+  insertado y objeto temporal eliminado. Las sesiones HTTP fueron emitidas por
+  el login real de las cuentas sintéticas; no se fabricaron marcadores o tokens.
+- Archivo de 20 MiB + 1 B rechazado en la UI, también en reemplazo a 390×844.
+  Teclado, cancelar/reabrir con confirmación limpia y vista previa privada de
+  tres páginas comprobados. Consola sin errores. Es ancho móvil emulado;
+  no sustituye la prueba táctil física pendiente de HU040.
+
+Se añadieron ocho JPEG nativos a Jira, sin duplicados, conservando todos los
+adjuntos anteriores y un único comentario de resultados por tarea:
+- SCRUM-235: comentario 10241, adjuntos 10601–10602 (respuestas perdidas).
+- SCRUM-162: comentario 10052 actualizado, adjunto 10603 (carga recuperada).
+- SCRUM-70: comentario 10055 actualizado, adjuntos 10604–10605 (límites/móvil).
+- SCRUM-173: comentario 10085 actualizado, adjuntos 10606–10608 (progreso,
+  recuperación y tercera página). Sus cuatro imágenes anteriores permanecen.
+SCRUM-162/70/173 siguen Finalizado. Se verificaron metadatos, un comentario por
+tarea, conservación del texto anterior y visualización nativa en Jira.
+
+Resultados sanitizados y capturas fuera de Git en `SCRUM-235-PDF-GRANDES`:
+`local-api-checks.json`, `qa-api-checks.json`, `qa-concurrent-replacement.json`,
+recibos de operaciones, reintentos y `pdf-integrity-and-versions.json`.
+No contienen claves ni cookies. Se conservan los respaldos previos de Jira.
+445/445 pruebas, lint y build ya aprobados sobre el código publicado; no se
+repitieron por cada captura. El commit posterior de continuidad solo documenta
+estos resultados. No hay merge automático, ni nuevos consumos de IA o pagos.
+
+Pendientes para el cierre global: revisar e integrar la cadena de PR preparada
+en su orden; HU040 requiere táctil físico; HU046 conserva la matriz real de
+navegadores N/N−1 y la supervisión/notificación operativa con umbrales acordados;
+SCRUM-233 depende de dominio/SMTP para acreditar recuperación por correo.
+Los fixtures de 20 MiB acreditan transferencia e integridad, no complejidad
+gráfica del PDF. No se declara terminado todo el proyecto por esta regresión.
