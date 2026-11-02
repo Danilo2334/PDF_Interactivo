@@ -6220,3 +6220,80 @@ errores/avisos durante este recorrido. La comprobación alojada y el registro fi
 en Jira se documentarán después de ejecutarlos; no se declaran aprobados aquí.
 Este cambio cubre medios HU027: la carga/reemplazo de PDF de 20 MiB sigue siendo
 otro pendiente del hosting. Sin merge, pagos ni nuevas llamadas de IA.
+
+### 2026-11-02 — HU027 comprobada en QA HTTPS y registro terminado
+
+Las pruebas siguientes se ejecutaron la noche del 01/11 en hora de Bogotá;
+el registro de Jira se terminó el 02/11 después de la interrupción. Código:
+680f226129514e61c94258ec60925cf4e998a5ac y
+a6390afe223e3aad8647aa062cbe7cd1e6789011. PR #56:
+https://github.com/Danilo2334/PDF_Interactivo/pull/56, base HU046 / PR #55.
+La publicación Git se hizo con Danilo2334 por operación, sin cambiar la cuenta
+global de GitHub ni usar los proyectos de otras cuentas. Sin merge.
+
+Se desplegaron candidatos desde archivos limpios de esos commits en el proyecto
+QA Hobby de Danilo. Se comprobó su revisión antes de promoverlos al alias QA.
+Versión final probada: a6390af, deployment
+`dpl_Bjv6sbNHzrHS9PuGJ6YHBkYFwisp`,
+https://pdf-interactivo-ojir55guk-danilo-carlosamas-projects.vercel.app;
+alias https://pdf-interactivo-qa.vercel.app. No se modificaron facturación,
+variables privadas, datos personales ni políticas de acceso. No hubo llamadas IA.
+
+Resultados REALES desde el formulario autenticado del QA:
+- PNG 5.034.365 bytes y MP4 20.971.520 bytes: guardados y recuperados. La traza
+  muestra JSON de 471/472 bytes hacia Next y el binario hacia Supabase; sin 413.
+  Las descargas privadas de ambos coinciden con las huellas documentadas arriba.
+- El video privado se reprodujo a 960×540, duración 5,055 s. Range 0–31 respondió
+  206, 32 bytes, total 20.971.520, private/no-store y nosniff.
+- Se interceptó la respuesta 200 de complete-file DESPUÉS de la aprobación del
+  video `1b2ee849-2bed-45cd-a8ff-2bb7f05086e1` y se abortó únicamente su entrega.
+  El formulario se conservó; el reintento hizo un prepare-file, recuperó el mismo
+  ID y no repitió el binario ni creó otro recurso. No se confundió con desconectar
+  antes de guardar. Se corrigió el mensaje inglés de red y se repitió el corte
+  real con un PNG pequeño en a6390af: mensaje español, reintento con Enter y una
+  sola entrada aprobada (`792d51e0-cbd4-46cb-a53d-fc56c8716d55`).
+- Reserva sin objeto: 503 sin aprobar. PNG real de 68 bytes subido a una reserva
+  con otra huella: complete-file 409 sin aprobar. Cambio de intención 409,
+  documento incoherente 400, imagen mayor de 5 MiB 415, sin sesión 401.
+- Storage con sesión real de otra cuenta y anónimo no entregó bytes. Tampoco
+  aceptó ruta sin reserva, sobrescritura ni subida posterior a retirar la reserva
+  (errores 400 de Storage en estos ensayos; no se presentan como HTTP 403).
+- Pendientes separados de aprobados y retirables en UI. Móvil 390×844, ancho
+  de documento 375 por la barra de desplazamiento, sin desbordamiento horizontal;
+  captura móvil nativa 07 y navegación de controles/reintento con teclado.
+- Se retiraron desde UI solo los cinco medios técnicos aprobados y las dos
+  reservas creadas en esta sesión. Después: 0 aprobados y 0 pendientes en ese
+  refuerzo, también tras recargar; el acceso al video retirado devolvió 404.
+  Los medios previos de otro refuerzo permanecen. No se publicaron esos clips
+  o imágenes técnicos como material pedagógico. La retirada lógica no promete
+  liberar cuota histórica ni eliminar físicamente el almacenamiento.
+- PDF original: 1580 bytes, SHA-256
+  `e7277d66afd7caba47385cfac2f0e55a2eeb4fb7aa7136409fa35300a6347946`,
+  idéntico al anterior. Los abortos y 4xx/503 provocados son parte de las pruebas;
+  no se afirma consola vacía durante esos fallos controlados.
+
+Verificación automática: suite completa 438/438, lint y build de producción.
+Después del ajuste de mensajes: 12/12 pruebas afectadas, lint y build repetidos,
+correctos. No se repitió toda la suite por cada captura.
+
+Jira Free comprobado otra vez: se editaron los comentarios únicos 10155 de
+SCRUM-111 y 10158 de SCRUM-112 preservando íntegramente el HTML anterior y sus
+dos imágenes en cada uno. Ahora contienen cuatro imágenes cada uno, un único
+comentario por subtarea. Adjuntos NUEVOS:
+- SCRUM-111: 10596 `01-qa-imagen-transferida.jpg` (49.503 B, progreso real 86 %),
+  10597 `04-qa-video-20mib-reproduccion.jpg` (61.984 B).
+- SCRUM-112: 10599 `06-qa-error-recuperable-corregido.jpg` (50.665 B),
+  10598 `08-qa-recursos-retirados.jpg` (63.132 B).
+Se comprobó su asociación por API y su visualización en Jira. Las cuatro
+evidencias anteriores de estas dos subtareas conservan IDs y tamaños. SCRUM-111
+y SCRUM-112 pasan a Finalizado; SCRUM-193/194 se respetan. El comentario único
+10159 de SCRUM-39 resume el cierre y enlaza PR #56; historia En revisión por
+integración pendiente. No se cerró ningún sprint.
+
+Capturas nativas, descriptores de los fixtures y resultados HTTP/Storage se
+conservan fuera de Git en `HU027-TRANSFERENCIAS-20261101`, junto al respaldo
+anterior de Jira. Los JPEG 02 y 05 documentan un estado previo o una captura
+reducida y no se usaron como evidencia de aceptación en Jira. Stash d6406e0
+intacto; árbol sin secretos. Próximo pendiente de hosting: carga/reemplazo de
+PDF grandes (20 MiB), fuera de este cambio. Siguen los pendientes de HU040
+táctil, matriz de navegadores, supervisión de HU046 y SMTP ya documentados.
