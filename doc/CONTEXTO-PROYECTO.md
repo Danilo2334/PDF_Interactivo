@@ -5927,3 +5927,14 @@ El QA HTTPS sigue en `e3dfd023`: HU045 todavía no se desplegó. Sin nuevas vari
 en Vercel, pagos, publicaciones públicas o cambios a resultados del lector.
 Permanecen HU046,137 táctil,HU027 cargas grandes ySMTP233; no declarar el proyecto
 ni el sprint finalizados al cerrar esta regresión.
+
+Entrega HU045: implementación `18739b7e930830ac3a3511563a215c32a2756caf`, publicada.
+PR54 abierto y listo para revisión, base `codex/scrum-53-hu041-analitica`, mergeable
+sin checks remotos configurados; las verificaciones citadas son locales. Jira
+SCRUM-57 y147/148/229/230 Finalizado. Comentario único madre10231 actualizado;
+147=10232,229=10233,230=10234,148=10235. Diez adjuntos10581–10590,2/2/3/3 inline,
+sin duplicados. Nombres,tamaños,asociaciones y conteo de comentarios comprobados.
+10590 descargado y comparado:66841 bytes idénticos al JPEG nativo10. No se afirma
+haber inspeccionado miniaturas en la UI de Jira; se verificaron conector,HTML y
+binario. El Sprint7 ya estaba activo, desde2026-11-01 hasta2026-11-08; no se alteró.
+Cadena pendiente de integración48→49→50→51→52→53→54;52 continúa en borrador por137.
