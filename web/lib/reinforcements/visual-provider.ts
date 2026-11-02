@@ -2,7 +2,7 @@ import "server-only";
 import type { GenerationAdjustment } from "@/lib/validations/regeneration";
 import { z } from "zod";
 import { getAiConfiguration, generateJson, AiFailure } from "@/lib/reinforcements/ai-provider";
-import { visualContentSchema, validateVisual, VISUAL_LABELS, type VisualMode, type VisualFailureCode } from "@/lib/validations/visual";
+import { generatedVisualContentSchema, validateVisual, VISUAL_LABELS, type VisualMode, type VisualFailureCode } from "@/lib/validations/visual";
 import type { AnalysisContext, ContextDiagnosis } from "@/lib/validations/contextual-analysis";
 export const getVisualConfiguration = getAiConfiguration;
 export class VisualFailure extends Error { constructor(public code: VisualFailureCode, public quotaExhausted = false) { super(code); } }
@@ -11,7 +11,7 @@ export async function generateVisual(context: AnalysisContext, diagnosis: Contex
   if (!context.enough || !diagnosis.sufficient) throw new VisualFailure("invalid_visual");
   try {
     // The model describes a bounded visual composition, never executable SVG/HTML.
-    const schema = z.toJSONSchema(visualContentSchema);
+    const schema = z.toJSONSchema(generatedVisualContentSchema);
     schema.properties = { ...schema.properties, sourceQuote: { type: "string", enum: [context.selectedText.slice(0, 500).replace(/[\uD800-\uDBFF]$/, "")] },
       topicReference: { type: "string", enum: [diagnosis.topic] } };
     const output = await generateJson(config, {
@@ -23,7 +23,12 @@ export async function generateVisual(context: AnalysisContext, diagnosis: Contex
         + "Escoge el símbolo pertinente de la lista; el péndulo solo corresponde a mecánica, no a procesos de agua. "
         + "Cada label debe ser breve y cada detail explicar el elemento. text es una descripción accesible de 80 a 1600 caracteres que explica el conjunto y sus límites. "
         + "Usa etiquetas de dos a cuatro palabras completas: nodos hasta 60 caracteres y flechas hasta 40. Si una frase no cabe, reformúlala más corta; jamás cortes palabras ni uses puntos suspensivos, guiones blandos o caracteres invisibles para cumplir el límite. Una flecha debe expresar una relación sustentada, no una secuencia o causalidad inventadas. "
-        + "El renderizador coloca hasta tres nodos por fila en el orden del array; con tres nodos todos quedan en una fila. Describe las relaciones por el nombre de los conceptos, sin afirmar posiciones superiores, inferiores, izquierda o derecha de los nodos: la disposición visual no es contenido del PDF. "
+        + "Resuelve la dificultad concreta: cada nodo aporta un concepto distinto y conectado; no añadas nodos decorativos ni representes un ciclo completo cuando el texto solo explica parte de él. "
+        + "Cada conexión necesita relationType y evidence: transformation (cambia de forma), cause (causa explícita), sequence (orden explícito), part_of (componente de un conjunto), comparison (contraste) o definition (define un concepto). evidence es una cita literal de 8 a 300 caracteres de selection o nearbyText que respalda esa relación; una cita global no sustituye el respaldo de cada conexión. "
+        + "Si el contexto solo enumera dos términos sin explicar su vínculo, no conviertas esa enumeración en una secuencia ni una causa. El contexto cercano ajeno al tema no respalda relaciones. Si solo puedes repetir los términos sin aclarar la dificultad planteada o no alcanza para el diagrama elegido, consistentWithSource=false; nunca rellenes la estructura con relaciones supuestas. "
+        + "Las relaciones de composición, comparación y definición se dibujan sin flecha causal. Escribe el vínculo al leer origen, etiqueta y destino como una frase inequívoca: 'energía potencial —forma parte de→ energía total'. Evita 'integra la suma', 'alterna con', 'conduce a', 'permite', 'contiene' o 'relacionado con' sin explicar el vínculo. "
+        + "Distingue transformación de conservación: si el fragmento dice que dos formas se transforman una en otra, representa ambos sentidos explícitos; que ambas compongan una suma constante no significa que una cause la suma ni otra energía. Incluye las condiciones del fragmento, como ausencia de rozamiento, en el detalle y descripción. No extrapoles fórmulas, etapas o causas ausentes del contexto. "
+        + "El renderizador agrupa los componentes y su conjunto en filas distintas cuando corresponde. Describe las relaciones por el nombre de los conceptos, sin afirmar posiciones superiores, inferiores, izquierda o derecha de los nodos: la disposición visual no es contenido del PDF. "
         + "Copia sourceQuote y topicReference exactamente según el esquema. consistentWithSource=false si no puedes producir una representación coherente. "
         + "El resultado es un borrador para revisión: nunca lo apruebes ni afirmes haber cambiado el PDF.",
       data: { ...(adjustment ? { revision: adjustment } : {}), selection: context.selectedText, nearbyText: context.nearbyText, pageNumber: context.pageNumber, difficulty: context.need,

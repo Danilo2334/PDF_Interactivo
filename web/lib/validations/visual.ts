@@ -7,22 +7,31 @@ export const VISUAL_MODES = ["image", "diagram"] as const;
 export type VisualMode = typeof VISUAL_MODES[number];
 export const VISUAL_LABELS = { image: "Imagen", diagram: "Diagrama" };
 export const VISUAL_SYMBOLS = ["pendulum", "water", "sun", "cloud", "plant", "book", "atom", "energy", "cycle"] as const;
-export const visualSceneSchema = z.object({
+export const VISUAL_RELATION_LABELS = { transformation: "Transformación", cause: "Causa", sequence: "Secuencia", part_of: "Composición", comparison: "Comparación", definition: "Definición" } as const;
+const visualEdgeSchema = z.object({ from: z.string().regex(/^n[1-6]$/), to: z.string().regex(/^n[1-6]$/),
+  label: z.string().trim().min(1).max(40), relationType: z.enum(["transformation", "cause", "sequence", "part_of", "comparison", "definition"]),
+  evidence: z.string().trim().min(8).max(300) }).strict();
+const sceneShape = {
   kind: z.enum(VISUAL_MODES),
   nodes: z.array(z.object({ id: z.string().regex(/^n[1-6]$/), label: z.string().trim().min(1).max(60),
     detail: z.string().trim().min(1).max(160), symbol: z.enum(VISUAL_SYMBOLS) }).strict()).min(1).max(6),
-  edges: z.array(z.object({ from: z.string().regex(/^n[1-6]$/), to: z.string().regex(/^n[1-6]$/), label: z.string().trim().min(1).max(40) }).strict()).max(8),
-}).strict().superRefine((scene, ctx) => {
+};
+function checkScene(scene: { kind: string; nodes: {id: string}[]; edges: {from: string; to: string}[] }, ctx: z.RefinementCtx) {
   const ids = new Set(scene.nodes.map(n => n.id));
   if (ids.size !== scene.nodes.length || scene.edges.some(e => !ids.has(e.from) || !ids.has(e.to) || e.from === e.to)) ctx.addIssue({ code: "custom", message: "Invalid visual references" });
   if (scene.kind === "diagram" && (scene.nodes.length < 2 || !scene.edges.length)
     || scene.kind === "image" && (scene.nodes.length > 4 || scene.edges.length)) ctx.addIssue({ code: "custom", message: "Visual structure does not match the selected mode" });
-});
+}
+// Older owner-reviewed versions remain readable; new generations require both fields.
+export const visualSceneSchema = z.object({ ...sceneShape,
+  edges: z.array(visualEdgeSchema.partial({relationType: true, evidence: true})).max(8) }).strict().superRefine(checkScene);
+const generatedSceneSchema = z.object({ ...sceneShape, edges: z.array(visualEdgeSchema).max(8) }).strict().superRefine(checkScene);
 export const visualContentSchema = z.object({ title: z.string().trim().min(3).max(160), text: z.string().trim().min(80).max(1600),
   sourceQuote: z.string().trim().min(8).max(500), topicReference: z.string().min(3).max(200), consistentWithSource: z.boolean(), scene: visualSceneSchema }).strict();
+export const generatedVisualContentSchema = visualContentSchema.extend({scene: generatedSceneSchema});
 export type VisualContent = z.infer<typeof visualContentSchema>;
 export function validateVisual(value: unknown, context: AnalysisContext, diagnosis: ContextDiagnosis, mode: VisualMode) {
-  const output = visualContentSchema.parse(value);
+  const output = generatedVisualContentSchema.parse(value);
   if (!context.enough || !diagnosis.sufficient || !output.consistentWithSource || output.scene.kind !== mode
     || !context.selectedText.includes(output.sourceQuote) || output.topicReference !== diagnosis.topic) throw Error("Visual does not match its saved source");
   // Apply to new AI outputs without making historical owner-reviewed versions
@@ -30,6 +39,24 @@ export function validateVisual(value: unknown, context: AnalysisContext, diagnos
   const labels = [...output.scene.nodes.map(node => node.label), ...output.scene.edges.map(edge => edge.label)];
   if (labels.some(label => /[\u00ad\u200b-\u200d\ufeff]|(?:…|\.{3}|[-–—])\s*$/u.test(label))) throw Error("Visual contains a truncated label");
   if (/\b(?:nodos?|elementos?)\s+(?:superiores?|inferiores?)\b/iu.test(output.text)) throw Error("Visual description assumes an unsupported layout");
+  const normalize = (text: string) => text.normalize("NFC").replace(/\s+/g, " ").trim();
+  const nodeLabels = output.scene.nodes.map(node => normalize(node.label).toLocaleLowerCase("es"));
+  if (new Set(nodeLabels).size !== nodeLabels.length) throw Error("Visual repeats concept labels");
+  const sources = [context.selectedText, context.nearbyText].map(normalize), links = new Set<string>();
+  for (const edge of output.scene.edges) {
+    if (!sources.some(source => source.includes(normalize(edge.evidence)))) throw Error("Visual relation has no source evidence");
+    if (/^(?:se relaciona con|relacionad[oa] con|conecta con|conduce a|permite|contiene|integra(?: la suma)?|alterna con)$/iu.test(edge.label.trim()))
+      throw Error("Visual relation is ambiguous");
+    const key = `${edge.from}:${edge.to}:${edge.relationType}`;
+    if (links.has(key)) throw Error("Visual repeats a relation");
+    links.add(key);
+  }
+  if (mode === "diagram") {
+    const connected = new Set([output.scene.nodes[0].id]);
+    for (let pass = 0; pass < output.scene.nodes.length; pass++) for (const edge of output.scene.edges)
+      if (connected.has(edge.from) || connected.has(edge.to)) { connected.add(edge.from); connected.add(edge.to); }
+    if (connected.size !== output.scene.nodes.length) throw Error("Visual contains disconnected concepts");
+  }
   return output;
 }
 export const VISUAL_FAILURES = ["provider_unavailable", "provider_refused", "invalid_visual", "timeout"] as const;
@@ -37,7 +64,7 @@ export type VisualFailureCode = typeof VISUAL_FAILURES[number];
 export const VISUAL_MESSAGES: Record<VisualFailureCode, string> = {
   provider_unavailable: "El servicio de IA no está disponible o se agotó su cuota. Espera antes de reintentar; no se cambiará de proveedor automáticamente.",
   provider_refused: "No fue posible generar este recurso. Revisa el fragmento y su dificultad.",
-  invalid_visual: "El recurso recibido no pudo verificarse. No se publicó; puedes solicitar otro resultado.",
+  invalid_visual: "El recurso no ofrece relaciones claras y verificables con el fragmento. No se publicó. Amplía el contexto o solicita otro resultado.",
   timeout: "La generación agotó su tiempo. Puedes reintentar sin publicar un recurso incompleto.",
 };
 export const visualRecordSchema = explanationRecordSchema.omit({ detail_level: true }).extend({ mode: z.enum(VISUAL_MODES),
