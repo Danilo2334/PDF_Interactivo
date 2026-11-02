@@ -5,8 +5,10 @@ import { MEDIA_BUCKET, mediaFileMetadata, mediaInputSchema, mediaRecordSchema, t
 const receiptSchema = z.object({ upload: z.object({ bucket: z.literal(MEDIA_BUCKET), path: z.string() }), pendingItem: mediaRecordSchema });
 async function jsonStep(endpoint: string, body: unknown) {
   const response = await fetch(endpoint, { method: "POST", headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body), signal: AbortSignal.timeout(90000), cache: "no-store" });
-  const result = await response.json();
+    body: JSON.stringify(body), signal: AbortSignal.timeout(90000), cache: "no-store" }).catch(() => {
+    throw new Error("No se pudo confirmar la carga. Reintenta sin cambiar los datos; no se duplicará la operación.");
+  });
+  const result = await response.json().catch(() => { throw new Error("No se pudo leer la confirmación. Reintenta sin cambiar los datos."); });
   if (!response.ok) throw new Error(typeof result.message === "string" ? result.message.slice(0, 300) : "No se pudo confirmar el recurso. Reintenta sin cambiar los datos.");
   return result;
 }

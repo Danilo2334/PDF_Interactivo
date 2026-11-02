@@ -12,7 +12,7 @@ function fixture(options={}){
     '@/lib/validations/reinforcement-media':schemas,
     '@/lib/supabase/client':{createClient:()=>({auth:{getSession:async()=>{sessions++;return{data:{session:options.noSession?null:{user:{id:record.owner_id},access_token:'synthetic-session-token'}},error:null}}}})},
   },{XMLHttpRequest:Xhr,process:{env:{NEXT_PUBLIC_SUPABASE_URL:'https://project.supabase.co',NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY:'public-test-key'}},
-    fetch:async(endpoint,init)=>{const body=JSON.parse(init.body);posts.push({endpoint,body});return Response.json(options.cached?{item}:body.action==='prepare-file'?{pendingItem:{...item,status:'uploading'},upload:{bucket:schemas.MEDIA_BUCKET,path:options.badPath??`${record.owner_id}/${id}.png`}}:options.missing?{message:'La transferencia no está confirmada.'}:{item},{status:options.missing&&body.action==='complete-file'?503:200});}});
+    fetch:async(endpoint,init)=>{const body=JSON.parse(init.body);posts.push({endpoint,body});if(options.lostConfirmation&&body.action==='complete-file')throw new TypeError('Failed to fetch');return Response.json(options.cached?{item}:body.action==='prepare-file'?{pendingItem:{...item,status:'uploading'},upload:{bucket:schemas.MEDIA_BUCKET,path:options.badPath??`${record.owner_id}/${id}.png`}}:options.missing?{message:'La transferencia no está confirmada.'}:{item},{status:options.missing&&body.action==='complete-file'?503:200});}});
   return{posts,sent,progress,get sessions(){return sessions},run:()=>transfer.transferMediaFile('/api/projects/qa/media',metadata,new File(['abcde'],'qa.png',{type:'image/png'}),message=>progress.push(message),()=>{})};
 }
 test('HU027 browser sends only JSON metadata to Next and private file bytes to the fixed Supabase origin',async()=>{
@@ -25,6 +25,7 @@ test('HU027 browser sends only JSON metadata to Next and private file bytes to t
 test('HU027 browser checks completion after ambiguous upload responses; approved replay never uploads again',async()=>{
   for(const options of [{lostResponse:true},{uploadStatus:409}]){const f=fixture(options);assert.equal((await f.run()).status,'approved');assert.equal(f.posts.length,2);assert.equal(f.sent.length,1);}
   const missing=fixture({lostResponse:true,missing:true});await assert.rejects(missing.run(),/transferencia no está confirmada/);assert.equal(missing.sent.length,1);
+  const lost=fixture({lostConfirmation:true});await assert.rejects(lost.run(),/Reintenta sin cambiar los datos; no se duplicará/);assert.equal(lost.posts.length,2);
   const cached=fixture({cached:true});assert.equal((await cached.run()).id,id);assert.equal(cached.sent.length,0);assert.equal(cached.sessions,0);
 });
 test('HU027 browser never transmits credentials to a foreign storage path or without its own session',async()=>{
