@@ -6278,8 +6278,8 @@ correctos. No se repitió toda la suite por cada captura.
 
 Jira Free comprobado otra vez: se editaron los comentarios únicos 10155 de
 SCRUM-111 y 10158 de SCRUM-112 preservando íntegramente el HTML anterior y sus
-dos imágenes en cada uno. Ahora contienen cuatro imágenes cada uno, un único
-comentario por subtarea. Adjuntos NUEVOS:
+dos imágenes en cada uno. En esa primera comprobación contenían cuatro imágenes
+cada uno y un único comentario por subtarea. Adjuntos NUEVOS:
 - SCRUM-111: 10596 `01-qa-imagen-transferida.jpg` (49.503 B, progreso real 86 %),
   10597 `04-qa-video-20mib-reproduccion.jpg` (61.984 B).
 - SCRUM-112: 10599 `06-qa-error-recuperable-corregido.jpg` (50.665 B),
@@ -6297,3 +6297,14 @@ reducida y no se usaron como evidencia de aceptación en Jira. Stash d6406e0
 intacto; árbol sin secretos. Próximo pendiente de hosting: carga/reemplazo de
 PDF grandes (20 MiB), fuera de este cambio. Siguen los pendientes de HU040
 táctil, matriz de navegadores, supervisión de HU046 y SMTP ya documentados.
+
+Comprobación visual adicional del 02/11: la captura 08 conserva un fotograma
+intermedio, cuando todavía se dibujaba el último recurso antes de retirarlo.
+Se mantuvo por trazabilidad y se añadió el JPEG nativo
+`13-qa-retirada-final-tras-recarga.jpg` (76.739 B), adjunto 10600 en SCRUM-112.
+Se volvió a entrar con la cuenta QA sintética, se recargó el proyecto y se
+observó la lista vacía. La nueva captura muestra ese estado final y concuerda
+con el resultado API anterior 0/0/404. El comentario 10158 se aclaró, sin borrar
+texto ni imágenes; ahora tiene cinco imágenes (dos anteriores y tres nuevas).
+SCRUM-111 conserva cuatro. Total nuevo de esta corrección: cinco capturas en
+Jira. La madre y el PR reflejan ese total. No se repitieron subidas grandes ni IA.
