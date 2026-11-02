@@ -5985,3 +5985,11 @@ Tres capturas nativas yreportes reales enHU046-REAL.150 cumple la reversión
 comprobada;pendiente vincular evidencia yPR.58/149/231/232 permanecenEncurso.
 No declarar terminadoSprint7/proyecto:además siguen137 táctil,HU027 cargas
 grandes delhosting ySMTP233. Stashd6406e0 conservado.
+
+Entrega parcial HU046: PR55 en borrador sobre54, head documental a921fb9.
+150 Finalizado: comentario único10237 yadjuntos10591/10593/10592 de las3 fases
+reales del ensayo.10592 descargado:16600 bytes idénticos alJPEG nativo03.
+Madre58 comentario10236 actualizado;149=10238,231=10239,232=10240, únicos ysin
+imágenes duplicadas.58/149/231/232 siguenEncurso. El estado final delQA es
+86dec12 (incluyeHU045), no e3dfd023; la nota anterior sin despliegue HU045 queda
+superada por este ensayo. No se hizo merge de54/55 ni se cerróSprint7.
