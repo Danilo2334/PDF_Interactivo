@@ -6531,3 +6531,18 @@ Lint y build finales aprobados, sin avisos de lint. Falta el recorrido real en
 navegador, móvil y lector con estas correcciones: Computer Use fue detenido por
 la revisión automática al no poder determinar la URL de Chrome y no se sorteó.
 No se declara terminada SCRUM-236 ni se presenta el render como captura de app.
+
+Entrega preparada: commitb9f75bfeffd922c19975c067bc32c93097e15430 yPR #59 en
+borrador sobre codex/scrum-232-hu046-supervision / PR #58. Código y documento
+publicados, sin merge ni despliegue. Comentario único10242 de SCRUM-236 con
+adjunto10609,energia-component-v4.png,37925B,SHA-256
+50c92f4d7a693faabfae34ccf46c29b68f0aa37baab86e30cf59733ef440511d.
+Se identificó expresamente como render del componente, no captura del navegador.
+Metadatos y nodo inline comprobados por API; no se afirma visualización de Jira
+en UI porque ese control fue detenido. La tarea permanece En curso.
+
+Se actualizaron, sin duplicar comentarios ni imágenes: madreHU022/10136,
+HU046/10236,matriz149/10238,regresiones231/10239 ysupervisión232/10240.
+Comprobados por API el texto anterior, un comentario por tarea y las dos imágenes
+anteriores de232. Los cierres históricos de HU022 siguen intactos. Se conservaron
+el stashd6406e0 ylas variables privadas ignoradas; no entraron en Git.
