@@ -387,8 +387,11 @@ test("dashboard and upload enforce access even when the proxy is bypassed", asyn
       "@/lib/supabase/server": { createClient() { assert.fail("Access must be checked first"); } },
       "@/components/auth/logout-button": {},
       "@/components/documents/pdf-file-selector": {},
+      "@/lib/auth/permissions": { hasPermission() { assert.fail("Access must be checked first"); } },
+      "@/lib/analytics/service": { analyticsDocuments() { assert.fail("Access must be checked first"); } },
+      "@/components/analytics/document-analytics-panel": {},
     };
-    for (const path of ["app/dashboard/page.tsx", "app/documents/upload/page.tsx"]) {
+    for (const path of ["app/dashboard/page.tsx", "app/documents/upload/page.tsx", "app/analytics/page.tsx"]) {
       const page = loadModule(path, dependencies).default;
       const expected = status === 401 ? /REDIRECT:\/login/
         : status === 403 ? /REDIRECT:\/blocked/ : /Unavailable/;
