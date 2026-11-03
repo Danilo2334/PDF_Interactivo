@@ -5259,3 +5259,169 @@ y no detenerse por pasos rutinarios. Próxima historia por orden del Sprint7:
 HU038/SCRUM-50, seguimiento de aperturas de refuerzo. Sprint7 permanece activo;
 no cerrar sprints ni inventar pruebas pendientes. Las credenciales se gestionan
 únicamente en mecanismos privados; no incluirlas en contexto, Git, Jira o capturas.
+
+### 01/11/2026 — HU038: implementación y comienzo de validación real
+
+Rama codex/scrum-50-hu038-consultas desde eaa75ec (HU037, PR48 todavía sin
+integrar). SCRUM-50 y133/134/215/216 En curso. Definición incorporada ahora en
+el comentario único10211: interacción explícita con indicador, tarjeta o panel,
+mediante clic o teclado; sólo los contenidos que se abren cuentan. Indicadores,
+renderizado, navegación pasiva y colapsar no suman. Reapertura real aumenta la
+frecuencia; porcentaje deduplica visita válida HU037+refuerzo. Periodo inicial:
+todo el historial del documento hasta la consulta, igual en ambos términos;
+filtros avanzados quedan en HU041. No se interpretan sesiones como personas.
+
+Eventos ligados a visita firmada del mismo documento y sesión. Servidor resuelve
+IDs opacos, valida página y versión pública vigente, identificación y propietario
+activo; SQL vuelve a contrastar todo atómicamente y rechaza asociaciones falsas.
+Propietario y pruebas privadas excluidos. UUID de interacción conserva idempotencia
+en reintentos; cola en memoria limitada a50 interacciones, dos intentos por envío,
+timeout10s, sin bloquear la lectura ni persistir cookies o identidad en el cliente.
+Panel de uso privado agrupado por página/refuerzo, incluye publicados sin aperturas,
+frecuencia y visitas distintas/denominador/porcentaje; cero seguro, errores de acceso
+limpian resultados. Consulta admin no amplía acceso al PDF o claves del quiz ajeno.
+
+Migración creada con CLI oficial y probada con PGlite/pgcrypto antes de aplicarla.
+Historial remoto de24 migraciones conciliado; única nueva aplicada, versión remota
+20261101220427_reader_reinforcement_opens y archivo local alineado. RLS activa,
+clientes sólo SELECT autorizado; escritura exclusivamente RPC invoker→definer
+privado con firma, purpose, vencimiento y search_path vacío. Sin db push ni repetir
+SQL anterior. Advisors anteriores conservan avisos de funciones históricas y Auth;
+no se debilitaron permisos ni se activaron prestaciones de pago para ocultarlos.
+
+Lint y build/TypeScript aprobados. Batería previa402/402 y diez casos específicos
+actuales aprobados (incluido panel sin denominador y pérdida de autorización);
+se ejecuta batería final después del último test. La cuenta sintética existente
+inició sesión por el formulario QA normal; no se usó ni guardó la contraseña
+personal enviada por chat. No se alteró la sesión de localhost ni su configuración.
+Pendiente antes de cerrar: publicación temporal QA, interacción visual real,
+conciliación de eventos y porcentajes, latencia no bloqueante, capturas y Jira.
+
+QA inicial dpl_FaiRZRoQ4FvrwtViMVdyh9hp9GwC READY, fuente1bb2f42; mismo proyecto
+Danilo/Hobby y variables sin cambiar.403/403 tests finales iniciales. Recorrido real:
+frecuencia4/visitas distintas2/denominador9=22,22% y otra página1/1/9=11,11%;
+cinco POST simultáneos de una operación insertan una sola fila. Reintento después
+de descartar el cuerpo HTTP ya procesado devuelve recorded=false sin duplicar;
+no se presenta como interrupción de paquetes. Página y refuerzo ajenos409,
+otra sesión403, referencia de documento extra400, falta cookie428, origen403,
+agregado anónimo401 y otro dueño404; documento actual incorrecto409.
+RLS real con clave pública: dueño5 eventos, otra cuenta0, anon401/42501 y RPC
+directo42501. Ensayo privado real y propietario no aumentaron los cinco eventos.
+Documento QA-Sol sin visitas ni publicaciones devuelve0 y vacío, comprobado en UI.
+Logout sólo de cuenta sintética QA confirma limpieza de métricas ante401.
+
+Lector IAB autenticado como segunda cuenta QA, distinta del propietario: renderizar
+indicadores conserva5 eventos; tres aperturas por clic/teclado producen6 filas
+(dos contenidos inicialmente expandidos) y navegar pasivamente a página2 conserva11.
+Medición inicial de panel con contenido561,1/8,4/39,1ms; primera petición de métricas
+pausada de forma controlada mediante CDP Fetch sólo para ese recurso, panel usable
+antes de continuar la petición real. Intercepción restaurada con patterns vacío;
+sin sustituir respuestas. Se repetirá la medición sobre la corrección final.
+
+Fallo visual observado: activar indicador de página2 podía devolver el estado a1
+porque scrollIntoView del panel también desplazaba su ancestro window y PDF.js
+detectaba otra página. Se corrige desplazando sólo el contenedor del panel en
+escritorio; teclado y cierre siguen conservando foco/posición. Regresión específica
+añadida y once casos afectados pasan. Se repiten batería, lint/build y QA del caso;
+no se declara resuelto visualmente antes de ese contraste. PR49 borrador apilado
+sobre PR48, publicado sin merge. Publicación escaneada QA2 temporalmente pública
+para tres aperturas sin refuerzos; restaurar su estado previo privado al terminar.
+
+La primera corrección37d4e36 pasó404/404, lint/build y llegó al QA. La repetición
+reveló además el caso de marcador de página2 parcialmente visible mientras la1
+ocupa más viewport: un callback posterior de visibilidad sigue eligiendo1 aunque
+el panel no desplace window. Se amplía la corrección alineando explícitamente
+la página PDF del indicador en escritorio; no se congela el seguimiento de páginas
+ni se recarga el PDF. El test exige también initialPage2/navigationKey. Repetir
+clic/teclado y esperar el callback tardío antes de dar el fallo por resuelto.
+
+En QA6a5d96b el indicador conserva finalmente la página2, también tras callbacks
+tardíos y zoom por teclado125%. El clic automatizado en el control fijo puede
+desplazar antes la ventana hacia su posición DOM; se contrastó con Enter y medidas
+reales del control visible, sin congelar el seguimiento automático del PDF.
+Se observó otro retorno obsoleto: si el lector cambia página/zoom con el panel
+abierto, cerrar restauraba la posición de antes de esas acciones explícitas.
+Se invalida ese retorno sólo tras una navegación/zoom aplicado por el usuario;
+callbacks pasivos y alineación de indicadores no lo invalidan. Dos regresiones
+verifican el contrato y que no se vuelva a descargar el PDF. Repetir ese cierre
+en QA antes de finalizar134. El abrir/cerrar sin cambiar PDF sigue restaurando
+la posición original. Métricas y pruebas de servidor permanecen iguales.
+
+El retorno se refuerza conservando la página de la última navegación/zoom explícito
+y alineándola al cerrar. Así el enfoque del botón de cierre no puede seleccionar
+una página anterior parcialmente visible. La firma opcional del visor comunica
+la página aplicada, sin eventos analíticos ni nuevas descargas. Se vuelve a
+comprobar el caso sobre este código antes del cierre de134.
+
+### 01/11/2026 — HU038 entregada con evidencia HTTPS y métricas conciliadas
+
+Fuente final78881b278c74bb6eead80356c9a636f09238147c, QA
+dpl_H4PV6bxiBuTWd7v4CH3kQdsMrpVS READY en el mismo proyecto Hobby de Danilo.
+406/406 pruebas, lint y build/TypeScript aprobados; sin dependencias nuevas,
+variables/epoch modificados, pagos o llamadas IA. Sólo QA, sin merge ni cambios a
+main. PR49 apilado sobre48, que permanece sin integrar.
+
+Regresión final real: indicador de página2 estable después del callback tardío;
+cambio explícito de página y zoom con el panel abierto, cierre y espera posterior
+conservan página2/125%. En móvil390×844, registro del evento de apertura antes del
+handler (después del enfoque real del teclado): x0/y1080; retorno x0/y1080,
+página2/125%, scrollWidth390. Esto evita confundir el desplazamiento que provoca
+el enfoque del localizador con el retorno de la aplicación. Consola warn/error[];
+interceptores, observadores de medición y overrides de tamaño restaurados.
+
+Limitación explícita: la API de capturas de este IAB devolvió miniaturas móviles
+incompletas y falló la captura CDP nativa a390px. Se conservaron marcadas
+no-adjuntar, sin agrandarlas, reconstruirlas ni presentarlas como evidencia visual.
+El contraste móvil anterior es funcional por DOM/teclado y medidas reales, no una
+inspección de imagen móvil. Las siete imágenes adjuntas son capturas auténticas
+de escritorio de la aplicación, incluidas estado vacío, página2 y métricas finales.
+
+Rendimiento de apertura: producción HTTPS, sesión QA distinta del propietario y
+PDF ya abierto, IAB/Chromium156 en Windows, i5-11400H@2.70GHz/15,8GiB RAM,
+viewport1280×720. Red del equipo sin limitador; NetworkInformation estimó
+effectiveType4g, RTT50ms y downlink1,45Mb/s (estimaciones, no medición del enlace
+físico). Caché del navegador conservada, API no-store; primera apertura tras recarga
+y dos reaperturas. Página1 con5 refuerzos de7 publicados, explicación/ejemplo
+inicialmente expandidos, imagen/enlace aprobados y quiz opcional:
+2980,1 /1965,7 /1979,4ms. Escaneado QA de1 página sin refuerzos:
+1986,7 /1991,0 /1980,6ms. Máximo2980,1ms, seis casos<=3000ms.
+Medición conservadora en segundo plano hasta DOM visible, imágenes visibles listas
+y dos animation frames. Son muestras de6a5d96b; cambios posteriores sólo afectan
+retorno/enfoque, que se repitieron sobre78881b2. El envío asíncrono no cambió.
+Ensayo separado detuvo sólo Fetch/reinforcement-opens: panel utilizable antes de
+continuar la petición real. No se sustituyeron respuestas ni midió generación IA.
+
+Final por API y SQL:36 aperturas de refuerzo,10 visitas del documento digital,
+14 visitas globales (10 digital,2 personal QA,2 escaneado),7 intentos lector y10
+prácticas privadas, todos conservados. El resumen del documento muestra frecuencias
+11/11/4/10 en los cuatro refuerzos consultados; visitas distintas1/1/2/2 y
+porcentajes10/10/20/20 sobre10. Otros3 publicados tienen0. El punto anterior de
+medición9 visitas/4 aperturas/2 distintas=22,22% conserva su captura y su fecha;
+no se reemplaza por un resultado esperado del estado posterior.
+
+Publicaciones temporales restauradas mediante API normal: digital8→unpublished,
+escaneado2→private (su estado previo). Cero públicas globales; nueva lectura y
+escritura por el enlace digital retirado404, agregado privado conserva36 eventos.
+GET privado del original devuelve1580bytes y SHA-256
+e7277d66afd7caba47385cfac2f0e55a2eeb4fb7aa7136409fa35300a6347946,
+idéntico al anterior. Ningún estado de negocio inventado mediante SQL.
+
+Jira confirma Finalizado para HU038/SCRUM-50 y133/134/215/216. Comentarios únicos:
+madre10211,133=10213,134=10215,215=10214,216=10212. Siete adjuntos reales
+10541–10547, nombres/tamaños/media comprobados;10541 descargado y comparado byte
+a byte con el original.216 actualizado preservando sus dos nodos de imagen, sin
+duplicar adjuntos. No se afirma inspección visual de miniaturas dentro de Jira:
+se validan conector autorizado, inline media y archivo descargable. Madre sin
+imágenes duplicadas. Evidencias y resultados detallados fuera de Git en HU038-REAL.
+
+La cuenta sintética propietaria quedó abierta en el panel privado QA; la sesión
+personal de localhost no se utilizó ni modificó. No se guardaron contraseñas
+personales, cookies, tokens, .env o scripts temporales en Git/Jira. Stash d6406e0
+intacto. Sprint7 continúa activo, sin cierre automático.
+
+Siguiente historia por orden: HU039/SCRUM-51, subtareas135/136/217/218, leídas pero
+todavía sin implementar. Reutiliza quiz_reader_attempts de HU030, excluye
+quiz_practice_attempts, comprueba respuestas contra la instantánea evaluada,
+agrega aciertos por pregunta y respeta identificación/propiedad. No duplicar el
+registro ni recalificar con versiones posteriores. Después siguen HU040/041/045/046;
+SMTP233 y cargas grandes del hosting continúan pendientes de proyecto.

@@ -34,6 +34,7 @@ type ViewerProps = {
   floatingReinforcements?: boolean;
   includeReadableText?: boolean;
   onFirstPageRendered?: () => void;
+  onReadingNavigate?: (page: number) => void;
 };
 
 type ViewerStatus =
@@ -50,7 +51,7 @@ const viewerMessages = {
   ready: "PDF disponible. Usa los controles o desplázate para consultar sus páginas.",
 };
 
-export function PdfViewer({ projectId, sourceUrl, initialPage = 1, initialFragment = null, onPageSelect, requestDraft, onFragmentSelect, fragmentResetKey, onTextSourceChange, visible = true, onVisiblePageChange, onOpenReinforcements, navigationKey = 0, onOpenPreview, previewTriggerRef, reinforcementMarkers, onReinforcementActivate, pagesHidden, onHiddenNavigate, floatingReinforcements, includeReadableText, onFirstPageRendered }: ViewerProps) {
+export function PdfViewer({ projectId, sourceUrl, initialPage = 1, initialFragment = null, onPageSelect, requestDraft, onFragmentSelect, fragmentResetKey, onTextSourceChange, visible = true, onVisiblePageChange, onOpenReinforcements, navigationKey = 0, onOpenPreview, previewTriggerRef, reinforcementMarkers, onReinforcementActivate, pagesHidden, onHiddenNavigate, floatingReinforcements, includeReadableText, onFirstPageRendered, onReadingNavigate }: ViewerProps) {
   const [attempt, setAttempt] = useState(0);
   // Only restore on mount; changing the selection must not reload the PDF.
   const [startingPage] = useState(initialPage);
@@ -75,6 +76,7 @@ export function PdfViewer({ projectId, sourceUrl, initialPage = 1, initialFragme
       pagesHidden={pagesHidden} onHiddenNavigate={onHiddenNavigate} floatingReinforcements={floatingReinforcements}
       includeReadableText={includeReadableText}
       onFirstPageRendered={onFirstPageRendered}
+      onReadingNavigate={onReadingNavigate}
       onRetry={() => setAttempt((value) => value + 1)}
     />
   );
@@ -96,6 +98,7 @@ function PdfPages({
   pagesHidden = false, onHiddenNavigate, floatingReinforcements = true,
   includeReadableText = false,
   onFirstPageRendered,
+  onReadingNavigate,
 }: ViewerProps & { onRetry: () => void; targetPage?: number; targetFragment?: FragmentSelection | null }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const navigationRef = useRef<HTMLDivElement>(null);
@@ -142,12 +145,14 @@ function PdfPages({
       return;
     }
     if (status !== "ready" || !rendererRef.current?.goToPage(number)) return;
+    onReadingNavigate?.(number);
     setPageInput(String(number));
     setPageInputError("");
   }
 
   function changeZoom(percentage: number) {
     if (status !== "ready" || !rendererRef.current?.setZoom(percentage)) return;
+    onReadingNavigate?.(currentPage);
     setZoom(percentage);
   }
 
