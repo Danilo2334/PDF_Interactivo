@@ -6668,3 +6668,53 @@ El adjunto10609,energia-component-v4.png,37925B sigue intacto. Las imágenes
 anteriores y el resultado SSR están identificados como iteraciones previas;
 las nuevas son capturas reales de la aplicación. Comprobaciones del visor
 guardadas fuera de Git como17-jira-fotosintesis-visible.jpg y siguientes.
+
+### 2026-11-02 — SCRUM-161: validación y guardado real del perfil
+
+Reanudación autorizada sin merge, despliegue ni pagos. Se revisaron Git, las
+instrucciones aplicables y Jira. SCRUM-161 seguía Por hacer pese al comentario
+histórico y a su madre HU005/SCRUM-17 Finalizado. Se pasó a En curso para
+comprobar sus criterios. No se reabrieron ni alteraron las evidencias de HU005.
+
+Fallo observado antes del arreglo: el cliente y la Server Action aceptaban
+«--», lo persistían en Supabase y mostraban «Perfil actualizado correctamente».
+La validación compartida exige ahora al menos una letra Unicode. Conserva los
+nombres internacionales, acentos, apóstrofes y guiones, los límites de longitud
+y el recorte de espacios. Commit8d0816923eb6b14514499e2f111681de1c343158.
+
+Verificación automática: el caso nuevo falló antes del arreglo; después pasaron
+4/4 pruebas dirigidas y465/465 del proyecto, lint y build de producción con
+TypeScript. Las pruebas de la acción cubren entradas inválidas, campos forjados,
+sesión ausente/caducada/inactiva y error de persistencia, distinguiéndolas de las
+pruebas reales que siguen. No se actualizaron dependencias ni Node22.23.3.
+
+Producción local aislada en http://127.0.0.2:3002, compilada en el worktree
+PDF_Interactivo_QA_SCRUM161 desde8d08169. Se conservó el servidor previo3001,
+su compilación, la sesión personal y el QA HTTPS. Cuenta sintética HU019 propia,
+sin utilizar credenciales personales ni modificar contraseñas. Pruebas reales:
+- Navegador: «--» rechazado; nombre con acentos/apóstrofo guardado por Enter,
+  confirmación correcta y persistencia al recargar. Cancelar restauró el nombre
+  guardado; correo de solo lectura. Fallo controlado del Fetch de guardado QA
+  antes de enviarlo: aviso de error y ninguna confirmación falsa. Intercepción
+  retirada al terminar; no se desconectó el navegador ni otras pestañas.
+- Server Actions HTTP reales:9 entradas inválidas rechazadas sin cambio; nombre
+  válido guardado y recortado. Enviar el id de la otra cuenta, correo, rol y
+  app_metadata forjados solo actualizó full_name del usuario autenticado.
+  Perfil de la segunda cuenta, correos y metadatos de autorización sin cambios.
+- Origen ajeno rechazado por Next.js con HTTP500, sin escritura; sin sesión,
+  HTTP307, sin escritura. El500 fue el rechazo de seguridad observado, no un403
+  supuesto. Perfiles de ambas cuentas QA restaurados y comparados al terminar.
+
+Evidencias reales fuera de Git en SCRUM-161-PERFIL. Jira conserva íntegro el
+comentario10050 y añade allí el resultado actual y cuatro imágenes, sin un
+segundo comentario ni adjuntos duplicados. Se abrieron las cuatro en el visor
+autenticado y se comprobaron nombres/tamaños por API:
+- 10616:01-fallo-guiones-antes.jpg,45408B.
+- 10618:02-guiones-rechazados.jpg,77683B.
+- 10615:03-guardado-confirmado.jpg,74828B.
+- 10617:05-fallo-red-controlado.jpg,76787B.
+SCRUM-161 Finalizado tras comprobar sus criterios. HU005 conserva Finalizado;
+comentario10243 resume el arreglo y enlaza las evidencias sin repetir imágenes.
+PR #61 en borrador sobre codex/scrum-236-ilustraciones-didacticas / PR #60.
+La corrección no está integrada ni desplegada; no confundir la prueba local con
+una validación de esta versión en el QA público. Stashd6406e0 intacto.
