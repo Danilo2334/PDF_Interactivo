@@ -252,9 +252,11 @@ notificaciones recibidas ni objetivos de degradación aún no acordados.
   con perfiles QA separados y un sistema Apple real para Safari. Registrar
   sistema, versión activa y resultado observado de cada flujo; el IAB no los
   sustituye. No cerrar la compatibilidad ni declarar aprobadas filas pendientes.
-- SCRUM-137: completar la selección y envío de claridad desde una pantalla
-  táctil real. Ratón, teclado y viewport móvil ya documentados no acreditan
-  ese dispositivo; no fabricar el gesto mediante una afirmación de emulación.
+- SCRUM-137: completar la selección y envío de claridad con un gesto táctil.
+  Registrar dispositivo o emulación utilizados; el criterio Jira exige el
+  control táctil, sin fijar un modelo de hardware. Ratón, teclado y viewport
+  móvil por sí solos no acreditan el gesto. No declarar hardware físico si
+  únicamente se ha usado emulación.
 - SCRUM-232: acordar SLO/ventana/umbral para degradación y el destino de avisos,
   y disponer de un ejecutor continuo comprobable. El workflow solo manual y
   presente en develop no acredita vigilancia24/7 ni notificación recibida.
@@ -360,7 +362,7 @@ La frase editorial del fixture aprobado se conserva sin reescribir su historial.
 
 | Frente | Tareas | Requisito aún no acreditado |
 | --- | --- | --- |
-| Claridad táctil | HU040/SCRUM-52,137 | Selección y envío desde pantalla táctil física. |
+| Claridad táctil | HU040/SCRUM-52,137 | Selección y envío con gesto táctil completo; registrar dispositivo o emulación utilizados. |
 | Compatibilidad | HU046/SCRUM-58,149/231 | Sistemas/versiones concretos de la matriz y recorridos completos en ocho versiones de marca, incluido Safari real. |
 | Supervisión | HU046/SCRUM-58,232 | Ejecutor continuo, destino autorizado de avisos y SLO/ventana/umbrales documentados antes de configurar alertas. |
 | Recuperación por correo | SCRUM-233,EP01/SCRUM-5 | Dominio/remitente SMTP autorizado y verificado, configuración privada y recorrido real de recuperación. |
@@ -368,3 +370,97 @@ La frase editorial del fixture aprobado se conserva sin reescribir su historial.
 La matriz documental y el inventario se conservan. No se declara probada una
 marca por el resultado del IAB, ni se define un umbral nuevo como si estuviera
 acordado. El workflow manual sigue en develop y no se modificó main.
+
+## Evaluación de alertas RNF de interfaz — SCRUM-232,02/11/2026
+
+PR #64 incorpora web/scripts/check-view-budgets.mjs. Complementa el sondeo HTTP
+con la evaluación de mediciones de interfaz ya recogidas. No abre navegadores,
+no mide por sí mismo una vista y no activa vigilancia o envío de avisos.
+Las fuentes de presupuesto se consultaron directamente en Jira:
+
+| Perfil | Límite | Fuente y alcance |
+| --- | --- | --- |
+| documents_ready |3000ms |146/comentario10078, recarga hasta listado utilizable. |
+| pdf_first_page_2_02mb |5000ms |146/10078, escenario de referencia2,02MB/15páginas. |
+| pdf_first_page_19mb |10000ms |146/10078, escenario de referencia19MB/19páginas. |
+| reinforcements_ready |3000ms |108, pulsación hasta contenido utilizable, PDF ya abierto, consultas incluidas y sin generar IA. |
+
+Los perfiles PDF deben identificarse expresamente como los escenarios RNF de
+referencia; no se clasifican otros documentos por aproximación de tamaño. No
+se trasladan estos límites al TTFB, latencia API o disponibilidad mensual.
+
+Contrato de entrada: schemaVersion1, kind real/historical/simulation y1–1000
+mediciones. Cada medición aporta metric, elapsedMs y context con production,
+visible, authenticated, usable e includesServerQueries verdaderos,
+includesAiGeneration falso y trigger reload/open-panel. Los PDF identifican
+referencePdf; el panel exige pdfAlreadyOpen. Kind real requiere SHA completo
+de la fuente y observedAt UTC por medición; la procedencia debe comprobarla
+quien recoge la evidencia. Declarar esos campos no autentica por sí solo una
+medición. Una vista de carga o un escenario no aplicable se rechazan.
+
+La primera superación abre view_budget_exceeded; repetirla no duplica el
+incidente. Una medición posterior dentro del presupuesto lo recupera con el
+mismo ID. Cualquier incumplimiento anterior mantiene el resultado acumulado
+no aprobado. Cada evento referencia su muestra, duración, límite y fuente Jira.
+Solo se copian campos permitidos; no URLs de lectura, texto de documentos,
+cookies, nombres o claves recibidos en campos adicionales.
+
+CLI: definir QA_VIEW_INPUT como archivo JSON de mediciones y QA_VIEW_OUTPUT
+como directorio nuevo dentro de la carpeta de evidencias; ejecutar
+`node web/scripts/check-view-budgets.mjs`. Máximo1MiB de entrada. Guarda
+samples.jsonl,events.jsonl ysummary.json; nunca sobrescribe un directorio
+existente. El resumen empieza incompleto y solo se completa después de guardar
+los registros. Salidas0=mediciones dentro del límite,1=incumplimiento,
+2=entrada/ejecución/persistencia inválida o incompleta. El tipo de procedencia
+se conserva también cuando todas las mediciones cumplen.
+
+Ejecución real del evaluador, con datos históricos reales de146/10078:
+
+| Serie histórica leída | Duraciones en ms | Evaluación |
+| --- | --- | --- |
+| Listado |804 /1300 /1295 |3/3 dentro de3000. |
+| Primera página2,02MB |3548 /2853 /3039 |3/3 dentro de5000. |
+| Primera página19MB |3738 /3419 /4144 |3/3 dentro de10000. |
+
+Resultado CLI0,9 muestras,0 incumplimientos, kind historical y revisiónnull
+porque la fuente no identifica el SHA de aquella medición. Son mediciones
+conservadas, no recargas nuevas ni nueva prueba de disponibilidad. Las pruebas
+de degradación/recuperación usan kind simulation y no representan un incidente
+real del QA.471/471 pruebas ylint aprobados;6/6 dirigidas repetidas tras revisar
+la limpieza segura de temporales. No cambió la aplicación servida ni se reinició
+un servidor. Las salidas se conservan fuera deGit en SCRUM-232-RNF-20261102.
+
+232 continúa En curso: falta conectar recogida operativa y comprobar el destino
+de los avisos. La modalidad/cadencia y cualquier SLO API o ventana de errores
+siguen por concretar; no se inventan ni se atribuyen a los límites de interfaz.
+Este incremento no equivale a un servicio permanente o una notificación recibida.
+
+## Acceso necesario para completar SMTP y compatibilidad
+
+Se abrió el panel SMTP del proyecto Supabase correcto, solo lectura: custom
+SMTP activo y host smtp.resend.com. No se leyó ni modificó su contraseña.
+Resend/domains redirigió a Log in to Resend; no se pudo confirmar todavía
+qué dominios/remitentes autorizados hay en la cuenta de Danilo. Inicio de sesión
+personal solicitado en esa pestaña, sin claves por chat. El proveedor exige
+[dominio verificado](https://resend.com/docs/send-with-supabase-smtp), y el SMTP
+predeterminado de Supabase limita destinatarios a miembros del equipo y no
+sustituye una recuperación general de usuarios:
+[SMTP de Supabase](https://supabase.com/docs/guides/auth/auth-smtp).
+No se cambió de proveedor, remitente, controles de seguridad ni facturación.
+
+Inventario actualizado de Browser Use: IAB yMCP Apps. La apertura independiente
+de Edge por la API documentada devolvió Browser is not available: edge. No se
+automatizaron las ventanas personales de Chrome, instaló software o volvió a
+ejecutar un comando antes rechazado. Esto no añade una regresión de marca o un
+gesto táctil físico;149/231/137 conservan sus pendientes y evidencias anteriores.
+
+Revisión de137: su criterio pide verificar ratón, teclado y pantalla táctil;
+no fija hardware físico obligatorio. Para intentar resolver el gesto pendiente
+se probó Input.synthesizeTapGesture, documentado por CDP, en una pantalla404 de
+diagnóstico sin publicación ni datos de usuario. El puente IAB respondió que
+ese método no está soportado; la observación registró cero eventos. No se volvió
+a intentar dispatchTouchEvent ni la conversión ratón→táctil incompleta anterior.
+Se retiraron listeners y emulaciones, y se cerró la pestaña. La limitación es
+completar el gesto con las herramientas conectadas, no un fallo observado del
+control. Un navegador con soporte táctil completo o un dispositivo permitiría
+continuar; el resultado debería identificar claramente si usa emulación.

@@ -36,7 +36,7 @@ test('UI readiness, foreground, authenticated production and measurement scope a
   }
   assert.throws(() => evaluateViewBudgets(simulated([sample('reinforcements_ready', 1, {trigger: 'open-panel'})])));
   assert.throws(() => evaluateViewBudgets(simulated([sample('pdf_first_page_19mb', 1, {referencePdf: 'arbitrary-small-pdf'})])));
-  for (const metric of ['api_latency', '__proto__', 'constructor']) assert.throws(() => evaluateViewBudgets(simulated([sample(metric, 1)])));
+  for (const metric of ['api_latency', '__proto__', 'constructor', ['documents_ready']]) assert.throws(() => evaluateViewBudgets(simulated([sample(metric, 1)])));
   for (const duration of [-1, NaN, Infinity, '10']) assert.throws(() => evaluateViewBudgets(simulated([sample('documents_ready', duration)])));
   assert.throws(() => evaluateViewBudgets(simulated([])));
 });
@@ -48,6 +48,7 @@ test('real evidence requires the revision and a valid observed timestamp; archiv
   real.measurements[0].observedAt = '2026-11-02T12:00:00.000Z';
   assert.equal(evaluateViewBudgets(real).samples[0].observedAt, real.measurements[0].observedAt);
   assert.throws(() => evaluateViewBudgets({...real, revision: null}));
+  assert.throws(() => evaluateViewBudgets({...real, revision: [real.revision]}));
   const archived = {...real, kind: 'historical', historicalSource: 'SCRUM-146:10078', revision: null};
   assert.equal(evaluateViewBudgets(archived).samples[0].observedAt, null);
   assert.equal(evaluateViewBudgets(archived).kind, 'historical');

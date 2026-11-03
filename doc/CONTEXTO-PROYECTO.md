@@ -6967,3 +6967,67 @@ PR #63 actualizado y preparado para revisión, sin nuevo merge ni despliegue;
 main, secretos, configuración, datos personales y stash intactos. Evidencia
 nueva fuera deGit en CIERRE-FUNCIONAL-20261102; retiro y controles backend
 conservados también en CIERRE-PENDIENTES-20261102.
+
+### 2026-11-02 — Incremento de SCRUM-232 y comprobación de accesos pendientes
+
+Continuación solicitada para terminar el proyecto. Rama nueva
+codex/scrum-232-alertas-rnf desde b0f776c; base provisional del PR #64 es
+codex/cierre-entregas-verificadas, PR #63. No se mezcló código nuevo con su
+diff documental ni se integró ninguna rama. Stashd6406e0 intacto.
+
+Se leyó la descripción vigente de HU046 y232, además del comentario original
+146/10078. Los presupuestos existentes son3s listado,5s primera página del
+PDF2,02MB/15páginas,10s para19MB/19páginas y3s panel de108. El monitor HTTP
+previo no evaluaba esas mediciones de interfaz. Se añadió check-view-budgets.mjs:
+valida condiciones y escenario, correlaciona superación/recuperación, conserva
+incumplimientos previos y produce registros sanitizados sin sobrescribir pruebas.
+No extrapola presupuestos a otros PDF, API o porcentajes mensuales.
+
+Commit bc64f63f1856e01b3607115ef77ce4328b9d5f68 publicado en PR #64 borrador.
+471/471 pruebas ylint correctos; tras la revisión final de temporales se
+repitieron6/6 dirigidas ylint de los archivos nuevos. Lectura de las nueve
+mediciones reales conservadas en146/10078:9/9 dentro de su presupuesto, CLI0,
+kind historical y sin inventar un SHA de medición. Las duraciones y procedencia
+quedan en el documento de operación y SCRUM-232-RNF-20261102 fuera deGit.
+No se presenta esa lectura como una ejecución nueva del navegador. Los casos
+de degradación/recuperación son pruebas automáticas identificadas simulation.
+El evaluador no recoge vistas por sí solo ni entrega notificaciones:232 permanece
+En curso para su conexión operativa y comprobación de avisos. Modalidad/cadencia
+y fuentes/umbrales de disponibilidad o latencia API siguen por concretar.
+
+Revisión de parámetros del evaluador: metric y revision exigen cadenas
+explícitas, sin aceptar arrays por coerción. La suite completa se repitió sobre
+esa revisión:471/471, sin fallos. La procedencia histórica se conserva y no se
+copian metadatos arbitrarios al reporte.
+
+SMTP233: panel de Supabase del proyecto zqodybtzssvqozrckfgw accesible. Lectura
+restringida a host smtp.resend.com y activación customSMTP; sin leer ni cambiar
+credenciales. Resend pide inicio de sesión para acceder a dominios. Se dejó la
+pestaña visible y se solicitó acceso personal de Danilo por la herramienta de
+consulta, sin pedir contraseñas. Todavía no se comprobó un dominio verificado
+ni se hizo un envío nuevo; el fallo550 anterior no se presentó como repetido.
+No se desactivó SMTP ni se sustituyó por el servicio predeterminado restringido
+de Supabase. Documentación oficial actual consultada; cambios TLS próximos
+revisados sin encontrar una modificación necesaria para este incremento.
+
+Se buscaron conectores para el proveedor y dispositivos reales sin encontrar
+uno aplicable. Browser Use sigue ofreciendo solo IAB yMCP Apps. Intento de abrir
+Edge mediante createBrowserTab: no disponible. No se operaron las ventanas
+personales de Chrome ni se reintentaron comandos rechazados, y no se instalaron
+dependencias o navegadores.137 táctil y149/231 conservan sus requisitos reales.
+
+Se releyeron HU040 y137: el criterio requiere un gesto táctil, sin imponer un
+modelo de hardware. Se corrigió la formulación operativa excesivamente restrictiva
+de «físico obligatorio». Intento nuevo con Input.synthesizeTapGesture sobre una
+pantalla404 de diagnóstico: método no soportado en IAB, cero eventos observados.
+No se publicó un documento ni se envió una opinión. Se quitaron observadores y
+emulaciones y se cerró la pestaña.137 sigue En curso; haría falta un navegador
+con soporte táctil completo o un dispositivo, indicando emulación/hardware en
+la evidencia. El fallo de herramienta no se atribuye al control de la aplicación.
+
+La aplicación desplegada sigue en baf41be. Cambian únicamente scripts de
+diagnóstico, sus pruebas y documentación; el build previo de esa misma
+aplicación sigue vigente. No se reiniciaron servidores, desplegó, hizo merge,
+modificó main, activó pagos o llamó IA. No se cerraron historias/subtareas por
+este incremento parcial. Orden de revisión pendiente: #63 → #64; después de
+integrar63, cambiar la base de64 a develop y revisar su diff de nuevo.

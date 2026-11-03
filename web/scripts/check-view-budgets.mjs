@@ -23,7 +23,7 @@ export function evaluateViewBudgets(input) {
   if (input?.schemaVersion !== 1 || !['real', 'historical', 'simulation'].includes(input.kind) ||
       !Array.isArray(input.measurements) || input.measurements.length < 1 || input.measurements.length > 1000)
     throw Error('Invalid view measurement report');
-  const revision = /^[a-f0-9]{40}$/.test(input.revision ?? '') ? input.revision : null;
+  const revision = typeof input.revision === 'string' && /^[a-f0-9]{40}$/.test(input.revision) ? input.revision : null;
   if (input.kind === 'real' && !revision) throw Error('Real measurements require a source revision');
   if (input.kind === 'historical' && input.historicalSource !== 'SCRUM-146:10078')
     throw Error('Historical measurements require a known evidence source');
@@ -31,7 +31,7 @@ export function evaluateViewBudgets(input) {
   // Validate every row before producing a result. A loader, background tab,
   // private preview or invented PDF category cannot become an approved sample.
   const observations = input.measurements.map(row => {
-    if (!Object.hasOwn(budgets, row?.metric)) throw Error('Unknown RNF profile');
+    if (typeof row?.metric !== 'string' || !Object.hasOwn(budgets, row.metric)) throw Error('Unknown RNF profile');
     const budget = budgets[row.metric], context = row.context;
     if (!Number.isFinite(row.elapsedMs) || row.elapsedMs < 0 || context?.production !== true ||
         context.visible !== true || context.authenticated !== true || context.usable !== true ||
