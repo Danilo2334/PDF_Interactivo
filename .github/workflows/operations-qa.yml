@@ -1,0 +1,29 @@
+name: QA service verification
+
+on:
+  workflow_dispatch:
+    inputs:
+      expected_revision:
+        description: Full SHA of the already deployed QA candidate
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    if: github.repository == 'Danilo2334/PDF_Interactivo'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '22'
+      - name: Verify the existing Danilo QA deployment
+        env:
+          QA_EXPECTED_REVISION: ${{ inputs.expected_revision }}
+        run: node web/scripts/check-operations.mjs

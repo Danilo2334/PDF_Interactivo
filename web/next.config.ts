@@ -1,6 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // A nonsecret source revision is embedded at build time, including CLI builds
+  // from git archive without .git. Never expose an arbitrary environment value.
+  env: { APP_BUILD_REVISION: /^[a-f0-9]{40}$/.test(process.env.APP_BUILD_REVISION ?? "") ? process.env.APP_BUILD_REVISION! : "" },
   headers() { return ["/read/:path*", "/api/read/:path*", "/projects/:projectId/reader-test/:path*", "/api/projects/:projectId/reader-test/:path*"].map(source => ({ source, headers: [
     { key: "Referrer-Policy", value: "no-referrer" }, { key: "X-Robots-Tag", value: "noindex, nofollow" },
     { key: "X-Content-Type-Options", value: "nosniff" }, { key: "Cache-Control", value: "private, no-store" },
