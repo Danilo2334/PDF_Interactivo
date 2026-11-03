@@ -6718,3 +6718,78 @@ comentario10243 resume el arreglo y enlaza las evidencias sin repetir imágenes.
 PR #61 en borrador sobre codex/scrum-236-ilustraciones-didacticas / PR #60.
 La corrección no está integrada ni desplegada; no confundir la prueba local con
 una validación de esta versión en el QA público. Stashd6406e0 intacto.
+
+
+### 2026-11-02 — Revisión e integración de PR #48–#61 en develop
+
+El propietario autorizó revisar PR #61 y sus dependencias e integrarlos en orden,
+sin desplegar. Se comprobó que develop seguía en2e5030f091d28fc1ff90bc14f7b28ea12c0e5a7c
+(PR #47) y que la cadena pendiente empezaba en #48. Los apartados anteriores
+que indicaban «sin merge» describen las entregas previas; esta entrada actualiza
+su integración. No se modificó main ni se integró el PR #13.
+
+Revisión de los incrementos: visitas y aperturas firmadas, resultados privados
+por instantánea, opiniones, analítica/CSV, recuperación idempotente, diagnóstico,
+sondeos acotados, transferencias privadas de medios/PDF, ilustraciones y perfil.
+Se contrastaron permisos, validación, límites, originales/versiones, errores y
+las evidencias reales ya registradas. No se encontraron bloqueos para integrar
+el código. Los alcances sin una prueba completa mantienen sus pendientes en Jira;
+integración en develop no equivale a aprobar disponibilidad, gesto táctil,
+compatibilidad de ocho versiones ni el lector público con las ilustraciones nuevas.
+
+Verificación actual acumulada, fuente1fce8f76d42b62e8a21ec9082d386d3ef8877cc4:
+465/465 pruebas, ninguna omitida/fallida, lint y build de producción/TypeScript
+aprobados. Windows, Node22.23.3 y Next16.4.3, sin actualizar dependencias.
+Build en el worktree QA separado para conservar el servidor3001 y la sesión
+personal. HTTP real en127.0.0.2:3002: login200, dashboard anónimo307, PDF privado
+anónimo401, escritura de origen ajeno403 y health200 con SHA de fuente exacto.
+No se generó contenido IA ni se atribuyeron pruebas visuales nuevas a este turno.
+GitHub no tenía checks de PR configurados para estos heads; se registran las
+comprobaciones locales, sin presentarlas como ejecuciones CI remotas.
+
+Supabase: consulta de solo lectura confirmó las seis migraciones20261101061105,
+20261101220427,20261101231149,20261101232623,20261102000821 y20261102060403.
+No se reaplicaron ni se ejecutó SQL de modificación. Vercel confirmó el proyecto
+pdf-interactivo-qa de Danilo sin enlace Git activo; los workflows revisados no
+despliegan al hacer push. No hubo deploy, promoción, reversión ni activación de pagos.
+
+Se cambió cada base a develop después de integrar el predecesor. Antes de cada
+merge se contrastó la identidad de la base y el diff; se exigió el SHA revisado
+del head. Merge commits, sin squash/rebase, force push, borrado de ramas ni
+reescritura. Tras cada integración el árbol coincidió con la rama revisada.
+La respuesta de merge de #54 fue ambigua: se leyó el estado real de GitHub y
+se confirmó el commit, sin repetirla. Orden y commits confirmados:
+
+| PR | Commit de merge |
+| --- | --- |
+| [#48](https://github.com/Danilo2334/PDF_Interactivo/pull/48) | `7595a66ce7d4dacd14dbf35ab883f0436bae594f` |
+| [#49](https://github.com/Danilo2334/PDF_Interactivo/pull/49) | `461dfa235bd3bbd30331188f5b21f99c958e6e84` |
+| [#50](https://github.com/Danilo2334/PDF_Interactivo/pull/50) | `4daa82d1a35dc32d5a09d2beb6c93d489a3e43ef` |
+| [#51](https://github.com/Danilo2334/PDF_Interactivo/pull/51) | `0ee877aeb77f5afbd17834df3b1e8b57f129da3d` |
+| [#52](https://github.com/Danilo2334/PDF_Interactivo/pull/52) | `d9abc1e5f3afa8fc3a1bf8d0d4ac7495a4cfeb87` |
+| [#53](https://github.com/Danilo2334/PDF_Interactivo/pull/53) | `8cc071e11e14e7d5af18ada158a14dea277e6a98` |
+| [#54](https://github.com/Danilo2334/PDF_Interactivo/pull/54) | `773073271491623f31d6e0987a7d6c85092ee075` |
+| [#55](https://github.com/Danilo2334/PDF_Interactivo/pull/55) | `3fa14b93595ee9fb549369de0becf8dbc7a3ba9b` |
+| [#56](https://github.com/Danilo2334/PDF_Interactivo/pull/56) | `6c75b1c450ee626a2c3236619a662b04f5700957` |
+| [#57](https://github.com/Danilo2334/PDF_Interactivo/pull/57) | `e08f38edc34212c69ef72d7cf36703166af354c6` |
+| [#58](https://github.com/Danilo2334/PDF_Interactivo/pull/58) | `32f7e0eec58e94816c655c7c5225f1bc657a8d5c` |
+| [#59](https://github.com/Danilo2334/PDF_Interactivo/pull/59) | `1433fe47aa69ffc4ce3301b3558309c00c6576b5` |
+| [#60](https://github.com/Danilo2334/PDF_Interactivo/pull/60) | `f97d51f245d1acbde359ffb6e4fff549d078bf02` |
+| [#61](https://github.com/Danilo2334/PDF_Interactivo/pull/61) | `6402a8b68d6e910b75b9b17cdb2fa140cf813c20` |
+
+Al terminar #61, develop6402a8b68d6e910b75b9b17cdb2fa140cf813c20 tenía exactamente
+el mismo árbol que1fce8f7, la fuente comprobada. La actualización posterior
+de esta continuidad se entrega aparte y solo modifica documentación.
+
+Jira:43 tareas relacionadas y79 adjuntos contrastados antes/después; IDs,
+nombres y tamaños conservados. Se actualizan los12 comentarios de resultados
+existentes mediante HTML, sin añadir otro ni duplicar imágenes:49/10208,
+50/10211,51/10216,52/10221,53/10226,57/10231,58/10236,39/10159,
+235/10241,232/10240,236/10242 y161/10050 (claves SCRUM).
+No se cerraron tareas por el mero hecho del merge. HU040/SCRUM-137 conserva
+la prueba táctil completa; HU046 conserva matriz de navegadores, supervisión
+continua, notificaciones y SLO pendientes. El workflow manual en develop
+todavía no se puede despachar si no existe en main. SCRUM-236 mantiene revisión
+de calidad y lector público HTTPS con este código pendiente de un despliegue
+autorizado. SCRUM-161 conserva Finalizado. QA HTTPS y datos personales intactos;
+stashd6406e0cdbc464c1c0301c058024b10dd27c4515 conservado sin aplicar.
