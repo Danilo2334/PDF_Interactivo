@@ -6793,3 +6793,50 @@ todavía no se puede despachar si no existe en main. SCRUM-236 mantiene revisió
 de calidad y lector público HTTPS con este código pendiente de un despliegue
 autorizado. SCRUM-161 conserva Finalizado. QA HTTPS y datos personales intactos;
 stashd6406e0cdbc464c1c0301c058024b10dd27c4515 conservado sin aplicar.
+
+### 2026-11-02 — Cierre de entregas verificadas y pendientes externos concretos
+
+Continuación solicitada después de integrar #48–#62. Rama
+codex/cierre-entregas-verificadas desde developbaf41be, limpia al comenzar.
+Se contrastaron las tareas abiertas, sus criterios y los comentarios HTML con
+las capturas y registros originales. No se repitieron pruebas ya aprobadas sin
+un cambio que lo justificara, ni se presentaron esos registros como una ejecución nueva.
+
+HU027/SCRUM-39 y SCRUM-235 pasaron de En revisión a Finalizado. Su pendiente
+expreso era revisar e integrar #56/#57, completado en el turno anterior. HU027
+conserva111/112/193/194 Finalizado: archivo/URL permitido, vista previa,
+aprobación, retirada, PNG5.034.365B yMP4 de20MiB, recuperación y almacenamiento
+privado probados en QA HTTPS. SCRUM-235 conserva la carga/reemplazo20MiB,
+respuesta perdida, concurrencia, rechazos y visor de3 páginas ya acreditados.
+El informe original contiene los cuatro PDF descargados con SHA-256 idéntico
+a sus fuentes y las dos versiones por proyecto. Se inspeccionaron también
+las capturas reales del video reproduciéndose y de la tercera página del PDF.
+Se añadieron las conclusiones en10159 y10241, sin otro comentario ni imágenes
+duplicadas. No se reabrieron subtareas ni se cerraron epics o sprints.
+
+149/231 siguen En curso. Fuentes oficiales Google/Microsoft/Mozilla/Apple
+reconsultadas: objetivos sin cambios respecto de la matriz del02/11. La nota
+Edge de02/11 corresponde a Android/iOS, no a un parche nuevo de escritorio.
+Inventario local: Windows11 10.0.26200; Chrome156.0.8078.74, Edge156.0.4314.58,
+Firefox88.0. Solo IAB y MCP Apps aparecen como sesiones de control de navegador;
+la ventana personal de Chrome permanece ajena a las pruebas. No se repitieron
+los intentos rechazados anteriormente ni se declaró una marca/versión probada.
+La matriz y sus condiciones de ejecución se actualizaron en
+doc/OPERACION-Y-COMPATIBILIDAD.md; no hubo instalación ni actualización de software.
+
+Bloqueos concretos conservados: pantalla táctil real para137; ocho versiones
+de marca y dispositivo Apple para149/231; ejecutor continuo, destino de avisos
+y SLO/ventana/umbrales acordados para232; dominio/remitente SMTP verificado
+para233; despliegue QA autorizado y lector público con el código nuevo para236.
+El workflow manual solo en develop no acredita vigilancia permanente y no se
+modificó main para activarlo. No se inventaron SLO ni se contrataron servicios.
+
+Candidato limpio preparado, sin desplegar: git archive del commit aprobado
+baf41bec85b0ea42394d2b2230ca3197a0ce28a4. ZIP739 entradas, sin .env,
+.vercel, node_modules o .git; SHA-256
+657207018606b8896c42cd7e5e2a3aa9f13092c247912575a61b0cbdcf1a3ee5.
+Artefacto y comprobante fuera de Git en CIERRE-PENDIENTES-20261102. Esta copia
+no incluye configuración privada ni representa una publicación o despliegue.
+No cambió código, SQL, secretos, sesiones personales, datos o el stashd6406e0.
+465/465, lint y build del mismo código siguen vigentes; esta entrega solo cambia
+documentación y estados respaldados por la evidencia existente.

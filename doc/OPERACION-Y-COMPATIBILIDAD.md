@@ -16,6 +16,16 @@ Nightly y Early Stable. Las actualizaciones dentro de una rama se registran
 sin sustituir la prueba de la rama anterior. Cada fila conserva el pendiente
 de ejecución real; la política no cambia un resultado no ejecutado en aprobado.
 
+Revalidación del02/11 tras integrar PR #48–#62: las fuentes oficiales de Google,
+Microsoft, Mozilla y Apple conservan las versiones objetivo de la tabla. La
+entrada Edge de02/11 es Android/iOS; no sustituye el parche Stable de escritorio.
+ProductVersion sigue siendo Chrome156.0.8078.74, Edge156.0.4314.58 yFirefox88.0,
+en Windows11 10.0.26200. No se instaló ni actualizó un navegador.
+El inventario de control sigue ofreciendo IAB y MCP Apps, sin una sesión de
+navegador de marca conectada. No se operó la ventana personal de Chrome ni se
+repitieron los intentos previamente rechazados. Esta revalidación documental
+no añade una regresión ejecutada a149/231 ni una prueba táctil física a137.
+
 | Navegador | Versiones concretas consultadas | Sistema de prueba | Estado real |
 | --- | --- | --- | --- |
 | Chrome | 156.0.8078.80 y155.0.8059.85 | Windows del equipo local | Pendiente en esas versiones exactas; ProductVersion instalado156.0.8078.74 al02/11. No acredita la versión activa ni una prueba ejecutada. |
@@ -235,6 +245,30 @@ Capturas nativas01/02/03 y reportes reales enHU046-REAL fuera deGit. El endpoint
 fue comprobado también por el cliente anónimo contra el dominio estable.
 Estos resultados no acreditan compatibilidad de las8 versiones, vigilancia24/7,
 notificaciones recibidas ni objetivos de degradación aún no acordados.
+
+## Condiciones concretas para completar lo pendiente
+
+- SCRUM-149/231: acceso verificable a las ocho versiones de marca de la matriz,
+  con perfiles QA separados y un sistema Apple real para Safari. Registrar
+  sistema, versión activa y resultado observado de cada flujo; el IAB no los
+  sustituye. No cerrar la compatibilidad ni declarar aprobadas filas pendientes.
+- SCRUM-137: completar la selección y envío de claridad desde una pantalla
+  táctil real. Ratón, teclado y viewport móvil ya documentados no acreditan
+  ese dispositivo; no fabricar el gesto mediante una afirmación de emulación.
+- SCRUM-232: acordar SLO/ventana/umbral para degradación y el destino de avisos,
+  y disponer de un ejecutor continuo comprobable. El workflow solo manual y
+  presente en develop no acredita vigilancia24/7 ni notificación recibida.
+  Mantener los contratos y límites RNF vigentes; no inventar umbrales API.
+- SCRUM-233: dominio/remitente de correo autorizado y verificado en el proveedor
+  SMTP, configuración privada en Supabase y prueba de recuperación real. No
+  solicitar claves por chat ni reducir la seguridad para sortear el bloqueo.
+- SCRUM-236: desplegar al QA una revisión autorizada que incluya las ilustraciones
+  y probar el lector HTTPS público con un fixture propio, conservando versiones,
+  permisos y originales. La prueba del lector privado local no equivale a esta.
+
+El candidato de código revisado esbaf41bec85b0ea42394d2b2230ca3197a0ce28a4,
+develop después de #62. Preparar una copia limpia no autoriza desplegarla:
+continúa vigente la espera de despliegue solicitada por el propietario.
 
 Intento de abrir Edge con perfil QA separado desde terminal: rechazado por el
 control automático con «blocked by policy», sin detalle adicional. No se repitió
