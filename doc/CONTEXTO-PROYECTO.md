@@ -6472,3 +6472,77 @@ de Chrome ejecutada.149/231 permanecen En curso. Siguen137 táctil ySMTP233.
 El usuario señaló además que los gráficos generados le parecen ambiguos.
 Se prioriza revisar los ejemplos guardados, sus etiquetas y relaciones, el
 prompt y los criterios de calidad antes de declarar cerrada la parte visual IA.
+
+### 2026-11-02 — SCRUM-236: claridad de los gráficos de IA
+
+El propietario señaló que los gráficos le resultan ambiguos. Se abrió una tarea
+de regresión de calidad bajo EP04/SCRUM-9, en Sprint7/id8; En curso. HU022 y sus
+evidencias no se reabrieron ni se sobrescribieron. Rama codex/calidad-graficos-ia
+desde588f2f3, después del incremento de supervisión de PR #58.
+
+Se revisaron la captura real186-sol-diagrama-corregido.png y los contenidos y
+versiones guardados de las solicitudes QA4716166b y167fe954. En el péndulo las
+flechas iguales mezclaban transformación y composición de una suma. La versión
+antigua de agua llegó a representar un ciclo completo pese a tener un fragmento
+de54 caracteres que solo enumera evaporación/condensación; el contexto cercano
+guardado advierte que pertenece a otra página. No se usó como respaldo pertinente.
+
+Las nuevas generaciones exigen tipo de relación y cita por conexión, además de
+la atribución global. Se rechazan referencias inventadas, etiquetas repetidas,
+vínculos vagos, conexiones duplicadas y conceptos desconectados. El prompt exige
+resolver la dificultad y rechazar cuando solo puede repetir términos o inventar
+etapas. Los contratos de lectura históricos mantienen esos campos opcionales;
+las versiones anteriores siguen accesibles. La función SQL ya admite esos campos
+JSON y se comprobó su compatibilidad en PostgreSQL aislado: sin migración nueva,
+cambios de permisos o debilitamiento de firmas/aprobación.
+
+El componente distingue composición con línea discontinua sin flecha causal y
+transformaciones dirigidas. Se separan los dos sentidos, los componentes y el
+conjunto; la condición del conjunto se muestra en el SVG. Detalles y relaciones
+numeradas/citadas quedan visibles debajo, sin depender de abrir un desplegable.
+Se mantienen escape de texto, título/descripción accesibles y ampliación.
+Documentación local Next, guía React y documentación oficial de Structured
+Outputs consultadas. Una estructura válida no garantiza por sí sola semántica
+correcta; la revisión/aprobación del propietario sigue siendo obligatoria.
+
+Se reutilizó la configuración y clave ya autorizadas, sin imprimirla o cambiarla:
+OpenAI/gpt-6.1-sol, reasoning low, una llamada limitada por ejemplo, sin fallback
+ni reintentos. Contextos reales guardados, no resultados simulados:
+- Agua,1211 tokens entrada/390 salida: consistentWithSource=false; el validador
+  rechazó el gráfico. No se inventó una cadena causal o un ciclo completo.
+- Energía,1349 entrada/796 salida: resultado aceptado con dos transformaciones
+  y dos vínculos de composición, cada uno respaldado por cita literal.
+Total2 llamadas,2560 tokens entrada/1186 salida, sin caché; estimación USD0,016980,
+no factura. Tarifas estándar consultadas:USD2/M entrada yUSD10/M salida,
+https://developers.openai.com/api/docs/models/gpt-6.1-sol.md. No se activaron pagos.
+
+La respuesta aceptada se renderizó con el componente real mediante SSR y Sharp
+a PNG; las iteraciones de distribución reutilizaron el mismo JSON, sin llamadas
+IA adicionales. El resultado final es energia-component-v4.png. Es un render
+del SVG real, NO una captura del navegador ni prueba autenticada. Las variantes
+anteriores se conservan como comprobación de diseño, no como evidencias aprobadas.
+No se regeneraron, editaron o aprobaron registros guardados; no se publicó ni se
+modificó el PDF original. Resultados, respuestas, HTML/SVG/PNG y pruebas fuera de
+Git en SCRUM-236-GRAFICOS. El nuevo mensaje de error invita a ampliar el contexto.
+
+Suite455/455 aprobada y25/25 casos dirigidos de generación/revisión/SQL; después
+del último detalle de distribución,11/11 del recurso visual comprobados otra vez.
+Lint y build finales aprobados, sin avisos de lint. Falta el recorrido real en
+navegador, móvil y lector con estas correcciones: Computer Use fue detenido por
+la revisión automática al no poder determinar la URL de Chrome y no se sorteó.
+No se declara terminada SCRUM-236 ni se presenta el render como captura de app.
+
+Entrega preparada: commitb9f75bfeffd922c19975c067bc32c93097e15430 yPR #59 en
+borrador sobre codex/scrum-232-hu046-supervision / PR #58. Código y documento
+publicados, sin merge ni despliegue. Comentario único10242 de SCRUM-236 con
+adjunto10609,energia-component-v4.png,37925B,SHA-256
+50c92f4d7a693faabfae34ccf46c29b68f0aa37baab86e30cf59733ef440511d.
+Se identificó expresamente como render del componente, no captura del navegador.
+Metadatos y nodo inline comprobados por API; no se afirma visualización de Jira
+en UI porque ese control fue detenido. La tarea permanece En curso.
+
+Se actualizaron, sin duplicar comentarios ni imágenes: madreHU022/10136,
+HU046/10236,matriz149/10238,regresiones231/10239 ysupervisión232/10240.
+Comprobados por API el texto anterior, un comentario por tarea y las dos imágenes
+anteriores de232. Los cierres históricos de HU022 siguen intactos. Se conservaron
+el stashd6406e0 ylas variables privadas ignoradas; no entraron en Git.

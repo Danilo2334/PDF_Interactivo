@@ -1,5 +1,5 @@
 import { useId, useState } from "react";
-import { visualContentSchema, type VisualContent } from "@/lib/validations/visual";
+import { visualContentSchema, VISUAL_RELATION_LABELS, type VisualContent } from "@/lib/validations/visual";
 
 function lines(text: string, width = 23) {
   const words = text.match(new RegExp(`.{1,${width}}(?:\\s|$)|.{1,${width}}`, "g")) ?? [text];
@@ -21,9 +21,19 @@ export function VisualResource({ value, title, description }: { value: unknown; 
   const [expanded, setExpanded] = useState(false);
   const id = useId().replace(/[^a-zA-Z0-9_-]/g, ""), parsed = visualContentSchema.safeParse(value);
   if (!parsed.success) return <p role="alert">El recurso visual no pudo verificarse.</p>;
-  const content = parsed.data, image = content.scene.kind === "image", count = content.scene.nodes.length;
-  const cols = image ? Math.min(2, count) : Math.min(3, count), rows = Math.ceil(count / cols), height = rows * 280 + 25;
-  const nodes = content.scene.nodes.map((node, i) => ({ ...node, x: (i % cols + 0.5) * 960 / cols, y: Math.floor(i / cols) * 280 + 125 }));
+  const content = parsed.data, image = content.scene.kind === "image";
+  const compositionTargets = new Set(content.scene.edges.filter(edge => edge.relationType==="part_of").map(edge => edge.to));
+  const parts = content.scene.nodes.filter(node => !compositionTargets.has(node.id)), wholes = content.scene.nodes.filter(node => compositionTargets.has(node.id));
+  const groups = !image && parts.length && wholes.length ? [parts, wholes] : [content.scene.nodes];
+  const positions = new Map<string,{x:number;y:number}>();
+  let rows = 0;
+  for (const group of groups) {
+    const cols = Math.min(image ? 2 : 3, group.length);
+    group.forEach((node, i) => positions.set(node.id, {x:(i%cols+.5)*960/cols, y:(rows+Math.floor(i/cols))*(image ? 280 : 340)+(image ? 125 : 155)}));
+    rows += Math.ceil(group.length/cols);
+  }
+  const height = rows*(image ? 280 : 340)+25;
+  const nodes = content.scene.nodes.map(node => ({...node,...positions.get(node.id)!}));
   return <figure className="min-w-0 space-y-3">
     <button type="button" aria-expanded={expanded} aria-controls={`${id}-viewport`}
       onClick={() => setExpanded(previous => !previous)}
@@ -33,21 +43,32 @@ export function VisualResource({ value, title, description }: { value: unknown; 
     {expanded && <p className="text-sm text-slate-700">Desplázate horizontalmente para ver todo el recurso. Con teclado, enfoca el gráfico y usa las flechas.</p>}
     <div id={`${id}-viewport`} role="region" aria-label="Vista del recurso visual" tabIndex={expanded ? 0 : undefined}
       className="max-w-full overflow-x-auto rounded-xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700">
-    <svg role="img" aria-labelledby={`${id}-title ${id}-description`} viewBox={`0 0 960 ${height}`}
+    <svg role="img" fontFamily="sans-serif" aria-labelledby={`${id}-title ${id}-description`} viewBox={`0 0 960 ${height}`}
       className={`h-auto w-full rounded-xl border border-slate-300 bg-white${expanded ? " min-w-[60rem]" : ""}`} xmlns="http://www.w3.org/2000/svg">
       <title id={`${id}-title`}>{title ?? content.title}</title><desc id={`${id}-description`}>{description ?? content.text}</desc>
+      <rect width="960" height={height} fill="white" />
       <defs><marker id={`${id}-arrow`} viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#475569" /></marker></defs>
       {!image && content.scene.edges.map((edge, i) => {
         const from = nodes.find(n => n.id === edge.from)!, to = nodes.find(n => n.id === edge.to)!;
-        const vertical = from.y !== to.y, sx = from.x, sy = from.y + (vertical ? 65 : 0), tx = to.x, ty = to.y - (vertical ? 65 : 0);
+        const vertical = from.y !== to.y, direction = Math.sign(to.y-from.y), sx = from.x,
+          sy = from.y + (vertical ? direction*65 : 0), tx = to.x, ty = to.y - (vertical ? direction*65 : 0);
         const x1 = vertical ? sx : sx + (tx > sx ? 125 : -125), x2 = vertical ? tx : tx + (tx > sx ? -135 : 135);
         // A connection that skips a node must not run behind that node or merge
         // with adjacent arrows. Route it through the free space below its row.
-        const skipsNode = !vertical && Math.abs(tx-sx) > 960 / cols * 1.1;
-        const route = skipsNode ? `M${sx} ${sy+62}C${sx} ${sy+150} ${tx} ${ty+150} ${tx} ${ty+72}` : `M${x1} ${sy}L${x2} ${ty}`;
-        const labelY = skipsNode ? sy+139 : vertical ? (sy+ty)/2-15 : sy-101;
-        return <g key={i}><path d={route} stroke="#475569" fill="none" strokeWidth="3" markerEnd={`url(#${id}-arrow)`} />
-          <text x={(x1+x2)/2} y={labelY} textAnchor="middle" fontSize="15" fill="#334155" stroke="white" strokeWidth="4" paintOrder="stroke">{lines(edge.label, 18).map((line, j) => <tspan key={j} x={(x1+x2)/2} dy={j ? 17 : 0}>{line}</tspan>)}</text></g>;
+        const skipsNode = !vertical && nodes.some(node => node.id!==from.id && node.id!==to.id && node.y===from.y && node.x>Math.min(sx,tx) && node.x<Math.max(sx,tx));
+        const reciprocal = content.scene.edges.some(other => other.from===edge.to && other.to===edge.from);
+        const lane = vertical ? (ty>sy ? -1 : 1) : (tx>sx ? -1 : 1);
+        const parallel = reciprocal && !vertical && !skipsNode;
+        const route = parallel ? `M${x1} ${sy+lane*22}L${x2} ${ty+lane*22}`
+          : reciprocal && vertical ? `M${sx+lane*65} ${sy}C${sx+lane*170} ${sy} ${tx+lane*170} ${ty} ${tx+lane*65} ${ty}`
+          : reciprocal ? `M${sx} ${sy+lane*62}C${sx} ${sy+lane*150} ${tx} ${ty+lane*150} ${tx} ${ty+lane*72}`
+          : skipsNode ? `M${sx} ${sy+62}C${sx} ${sy+150} ${tx} ${ty+150} ${tx} ${ty+72}` : `M${x1} ${sy}L${x2} ${ty}`;
+        const labelX = reciprocal && vertical ? (sx+tx)/2+lane*145 : (x1+x2)/2;
+        const labelY = parallel ? sy+(lane<0 ? -44 : 52) : reciprocal && vertical ? (sy+ty)/2-15 : reciprocal ? sy+lane*101 : skipsNode ? sy+139 : vertical ? (sy+ty)/2-15 : sy-101;
+        const undirected = edge.relationType && ["part_of", "comparison", "definition"].includes(edge.relationType);
+        return <g key={i}><path d={route} stroke="#475569" fill="none" strokeWidth="3"
+          strokeDasharray={edge.relationType==="part_of" ? "7 5" : undefined} markerEnd={undirected ? undefined : `url(#${id}-arrow)`} />
+          <text x={labelX} y={labelY} textAnchor="middle" fontSize="15" fill="#334155" stroke="white" strokeWidth="4" paintOrder="stroke">{lines(`${i+1}. ${edge.label}`, 18).map((line, j) => <tspan key={j} x={labelX} dy={j ? 17 : 0}>{line}</tspan>)}</text></g>;
       })}
       {nodes.map((node, i) => <g key={node.id} transform={`translate(${node.x} ${node.y})`}>
         {image ? <><rect x="-190" y="-105" width="380" height="240" rx="28" fill={palette[i%4]} /><g transform="translate(0 -10)" stroke="currentColor" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" fill="none" color="#1e40af"><Symbol name={node.symbol} /></g></>
@@ -55,13 +76,22 @@ export function VisualResource({ value, title, description }: { value: unknown; 
         <text textAnchor="middle" fontFamily="sans-serif" fontSize={image ? 25 : 21} fontWeight="600" fill="#0f172a" y={image ? 89 : -10}>
           {lines(node.label, image ? 27 : 21).map((line, j) => <tspan key={j} x="0" dy={j ? 26 : 0}>{line}</tspan>)}
         </text>
+        {!image && compositionTargets.has(node.id) && !content.scene.edges.some(edge => edge.from===node.id) &&
+          <text textAnchor="middle" fontSize="16" fill="#334155" y="92">{lines(node.detail,34).map((line,j)=><tspan key={j} x="0" dy={j ? 19 : 0}>{line}</tspan>)}</text>}
       </g>)}
     </svg>
     </div>
     <figcaption className="whitespace-pre-wrap break-words text-sm text-slate-800">{description ?? content.text}</figcaption>
-    <details className="text-sm"><summary className="cursor-pointer font-medium">Descripción de los elementos</summary>
-      <ul className="mt-2 space-y-2">{content.scene.nodes.map(node => <li key={node.id}><strong>{node.label}: </strong>{node.detail}</li>)}</ul>
-      {content.scene.edges.length > 0 && <ul className="mt-2 space-y-1">{content.scene.edges.map((edge, i) => <li key={i}>{content.scene.nodes.find(n => n.id===edge.from)?.label} → {content.scene.nodes.find(n => n.id===edge.to)?.label}: {edge.label}</li>)}</ul>}
-    </details>
+    <div className="text-sm"><h4 className="font-semibold">Descripción de los elementos</h4>
+      <dl className="mt-2 grid gap-3 sm:grid-cols-2">{content.scene.nodes.map(node => <div key={node.id} className="rounded-lg border border-slate-300 bg-white p-3"><dt className="font-semibold">{node.label}</dt><dd className="mt-1 whitespace-pre-wrap break-words">{node.detail}</dd></div>)}</dl>
+    </div>
+    {content.scene.edges.length > 0 && <div className="space-y-2 text-sm"><h4 className="font-semibold">Relaciones del gráfico</h4>
+      <p>Las flechas indican una relación dirigida; las líneas discontinuas unen un componente con su conjunto. Lee cada vínculo con su explicación.</p>
+      <ol className="list-decimal space-y-3 pl-5">{content.scene.edges.map((edge, i) => <li key={i} className="whitespace-pre-wrap break-words">
+        <strong>{content.scene.nodes.find(n => n.id===edge.from)?.label}</strong>{" — "}{edge.label}{" — "}<strong>{content.scene.nodes.find(n => n.id===edge.to)?.label}</strong>
+        {edge.relationType && <p className="mt-1 text-slate-700">{VISUAL_RELATION_LABELS[edge.relationType]}</p>}
+        {edge.evidence && <blockquote className="mt-1 border-l-2 border-slate-400 pl-3 text-slate-700">Cita del PDF: «{edge.evidence}»</blockquote>}
+      </li>)}</ol>
+    </div>}
   </figure>;
 }

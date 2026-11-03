@@ -31,7 +31,10 @@ test('provider sends only persisted context, mode, brief and bounded instruction
     calls++;const body=JSON.parse(init.body),input=JSON.parse(body.contents[0].parts[0].text);assert.equal(input.modality,'Diagrama');assert.equal(input.brief,generation.visual_brief);
     assert.equal(input.additionalInstructions,'Aclarar la transformación.');assert.equal(input.ownerId,undefined);assert.equal(init.cache,'no-store');
     assert.equal(body.generationConfig.responseFormat.text.schema.properties.sourceQuote.enum[0],'a'.repeat(499));
-    return Response.json({candidates:[{finishReason:'STOP',content:{parts:[{text:JSON.stringify({...visual,sourceQuote:'a'.repeat(499)})}]}}]});
+    const supported={...visual,sourceQuote:'a'.repeat(499),scene:{...visual.scene,edges:[{...visual.scene.edges[0],evidence:'a'.repeat(100)}]}};
+    assert.ok(body.generationConfig.responseFormat.text.schema.properties.scene.properties.edges.items.required.includes('evidence'));
+    assert.ok(body.generationConfig.responseFormat.text.schema.properties.scene.properties.edges.items.required.includes('relationType'));
+    return Response.json({candidates:[{finishReason:'STOP',content:{parts:[{text:JSON.stringify(supported)}]}}]});
   });assert.equal(calls,1);
 });
 test('invalid provider output, quota, refusal and timeout remain controlled and never retry automatically',async()=>{
@@ -44,6 +47,56 @@ test('invalid provider output, quota, refusal and timeout remain controlled and 
     e=>e.code===code&&e.quotaExhausted===quota&&!e.message.includes('sensitive'));assert.equal(calls,1);}
 });
 const {VisualResource}=load('components/documents/visual-resource.tsx',{react:React,'@/lib/validations/visual':schemas});
+
+test('new diagrams require grounded, precise, distinct and connected relations while historical diagrams remain readable',()=>{
+ const edge=visual.scene.edges[0];
+ for(const changed of [Object.fromEntries(Object.entries(edge).filter(([key])=>!['evidence','relationType'].includes(key))),
+  {...edge,evidence:'Una cita que no pertenece al contexto real.'},...['Integra la suma','Alterna con','Conduce a','Relacionado con'].map(label=>({...edge,label}))]){
+   const value={...visual,scene:{...visual.scene,edges:[changed]}};
+   assert.throws(()=>schemas.validateVisual(value,context,diagnosis,'diagram'));
+ }
+ const historical={...visual,scene:{...visual.scene,edges:[{from:edge.from,to:edge.to,label:'Integra la suma'}]}};
+ assert.equal(schemas.visualContentSchema.safeParse(historical).success,true);
+ assert.match(renderToStaticMarkup(React.createElement(VisualResource,{value:historical})),/Integra la suma/);
+ assert.throws(()=>schemas.validateVisual({...visual,scene:{...visual.scene,edges:[edge,edge]}},context,diagnosis,'diagram'));
+ assert.throws(()=>schemas.validateVisual({...visual,scene:{...visual.scene,nodes:[...visual.scene.nodes,{...visual.scene.nodes[0],id:'n3',label:'Decoración'}]}},context,diagnosis,'diagram'));
+ assert.throws(()=>schemas.validateVisual({...visual,scene:{...visual.scene,nodes:[visual.scene.nodes[0],{...visual.scene.nodes[1],label:visual.scene.nodes[0].label.toUpperCase()}]}},context,diagnosis,'diagram'));
+ const nearby={...visual,scene:{...visual.scene,edges:[{...edge,evidence:'La suma permanece constante sin rozamiento.'}]}};
+ assert.doesNotThrow(()=>schemas.validateVisual(nearby,{...context,nearbyText:'La suma permanece constante sin rozamiento.'},diagnosis,'diagram'));
+});
+
+test('composition uses a noncausal dashed connection, with visible explanations and escaped source evidence',()=>{
+ const value={...visual,scene:{...visual.scene,edges:[{...visual.scene.edges[0],relationType:'part_of',label:'Forma parte de',evidence:'Cita <script>alert(1)</script> literal.'}]}};
+ const html=renderToStaticMarkup(React.createElement(VisualResource,{value}));
+ assert.match(html,/stroke-dasharray="7 5"/);assert.doesNotMatch(html,/marker-end=/);
+ assert.match(html,/Relaciones del gráfico/);assert.match(html,/Composición/);assert.match(html,/Cita del PDF/);
+ assert.match(html,/&lt;script&gt;/);assert.doesNotMatch(html,/<script>/);assert.doesNotMatch(html,/<details/);
+ assert.match(html,/Mayor altura y menor velocidad/);
+});
+
+test('reciprocal transformations use distinct upper and lower paths instead of hiding one direction',()=>{
+ const value={...visual,scene:{...visual.scene,edges:[visual.scene.edges[0],{...visual.scene.edges[0],from:'n2',to:'n1',label:'Al ascender'}]}};
+ const html=renderToStaticMarkup(React.createElement(VisualResource,{value}));
+ const routes=[...html.matchAll(/<path d="([^"]+)"[^>]*marker-end=/g)].map(match=>match[1]);
+ assert.equal(routes.length,2);assert.notEqual(routes[0],routes[1]);
+ const firstY=routes[0].match(/-?\d+(?:\.\d+)?/g).map(Number)[1];
+ const secondY=routes[1].match(/-?\d+(?:\.\d+)?/g).map(Number)[1];
+ const nodeY=Number(/transform="translate\([^ ]+ ([\d.]+)\)"/.exec(html)[1]);
+ assert.ok(firstY<nodeY&&secondY>nodeY);
+});
+
+test('a shared total is laid out after its components so composition does not look like a transformation chain',()=>{
+ const value={...visual,scene:{...visual.scene,nodes:[...visual.scene.nodes,{...visual.scene.nodes[0],id:'n3',label:'Suma de energías'}],edges:[
+  visual.scene.edges[0],{...visual.scene.edges[0],from:'n2',to:'n1'},
+  {...visual.scene.edges[0],to:'n3',relationType:'part_of',label:'Forma parte de'},
+  {...visual.scene.edges[0],from:'n2',to:'n3',relationType:'part_of',label:'Forma parte de'}]}};
+ const html=renderToStaticMarkup(React.createElement(VisualResource,{value}));
+ const ys=[...html.matchAll(/transform="translate\([^ ]+ ([\d.]+)\)"/g)].map(match=>Number(match[1]));
+ assert.equal(ys[0],ys[1]);assert.ok(ys[2]>ys[1]);
+ assert.equal((html.match(/stroke-dasharray="7 5"/g)||[]).length,2);
+ assert.equal((html.match(/marker-end=/g)||[]).length,2);
+ assert.ok(html.slice(html.indexOf('<svg'),html.indexOf('</svg>')).includes('Mayor altura y menor velocidad'));
+});
 
 test('a diagram connection skipping the middle node stays outside its box instead of disappearing behind it',()=>{
  const value={...visual,scene:{kind:'diagram',nodes:[visual.scene.nodes[0],visual.scene.nodes[1],{...visual.scene.nodes[1],id:'n3',label:'Suma constante'}],edges:[{from:'n1',to:'n3',label:'Integra la suma'}]}};
