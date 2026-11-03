@@ -355,3 +355,68 @@ privadas. La sesión personal queda conservada. No nuevo deployment ni cambio de
 protección. Para repetir acceso público, el agente republicará solo la instantánea
 sintética con confirmación normal y utilizará su enlace nuevo; al terminar retirará
 la publicación y verificará el mismo enlace en modo retired.
+
+## HU037: visitas del lector — procedimiento y límites
+
+PR #47 quedó integrado a develop el01/11/2026 en2e5030f. HU037 está en
+[PR #48](https://github.com/Danilo2334/PDF_Interactivo/pull/48). Su migración nueva
+es20261101061105_reader_open_visits.sql, conciliada con la versión asignada
+por Supabase; no volver a aplicarla ni ejecutar db push a ciegas. Reutiliza el
+secreto de firma y la clave de servidor existentes; no añade proveedor IA ni
+variables privadas nuevas. El QA continúa en el proyecto Hobby de Danilo.
+
+La apertura se comunica sólo tras renderizar la primera página del PDF en una
+pestaña visible. Descargar HTML, consultar GET de la proyección o ejecutar el
+verificador HTTP externo no cuenta por sí solo. El cliente envía un UUID de
+operación a POST /api/read/[token]/visits, con origen y cookie de lector válidos;
+el servidor verifica publicación vigente y documento actual antes de firmar la
+escritura. La identificación pendiente, PDF fallido, ensayo privado, vista previa
+y lectura autenticada del propietario no suman. No hay total de visitas en la
+proyección pública.
+
+Se acepta como máximo una visita por documento y sesión durante30min desde la
+última aceptada. Recarga, navegación, zoom y cambio de versión publicada conservan
+la deduplicación. Otra sesión o una reapertura posterior sí suman. La cookie
+HttpOnly/Secure/SameSite=Lax dura12h; sólo se almacena un HMAC diferente por
+documento, fecha del servidor, referencias del documento/publicación/propietario
+y origen HTTPS. No hay IP, user agent, nombre, correo ni nonce original del lector.
+No equivale a contar personas únicas: borrar/bloquear cookies o cambiar navegador
+puede crear otra sesión. Web Locks serializa la primera cookie entre pestañas en
+navegadores compatibles. La operación mantiene su identidad incluso si se pierde
+la primera respuesta y su Set-Cookie.
+
+El propietario activo o admin autorizado consulta el agregado mediante
+GET /api/projects/[projectId]/visits?documentId=[documentId]. El widget del proyecto
+muestra cero, total, última apertura y errores; no lista sesiones individuales.
+El permiso administrativo del agregado no concede acceso al PDF privado ajeno.
+Al perder autorización se limpia el total anterior;401 exige nuevo login,403
+indica falta de permiso y409 que cambió el documento. Retirar/republicar conserva
+los eventos mientras exista el documento; eliminarlo elimina sus eventos por FK.
+
+Para repetir QA, utilizar únicamente fixtures sintéticos: abrir PDF público,
+registrar los recibos y tiempos reales, recargar con la misma cookie, contrastar
+con una segunda sesión y otro documento, probar propietario/ensayo privado,
+concurrencia y respuesta descartada, y conciliar API con filas aceptadas en BD.
+Para la reapertura posterior esperar30min de reloj real, renovar la cookie de
+lector mediante GET normal si caducó, conservar la cookie de visitas y usar una
+operación nueva. No alterar fechas, relojes o filas en SQL ni bajar el límite para
+aprobar. Los cambios temporales de tiempo de pruebas PGlite son sólo fixtures
+aislados, nunca evidencias del QA real. Restaurar bloqueos/viewport, retirar
+publicaciones de prueba y comprobar conservación de PDF e intentos al terminar.
+
+Precaución observada: GET /login de esta aplicación elimina el marcador de acceso
+por diseño del proxy. Para preparar CDP o pestañas auxiliares usar una ruta de
+lectura o el proyecto, conservando el epoch; no abrir /login salvo que realmente
+se necesite autenticar. No restaurar ese marcador manualmente ni extraer cookies
+personales. Si hace falta login, lo completa el propietario; las pruebas HTTP
+sintéticas independientes pueden continuar.
+
+Resultado real HU03701/11/2026:397 pruebas, lint/build; sesiones con reapertura
+tras1803.244031s y1834.349283s, total5→7; v8 no duplica, antiguas operaciones
+idempotentes y documento ajeno409. Conciliación final7/2/1 y cero públicas, con
+PDF e intentos intactos. Ocho capturas en131/132/213/214, todas Finalizado junto
+a49. Fuente de aplicación QA dedfffe,dpl_8hAoH66sJKAY6AJdo9uCWgXaGw8A.
+HTTP externo: [público PASS9](https://github.com/Danilo2334/PDF_Interactivo/actions/runs/41280983219)
+y [mismo enlace7 retirado PASS4](https://github.com/Danilo2334/PDF_Interactivo/actions/runs/41282261536).
+No pagos, IA nueva ni SQL de escritura de eventos. Sesión personal restaurada
+y viewport/bloqueos retirados. PR48 pendiente de revisión e integración.

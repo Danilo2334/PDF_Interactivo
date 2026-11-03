@@ -33,6 +33,7 @@ type ViewerProps = {
   onHiddenNavigate?: (number: number) => void;
   floatingReinforcements?: boolean;
   includeReadableText?: boolean;
+  onFirstPageRendered?: () => void;
 };
 
 type ViewerStatus =
@@ -49,7 +50,7 @@ const viewerMessages = {
   ready: "PDF disponible. Usa los controles o desplázate para consultar sus páginas.",
 };
 
-export function PdfViewer({ projectId, sourceUrl, initialPage = 1, initialFragment = null, onPageSelect, requestDraft, onFragmentSelect, fragmentResetKey, onTextSourceChange, visible = true, onVisiblePageChange, onOpenReinforcements, navigationKey = 0, onOpenPreview, previewTriggerRef, reinforcementMarkers, onReinforcementActivate, pagesHidden, onHiddenNavigate, floatingReinforcements, includeReadableText }: ViewerProps) {
+export function PdfViewer({ projectId, sourceUrl, initialPage = 1, initialFragment = null, onPageSelect, requestDraft, onFragmentSelect, fragmentResetKey, onTextSourceChange, visible = true, onVisiblePageChange, onOpenReinforcements, navigationKey = 0, onOpenPreview, previewTriggerRef, reinforcementMarkers, onReinforcementActivate, pagesHidden, onHiddenNavigate, floatingReinforcements, includeReadableText, onFirstPageRendered }: ViewerProps) {
   const [attempt, setAttempt] = useState(0);
   // Only restore on mount; changing the selection must not reload the PDF.
   const [startingPage] = useState(initialPage);
@@ -73,6 +74,7 @@ export function PdfViewer({ projectId, sourceUrl, initialPage = 1, initialFragme
       reinforcementMarkers={reinforcementMarkers} onReinforcementActivate={onReinforcementActivate}
       pagesHidden={pagesHidden} onHiddenNavigate={onHiddenNavigate} floatingReinforcements={floatingReinforcements}
       includeReadableText={includeReadableText}
+      onFirstPageRendered={onFirstPageRendered}
       onRetry={() => setAttempt((value) => value + 1)}
     />
   );
@@ -93,6 +95,7 @@ function PdfPages({
   reinforcementMarkers, onReinforcementActivate,
   pagesHidden = false, onHiddenNavigate, floatingReinforcements = true,
   includeReadableText = false,
+  onFirstPageRendered,
 }: ViewerProps & { onRetry: () => void; targetPage?: number; targetFragment?: FragmentSelection | null }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const navigationRef = useRef<HTMLDivElement>(null);
@@ -112,6 +115,8 @@ function PdfPages({
   const [hasFragment, setHasFragment] = useState(false);
   const visibleRef = useRef(visible), appliedNavigation = useRef(0);
   const markerConfig = useRef({ markers: reinforcementMarkers, activate: onReinforcementActivate, readable: includeReadableText, textId: pageInputId });
+  const firstPageCallback = useRef(onFirstPageRendered);
+  useLayoutEffect(() => { firstPageCallback.current = onFirstPageRendered; }, [onFirstPageRendered]);
   useLayoutEffect(() => { markerConfig.current = { markers: reinforcementMarkers, activate: onReinforcementActivate, readable: includeReadableText, textId: pageInputId }; }, [reinforcementMarkers, onReinforcementActivate, includeReadableText, pageInputId]);
   useLayoutEffect(() => { visibleRef.current = visible; rendererRef.current?.setActive(visible); }, [visible]);
   useLayoutEffect(() => {
@@ -241,6 +246,7 @@ function PdfPages({
             setStatus("ready");
             if (!restoredSelection) {
               restoredSelection = true;
+              firstPageCallback.current?.();
               const page = Number.isInteger(initialPage) && initialPage >= 1 && initialPage <= pdf.numPages ? initialPage : 1;
               if (page === 1) { onPageSelect?.(visiblePage); onVisiblePageChange?.(visiblePage); }
               else renderer?.goToPage(page);

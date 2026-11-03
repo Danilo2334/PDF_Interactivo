@@ -5159,3 +5159,103 @@ confirmados por lectura de BD. Sin modificar PDF original ni borrar datos. Sesi�
 personal y servidor local preservados; d6406e0 intacto. No hubo despliegues nuevos,
 pagos, IA, avance a otra historia ni cierre de sprint. SMTP233 y el límite de
 cargas grandes del hosting siguen pendientes del proyecto, fuera de este cierre.
+
+### 01/11/2026 — Revisión e integración de PR #47; inicio de HU037
+
+PR #47 revisado en el head 961b8c9552acb417f5e32a4883f6fdf6d32342a6: checks CI aprobados, sin conflictos ni comentarios pendientes, sin hallazgos bloqueantes. Integrado a develop con control del SHA; merge 2e5030f091d28fc1ff90bc14f7b28ea12c0e5a7c a las 05:59:25 UTC. Se conserva main, la sesión personal, los datos y el stash d6406e0cdbc464c1c0301c058024b10dd27c4515.
+
+HU037 / SCRUM-49 y subtareas 131,213,214,132 pasan a En curso. Sprint 7 (id8) iniciado el 01/11/2026 06:01:21 UTC, hasta 08/11 06:01:21 UTC, según la instrucción previa del usuario. No se cerraron otros sprints. Rama codex/scrum-49-hu037-visitas desde el merge anterior.
+
+Definición incorporada ahora y registrada en SCRUM-213: apertura tras renderizar la primera página del PDF publicado en una pestaña visible; como máximo una por documento y sesión dentro de 30 minutos desde la última aceptada. Reaperturas posteriores y sesiones diferentes cuentan. Cambiar zoom, navegar, recargar, versiones publicadas o repetir la misma operación no duplica. Cookie firmada HttpOnly/Secure/SameSite=Lax de 12 horas, sin IP, nombre, correo ni user agent; HMAC distinto por documento, sin guardar el nonce original. No pretende identificar personas únicas entre navegadores o dispositivos. Vistas previas, ensayos privados y apertura autenticada del propietario excluidos. La escritura requiere publicación vigente, documento actual, sesión lector e identificación cuando corresponda. El total sólo lo consultan propietario activo o admin autorizado; su consulta no amplía el acceso al PDF ajeno.
+
+Migración reader_open_visits generada con CLI oficial, probada en PostgreSQL aislado y aplicada tras leer y conciliar las 23 migraciones remotas. Supabase asignó versión 20261101061105; archivo local alineado, sin volver a aplicar versiones anteriores. RLS activa, sin INSERT/UPDATE/DELETE directo para clientes; RPC firmado por servidor y función definer en esquema privado con search_path vacío. Reintentos idempotentes y bloqueo transaccional de deduplicación. Totales preservados al retirar/republicar mientras exista el documento. Build/TypeScript y lint aprobados. La batería inicial detectó dependencias de montaje nuevas ausentes; se actualizaron los montajes y los 41 casos afectados pasan. Se prepara prueba HTTPS con tiempo real para la ventana de 30 minutos; aún no se declara cumplida. Sin pagos ni IA.
+
+HU037: 395/395 pruebas, lint y build aprobaron tras actualizar los montajes. Commit funcional 211ec0812b663946a69919e3021b9d02cd7274ad desplegado sólo en el QA existente de Danilo, dpl_HNYBbTMzbDjK73fpxqCL31kTTLx8; Hobby sin cambios, mismas ocho variables y epoch sin modificar. Ventana real iniciada a las 06:15:47.714451 UTC. Primeras pruebas HTTPS: dos sesiones distintas aceptadas, reapertura consecutiva devuelve el mismo ID; cinco POST iniciales concurrentes de una operación producen una sola visita; cinco operaciones diferentes con la cookie existente no suman. Respuesta de un POST ya procesado descartada por el cliente junto con su Set-Cookie, sin consumir el cuerpo: reintento devuelve el mismo ID y el siguiente envío no duplica. No se presenta como corte de paquetes en la red. Origen ajeno403, campos falsificados400, falta sesión lector428, totales anónimos401, propietario ajeno404, documento cambiado409. Dueño autenticado y ensayo privado: recorded=false/visitId=null. Admin autorizado consultó agregado ajeno200 sin ampliar acceso al PDF.
+
+Documento digital QA de otra cuenta: cinco eventos aceptados, exactamente conciliados con el agregado; navegación, zoom y recarga IAB no sumaron. Documento QA propio: estado vacío real y luego dos visitas desde las mismas sesiones A/B, sin afectar el total del otro documento. SHA original digital e7277d66afd7caba47385cfac2f0e55a2eeb4fb7aa7136409fa35300a6347946 en todas las lecturas. Se preparó versión2 del fixture escaneado con identificación: puerta previa428 y cero visitas; PDF bloqueado sólo en esa pestaña mediante CDP, aun identificado permaneció en cero; desbloquear y renderizar produjo una visita a las06:18:41.282974 UTC. Bloqueo y viewport restaurados. Lectura móvil real390x844 sin desbordamiento; teclado abre/cierra refuerzos, cambia a página2 y zoom125% sin otra visita ni envío de quiz.
+
+Incidencia del ensayo: al abrir /login en una pestaña auxiliar para preparar CDP, el proxy existente eliminó el marcador pdf-interactivo-login-session de la sesión personal. No fue causado por el deployment ni por cambiar el epoch. Error del agente comunicado y login solicitado sin credenciales por chat; sesión Supabase y datos no se cambiaron ni se sustituyeron por la cuenta QA en IAB. Se continúa con las sesiones HTTP sintéticas ya autenticadas y lector público. No se falsificó ni restauró el marcador saltándose el login. La consulta del panel devolvió401 como corresponde. Se corrigió que el widget conservara el total anterior tras ese rechazo: ahora limpia la métrica y muestra un mensaje de inicio de sesión; también distingue403 y409. Prueba de pérdida/recuperación de acceso y de reporte visible con reintentos limitados añadidas:397/397, lint y build correctos. La prueba de reapertura de30min continúa pendiente de su plazo real.
+
+Actualización HU037: el propietario volvió a iniciar sesión personalmente y se
+comprobó otra vez su acceso200; no se volvió a abrir /login para preparar pruebas.
+Corrección dedfffe2c93ba72a8e0a40d752ab02a29f1a4d1a desplegada en el mismo QA,
+dpl_8hAoH66sJKAY6AJdo9uCWgXaGw8A READY; se comprobó la cadena de error nueva
+en el chunk realmente servido, no sólo en el código local. Panel autenticado
+390x844, teclado y total2 comprobados; captura móvil nativa contrastada con las
+medidas CSS para evitar un recorte por la escala de Windows. Overrides restaurados.
+
+RLS contrastada también contra Supabase real con clave pública y cuentas QA:
+anónimo lectura401/42501 y RPC42501; propietario del fixture ve6 filas propias y
+cero del documento personal QA; otra cuenta ve0; ambos RPC de escritura directa
+rechazados42501. No se usó service_role para ese contraste, no se insertó por SQL
+ni se cambiaron roles. Firma/RLS/grants remotos leídos: activos, clientes sin
+INSERT/UPDATE/DELETE ni EXECUTE de record_reader_open; sólo servidor autorizado.
+
+Nueva comprobación HTTP externa sin login personal ni IA:
+https://github.com/Danilo2334/PDF_Interactivo/actions/runs/41280983219
+head dedfffe, PASS9,06:28:44.740–06:28:48.362UTC. Alcance explícito HTTP y
+recursos, complementado por pruebas visuales IAB. Versión7 y SHA del original
+conservados, sin nuevos intentos. Reporte externo JSON guardado fuera de Git.
+
+PR #48 creado y publicado hacia develop; no integrado. SCRUM-131,132 y214
+Finalizado con comentarios únicos10206/10207/10209 y cinco capturas reales.
+SCRUM-213 y madre49 siguen En curso hasta terminar el plazo. Adjuntos131
+10533/10534 comprobados en metadatos;10533 descargado y comparado byte a byte
+con la captura original. El navegador Jira pide login: no se afirma haber
+inspeccionado visualmente sus miniaturas; se verifican media IDs, adjuntos y
+archivo accesible mediante conector autorizado. Las imágenes no son plantillas.
+
+Conciliación previa al plazo: documento06d8f...=5, propio d91357...=2 y
+escaneado d11635...=1, mismos valores en las tres API autorizadas y ocho filas
+aceptadas. Publicación propia v2 retirada otra vez, sus dos eventos conservados
+y nuevas aperturas404; escaneado v2 restaurado privado. La publicación QA7 se
+mantiene pública temporalmente sólo para el ensayo de reapertura. Plazo mínimo
+para sesión A06:45:49.214UTC y para sesión IAB06:46:02.522UTC; conservar cookies
+de visitas, no manipular fechas.
+
+### 01/11/2026 — Cierre verificado de HU037; continuidad hacia HU038
+
+La prueba temporal terminó con tiempo real, sin tocar fechas, relojes o filas:
+sesiónA06:15:47.714451→06:45:50.958482UTC,1803.244031s; sesiónIAB
+06:16:02.521570→06:46:36.870853UTC,1834.349283s. Cada HMAC conserva dos
+eventos aceptados; no se expusieron sus valores. Total del documento digital
+QA ajeno5→7. El reintento de la operación original tras el plazo devuelve su
+ID inicial, sin sumar; reutilizar la operación del otro documento409.
+
+Se preparó/publicó v8 mediante el flujo normal, con los mismos siete refuerzos,
+dos medios y dos quizzes aprobados, sin IA. La misma sesiónA reabrió v8 y obtuvo
+recorded=false y el ID reciente539f1a3b; total7. Versión7 sustituida404. Lectura
+real IAB de v8 renderizada y sin nueva visita dentro de la ventana. Se retiraron
+ambas versiones7/8, y v2 propia ya retirada; escaneado v2 privado. Resultado final
+leído en BD:10 visitas aceptadas (7/2/1),7 intentos lector,10 prácticas privadas,
+12 instantáneas conservadas y0 publicaciones públicas. PDF digital conserva
+1580bytes y SHA e7277d66afd7caba47385cfac2f0e55a2eeb4fb7aa7136409fa35300a6347946.
+
+Retirada externa repetida sobre el mismo enlace7 del ensayo público:
+https://github.com/Danilo2334/PDF_Interactivo/actions/runs/41282261536
+PASS4,terminó06:48:10.240UTC,head dedfffe. Junto a PASS9 público del run
+41280983219, acredita HTTP externo; las pruebas visuales siguen siendo IAB.
+No se presenta el cliente HTTP como navegador remoto.
+
+Jira confirma Finalizado para49 y131/132/213/214. Comentarios únicos: madre10208,
+131=10206,132=10207,213=10210,214=10209. Ocho capturas auténticas adjuntas
+10533–10540, con nombres/tamaños comprobados; no imágenes duplicadas en madre.
+213 incluye las respuestas reales del API antes/después y el lector de v8;
+132 estado vacío y panel móvil autenticado;214 total conservado al retirar;
+131 fallo PDF y recuperación. La captura08 se conservó marcada no-adjuntar por
+recorte;09 y13 definitivas obtenidas por captura nativa con viewport CSS390x844.
+No se usaron plantillas ni resultados esperados como observados.
+
+397/397 pruebas, lint y build aprobados para el código final dedfffe; los cambios
+posteriores son documentación. PR #48 listo para revisión hacia develop, sin
+integración automática. No se activaron pagos, modificó main, aplicó el stash
+d6406e0 ni reinició localhost. La sesión personal quedó restaurada y conservada
+al cierre; para preparar herramientas no volver a navegar a /login. Sin nuevas
+llamadas de IA. Los bloqueos previos SMTP233 y archivos grandes permanecen fuera
+de este cierre.
+
+El usuario amplió el encargo: continuar autónomamente los pendientes del proyecto
+y no detenerse por pasos rutinarios. Próxima historia por orden del Sprint7:
+HU038/SCRUM-50, seguimiento de aperturas de refuerzo. Sprint7 permanece activo;
+no cerrar sprints ni inventar pruebas pendientes. Las credenciales se gestionan
+únicamente en mecanismos privados; no incluirlas en contexto, Git, Jira o capturas.
