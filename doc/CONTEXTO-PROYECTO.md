@@ -6793,3 +6793,177 @@ todavía no se puede despachar si no existe en main. SCRUM-236 mantiene revisió
 de calidad y lector público HTTPS con este código pendiente de un despliegue
 autorizado. SCRUM-161 conserva Finalizado. QA HTTPS y datos personales intactos;
 stashd6406e0cdbc464c1c0301c058024b10dd27c4515 conservado sin aplicar.
+
+### 2026-11-02 — Cierre de entregas verificadas y pendientes externos concretos
+
+Continuación solicitada después de integrar #48–#62. Rama
+codex/cierre-entregas-verificadas desde developbaf41be, limpia al comenzar.
+Se contrastaron las tareas abiertas, sus criterios y los comentarios HTML con
+las capturas y registros originales. No se repitieron pruebas ya aprobadas sin
+un cambio que lo justificara, ni se presentaron esos registros como una ejecución nueva.
+
+HU027/SCRUM-39 y SCRUM-235 pasaron de En revisión a Finalizado. Su pendiente
+expreso era revisar e integrar #56/#57, completado en el turno anterior. HU027
+conserva111/112/193/194 Finalizado: archivo/URL permitido, vista previa,
+aprobación, retirada, PNG5.034.365B yMP4 de20MiB, recuperación y almacenamiento
+privado probados en QA HTTPS. SCRUM-235 conserva la carga/reemplazo20MiB,
+respuesta perdida, concurrencia, rechazos y visor de3 páginas ya acreditados.
+El informe original contiene los cuatro PDF descargados con SHA-256 idéntico
+a sus fuentes y las dos versiones por proyecto. Se inspeccionaron también
+las capturas reales del video reproduciéndose y de la tercera página del PDF.
+Se añadieron las conclusiones en10159 y10241, sin otro comentario ni imágenes
+duplicadas. No se reabrieron subtareas ni se cerraron epics o sprints.
+
+149/231 siguen En curso. Fuentes oficiales Google/Microsoft/Mozilla/Apple
+reconsultadas: objetivos sin cambios respecto de la matriz del02/11. La nota
+Edge de02/11 corresponde a Android/iOS, no a un parche nuevo de escritorio.
+Inventario local: Windows11 10.0.26200; Chrome156.0.8078.74, Edge156.0.4314.58,
+Firefox88.0. Solo IAB y MCP Apps aparecen como sesiones de control de navegador;
+la ventana personal de Chrome permanece ajena a las pruebas. No se repitieron
+los intentos rechazados anteriormente ni se declaró una marca/versión probada.
+La matriz y sus condiciones de ejecución se actualizaron en
+doc/OPERACION-Y-COMPATIBILIDAD.md; no hubo instalación ni actualización de software.
+
+Bloqueos concretos conservados: pantalla táctil real para137; ocho versiones
+de marca y dispositivo Apple para149/231; ejecutor continuo, destino de avisos
+y SLO/ventana/umbrales acordados para232; dominio/remitente SMTP verificado
+para233; despliegue QA autorizado y lector público con el código nuevo para236.
+El workflow manual solo en develop no acredita vigilancia permanente y no se
+modificó main para activarlo. No se inventaron SLO ni se contrataron servicios.
+
+Candidato limpio preparado, sin desplegar: git archive del commit aprobado
+baf41bec85b0ea42394d2b2230ca3197a0ce28a4. ZIP739 entradas, sin .env,
+.vercel, node_modules o .git; SHA-256
+657207018606b8896c42cd7e5e2a3aa9f13092c247912575a61b0cbdcf1a3ee5.
+Artefacto y comprobante fuera de Git en CIERRE-PENDIENTES-20261102. Esta copia
+no incluye configuración privada ni representa una publicación o despliegue.
+No cambió código, SQL, secretos, sesiones personales, datos o el stashd6406e0.
+465/465, lint y build del mismo código siguen vigentes; esta entrega solo cambia
+documentación y estados respaldados por la evidencia existente.
+
+### 2026-11-02 — QA baf41be autorizado y lector público de las ilustraciones
+
+Después de la preparación anterior, el propietario confirmó expresamente:
+«Sí, actualizar únicamente el QA con baf41be». Se desplegó exactamente
+baf41bec85b0ea42394d2b2230ca3197a0ce28a4 al proyecto QA existente de Danilo,
+sin pagos ni cambios en main. No se extendió esa autorización a otros destinos
+o revisiones. El build de Vercel quedó READY; se comprobó el candidato protegido
+con la CLI autenticada y después se promovió el alias estable. Deployment final
+dpl_5P2Cy4EMS9hpKAKXqvTg3RFV9TzZ; anterior conservado para reversión
+dpl_GXtWpykpve985kw6ipvqg5nZtb2B. Se mantuvieron las ocho variables QA y la
+ausencia de integración Git; no se copiaron claves IA locales.
+
+https://pdf-interactivo-qa.vercel.app/api/health confirmó la revisión exacta.
+Sondeo público 5/5 aprobado: login 200 (948,64 ms); página privada 307
+(184,27 ms); PDF privado 401 (589,63 ms); escritura de origen ajeno 403
+(361,97 ms); health 200 (178,48 ms). Son mediciones de contratos, no vigilancia
+continua ni SLO.
+Detalle reproducible y procedimiento de reversión en
+doc/OPERACION-Y-COMPATIBILIDAD.md.
+
+SCRUM-236: publicación pública temporal del fixture sintético de agua, visual
+aprobado v2, dos escenas. Lector anónimo real frente al PDF: evaporación con
+aporte solar y vapor simbólico; condensación con gotas tras enfriarse, misma
+sustancia y sin inventar lluvia/ciclo completo/temperaturas. Se comprobaron
+explicaciones, recarga, cierre/reapertura, zoom125% y ampliación con teclado;
+sin errores de consola. API pública idéntica a la versión aprobada y sin
+identificadores privados. No hubo generaciones nuevas de IA ni costo de proveedor.
+
+En390×844, DOM y teclado confirmaron el panel dentro del ancho disponible
+(derecha359,20px; ancho útil375px). La herramienta produjo capturas móviles
+incompletas/inconsistentes; se excluyeron y no se da esa comprobación visual
+pública por aprobada. No se confundió con la prueba física táctil de137.
+Las capturas móviles locales previas siguen conservadas. El contenido QA ya
+aprobado termina con la frase editorial «Borrador para revisión»; se deja
+registrada sin reescribirlo ni invalidar su historial.
+
+Se retiró la publicación temporal1b7586f0-ea71-43cf-a4d0-9748e6d7ab71 mediante
+el flujo normal con control de versión. Lector y PDF404, interfaz de experiencia
+no disponible y ausencia de publicación pública actual comprobados. Aprobación,
+ilustraciones y original1334B intactos; SHA-256
+0c9af69fde08b476c25801b079ffd456466afe0f55116869d7b37f3e4913f909.
+La preparación inicial del cliente de prueba usó un contrato de publicación
+antiguo y fue rechazada; se corrigió al contrato de visibilidad de la UI,
+reutilizando la operación de preparación. No fue un fallo del producto ni se
+crearon publicaciones duplicadas. Cookies de la cuenta QA solo en memoria;
+sesión personal y demás proyectos conservados. Enlace-capacidad omitido de Git,
+Jira y mensajes.
+
+Jira:10242 actualizado sin crear otro comentario, conserva todo su HTML y las
+seis imágenes previas; se añaden únicamente05-lector-publico-evaporacion.jpg,
+06-lector-publico-condensacion.jpg y11-lector-publico-retirado.jpg. Las tres
+cargan en el visor de Jira. SCRUM-236 permanece En curso por la verificación
+visual pública móvil pendiente. HU027/SCRUM-39 y235 quedan Finalizado por la
+revisión documentada antes;137,149/231,232 y233 mantienen sus bloqueos concretos.
+Se contrastaron los33 adjuntos de11 tareas previas: IDs, nombres y tamaños
+conservados; SCRUM-236 tiene ahora9 adjuntos y un único comentario10242. El
+seguimiento10136 de HU022 se actualizó conservando su HTML y estado Finalizado.
+PR #63 agrupa el cierre documental; sin nuevos merges ni cambios de aplicación,
+SQL, dependencias o secretos. Stashd6406e0 conservado sin aplicar ni eliminar.
+Evidencias y reportes fuera deGit en CIERRE-PENDIENTES-20261102.
+
+### 2026-11-02 — SCRUM-236 verificado en móvil y conciliación del cierre funcional
+
+El propietario pidió revisar cuánto falta y avanzar en lo resoluble. Árbol
+limpio al comenzar en codex/cierre-entregas-verificadas, origen actualizado y
+stashd6406e0 conservado. Inventario Jira completo:233 actividades,46 historias,
+175 subtareas,8 epics y4 tareas. Antes de este cierre había44 historias y170
+subtareas Finalizado; una de las cinco subtareas abiertas es SCRUM-4, heredada,
+sin requisitos funcionales. No se borró ni se dio por satisfecha.
+
+Se resolvió la captura móvil pendiente de236. El navegador medía390×844CSS
+frente a488×1055 en la captura con escala Windows125%. Se mantuvo el diseño
+estrecho y se aplicó scale0,8 al view image mediante CDP, según documentación
+oficial; captura directa del navegador, sin modificar la aplicación ni editar
+imágenes. Tras esperar la disposición estrecha estable, las dos ilustraciones
+y sus explicaciones se ven completas. Detalle y fuente en
+doc/OPERACION-Y-COMPATIBILIDAD.md. Overrides restaurados al terminar.
+
+Prueba real pública con el mismo QA baf41be: se reutilizó la publicación QA de
+agua v1 y su visual aprobado v2, sin nueva versión, IA o despliegue. El enlace
+anterior retirado siguió rechazado; se utilizó el vigente entregado por el flujo.
+Se comprobaron evaporación/condensación, anotaciones, foco, ampliación y retorno
+al ancho (región276px/contenido960px; flechas80px), zoom125%, cerrar/reabrir y
+recarga con las dos escenas aprobadas. Consola final sin errores. Retirada final
+confirmada: lector/PDF404, ninguna publicación pública actual, ilustraciones,
+aprobación y SHA-256 del original idénticos. No se utilizó la sesión personal.
+
+Jira236 pasó a Finalizado. Comentario10242 actualizado sin perder su HTML ni
+sus9 adjuntos previos. Se añadieron solamente tres capturas móviles reales de
+390×844:03-lector-movil-explicaciones.jpg,04-lector-movil-condensacion.jpg y
+06-lector-movil-retirado.jpg. Las tres cargan en el visor Jira; ahora12 adjuntos
+y un único comentario. La observación previa sobre capturas incompletas queda
+como historial, resuelta por esta ejecución. Seguimiento10136 de HU022 actualizado
+sin duplicar capturas ni cambiar el cierre histórico de la historia.
+
+Se concilió el estado de los epics con su alcance y resultados documentados,
+sin presentar pruebas anteriores como reejecutadas:
+
+| Epic Finalizado | Historias/subtareas acreditadas | Corrección relacionada |
+| --- | --- | --- |
+| EP02/SCRUM-7, documentos |6/27 |235 Finalizado, PDF20MiB e integridad. |
+| EP03/SCRUM-8, selección y solicitudes |6/18 |Contexto, persistencia e idempotencia documentados. |
+| EP04/SCRUM-9, asistente IA |7/21 |236 Finalizado, calidad de ilustraciones y lector público. |
+| EP05/SCRUM-10, recursos/quiz |6/24 |HU027 Finalizado, recursos grandes y quiz del lector acreditados. |
+| EP06/SCRUM-11, publicación/lector |6/25 |Recorridos HTTPS, navegación, autorización y retirada acreditados. |
+
+Cada epic recibió un único comentario de cierre breve, con referencia al alcance
+y continuidad; las evidencias permanecen en sus tareas sin copiar imágenes.
+EP01/SCRUM-5 y EP08/SCRUM-13 pasan a En curso para reflejar sus pendientes reales;
+EP07/SCRUM-12 ya estaba En curso. No se cerró ningún sprint ni se tocaron fechas.
+
+Estado final:44/46 historias,170/175 subtareas,5/8 epics y3/4 tareas Finalizado.
+Quedan11 actividades abiertas, incluidas las tres agrupaciones epic, las dos
+historias, cuatro subtareas funcionales, SCRUM-233 y la heredada SCRUM-4.
+Los frentes pendientes son cuatro:137 táctil físico;149/231 sistemas y ocho
+versiones de navegadores;232 ejecutor continuo, avisos y SLO/umbrales;233
+dominio/remitente SMTP verificado y recuperación por correo. El cambio de clave
+con sesión activa no sustituye la recuperación. No se inventaron umbrales,
+compatibilidad o pruebas táctiles, ni se activaron servicios de pago.
+
+Esta entrega modifica solo continuidad/operación. Se conserva la verificación
+465/465, lint y build del mismo código integrado; no se repitió sin cambios.
+PR #63 actualizado y preparado para revisión, sin nuevo merge ni despliegue;
+main, secretos, configuración, datos personales y stash intactos. Evidencia
+nueva fuera deGit en CIERRE-FUNCIONAL-20261102; retiro y controles backend
+conservados también en CIERRE-PENDIENTES-20261102.

@@ -16,6 +16,16 @@ Nightly y Early Stable. Las actualizaciones dentro de una rama se registran
 sin sustituir la prueba de la rama anterior. Cada fila conserva el pendiente
 de ejecución real; la política no cambia un resultado no ejecutado en aprobado.
 
+Revalidación del02/11 tras integrar PR #48–#62: las fuentes oficiales de Google,
+Microsoft, Mozilla y Apple conservan las versiones objetivo de la tabla. La
+entrada Edge de02/11 es Android/iOS; no sustituye el parche Stable de escritorio.
+ProductVersion sigue siendo Chrome156.0.8078.74, Edge156.0.4314.58 yFirefox88.0,
+en Windows11 10.0.26200. No se instaló ni actualizó un navegador.
+El inventario de control sigue ofreciendo IAB y MCP Apps, sin una sesión de
+navegador de marca conectada. No se operó la ventana personal de Chrome ni se
+repitieron los intentos previamente rechazados. Esta revalidación documental
+no añade una regresión ejecutada a149/231 ni una prueba táctil física a137.
+
 | Navegador | Versiones concretas consultadas | Sistema de prueba | Estado real |
 | --- | --- | --- | --- |
 | Chrome | 156.0.8078.80 y155.0.8059.85 | Windows del equipo local | Pendiente en esas versiones exactas; ProductVersion instalado156.0.8078.74 al02/11. No acredita la versión activa ni una prueba ejecutada. |
@@ -236,7 +246,125 @@ fue comprobado también por el cliente anónimo contra el dominio estable.
 Estos resultados no acreditan compatibilidad de las8 versiones, vigilancia24/7,
 notificaciones recibidas ni objetivos de degradación aún no acordados.
 
+## Condiciones concretas para completar lo pendiente
+
+- SCRUM-149/231: acceso verificable a las ocho versiones de marca de la matriz,
+  con perfiles QA separados y un sistema Apple real para Safari. Registrar
+  sistema, versión activa y resultado observado de cada flujo; el IAB no los
+  sustituye. No cerrar la compatibilidad ni declarar aprobadas filas pendientes.
+- SCRUM-137: completar la selección y envío de claridad desde una pantalla
+  táctil real. Ratón, teclado y viewport móvil ya documentados no acreditan
+  ese dispositivo; no fabricar el gesto mediante una afirmación de emulación.
+- SCRUM-232: acordar SLO/ventana/umbral para degradación y el destino de avisos,
+  y disponer de un ejecutor continuo comprobable. El workflow solo manual y
+  presente en develop no acredita vigilancia24/7 ni notificación recibida.
+  Mantener los contratos y límites RNF vigentes; no inventar umbrales API.
+- SCRUM-233: dominio/remitente de correo autorizado y verificado en el proveedor
+  SMTP, configuración privada en Supabase y prueba de recuperación real. No
+  solicitar claves por chat ni reducir la seguridad para sortear el bloqueo.
+- SCRUM-236: Finalizado tras completar también la comprobación visual pública
+  móvil, según la ejecución posterior documentada abajo. Se conservan las
+  capturas locales, públicas de escritorio/móvil y todas las versiones aprobadas.
+
+El candidato de código revisado esbaf41bec85b0ea42394d2b2230ca3197a0ce28a4,
+develop después de #62. Inicialmente se preparó sin desplegar. Posteriormente
+el propietario autorizó expresamente actualizar únicamente este QA con ese SHA;
+la ejecución y sus límites quedan registrados a continuación.
+
 Intento de abrir Edge con perfil QA separado desde terminal: rechazado por el
 control automático con «blocked by policy», sin detalle adicional. No se repitió
 el comando ni se declaró el navegador probado. La herramienta de navegador
 habilitada solo ofreció IAB yMCP Apps. Se preservaron las ventanas personales.
+
+## Ejecución QA autorizada del02/11/2026 — SCRUM-236
+
+Autorización literal: «Sí, actualizar únicamente el QA con baf41be». Fuente
+exportada desde Git y ZIP contrastado; mismo proyecto/equipo de Danilo, raíz web,
+Node22 y ocho variables QA existentes. Sin enlace Git, pagos, cambios en main,
+nuevas claves ni llamadas IA. La CLI oficial autenticada comprobó el candidato
+protegido sin desactivar Deployment Protection y después promovió el alias QA.
+
+| Identidad | Valor comprobado |
+| --- | --- |
+| Fuente | baf41bec85b0ea42394d2b2230ca3197a0ce28a4 |
+| Deployment final | dpl_5P2Cy4EMS9hpKAKXqvTg3RFV9TzZ |
+| Alias | https://pdf-interactivo-qa.vercel.app |
+| Anterior disponible para reversión | dpl_GXtWpykpve985kw6ipvqg5nZtb2B |
+
+Sondeo anónimo real después de promover, con revisión exacta:
+
+| Contrato | HTTP | Tiempo observado |
+| --- | --- | --- |
+| Login |200 |948,64ms |
+| Página privada |307 |184,27ms |
+| PDF privado |401 |589,63ms |
+| Escritura desde origen ajeno |403 |361,97ms |
+| Liveness/revisión |200 |178,48ms |
+
+5/5 aprobados, máximo948,64ms. Es una muestra de contratos, no una prueba de
+disponibilidad permanente ni un SLO. Reporte qa-live-health-check.json fuera deGit.
+
+Se publicó temporalmente el fixture sintético QA-SCRUM236-agua, con un único
+visual aprobado v2 y dos escenas anotadas. Acceso anónimo real, PDF/versión
+aprobada idénticos, sin IDs privados en la respuesta; apertura, recarga,
+cierre/reapertura, zoom125% y ampliación mediante teclado comprobados. Sin
+errores de consola antes de la retirada. Las capturas05/06 muestran las escenas
+frente al original;11 muestra el acceso rechazado después de retirar.
+
+Viewport390×844: panel derecho359,20px dentro del ancho útil375px, sin desborde
+del panel; navegación por teclado comprobada. Las capturas de ese viewport
+salieron incompletas/inconsistentes y se excluyeron de Jira. No se declara
+aprobada la comprobación visual pública móvil ni una prueba táctil física.
+
+La publicación temporal1b7586f0-ea71-43cf-a4d0-9748e6d7ab71 quedó unpublished:
+lector y PDF404, sin publicación pública actual. Se conservaron aprobación,
+contenido y PDF1334B, SHA-256
+0c9af69fde08b476c25801b079ffd456466afe0f55116869d7b37f3e4913f909.
+La sesión personal no se utilizó ni se invalidó; el cliente backend QA usó una
+cuenta sintética y cookies solo en memoria. No se publica el enlace-capacidad.
+
+## Cierre visual móvil del02/11/2026 — SCRUM-236
+
+Se identificó una diferencia de escala en la captura: Page.getLayoutMetrics
+reportaba390×844 en cssLayoutViewport y488×1055 en layoutViewport. El recorte
+provenía de la captura con escala de Windows125%, no de un desborde del panel.
+Emulation.setDeviceMetricsOverride mantuvo el diseño390×844 con deviceScaleFactor1
+y scale0,8 únicamente para la imagen del navegador. Se esperó el diseño estrecho
+estable y se capturó directamente Page.captureScreenshot; sin recomponer,
+agrandar o modificar imágenes ni código. Referencia del parámetro:
+[CDP Emulation](https://chromedevtools.github.io/devtools-protocol/tot/Emulation/#method-setDeviceMetricsOverride).
+El override se retiró al terminar. No se modificó la escala global de Windows.
+
+Mismo QA baf41be, sin otro despliegue. Se republicó temporalmente la misma
+publicación QA v1 y el mismo visual aprobado v2. El enlace retirado anterior
+siguió rechazado; el flujo normal entregó el enlace vigente, omitido de informes.
+Evaporación, condensación, anotaciones y explicaciones visibles, título completo
+y panel dentro del ancho disponible. Ampliar habilitó región de276px con960px
+de contenido; foco y flechas movieron80px. Volver al ancho, zoom125%, cerrar y
+reabrir conservaron el estado esperado; tras recargar se recuperaron las dos
+ilustraciones aprobadas. Consola final sin errores.
+
+Las capturas móviles03-lector-movil-explicaciones.jpg,
+04-lector-movil-condensacion.jpg y06-lector-movil-retirado.jpg son390×844,
+reales de la aplicación. Se inspeccionaron y cargan en el visor de Jira.
+Se conservan las capturas defectuosas fuera de Git, excluidas de aceptación.
+Esta prueba acredita diseño estrecho y teclado; la pantalla táctil física137
+y las marcas/versiones149/231 siguen pendientes.
+
+Retirada final mediante el flujo normal: lector/PDF404, ninguna publicación
+pública actual, mismo SHA-256, contenido y aprobación. SCRUM-236 Finalizado;
+comentario10242 único con12 adjuntos, incluidos los9 anteriores intactos.
+La frase editorial del fixture aprobado se conserva sin reescribir su historial.
+
+## Pendientes reales después del cierre visual
+
+| Frente | Tareas | Requisito aún no acreditado |
+| --- | --- | --- |
+| Claridad táctil | HU040/SCRUM-52,137 | Selección y envío desde pantalla táctil física. |
+| Compatibilidad | HU046/SCRUM-58,149/231 | Sistemas/versiones concretos de la matriz y recorridos completos en ocho versiones de marca, incluido Safari real. |
+| Supervisión | HU046/SCRUM-58,232 | Ejecutor continuo, destino autorizado de avisos y SLO/ventana/umbrales documentados antes de configurar alertas. |
+| Recuperación por correo | SCRUM-233,EP01/SCRUM-5 | Dominio/remitente SMTP autorizado y verificado, configuración privada y recorrido real de recuperación. |
+
+La matriz documental y el inventario se conservan. No se declara probada una
+marca por el resultado del IAB, ni se define un umbral nuevo como si estuviera
+acordado. El workflow manual sigue en develop y no se modificó main.
