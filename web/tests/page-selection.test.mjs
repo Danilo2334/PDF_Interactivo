@@ -52,6 +52,7 @@ function fixture(path, exportedName, initialProps) {
     if (name === '@/components/documents/publication-panel') return { PublicationPanel: 'publication' };
     if (name === '@/components/documents/visit-totals-panel') return { VisitTotalsPanel: 'visit-totals' };
     if (name === '@/components/documents/reinforcement-usage-panel') return { ReinforcementUsagePanel: 'reinforcement-usage' };
+    if (name === '@/components/documents/quiz-results-panel') return { QuizResultsPanel: 'quiz-results' };
     if (name === '@/components/documents/pdf-viewer') return { PdfViewer: viewer };
     if (name === '@/components/documents/reinforcement-request-draft') return { ReinforcementRequestDraft: draftForm };
     if (name === '@/lib/validations/difficulty') return difficulty;

@@ -5425,3 +5425,118 @@ quiz_practice_attempts, comprueba respuestas contra la instantánea evaluada,
 agrega aciertos por pregunta y respeta identificación/propiedad. No duplicar el
 registro ni recalificar con versiones posteriores. Después siguen HU040/041/045/046;
 SMTP233 y cargas grandes del hosting continúan pendientes de proyecto.
+
+### 01/11/2026 — Inicio de HU039: consolidación privada de resultados existentes
+
+HU038 quedó publicada en PR49 listo, head02792555f78b55681cef9a7d157faf8929d1cc90,
+sin integrar. Rama nueva codex/scrum-51-hu039-resultados desde ese head, árbol
+anterior limpio y stash intacto. SCRUM-51 y135/136/217/218 En curso; comentario
+único inicial10216. Sprint7 activo, sin cerrar otros sprints.
+
+Implementación inicial: GET privado quiz-results y panel del propietario reutilizan
+sólo quiz_reader_attempts. No nueva tabla, migración, escritor o recalificación.
+Comprueba publicación/hash/quiz/propietario, respuestas y feedback contra la copia
+inmutable evaluada, excluye inconsistencias avisando y evita duplicar indicadores.
+Agrega aciertos y distribución de opciones por pregunta y publicación/versión;
+detalle de intentos paginado20. Ensayos quiz_practice_attempts fuera. Consulta
+histórica admite publicaciones retiradas del documento actual; verifica documento
+disponible por RLS y vuelve a comprobar sustitución/eliminación antes de responder.
+No fallback privilegiado para leer respuestas ajenas, tampoco para admin.
+
+Privacidad preservada: el flujo existente nunca guardó nombres/correos en intentos
+y sólo retiene un hash de identidad en cookie. Se usan alias HMAC por documento,
+sin exponer reader_id; se indica si la publicación pedía identificación, también
+cuando el propietario no puede recuperar un nombre que nunca fue almacenado.
+No se incorpora recogida retroactiva de datos personales. Se prueban publicación
+con identificación y sin ella sin alterar esas reglas.
+
+Lectura servidor por lotes500 con corte temporal, detalle20 e indicadores completos.
+Presupuesto operacional actual: si alcanza10000 filas devuelve503 sin presentar
+un agregado parcial; queda explícito para optimización posterior del panel/exporte
+HU041. No se afirma escalabilidad ilimitada. Dataset remoto inicial:7 intentos
+de lector de publicación5,10 ensayos privados separados; no se modificaron.
+FK remotas document→publication→reader/practice ON DELETE CASCADE leídas y
+contrastadas. Regresión PostgreSQL aislada extendida para borrar documento y
+comprobar ausencia de respuestas, sin borrar fixtures remotos.
+
+Pruebas iniciales411/411; build detectó inferencia readonly del acumulador, corregida
+con tipo explícito mutable. En ejecución la batería final con eliminación vinculada
+y limpieza del panel al perder autorización, lint y build. Ninguna prueba visual
+HU039 ni captura nueva registrada todavía; no finalizar subtareas por estos checks.
+
+### 01/11/2026 — Cierre verificado de HU039 y actualización del QA
+
+412/412 pruebas, lint y build/TypeScript finales aprobados. Commit funcional
+efa3237b0f76241484a6cb9481c34e3fb81cf537, QA
+dpl_5fr8fGRgtKaeu6dhvFjD6HH7J1JD READY en el mismo proyecto Hobby,8 variables y
+epoch conservados. Sin nueva migración, dependencia, pago o llamada IA. PR50
+apilado sobre49, y49 depende de48; ninguno integrado automáticamente.
+
+GET quiz-results real concilia los7 intentos históricos de publicación5 con una
+consulta SQL independiente sobre sus instantáneas: energía1/3=33,33% y3/3=100%;
+agua2/4=50%. Sin inconsistencias ni duplicados en la lectura. Las10 prácticas
+privadas iniciales no aparecen. Identificación deshabilitada en5 y solicitada en
+la nueva9, preparada/publicada por API normal con7 refuerzos/2 medios/2 quizzes
+aprobados, sin generación. El contrato público del quiz sólo devuelve id/título/
+allowRetries/prompt/options, sin claves o feedback antes del envío. Las citas de
+los visuales aprobados son otro contenido público; no confundirlas con claves de
+quiz al inspeccionar el JSON completo del lector.
+
+Sesión HTTP QA identificada con nombre sintético, sin correo: cinco POST simultáneos
+del mismo envío devolvieron un único attemptId/number1 y1/2. Nueva operación en el
+quiz sin reintento409; quiz habilitado guarda0/1 y1/1 como1/2. Repetir la operación
+original después conserva su primer ID/nota, no crea otro intento. Falta de
+identificación403. Navegador real con otra cuenta: envío1/2, explicación por
+pregunta y aviso sin reintentos; recarga recupera lo guardado. En página2 completó
+0/1→1/1, foco vuelve a un radio al reintentar y al resultado al guardar; recarga
+conserva el segundo. Consola warn/error[].
+
+Resultado:7 históricos+6 nuevos=13 intentos de lector. Publicación9 energía0/2 y
+2/2, agua2/4=50%, todos conciliados de nuevo por SQL independiente. Los4 intentos
+del agua corresponden a2 referencias de lector, incluyen reintentos y se separan
+de los4 históricos de5. Ensayo privado real añade sólo1 registro: prácticas10→11,
+API público de resultados sigue13. Se abrió el ensayo por la ruta privada y se
+comprobó su badge y0/1 ya guardado, sin otro envío. Cero cambios a notas históricas.
+
+Privacidad real: respuesta sin nombres, correos, reader_id ni identidad declarada;
+cookie contiene hash, no el nombre de prueba. Alias HMAC del documento. Anónimo401,
+otro dueño404 y RLS directa de esa cuenta0 filas; documento equivocado409 y página
+inválida400. Cerrar sesión de la cuenta sintética quitó las respuestas ya cargadas
+y mostró401; después se restauró su login normal. Admin ajeno sin bypass e inactivo
+se contrastan aisladamente. Cuenta personal de localhost y credenciales personales
+sin utilizar/modificar. No se almacenó contraseña personal enviada por chat.
+
+Móvil390×844 comprobado por DOM/teclado: documento390, panel cliente/scroll275,
+13 summaries de intentos y todos dentro del ancho. No se presenta como inspección
+de imagen móvil; persiste la limitación de capturas del IAB registrada enHU038.
+El dataset real cabe en una página de20; paginación41 registros y offsets
+temporales probados aisladamente, sin fabricar envíos remotos para llenar páginas.
+Límite operacional de10000 filas explícito, sin totales parciales, pendiente de
+optimización en HU041. No se afirma carga ilimitada.
+
+Retirada normal de9→unpublished: GET lector y POST del quiz404; grupos, respuestas,
+notas y13 intentos idénticos antes/después en la consulta del propietario. Original
+privado1580bytes y SHA-256
+e7277d66afd7caba47385cfac2f0e55a2eeb4fb7aa7136409fa35300a6347946,
+idéntico al registrado arriba.
+SQL final:0 instantáneas públicas,13 intentos lector,11 prácticas,15 visitas y42
+aperturas de refuerzo (incluye el recorrido QA deHU039). No se borraron evidencias
+ni se reiniciaron contadores para que parecieran menores. Eliminación vinculada
+comprobada en PostgreSQL aislado usando FK hijas de la migración real deHU030 y
+FK padres iguales a las remotas leídas; ningún documento real se borró en esa prueba.
+
+Jira51 y135/136/217/218 Finalizado. Comentarios únicos: madre10216,
+135=10217,136=10218,217=10219,218=10220. Ocho capturas auténticas10548–10555,
+nombres/tamaños/media comprobados, un comentario por subtarea con2 imágenes cada
+uno; ninguna imagen duplicada en madre.10554 descargado,101998bytes idénticos a
+08-agregado-identificado-publicacion9.jpg. Sin afirmar miniaturas Jira vistas en
+navegador: conector, nodos inline y binario descargable verificados. Evidencias
+y resultados detallados en HU039-REAL fuera de Git. Stash d6406e0 intacto.
+
+La consulta completa de historias no finalizadas (issuetype10004, isLast=true)
+reveló además8 anteriores que requieren auditoría de pendientes/evidencias:
+SCRUM-29/HU017;36/HU024;37/HU025;38/HU026;39/HU027;40/HU028;41/HU029;43/HU031.
+No asumir que están cerradas porque exista implementación o un PR integrado, ni
+reimplementar desde una rama antigua. En Sprint7 siguen HU040/041/045/046, además
+de SMTP233/cargas grandes ya conocidos. No declarar terminado el proyecto o los
+sprints hasta conciliar esos pendientes reales.
