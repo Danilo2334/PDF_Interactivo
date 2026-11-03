@@ -25,6 +25,7 @@ function fixture(wide=false){
     'next/image':{default:()=>null},'@/components/documents/pdf-viewer':{PdfViewer},'@/components/documents/visual-resource':{VisualResource:()=>null},
     '@/components/documents/summary-resource':{SummaryResource:()=>null},'@/lib/validations/reader':{},'@/components/readers/reader-quiz':{ReaderQuiz:()=>null},
     '@/lib/readers/layout':{useWideReader:()=>wide},
+    '@/components/readers/reader-feedback':{ReaderFeedback:()=>null},
     '@/components/readers/reader-open-reporter':{ReaderOpenReporter:()=>null},
     '@/components/readers/use-reinforcement-opens':{useReinforcementOpens:()=>({opened:items=>opens.push(...items),acceptedVisit(){}})},
   },{window,document,HTMLElement:Element,CSS:{escape:x=>x}});
