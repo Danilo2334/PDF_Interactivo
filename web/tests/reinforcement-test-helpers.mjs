@@ -10,11 +10,12 @@ export function load(relative, dependencies = {}, globals = {}) {
     compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.ReactJSX },
   });
   const exports = {};
-  runInNewContext(outputText, { exports, Request, Response, URL, Headers, File, FormData, Buffer, AbortSignal, AbortController, fetch, crypto, process, Date, Error, structuredClone, Uint8Array, TextDecoder, setTimeout, clearTimeout,
+  runInNewContext(outputText, { exports, Request, Response, URL, Headers, File, FormData, Buffer, AbortSignal, AbortController, fetch, crypto, process, Date, Error, structuredClone, Uint8Array, TextDecoder, TextEncoder, setTimeout, clearTimeout,
     require(name) {
       if (name in dependencies) return dependencies[name];
       if (name === 'server-only') return {};
       if (['@/lib/reinforcements/ai-provider', '@/lib/reinforcements/gemini-provider', '@/lib/reinforcements/openai-provider'].includes(name)) return load(name.slice(2)+'.ts');
+      if (['@/lib/validations/visual-artwork','@/components/documents/illustrated-visual'].includes(name)) return load(name.slice(2)+(name.includes('/components/')?'.tsx':'.ts'));
       if (['zod', 'node:crypto', 'react/jsx-runtime'].includes(name)) return require(name);
       throw Error(`Unexpected dependency: ${name}`);
     }, ...globals,

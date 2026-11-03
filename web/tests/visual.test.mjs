@@ -26,7 +26,7 @@ test('new visual generations reject ellipses, soft hyphens and invisible truncat
  assert.throws(()=>schemas.validateVisual(layoutClaim,context,diagnosis,'diagram'));
 });
 test('provider sends only persisted context, mode, brief and bounded instructions in one call; quote schema never splits a surrogate pair',async()=>{
-  const unicodeContext={...context,selectedText:'a'.repeat(499)+'😀 al final'};let calls=0;
+  const unicodeContext={...context,selectedText:'a'.repeat(499)+'😀 al final',nearbyText:context.selectedText};let calls=0;
   await provider.generateVisual(unicodeContext,diagnosis,'diagram',generation.visual_brief,'Aclarar la transformación.',{provider:'gemini',key:'test',model:'test-model'},async(url,init)=>{
     calls++;const body=JSON.parse(init.body),input=JSON.parse(body.contents[0].parts[0].text);assert.equal(input.modality,'Diagrama');assert.equal(input.brief,generation.visual_brief);
     assert.equal(input.additionalInstructions,'Aclarar la transformación.');assert.equal(input.ownerId,undefined);assert.equal(init.cache,'no-store');
@@ -47,6 +47,7 @@ test('invalid provider output, quota, refusal and timeout remain controlled and 
     e=>e.code===code&&e.quotaExhausted===quota&&!e.message.includes('sensitive'));assert.equal(calls,1);}
 });
 const {VisualResource}=load('components/documents/visual-resource.tsx',{react:React,'@/lib/validations/visual':schemas});
+const renderLegacy=value=>renderToStaticMarkup(React.createElement(VisualResource,{value:{...value,scene:{...value.scene,artwork:undefined}}}));
 
 test('new diagrams require grounded, precise, distinct and connected relations while historical diagrams remain readable',()=>{
  const edge=visual.scene.edges[0];
@@ -67,7 +68,7 @@ test('new diagrams require grounded, precise, distinct and connected relations w
 
 test('composition uses a noncausal dashed connection, with visible explanations and escaped source evidence',()=>{
  const value={...visual,scene:{...visual.scene,edges:[{...visual.scene.edges[0],relationType:'part_of',label:'Forma parte de',evidence:'Cita <script>alert(1)</script> literal.'}]}};
- const html=renderToStaticMarkup(React.createElement(VisualResource,{value}));
+ const html=renderLegacy(value);
  assert.match(html,/stroke-dasharray="7 5"/);assert.doesNotMatch(html,/marker-end=/);
  assert.match(html,/Relaciones del gráfico/);assert.match(html,/Composición/);assert.match(html,/Cita del PDF/);
  assert.match(html,/&lt;script&gt;/);assert.doesNotMatch(html,/<script>/);assert.doesNotMatch(html,/<details/);
@@ -76,7 +77,7 @@ test('composition uses a noncausal dashed connection, with visible explanations 
 
 test('reciprocal transformations use distinct upper and lower paths instead of hiding one direction',()=>{
  const value={...visual,scene:{...visual.scene,edges:[visual.scene.edges[0],{...visual.scene.edges[0],from:'n2',to:'n1',label:'Al ascender'}]}};
- const html=renderToStaticMarkup(React.createElement(VisualResource,{value}));
+ const html=renderLegacy(value);
  const routes=[...html.matchAll(/<path d="([^"]+)"[^>]*marker-end=/g)].map(match=>match[1]);
  assert.equal(routes.length,2);assert.notEqual(routes[0],routes[1]);
  const firstY=routes[0].match(/-?\d+(?:\.\d+)?/g).map(Number)[1];
@@ -90,7 +91,7 @@ test('a shared total is laid out after its components so composition does not lo
   visual.scene.edges[0],{...visual.scene.edges[0],from:'n2',to:'n1'},
   {...visual.scene.edges[0],to:'n3',relationType:'part_of',label:'Forma parte de'},
   {...visual.scene.edges[0],from:'n2',to:'n3',relationType:'part_of',label:'Forma parte de'}]}};
- const html=renderToStaticMarkup(React.createElement(VisualResource,{value}));
+ const html=renderLegacy(value);
  const ys=[...html.matchAll(/transform="translate\([^ ]+ ([\d.]+)\)"/g)].map(match=>Number(match[1]));
  assert.equal(ys[0],ys[1]);assert.ok(ys[2]>ys[1]);
  assert.equal((html.match(/stroke-dasharray="7 5"/g)||[]).length,2);
