@@ -7,6 +7,7 @@ import { signUploadProof, uploadFingerprint } from "@/lib/documents/upload-proof
 import { withOperationDiagnostics } from "@/lib/diagnostics/operation";
 import { createClient } from "@/lib/supabase/server";
 import { validatePdfFile } from "@/lib/validations/pdf-file";
+import { directPdfUpload } from "@/lib/documents/direct-pdf-transfer";
 
 const receiptSchema = z.object({ state: z.enum(["pending", "completed", "gone"]),
   project: z.object({ id: z.uuid(), name: z.string(), status: z.string() }).optional(),
@@ -17,6 +18,8 @@ async function upload(request: Request) {
   if (!isSameOriginMutation(request)) return reply("Solicitud no permitida.", 403, "ORIGIN_REJECTED");
   const access = await checkPermission("documents.manage.own");
   if (!access.ok) return reply(access.message, access.status, "ACCESS_REJECTED");
+  if (request.headers.get("Content-Type")?.startsWith("application/json"))
+    return directPdfUpload(request, await createClient(), access.userId);
   let form: FormData;
   try { form = await request.formData(); } catch { return reply("No fue posible leer la carga. Selecciona el PDF y reintenta.", 400, "INVALID_UPLOAD"); }
   const operation = z.uuid().safeParse(form.get("operationId"));

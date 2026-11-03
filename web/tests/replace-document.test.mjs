@@ -62,6 +62,7 @@ function fixture(options = {}) {
     '@/lib/auth/access': { async checkPermission(permission) { permissions.push(permission); return options.access ?? { ok: true, userId: ownerId }; } },
     '@/lib/documents/mutation-request': mutation, '@/lib/validations/pdf-file': validation,
     '@/lib/supabase/server': { async createClient() { return client; } },
+    '@/lib/documents/direct-pdf-transfer': {},
   });
   async function run({ file = validPdf, confirmed = 'true', documentId = oldId, origin = 'http://localhost:3000', id = projectId } = {}) {
     const body = new FormData(); if (file) body.set('file', file);
@@ -188,6 +189,8 @@ test('replacement and deletion confirmations apply only to the PDF version the u
       } },
       'next/navigation': { useRouter: () => ({ refresh() {}, push() {} }) },
       '@/lib/validations/pdf-file': validation,
+      '@/lib/documents/pdf-file-transfer': {},
+      '@/lib/documents/upload-operation': {},
     })[exportName];
     const render = documentId => { cursor = 0; return component({ projectId, documentId, name: 'Test' }); };
     function find(node, predicate) {

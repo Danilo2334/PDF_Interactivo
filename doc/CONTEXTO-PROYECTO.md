@@ -6308,3 +6308,120 @@ con el resultado API anterior 0/0/404. El comentario 10158 se aclaró, sin borra
 texto ni imágenes; ahora tiene cinco imágenes (dos anteriores y tres nuevas).
 SCRUM-111 conserva cuatro. Total nuevo de esta corrección: cinco capturas en
 Jira. La madre y el PR reflejan ese total. No se repitieron subidas grandes ni IA.
+
+### 2026-11-02 — SCRUM-235: PDF grandes en carga y reemplazo
+
+El usuario pidió continuar hacia el cierre. Consulta actual: 46 historias,
+43 Finalizado, HU027 En revisión y HU040/HU046 En curso. Ese recuento no acredita
+que todas las correcciones estén integradas ni sustituye sus pendientes reales.
+Se abrió SCRUM-235, tarea de regresión de hosting bajo EP02, En curso en Sprint 7
+(id 8). No se reabrieron historias ni sprints cerrados de HU006/HU011. Jira tenía
+varios sprints activos, por lo que la asignación se resolvió explícitamente a 8.
+Rama `codex/scrum-pdf-transferencias-grandes`, descendiente de PR #56 / 754ecd6.
+
+El selector y el reemplazo envían ahora JSON pequeño, transfieren el PDF a su
+bucket privado con la sesión del propietario y solicitan validación en servidor.
+Tamaño, MIME, SHA-256, estructura PDF, cifrado y páginas se verifican sobre el
+objeto almacenado antes de crear registros o cambiar el documento vigente.
+La carga reutiliza el recibo firmado y el tombstone de HU045. El reemplazo usa
+una identidad estable ligada al archivo y al contexto confirmado; recupera el
+resultado si otro envío idéntico ya lo confirmó. No sobrescribe el original.
+Los resultados ambiguos conservan bytes; la limpieza solo toca identidades que
+todavía no son documentos y comunica sus fallos. Multipart anterior compatible.
+La clave privada, las comprobaciones de sesión/propiedad y RLS se conservan.
+Se usa transferencia estándar limitada, no se promete reanudación TUS.
+
+Migración generada primero con CLI: 20261102055747_direct_pdf_transfers.sql.
+Después de pasar PGlite se aplicó una vez con apply_migration. El historial
+remoto asignó 20261102060403, y el archivo local se alineó a esa versión real.
+No se reaplicaron las migraciones anteriores ni se ejecutó db push. Solo cambia
+la función privada existente para admitir pageCount=0 (desconocido) al reservar;
+commit sigue exigiendo páginas positivas y firma vigente. El recibo de reserva
+no inventa páginas. CREATE OR REPLACE conserva los ACL. Se comprobaron el wrapper
+invoker público, la función privada definer con search_path vacío y sus grants.
+Advisors antes/después sin avisos nuevos: 2 INFO privados sin políticas, avisos
+existentes de funciones definer y protección de contraseñas filtradas. No se
+presentan esos avisos existentes como corregidos por esta tarea.
+
+Documentación oficial de Storage estándar, changelog, guías Supabase/Postgres,
+Next local route/revalidatePath y checklist React revisados. Sin cambios de Node,
+dependencias, facturación o configuración IA. 445/445 pruebas, lint y build
+correctos, incluidos los rechazos y la recuperación en PostgreSQL.
+
+Fixtures técnicos reales de texto, con espacio válido entre trailer y startxref
+para alcanzar el límite; prueban volumen e integridad, no complejidad gráfica:
+- QA-SCRUM235-original-20MiB.pdf: 20.971.520 B, 2 páginas, SHA-256
+  `9a352b78549dd2765f2219873bf3f0d0501c33d16d97bf8356dfb9d3854177ce`.
+- QA-SCRUM235-reemplazo-20MiB.pdf: 20.971.520 B, 3 páginas, SHA-256
+  `076945b23e2c3e87b64a6eb37850c806be171fb0a27cb2010a742e6cbc0bc85a`.
+En producción local 127.0.0.1:3001 ya se observó la carga completada y el visor
+con 2 páginas del proyecto QA 467e7ffd-d93a-4f62-8872-48377a45b0bd. Pruebas del
+reemplazo y QA alojado en curso: todavía no se declaran aprobadas aquí. Evidencias
+privadas fuera de Git en `SCRUM-235-PDF-GRANDES`. Stash d6406e0 intacto.
+
+#### Resultado de la validación SCRUM-235 — 02/11/2026
+
+La validación pendiente del apartado anterior quedó comprobada. Commit funcional
+`c4508f218cfb2142f8b7d7e5753d688b77636ec4`, publicado en PR #57 sobre #56.
+PR #57 listo para revisión, sin merge. SCRUM-235 pasó a En revisión en Sprint 7;
+no se reabrieron ni se alteraron los cierres históricos de HU006/HU011.
+
+En producción local (127.0.0.1:3001) se reemplazó el PDF del proyecto
+`467e7ffd-d93a-4f62-8872-48377a45b0bd` por el documento
+`5930c64f-0463-4719-a397-fa36e11ee727`: ambos de 20.971.520 B, visor de 2 y luego
+3 páginas. Se conservaron proyecto, propietario, título y las dos versiones.
+En QA HTTPS se observó el mismo recorrido en el proyecto
+`5ed288a9-2c28-46bb-ac97-7d79910e9108`, nuevo documento
+`fd339579-d3be-4651-bf70-fd893a598361`. Se descargaron los cuatro objetos privados
+y sus tamaños y SHA-256 coincidieron exactamente con los dos fixtures originales.
+
+El candidato limpio de c4508f2 quedó READY y se promovió al alias
+`https://pdf-interactivo-qa.vercel.app`. Despliegue
+`dpl_GXtWpykpve985kw6ipvqg5nZtb2B`, cuenta Danilo2334 / proyecto pdf-interactivo-qa,
+Hobby, Node 22. Se verificó revisión c4508f2 en health antes de promover.
+Punto de retorno anterior: `dpl_Bjv6sbNHzrHS9PuGJ6YHBkYFwisp` (a6390af).
+No se cambiaron variables privadas, controles de sesión, pagos ni integración IA.
+
+Pruebas reales adicionales:
+- Doble clic en la carga: una operación. Se cortó mediante CDP únicamente la
+  respuesta 200 después de persistir, conservando archivo e identidad en la UI.
+  Reintentar recuperó el mismo proyecto con una reserva JSON, sin otra subida.
+- Reemplazo de 20 MiB con progreso real; limitación temporal de subida a
+  512 KiB/s para observarlo, restaurada antes de finalizar. Cinco confirmaciones
+  HTTP concurrentes del mismo reemplazo devolvieron 200 y el mismo documento.
+  La petición de UI continuó después; al cortar solo su respuesta persistida,
+  el reintento recuperó ese ID sin otra transferencia y abrió sus tres páginas.
+- En ambos entornos: sesión ausente 401, cuenta ajena 404, origen ajeno 403,
+  confirmación inválida 400, identidad igual a la vigente 400, versión antigua
+  409 y tamaño excesivo 400. PDF con contenido inválido: 422; sin documento
+  insertado y objeto temporal eliminado. Las sesiones HTTP fueron emitidas por
+  el login real de las cuentas sintéticas; no se fabricaron marcadores o tokens.
+- Archivo de 20 MiB + 1 B rechazado en la UI, también en reemplazo a 390×844.
+  Teclado, cancelar/reabrir con confirmación limpia y vista previa privada de
+  tres páginas comprobados. Consola sin errores. Es ancho móvil emulado;
+  no sustituye la prueba táctil física pendiente de HU040.
+
+Se añadieron ocho JPEG nativos a Jira, sin duplicados, conservando todos los
+adjuntos anteriores y un único comentario de resultados por tarea:
+- SCRUM-235: comentario 10241, adjuntos 10601–10602 (respuestas perdidas).
+- SCRUM-162: comentario 10052 actualizado, adjunto 10603 (carga recuperada).
+- SCRUM-70: comentario 10055 actualizado, adjuntos 10604–10605 (límites/móvil).
+- SCRUM-173: comentario 10085 actualizado, adjuntos 10606–10608 (progreso,
+  recuperación y tercera página). Sus cuatro imágenes anteriores permanecen.
+SCRUM-162/70/173 siguen Finalizado. Se verificaron metadatos, un comentario por
+tarea, conservación del texto anterior y visualización nativa en Jira.
+
+Resultados sanitizados y capturas fuera de Git en `SCRUM-235-PDF-GRANDES`:
+`local-api-checks.json`, `qa-api-checks.json`, `qa-concurrent-replacement.json`,
+recibos de operaciones, reintentos y `pdf-integrity-and-versions.json`.
+No contienen claves ni cookies. Se conservan los respaldos previos de Jira.
+445/445 pruebas, lint y build ya aprobados sobre el código publicado; no se
+repitieron por cada captura. El commit posterior de continuidad solo documenta
+estos resultados. No hay merge automático, ni nuevos consumos de IA o pagos.
+
+Pendientes para el cierre global: revisar e integrar la cadena de PR preparada
+en su orden; HU040 requiere táctil físico; HU046 conserva la matriz real de
+navegadores N/N−1 y la supervisión/notificación operativa con umbrales acordados;
+SCRUM-233 depende de dominio/SMTP para acreditar recuperación por correo.
+Los fixtures de 20 MiB acreditan transferencia e integridad, no complejidad
+gráfica del PDF. No se declara terminado todo el proyecto por esta regresión.

@@ -36,7 +36,8 @@ test('HU045 upload API validates permissions and real PDF bytes, resumes identic
  const db={storage:{from(){return{async upload(){events.push('upload');return{error:uploadError}},async download(){events.push('download');return{data:new Blob([storedBytes])}}}}},async rpc(name,args){events.push(args.action);return{data:receipt??{state:'pending'},error:rpcError}}};
  const route=load('app/api/documents/upload/route.ts',{'pdf-lib':{PDFDocument},'@/lib/auth/access':{checkPermission:async()=>access},
   '@/lib/documents/mutation-request':load('lib/documents/mutation-request.ts'),'@/lib/documents/upload-proof':{uploadFingerprint:()=> 'b'.repeat(64),signUploadProof:v=>v},
-  '@/lib/diagnostics/operation':diagnostics,'@/lib/supabase/server':{createClient:async()=>db},'@/lib/validations/pdf-file':load('lib/validations/pdf-file.ts')});
+  '@/lib/diagnostics/operation':diagnostics,'@/lib/supabase/server':{createClient:async()=>db},'@/lib/validations/pdf-file':load('lib/validations/pdf-file.ts'),
+  '@/lib/documents/direct-pdf-transfer':{}});
  const run=(selected=file,origin='https://qa.example')=>{const form=new FormData();form.set('operationId',operation);form.set('file',selected);return route.POST(new Request('https://qa.example/api/documents/upload',{method:'POST',headers:{origin},body:form}))};
  assert.equal((await run(file,'https://other.example')).status,403);assert.deepEqual(events,[]);
  access={ok:false,status:401,message:'Inicia sesión'};assert.equal((await run()).status,401);assert.deepEqual(events,[]);access={ok:true,userId:owner};
@@ -83,15 +84,20 @@ test('HU045 PostgreSQL atomically commits an upload once, rejects changed proofs
    create table storage.objects(bucket_id text,name text,metadata jsonb);
    grant usage on schema private,auth to authenticated;`);
   await db.exec(readFileSync(new URL('../../supabase/migrations/'+files[0],import.meta.url),'utf8'));
+  const directMigration=readdirSync(new URL('../../supabase/migrations/',import.meta.url)).find(n=>n.endsWith('_direct_pdf_transfers.sql'));
+  assert.ok(directMigration);await db.exec(readFileSync(new URL('../../supabase/migrations/'+directMigration,import.meta.url),'utf8'));
   async function asUser(id=owner,role='authenticated'){await db.exec('reset role');await db.query("select set_config('request.jwt.claim.sub',$1,false)",[id]);await db.exec('set role '+role)}
   function proof(action,key=operation,extra={}){const p=JSON.stringify({purpose:'pdf-upload',userId:owner,operationId:key,action,fingerprint:'b'.repeat(64),originalName:'QA-recuperación.pdf',sizeBytes:100,pageCount:2,expiresAt:Math.floor(Date.now()/1000)+300,...extra});return[p,createHmac('sha256',secret).update(p).digest('hex')]}
   const call=async(...args)=>(await db.query('select public.recover_document_upload($1,$2) as value',proof(...args))).rows[0].value;
-  await asUser();assert.equal((await call('prepare')).state,'pending');
+  await asUser();assert.equal((await call('prepare',operation,{pageCount:0})).state,'pending');
+  await assert.rejects(()=>call('commit',operation,{pageCount:0}),e=>e.code==='42501');
   await assert.rejects(()=>call('commit'),e=>e.code==='PT409');
   await db.exec('reset role');assert.equal((await db.query('select count(*)::int n from public.documents')).rows[0].n,0);
   await db.query('insert into storage.objects values($1,$2,$3)', ['pdf-documents',`${owner}/${operation}.pdf`,JSON.stringify({size:100})]);
   await asUser();const first=await call('commit');assert.equal(first.state,'completed');assert.equal(first.project.id,operation);
   assert.deepEqual(await call('commit'),first);assert.deepEqual(await call('prepare'),first);
+  const receiptBeforeReading=await call('prepare',operation,{pageCount:0});
+  assert.equal(receiptBeforeReading.project.id,operation);assert.equal('pageCount' in receiptBeforeReading.document,false);
   await assert.rejects(()=>call('prepare',operation,{fingerprint:'c'.repeat(64)}),e=>e.code==='PT409');
   await assert.rejects(()=>call('prepare',operation,{purpose:'other'}),e=>e.code==='42501');
   await assert.rejects(()=>call('prepare',operation,{expiresAt:1}),e=>e.code==='42501');

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { transferPdfFile, PdfTransferError } from "@/lib/documents/pdf-file-transfer";
 import { chooseUploadOperation, clearUploadOperation } from "@/lib/documents/upload-operation";
 import { validatePdfFile } from "@/lib/validations/pdf-file";
 import {
@@ -92,126 +93,27 @@ export function PdfFileSelector({ ownerId }: { ownerId: string }) {
     }
   }
 
-  function uploadFile() {
-    if (
-      !selectedFile ||
-      uploadInFlightRef.current ||
-      uploadStatus === "success"
-    ) {
-      return;
-    }
-
-    const formData = new FormData();
-    formData.append("file", selectedFile);
-    operationRef.current ??= crypto.randomUUID();
-    formData.append("operationId", operationRef.current);
-
-    const request = new XMLHttpRequest();
-
-    // Bloquea inmediatamente un segundo envío por doble clic.
+  async function uploadFile() {
+    if (!selectedFile || uploadInFlightRef.current || uploadStatus === "success") return;
     uploadInFlightRef.current = true;
-
-    setFileError("");
-    setCreatedProjectId(null);
-    setUploadStatus("uploading");
-    setUploadProgress(0);
-    setUploadMessage("Transfiriendo archivo...");
-
-    function finishWithError(message: string) {
-      uploadInFlightRef.current = false;
-      setUploadStatus("error");
-      setUploadMessage(message);
-    }
-
-    request.upload.onprogress = (event) => {
-      if (event.lengthComputable && event.total > 0) {
-        setUploadProgress(
-          Math.min(
-            100,
-            Math.floor((event.loaded / event.total) * 100),
-          ),
-        );
-      }
-    };
-
-    request.upload.onload = () => {
-      if (!uploadInFlightRef.current) return;
-
-      setUploadProgress(100);
-      setUploadStatus("processing");
-      setUploadMessage(
-        "Archivo enviado. Validando y guardando el PDF...",
-      );
-    };
-
-    request.onload = () => {
-      let response: {
-        message?: string;
-        project?: { id?: string };
-      } = {};
-
-      try {
-        const parsed = JSON.parse(request.responseText);
-
-        if (parsed && typeof parsed === "object") {
-          response = parsed;
-        }
-      } catch {
-        response = {};
-      }
-
-      const projectId = response.project?.id;
-      if (request.status === 410) {
-        try { clearUploadOperation(ownerId, window.sessionStorage); } catch { /* no saved operation */ }
-      }
-
-      if (
-        request.status >= 200 &&
-        request.status < 300 &&
-        typeof projectId === "string" &&
-        projectId.length > 0
-      ) {
-        uploadInFlightRef.current = false;
-        setUploadStatus("success");
-        setUploadProgress(100);
-        setUploadMessage(
-          response.message ?? "Proyecto creado correctamente.",
-        );
-        setCreatedProjectId(projectId);
-        return;
-      }
-
-      finishWithError(
-        typeof response.message === "string"
-          ? response.message
-          : request.status === 413
-            ? "El servidor rechazó el tamaño del archivo. Selecciona un PDF más pequeño; no se confirmó la carga."
-            : "No se pudo confirmar la carga. Reintenta con el archivo seleccionado para recuperar el mismo proyecto.",
-      );
-    };
-
-    request.onerror = () => {
-      finishWithError(
-        "Se perdió la conexión. Reintenta con el archivo seleccionado; si se guardó, recuperarás el mismo proyecto.",
-      );
-    };
-
-    request.onabort = () => {
-      finishWithError(
-        "La transferencia se interrumpió. Reintenta con el archivo seleccionado para recuperar la misma carga.",
-      );
-    };
-
+    operationRef.current ??= crypto.randomUUID();
+    setFileError(""); setCreatedProjectId(null); setUploadStatus("uploading"); setUploadProgress(0);
+    setUploadMessage("Preparando transferencia privada...");
     try {
-      request.open("POST", "/api/documents/upload");
-      request.timeout = 120000;
-      request.ontimeout = () => finishWithError("La carga tardó demasiado. Reintenta con el archivo seleccionado; no se creará otro proyecto para esta operación.");
-      request.send(formData);
-    } catch {
-      finishWithError(
-        "No fue posible iniciar la transferencia. Inténtalo nuevamente.",
-      );
-    }
+      const saved = await transferPdfFile({ endpoint: "/api/documents/upload", operationId: operationRef.current, file: selectedFile,
+        onProgress: progress => {
+          if (progress.percent !== undefined) setUploadProgress(progress.percent);
+          if (progress.phase === "verifying") { setUploadStatus("processing"); setUploadMessage("Validando el archivo almacenado y confirmando el proyecto..."); }
+          else { setUploadStatus("uploading"); setUploadMessage(progress.phase === "preparing" ? "Comprobando el PDF y preparando la transferencia..." : "Transfiriendo archivo al almacenamiento privado..."); }
+        } });
+      setCreatedProjectId(saved.project!.id); setUploadStatus("success"); setUploadProgress(100); setUploadMessage(saved.message);
+    } catch (error) {
+      if (error instanceof PdfTransferError && error.status === 410) {
+        try { clearUploadOperation(ownerId, window.sessionStorage); } catch { /* optional local recovery */ }
+      }
+      setUploadStatus("error");
+      setUploadMessage(error instanceof Error ? error.message : "No se pudo confirmar la carga. Reintenta con el mismo archivo.");
+    } finally { uploadInFlightRef.current = false; }
   }
 
   return (
@@ -310,7 +212,7 @@ export function PdfFileSelector({ ownerId }: { ownerId: string }) {
             </>
           ) : (
             <p className="font-medium text-blue-800">
-              Transferencia terminada. Procesando PDF...
+              Comprobando el PDF almacenado...
             </p>
           )}
 
