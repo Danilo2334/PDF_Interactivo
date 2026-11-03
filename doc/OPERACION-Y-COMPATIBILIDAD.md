@@ -262,15 +262,64 @@ notificaciones recibidas ni objetivos de degradación aún no acordados.
 - SCRUM-233: dominio/remitente de correo autorizado y verificado en el proveedor
   SMTP, configuración privada en Supabase y prueba de recuperación real. No
   solicitar claves por chat ni reducir la seguridad para sortear el bloqueo.
-- SCRUM-236: desplegar al QA una revisión autorizada que incluya las ilustraciones
-  y probar el lector HTTPS público con un fixture propio, conservando versiones,
-  permisos y originales. La prueba del lector privado local no equivale a esta.
+- SCRUM-236: lector público de escritorio comprobado con baf41be, según la
+  ejecución posterior documentada abajo. Falta acreditar visualmente el lector
+  público en viewport móvil; el DOM y el teclado no sustituyen esa observación.
+  Se conservan las capturas móviles locales y todas las versiones aprobadas.
 
 El candidato de código revisado esbaf41bec85b0ea42394d2b2230ca3197a0ce28a4,
-develop después de #62. Preparar una copia limpia no autoriza desplegarla:
-continúa vigente la espera de despliegue solicitada por el propietario.
+develop después de #62. Inicialmente se preparó sin desplegar. Posteriormente
+el propietario autorizó expresamente actualizar únicamente este QA con ese SHA;
+la ejecución y sus límites quedan registrados a continuación.
 
 Intento de abrir Edge con perfil QA separado desde terminal: rechazado por el
 control automático con «blocked by policy», sin detalle adicional. No se repitió
 el comando ni se declaró el navegador probado. La herramienta de navegador
 habilitada solo ofreció IAB yMCP Apps. Se preservaron las ventanas personales.
+
+## Ejecución QA autorizada del02/11/2026 — SCRUM-236
+
+Autorización literal: «Sí, actualizar únicamente el QA con baf41be». Fuente
+exportada desde Git y ZIP contrastado; mismo proyecto/equipo de Danilo, raíz web,
+Node22 y ocho variables QA existentes. Sin enlace Git, pagos, cambios en main,
+nuevas claves ni llamadas IA. La CLI oficial autenticada comprobó el candidato
+protegido sin desactivar Deployment Protection y después promovió el alias QA.
+
+| Identidad | Valor comprobado |
+| --- | --- |
+| Fuente | baf41bec85b0ea42394d2b2230ca3197a0ce28a4 |
+| Deployment final | dpl_5P2Cy4EMS9hpKAKXqvTg3RFV9TzZ |
+| Alias | https://pdf-interactivo-qa.vercel.app |
+| Anterior disponible para reversión | dpl_GXtWpykpve985kw6ipvqg5nZtb2B |
+
+Sondeo anónimo real después de promover, con revisión exacta:
+
+| Contrato | HTTP | Tiempo observado |
+| --- | --- | --- |
+| Login |200 |948,64ms |
+| Página privada |307 |184,27ms |
+| PDF privado |401 |589,63ms |
+| Escritura desde origen ajeno |403 |361,97ms |
+| Liveness/revisión |200 |178,48ms |
+
+5/5 aprobados, máximo948,64ms. Es una muestra de contratos, no una prueba de
+disponibilidad permanente ni un SLO. Reporte qa-live-health-check.json fuera deGit.
+
+Se publicó temporalmente el fixture sintético QA-SCRUM236-agua, con un único
+visual aprobado v2 y dos escenas anotadas. Acceso anónimo real, PDF/versión
+aprobada idénticos, sin IDs privados en la respuesta; apertura, recarga,
+cierre/reapertura, zoom125% y ampliación mediante teclado comprobados. Sin
+errores de consola antes de la retirada. Las capturas05/06 muestran las escenas
+frente al original;11 muestra el acceso rechazado después de retirar.
+
+Viewport390×844: panel derecho359,20px dentro del ancho útil375px, sin desborde
+del panel; navegación por teclado comprobada. Las capturas de ese viewport
+salieron incompletas/inconsistentes y se excluyeron de Jira. No se declara
+aprobada la comprobación visual pública móvil ni una prueba táctil física.
+
+La publicación temporal1b7586f0-ea71-43cf-a4d0-9748e6d7ab71 quedó unpublished:
+lector y PDF404, sin publicación pública actual. Se conservaron aprobación,
+contenido y PDF1334B, SHA-256
+0c9af69fde08b476c25801b079ffd456466afe0f55116869d7b37f3e4913f909.
+La sesión personal no se utilizó ni se invalidó; el cliente backend QA usó una
+cuenta sintética y cookies solo en memoria. No se publica el enlace-capacidad.

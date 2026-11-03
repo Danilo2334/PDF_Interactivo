@@ -6840,3 +6840,64 @@ no incluye configuración privada ni representa una publicación o despliegue.
 No cambió código, SQL, secretos, sesiones personales, datos o el stashd6406e0.
 465/465, lint y build del mismo código siguen vigentes; esta entrega solo cambia
 documentación y estados respaldados por la evidencia existente.
+
+### 2026-11-02 — QA baf41be autorizado y lector público de las ilustraciones
+
+Después de la preparación anterior, el propietario confirmó expresamente:
+«Sí, actualizar únicamente el QA con baf41be». Se desplegó exactamente
+baf41bec85b0ea42394d2b2230ca3197a0ce28a4 al proyecto QA existente de Danilo,
+sin pagos ni cambios en main. No se extendió esa autorización a otros destinos
+o revisiones. El build de Vercel quedó READY; se comprobó el candidato protegido
+con la CLI autenticada y después se promovió el alias estable. Deployment final
+dpl_5P2Cy4EMS9hpKAKXqvTg3RFV9TzZ; anterior conservado para reversión
+dpl_GXtWpykpve985kw6ipvqg5nZtb2B. Se mantuvieron las ocho variables QA y la
+ausencia de integración Git; no se copiaron claves IA locales.
+
+https://pdf-interactivo-qa.vercel.app/api/health confirmó la revisión exacta.
+Sondeo público 5/5 aprobado: login 200 (948,64 ms); página privada 307
+(184,27 ms); PDF privado 401 (589,63 ms); escritura de origen ajeno 403
+(361,97 ms); health 200 (178,48 ms). Son mediciones de contratos, no vigilancia
+continua ni SLO.
+Detalle reproducible y procedimiento de reversión en
+doc/OPERACION-Y-COMPATIBILIDAD.md.
+
+SCRUM-236: publicación pública temporal del fixture sintético de agua, visual
+aprobado v2, dos escenas. Lector anónimo real frente al PDF: evaporación con
+aporte solar y vapor simbólico; condensación con gotas tras enfriarse, misma
+sustancia y sin inventar lluvia/ciclo completo/temperaturas. Se comprobaron
+explicaciones, recarga, cierre/reapertura, zoom125% y ampliación con teclado;
+sin errores de consola. API pública idéntica a la versión aprobada y sin
+identificadores privados. No hubo generaciones nuevas de IA ni costo de proveedor.
+
+En390×844, DOM y teclado confirmaron el panel dentro del ancho disponible
+(derecha359,20px; ancho útil375px). La herramienta produjo capturas móviles
+incompletas/inconsistentes; se excluyeron y no se da esa comprobación visual
+pública por aprobada. No se confundió con la prueba física táctil de137.
+Las capturas móviles locales previas siguen conservadas. El contenido QA ya
+aprobado termina con la frase editorial «Borrador para revisión»; se deja
+registrada sin reescribirlo ni invalidar su historial.
+
+Se retiró la publicación temporal1b7586f0-ea71-43cf-a4d0-9748e6d7ab71 mediante
+el flujo normal con control de versión. Lector y PDF404, interfaz de experiencia
+no disponible y ausencia de publicación pública actual comprobados. Aprobación,
+ilustraciones y original1334B intactos; SHA-256
+0c9af69fde08b476c25801b079ffd456466afe0f55116869d7b37f3e4913f909.
+La preparación inicial del cliente de prueba usó un contrato de publicación
+antiguo y fue rechazada; se corrigió al contrato de visibilidad de la UI,
+reutilizando la operación de preparación. No fue un fallo del producto ni se
+crearon publicaciones duplicadas. Cookies de la cuenta QA solo en memoria;
+sesión personal y demás proyectos conservados. Enlace-capacidad omitido de Git,
+Jira y mensajes.
+
+Jira:10242 actualizado sin crear otro comentario, conserva todo su HTML y las
+seis imágenes previas; se añaden únicamente05-lector-publico-evaporacion.jpg,
+06-lector-publico-condensacion.jpg y11-lector-publico-retirado.jpg. Las tres
+cargan en el visor de Jira. SCRUM-236 permanece En curso por la verificación
+visual pública móvil pendiente. HU027/SCRUM-39 y235 quedan Finalizado por la
+revisión documentada antes;137,149/231,232 y233 mantienen sus bloqueos concretos.
+Se contrastaron los33 adjuntos de11 tareas previas: IDs, nombres y tamaños
+conservados; SCRUM-236 tiene ahora9 adjuntos y un único comentario10242. El
+seguimiento10136 de HU022 se actualizó conservando su HTML y estado Finalizado.
+PR #63 agrupa el cierre documental; sin nuevos merges ni cambios de aplicación,
+SQL, dependencias o secretos. Stashd6406e0 conservado sin aplicar ni eliminar.
+Evidencias y reportes fuera deGit en CIERRE-PENDIENTES-20261102.
