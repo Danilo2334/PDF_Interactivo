@@ -1,0 +1,149 @@
+"use client";
+import Image from "next/image";
+import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { PdfViewer } from "@/components/documents/pdf-viewer";
+import { VisualResource } from "@/components/documents/visual-resource";
+import { SummaryResource } from "@/components/documents/summary-resource";
+import { readerReplySchema, type ReaderItem, type ReaderView } from "@/lib/validations/reader";
+import { ReaderQuiz } from "@/components/readers/reader-quiz";
+import { ReaderFeedback } from "@/components/readers/reader-feedback";
+import type { FragmentSelection } from "@/lib/pdf/fragment-selection";
+import { useWideReader } from "@/lib/readers/layout";
+import { ReaderOpenReporter } from "@/components/readers/reader-open-reporter";
+import { useReinforcementOpens } from "@/components/readers/use-reinforcement-opens";
+function ReaderCard({ item, endpoint, onSource, privateTest, expanded, onToggle }: { item: ReaderItem; endpoint: string; onSource: () => void; privateTest: boolean; expanded: boolean; onToggle: () => void }) {
+  const id = useId();
+  return <article data-reader-item={item.id} className="min-w-0 space-y-3 rounded-xl border border-slate-200 bg-white p-4">
+    <p className="text-sm text-blue-800">Página {item.pageNumber} · Contenido aprobado</p>
+    <h3><button type="button" aria-expanded={expanded} aria-controls={`${id}-content`} onClick={onToggle} className="w-full rounded-lg py-2 text-left font-semibold break-words focus-visible:outline-2 focus-visible:outline-blue-700">{item.title} <span aria-hidden="true">{expanded ? "−" : "+"}</span></button></h3>
+    <div id={`${id}-content`} hidden={!expanded} className="space-y-4">
+      {item.type === "visual" && item.visual ? <VisualResource value={item.visual} title={item.title} description={item.text} /> : item.type === "summary" && item.summary ? <SummaryResource value={item.summary} /> : <p className="whitespace-pre-wrap break-words text-sm">{item.text}</p>}
+      <button type="button" onClick={onSource} className="rounded-lg border border-blue-300 px-3 py-2 text-sm">Ver {item.selection?.kind === "area" ? "zona" : item.selection?.kind === "text" ? "selección de texto" : "página"} original · Página {item.pageNumber}</button>
+      {item.media.length > 0 && <section aria-label={`Recursos de ${item.title}`} className="space-y-3"><h4 className="font-semibold">Recursos multimedia</h4>{item.media.map(m => <div key={m.id} className="space-y-2 rounded-lg border p-3"><p className="break-words text-sm font-semibold">{m.title}</p>
+        {m.kind === "link" ? m.url ? <a href={m.url} target="_blank" rel="noopener noreferrer" className="block break-all text-sm text-blue-800 underline">Consultar recurso (abre otra pestaña)</a> : <p>Enlace no disponible.</p>
+          : m.kind === "image" ? <Image src={`${endpoint}/assets/${m.id}`} alt={m.title} width={640} height={360} unoptimized className="h-auto max-h-80 w-full object-contain" />
+            : <video src={`${endpoint}/assets/${m.id}`} aria-label={m.title} controls playsInline preload="metadata" className="max-h-80 w-full" />}</div>)}</section>}
+      {item.quiz && <section aria-label={`Mini quiz: ${item.quiz.title}`}><ReaderQuiz quiz={item.quiz} endpoint={endpoint} privateTest={privateTest} active={expanded} /></section>}
+      {!privateTest && <ReaderFeedback endpoint={endpoint} itemId={item.id} pageNumber={item.pageNumber} active={expanded} />}
+    </div>
+  </article>;
+}
+export function Reading({ view, endpoint }: { view: ReaderView; endpoint: string }) {
+  const wide = useWideReader();
+  const { opened, acceptedVisit } = useReinforcementOpens(endpoint, view.privateTest);
+  const [pdfReady, setPdfReady] = useState(false);
+  const reportReady = useCallback(() => setPdfReady(true), []);
+  const [page, setPage] = useState(1), [panel, setPanel] = useState(false), [navigation, setNavigation] = useState<{ page: number; fragment: FragmentSelection | null; key: number }>({ page: 1, fragment: null, key: 0 });
+  const [activation, setActivation] = useState(0), [expanded, setExpanded] = useState(() => new Set(view.items.filter(i => i.initialExpanded).map(i => i.id)));
+  const selected = useRef<string | null>(null);
+  const pdf = useRef<HTMLDivElement>(null), content = useRef<HTMLElement>(null), position = useRef<{ x: number; y: number; page: number; horizontal: number; trigger: HTMLElement | null; markerId?: string } | null>(null);
+  const markers = useMemo(() => view.items.map(item => ({ id: item.id, title: item.title, pageNumber: item.pageNumber, selection: item.selection })), [view.items]);
+  const reportPage = useCallback((page: number) => setPage(page), []);
+  const intentionalPage = useRef<number | null>(null);
+  const keepCurrentPosition = useCallback((page: number) => { position.current = null; intentionalPage.current = page; }, []);
+  const closePanel = useCallback(() => {
+    const destination = intentionalPage.current; intentionalPage.current = null;
+    if (destination !== null) { setPage(destination); setNavigation(previous => ({ page: destination, fragment: null, key: previous.key + 1 })); }
+    setPanel(false);
+  }, []);
+  const openPanel = useCallback((currentPage: number, markerId?: string) => {
+    intentionalPage.current = null;
+    const figure = pdf.current?.querySelector<HTMLElement>(`[data-pdf-page="${currentPage}"]`);
+    position.current = { x: window.scrollX, y: window.scrollY, page: currentPage, horizontal: figure?.scrollLeft ?? 0, trigger: document.activeElement instanceof HTMLElement ? document.activeElement : null, markerId };
+    selected.current = markerId ?? null; setPage(currentPage); setActivation(n => n + 1);
+    if (markerId) setExpanded(previous => new Set(previous).add(markerId));
+    // A marker can be visible on the next page while the previous page still occupies more of the viewport.
+    // Align the requested PDF page so a delayed visibility update cannot replace the chosen panel.
+    if (markerId && wide) setNavigation(previous => ({ page: currentPage, fragment: null, key: previous.key + 1 }));
+    setPanel(true);
+    opened(view.items.filter(item => item.pageNumber === currentPage && (panel ? item.id === markerId && !expanded.has(item.id) : item.id === markerId || expanded.has(item.id))).map(item => ({ id: item.id, pageNumber: item.pageNumber })));
+  }, [opened, view.items, expanded, panel, wide]);
+  const openMarker = useCallback((id: string, currentPage: number) => openPanel(currentPage, id), [openPanel]);
+  const openPagePanel = useCallback((currentPage: number) => openPanel(currentPage), [openPanel]);
+  const navigateFromPanel = useCallback((currentPage: number) => {
+    position.current = null; setPage(currentPage);
+    setNavigation(previous => ({ page: currentPage, fragment: null, key: previous.key + 1 }));
+  }, []);
+  useLayoutEffect(() => {
+    if (panel) {
+      const target = selected.current ? content.current?.querySelector<HTMLElement>(`[data-reader-item="${CSS.escape(selected.current)}"]`) : content.current;
+      if (wide && content.current && target) {
+        // Scroll only the panel: scrolling its window ancestor can make PDF.js report another page.
+        content.current.scrollTop = target === content.current ? 0 : content.current.scrollTop + target.getBoundingClientRect().top - content.current.getBoundingClientRect().top - 16;
+      } else target?.scrollIntoView({ block: "start", behavior: "instant" });
+      target?.querySelector<HTMLButtonElement>("button")?.focus({ preventScroll: true });
+    } else if (position.current) {
+      const p = position.current, figure = pdf.current?.querySelector<HTMLElement>(`[data-pdf-page="${p.page}"]`);
+      if (figure) figure.scrollLeft = p.horizontal;
+      const trigger = p.trigger?.isConnected ? p.trigger : p.markerId ? pdf.current?.querySelector<HTMLElement>(`[data-reinforcement-id="${CSS.escape(p.markerId)}"]`) : null;
+      trigger?.focus({ preventScroll: true }); window.scrollTo({ left: p.x, top: p.y, behavior: "instant" });
+    } else if (activation > 0) {
+      pdf.current?.querySelector<HTMLElement>("h2")?.focus({ preventScroll: true });
+    }
+  }, [panel, activation, wide]);
+  return <>
+    <ReaderOpenReporter endpoint={endpoint} ready={pdfReady} privateTest={view.privateTest} onReceipt={acceptedVisit} />
+    <div role="group" aria-label="Secciones de lectura" className="flex flex-wrap gap-2"><button type="button" aria-pressed={!panel} onClick={closePanel} className="rounded-lg border px-3 py-2">PDF original</button><button type="button" aria-pressed={panel} onClick={() => { if (!panel) openPanel(page); }} className="rounded-lg border px-3 py-2">Refuerzos</button></div>
+    <p role="status" className="text-sm text-slate-700">Página {page}: {view.items.filter(item => item.pageNumber === page).length} refuerzos disponibles.</p>
+    <div className="reader-layout grid min-w-0 items-start gap-5 lg:grid-cols-[minmax(0,3fr)_minmax(18rem,2fr)]">
+    <div ref={pdf} className="min-w-0"><PdfViewer key={endpoint} projectId="reader" sourceUrl={`${endpoint}/assets/pdf`} visible={!panel || wide} pagesHidden={panel && !wide} onHiddenNavigate={navigateFromPanel} floatingReinforcements={false} includeReadableText initialPage={navigation.page} initialFragment={navigation.fragment} navigationKey={navigation.key}
+      onVisiblePageChange={reportPage} onOpenReinforcements={openPagePanel} reinforcementMarkers={markers} onReinforcementActivate={openMarker} onFirstPageRendered={reportReady} onReadingNavigate={keepCurrentPosition} />
+      {panel && !wide && <p className="mt-3 text-sm text-slate-700">Los controles de página siguen disponibles. Cierra los refuerzos para volver al PDF y ajustar el zoom conservado.</p>}
+    </div>
+    <section ref={content} hidden={!panel} aria-label={`Refuerzos de la página ${page}`} className="min-w-0 space-y-4 rounded-xl border border-slate-200 bg-white p-4 lg:sticky lg:top-4 lg:max-h-[calc(100dvh-2rem)] lg:overflow-y-auto"><button type="button" onClick={closePanel} className="rounded-lg border px-3 py-2">Cerrar refuerzos y volver al PDF</button><h2 className="text-xl font-semibold">Refuerzos de la página {page}</h2>
+      {!view.items.some(i => i.pageNumber === page) && <p>Esta página no tiene refuerzos publicados para consultar.</p>}
+      {view.items.filter(i => i.pageNumber === page).map(item => <ReaderCard key={item.id} item={item} endpoint={endpoint} privateTest={view.privateTest} expanded={expanded.has(item.id)}
+        onToggle={() => { if (!expanded.has(item.id)) opened([{ id: item.id, pageNumber: item.pageNumber }]); setExpanded(previous => { const next = new Set(previous); if (next.has(item.id)) next.delete(item.id); else next.add(item.id); return next; }); }}
+        onSource={() => { position.current = null; intentionalPage.current = null; setNavigation(p => ({ page: item.pageNumber, fragment: item.selection as FragmentSelection | null, key: p.key + 1 })); setPanel(false); }} />)}
+    </section>
+    {!panel && wide && <aside aria-label="Ayuda de refuerzos" className="mt-8 rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-950">
+      <h2 className="font-semibold">Lee el PDF y consulta sus refuerzos</h2>
+      <p className="mt-2">Activa un indicador numerado o el botón Refuerzos. El contenido de la página aparecerá aquí, junto al PDF.</p>
+    </aside>}
+    </div>
+  </>;
+}
+export function ReaderExperience({ token, endpointOverride }: { token: string; endpointOverride?: string }) {
+  const id = useId(), endpoint = endpointOverride ?? `/api/read/${encodeURIComponent(token)}`;
+  const [view, setView] = useState<ReaderView | null>(null), [gate, setGate] = useState<{ name: string; privateTest: boolean } | null>(null);
+  const [name, setName] = useState(""), [email, setEmail] = useState(""), [busy, setBusy] = useState(false), [error, setError] = useState(""), [attempt, setAttempt] = useState(0);
+  useEffect(() => {
+    const controller = new AbortController();
+    let checking = false, blocked = false;
+    const timer = setInterval(() => { if (document.visibilityState === "visible") void check(); }, 15000);
+    async function check() {
+      if (checking || blocked || controller.signal.aborted) return;
+      checking = true;
+      try { const response = await fetch(endpoint, { cache: "no-store", signal: AbortSignal.any([controller.signal, AbortSignal.timeout(30000)]) }), body = await response.json();
+      if (!response.ok) throw Error(body.message ?? "Esta experiencia no está disponible para lectura.");
+      const checked = readerReplySchema.safeParse(body); if (!checked.success) throw Error("No fue posible validar esta versión. Reintenta la lectura."); const parsed = checked.data;
+      if (controller.signal.aborted) return;
+      if (parsed.state === "ready") { setView(previous => previous?.version === parsed.view.version && previous.privateTest === parsed.view.privateTest ? previous : parsed.view); setGate(null); } else { setView(null); setGate(parsed); }
+      setError("");
+    } catch (e) { if (!controller.signal.aborted) { blocked = true; clearInterval(timer); setView(null); setGate(null); setError(e instanceof Error && e.name === "TimeoutError" ? "La lectura tardó demasiado. Reintenta." : e instanceof TypeError ? "No fue posible conectar con la experiencia. Revisa tu conexión y reintenta." : e instanceof Error ? e.message : "No fue posible abrir la experiencia."); } }
+    finally { checking = false; }
+    }
+    const recheck = () => { if (document.visibilityState === "visible") void check(); };
+    void check(); window.addEventListener("focus", recheck); document.addEventListener("visibilitychange", recheck);
+    return () => { controller.abort(); clearInterval(timer); window.removeEventListener("focus", recheck); document.removeEventListener("visibilitychange", recheck); };
+  }, [endpoint, attempt]);
+  async function identify(e: React.FormEvent) {
+    e.preventDefault(); setBusy(true); setError("");
+    try { const response = await fetch(`${endpoint}/identify`, { method: "POST", headers: { "Content-Type": "application/json" }, signal: AbortSignal.timeout(20000), body: JSON.stringify({ name: name.trim(), email: email.trim() }) });
+      const body = await response.json(); if (!response.ok) { setError(body.message ?? "Revisa los datos indicados."); return; }
+      setName(""); setEmail(""); setGate(null); setAttempt(a => a + 1);
+    } catch { setError("No fue posible completar la identificación. Reintenta."); } finally { setBusy(false); }
+  }
+  return <main className="reader-experience mx-auto min-w-0 max-w-7xl space-y-5 px-4 py-6 sm:px-6">
+    <p className="font-semibold text-blue-800">PDF Interactivo · Lectura</p>
+    <h1 className="break-words text-2xl font-bold">{view?.name ?? gate?.name ?? "Abrir experiencia"}</h1>
+    {(view?.privateTest || gate?.privateTest) && <p role="status" className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm font-semibold">Prueba privada del lector con sesión del propietario. No acredita acceso anónimo ni publicación HTTPS.</p>}
+    {view && <><p className="text-sm text-slate-600">Versión {view.version} · Modo de lectura</p><Reading key={endpoint} view={view} endpoint={endpoint} /></>}
+    {gate && <form onSubmit={identify} className="max-w-xl space-y-4 rounded-xl border bg-white p-5"><h2 className="text-xl font-semibold">Identificación del lector</h2><p className="text-sm">El propietario solicita un nombre o correo para consultar esta experiencia. Son datos declarados; no crean una cuenta ni verifican tu identidad.</p>
+      <label className="block text-sm" htmlFor={`${id}-name`}>Nombre (opcional si indicas correo)</label><input id={`${id}-name`} value={name} onChange={e => setName(e.target.value)} maxLength={80} autoComplete="off" className="w-full rounded-lg border p-2" />
+      <label className="block text-sm" htmlFor={`${id}-email`}>Correo (opcional si indicas nombre)</label><input id={`${id}-email`} type="email" value={email} onChange={e => setEmail(e.target.value)} maxLength={254} autoComplete="off" className="w-full rounded-lg border p-2" />
+      <button type="submit" disabled={busy} className="rounded-lg bg-blue-700 px-4 py-2 font-semibold text-white disabled:opacity-50">{busy ? "Comprobando…" : "Continuar a la lectura"}</button></form>}
+    {!view && !gate && !error && <p role="status">Abriendo experiencia…</p>}
+    {error && <div role="alert" className="space-y-3 rounded-lg bg-red-50 p-4"><p>{error}</p>{!gate && <button type="button" onClick={() => { setError(""); setAttempt(a => a + 1); }} className="rounded-lg border px-3 py-2">Reintentar lectura</button>}</div>}
+  </main>;
+}
