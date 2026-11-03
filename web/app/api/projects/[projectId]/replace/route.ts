@@ -1,3 +1,4 @@
+import { withOperationDiagnostics } from "@/lib/diagnostics/operation";
 import { revalidatePath } from "next/cache";
 import { PDFDocument } from "pdf-lib";
 import { z } from "zod";
@@ -12,7 +13,7 @@ function result(message: string, status: number) {
   return Response.json({ message }, { status, headers: { "Cache-Control": "private, no-store" } });
 }
 
-export async function POST(request: Request, { params }: { params: Promise<{ projectId: string }> }) {
+async function handlePOST(request: Request, { params }: { params: Promise<{ projectId: string }> }) {
   if (!isSameOriginMutation(request)) return result("Solicitud no permitida.", 403);
   const access = await checkPermission("documents.manage.own");
   if (!access.ok) return result(access.message, access.status);
@@ -54,7 +55,6 @@ export async function POST(request: Request, { params }: { params: Promise<{ pro
     p_document_id: documentId, p_original_name: file.name, p_storage_path: path, p_size_bytes: file.size,
   });
   if (error) {
-    console.error("No se confirmó el reemplazo del PDF:", { code: error.code });
     if (!databaseRolledBack(error.code)) {
       return result("No se pudo confirmar el reemplazo. Recarga el proyecto para comprobar su estado antes de reintentar.", 503);
     }
@@ -72,3 +72,5 @@ export async function POST(request: Request, { params }: { params: Promise<{ pro
   revalidatePath(`/projects/${projectId}`);
   return result("PDF reemplazado correctamente. Los refuerzos anteriores conservan su versión original.", 200);
 }
+
+export const POST = withOperationDiagnostics("pdf.replace", handlePOST);

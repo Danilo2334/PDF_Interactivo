@@ -7,7 +7,7 @@ export const metadata: Metadata = {
 };
 
 export default async function UploadPdfPage() {
-  await requireActiveUser();
+  const { userId } = await requireActiveUser();
 
   return (
     <main className="min-h-screen bg-slate-50 px-6 py-12">
@@ -25,7 +25,7 @@ export default async function UploadPdfPage() {
           interactiva.
         </p>
 
-        <PdfFileSelector />
+        <PdfFileSelector ownerId={userId} />
       </div>
     </main>
   );

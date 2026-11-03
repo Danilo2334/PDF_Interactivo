@@ -23,7 +23,7 @@ export async function getOwnerProjects(): Promise<OwnerProject[]> {
     .order("updated_at", { ascending: false });
 
   if (error) {
-    console.error("Error consultando proyectos:", error);
+    console.error("Error consultando proyectos.");
     throw new Error("No fue posible consultar los proyectos.");
   }
 

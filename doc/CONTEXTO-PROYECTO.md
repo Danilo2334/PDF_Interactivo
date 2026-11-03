@@ -5820,3 +5820,121 @@ y4 opiniones conservados. Este recorrido de analítica no genera eventos del lec
 Sin generación IA,pagos,merge o cambio de main. PR53 preparado para revisión sobre52;
 cadena48→49→50→51→52→53.52 sigue en borrador por137,táctil pendiente;no se cierra
 HU040 al completarHU041. Aún faltan HU045,HU046,HU027 cargas grandes ySMTP233.
+
+### 2026-11-01 — HU045/SCRUM-57: recuperación integrada comprobada
+
+Rama `codex/scrum-57-hu045-recuperacion`, sobre HU041. Se conservó el stash
+`d6406e0cdbc464c1c0301c058024b10dd27c4515`. Sin merge ni cambio de main.
+
+Brechas corregidas: una respuesta perdida de la carga podía duplicar proyectos;
+la creación de documento/proyecto se hacía en transacciones separadas; había
+registros con errores crudos del proveedor/Storage y mensajes que daban por
+hecha una limpieza sin comprobarla. También se observó `Failed to fetch` en
+regeneración y una restauración a página 1 cuando la portada terminaba de cargar
+después de abrir una solicitud de página 2.
+
+La carga envía un UUID estable. El servidor valida el PDF real, páginas y bytes;
+vincula la operación a nombre/tamaño/SHA-256 mediante una huella y prueba HMAC
+de propósito `pdf-upload`, con el secreto de servidor existente. PostgreSQL
+serializa el guardado de documento, proyecto y recibo en una sola transacción.
+El reintento devuelve el mismo proyecto y conserva su nombre actual. No se usa
+upsert de archivos: una transferencia ambigua solo se recupera si los bytes
+almacenados son idénticos. No se eliminan bytes ante un guardado ambiguo que
+otra petición pueda haber confirmado. Los pendientes quedan privados y
+localizables por propietario/operación para reintento; no se afirma limpieza
+automática de operaciones abandonadas.
+
+`private.pdf_upload_operations` tiene RLS, sin acceso directo de anon/authenticated;
+la función privada certificada vuelve a comprobar sesión, rol activo, firma,
+vencimiento, metadatos y presencia del objeto. El wrapper público es invoker.
+Al eliminar un proyecto se anulan las referencias y la huella; queda la clave
+consumida para impedir su recreación por una pestaña antigua. No contiene texto
+del PDF, nombres ni credenciales. Migración CLI `20261102000821_idempotent_pdf_uploads.sql`:
+aplicada por MCP como `20261102001240`, alineada solo esa entrada nueva al nombre
+canónico, tras comprobar el historial. Total remoto 28 migraciones. Advisors:
+la tabla privada sin policies produce aviso INFO esperado por acceso denegado;
+no se habilitaron políticas de lectura ni se cambiaron avisos históricos.
+
+El navegador conserva en sessionStorage solo huella y operación, por cuenta y
+pestaña; volver a seleccionar el mismo archivo tras recargar recupera el envío.
+`Preparar una nueva carga` permite iniciar expresamente otra operación. El
+progreso de XHR sigue siendo real y hay tiempo máximo de 120 s sin bucle de
+reintentos. Los errores de tamaño del hosting muestran una acción correctiva;
+esto NO resuelve el límite de entrada de Vercel de HU027.
+
+Las operaciones de carga/reemplazo, análisis, recomendaciones, generación,
+regeneración y revisión registran código permitido, operación, fecha, duración,
+estado y UUID de correlación, también cuando el contrato devuelve HTTP 200 con
+estado de negocio error. No registran URL, identificadores de documentos, nombres,
+texto, cookies, credenciales, stack ni cuerpos del proveedor. Cabecera y mensaje
+visible permiten vincular el error al registro. Los errores de red/esquema ya no
+exponen texto técnico; se indica conservar los datos y actualizar antes de
+reintentar. Una regeneración recuperada del mismo job muestra su versión guardada
+y bloquea otra generación hasta `Preparar otro ajuste`.
+
+La comprobación de origen usa el Host real de destino cuando Next forma una URL
+interna con otro hostname, conserva esquema/puerto y rechaza forwarded-host
+arbitrario. La primera portada tardía ya no sobrescribe una navegación explícita
+de solicitud; no se vuelve a descargar el PDF para restaurarla.
+
+Verificación final: 428/428 pruebas, lint y build de producción. Incluye PostgreSQL
+aislado con la migración real, firma ajena/falsa/vencida, atomicidad ante fallo del
+segundo insert, idempotencia, tombstone, privacidad del log, aislamiento de caché
+por cuenta, recuperación de job y la carrera de portada tardía. Los adaptadores
+de pruebas se actualizaron para ejecutar el wrapper real de diagnóstico.
+
+Pruebas reales en producción local `http://127.0.0.1:3001`, aislada de las cookies
+de localhost y de la sesión QA HTTPS. No se usó ni guardó la contraseña personal.
+Cuenta sintética propietaria existente. PDF de prueba de 2 páginas/1371 bytes.
+Se interrumpió SOLO la respuesta HTTP 200 después de persistir: proyecto/documento
+`4fdd9220-ea2f-4e9c-a05f-84e0cc009fe1`, un objeto y un recibo. Reintento y recarga
+devolvieron el mismo ID. Cinco cargas iniciales paralelas devolvieron el único
+proyecto `a3cb19ac-28c8-471e-8b74-a4ce94d9f40e`; se eliminó normalmente solo ese
+fixture y repetir su operación devolvió 410. Cambiar el archivo con la misma
+operación:409; sin sesión:401; origen ajeno:403. Un PDF de firma válida pero
+estructura dañada produjo 422 y referencia `5b3d72d9-1e21-480b-856d-5fa2b4568184`,
+idéntica en captura y salida real del servidor.
+
+Se confirmó el nombre `QA-HU045-nombre-confirmado` en el primer fixture; reemplazo
+dañado rechazado, recarga y reintento de carga conservaron nombre/documento.
+Su PDF sigue en SHA-256 `c6c9cf2f5c0cf43fe7cb9b420198e765e7b658288d2300808361b3ee6213e22b`.
+
+Generación REAL, configuración OpenAI ya autorizada, `gpt-6.1-sol`, dos llamadas
+para comprobar y repetir el fallo corregido; sin cambiar proveedor/clave, activar
+facturación ni subir claves al QA. Solicitud `167fe954-382d-4c30-b276-51b5bbdbd7a0`:
+interrupción antes del envío conservó instrucciones; luego se perdieron las
+respuestas DESPUÉS de guardar versiones 3 y 4. Operaciones `66e598ee-dc22-4840-b2cd-013e4c5d00d1`
+y `463bcebf-a54b-4ef0-a384-a927dfd5733e`. Repetir cada petición devolvió su misma
+versión, sin otra generación. Segunda llamada: 1146 tokens entrada,318 salida,
+0 cacheados, del log real; no se infiere el consumo de la primera ni un costo
+total sin datos de facturación. Versiones nuevas pendientes, sin aprobación.
+Se revisaron texto, cita exacta, dos nodos evaporación/condensación, etiquetas
+completas y flecha que no inventa una causalidad ni fases fuera del fragmento.
+Esto verifica ese caso concreto; no equivale a una evaluación de todas las materias.
+La versión aprobada 2 `5b7df6e1-4e1f-4fb4-89e6-d676bd8169a9` conserva SHA-256
+`5166da6fb8b4979c845e6d12e444afd211885d897ca44e0d003d4f95c2d260b9`.
+Original digital 1580 bytes, antes/después:
+`e7277d66afd7caba47385cfac2f0e55a2eeb4fb7aa7136409fa35300a6347946`.
+La carrera de navegación se repitió reteniendo la respuesta real del PDF hasta
+después de abrir la selección: finalmente página 2, sin modificar texto/necesidad.
+
+Diez JPEG nativos revisados, registros reales y recibos se conservan fuera de Git
+en `HU045-REAL` dentro de la carpeta de evidencias habitual. 04 y09 documentan
+fallos observados antes de corregir;05,06 y10 muestran la repetición corregida.
+No son plantillas ni capturas reconstruidas. Pendiente en este punto: vincular
+las imágenes/comentarios únicos a147/148/229/230 y preparar el PR sobre HU041.
+El QA HTTPS sigue en `e3dfd023`: HU045 todavía no se desplegó. Sin nuevas variables
+en Vercel, pagos, publicaciones públicas o cambios a resultados del lector.
+Permanecen HU046,137 táctil,HU027 cargas grandes ySMTP233; no declarar el proyecto
+ni el sprint finalizados al cerrar esta regresión.
+
+Entrega HU045: implementación `18739b7e930830ac3a3511563a215c32a2756caf`, publicada.
+PR54 abierto y listo para revisión, base `codex/scrum-53-hu041-analitica`, mergeable
+sin checks remotos configurados; las verificaciones citadas son locales. Jira
+SCRUM-57 y147/148/229/230 Finalizado. Comentario único madre10231 actualizado;
+147=10232,229=10233,230=10234,148=10235. Diez adjuntos10581–10590,2/2/3/3 inline,
+sin duplicados. Nombres,tamaños,asociaciones y conteo de comentarios comprobados.
+10590 descargado y comparado:66841 bytes idénticos al JPEG nativo10. No se afirma
+haber inspeccionado miniaturas en la UI de Jira; se verificaron conector,HTML y
+binario. El Sprint7 ya estaba activo, desde2026-11-01 hasta2026-11-08; no se alteró.
+Cadena pendiente de integración48→49→50→51→52→53→54;52 continúa en borrador por137.

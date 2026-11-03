@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { runInNewContext } from 'node:vm';
 import ts from 'typescript';
 import { PDFDocument } from 'pdf-lib';
-import { validation as requestValidation, submission as requestSubmission } from './reinforcement-test-helpers.mjs';
+import { load as loadShared, validation as requestValidation, submission as requestSubmission } from './reinforcement-test-helpers.mjs';
 
 const require = createRequire(import.meta.url);
 function load(relative, dependencies) {
@@ -57,6 +57,7 @@ function fixture(options = {}) {
     async rpc(name, input) { events.push(['rpc', name, input]); return { data: newId, error: options.rpcError ?? null }; },
   };
   const route = load('app/api/projects/[projectId]/replace/route.ts', {
+    '@/lib/diagnostics/operation': loadShared('lib/diagnostics/operation.ts', {}, { console: { error() {} } }),
     'next/cache': { revalidatePath(path) { paths.push(path); } }, 'pdf-lib': { PDFDocument },
     '@/lib/auth/access': { async checkPermission(permission) { permissions.push(permission); return options.access ?? { ok: true, userId: ownerId }; } },
     '@/lib/documents/mutation-request': mutation, '@/lib/validations/pdf-file': validation,

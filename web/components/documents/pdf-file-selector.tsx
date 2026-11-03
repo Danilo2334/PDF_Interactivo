@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { chooseUploadOperation, clearUploadOperation } from "@/lib/documents/upload-operation";
 import { validatePdfFile } from "@/lib/validations/pdf-file";
 import {
   ChangeEvent,
@@ -17,9 +18,11 @@ type UploadStatus =
   | "success"
   | "error";
 
-export function PdfFileSelector() {
+export function PdfFileSelector({ ownerId }: { ownerId: string }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const uploadInFlightRef = useRef(false);
+  const operationRef = useRef<string | null>(null);
+  const selectionRef = useRef(0);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [fileError, setFileError] = useState("");
@@ -37,6 +40,7 @@ export function PdfFileSelector() {
 
   async function selectFile(file?: File) {
     if (!file || isBusy) return;
+    const selection = ++selectionRef.current;
 
     setSelectedFile(null);
     setFileError("");
@@ -46,6 +50,7 @@ export function PdfFileSelector() {
     setCreatedProjectId(null);
 
     const validation = await validatePdfFile(file);
+    if (selection !== selectionRef.current) return;
 
     if (!validation.valid) {
       setFileError(validation.message);
@@ -57,6 +62,13 @@ export function PdfFileSelector() {
       return;
     }
 
+    let storage: Storage | null = null;
+    try { storage = window.sessionStorage; } catch { /* retry remains available in memory */ }
+    let operation: string;
+    try { operation = await chooseUploadOperation(file, ownerId, storage); }
+    catch { setFileError("No fue posible leer el PDF. Selecciónalo nuevamente."); return; }
+    if (selection !== selectionRef.current) return;
+    operationRef.current = operation;
     setSelectedFile(file);
   }
 
@@ -91,6 +103,8 @@ export function PdfFileSelector() {
 
     const formData = new FormData();
     formData.append("file", selectedFile);
+    operationRef.current ??= crypto.randomUUID();
+    formData.append("operationId", operationRef.current);
 
     const request = new XMLHttpRequest();
 
@@ -147,6 +161,9 @@ export function PdfFileSelector() {
       }
 
       const projectId = response.project?.id;
+      if (request.status === 410) {
+        try { clearUploadOperation(ownerId, window.sessionStorage); } catch { /* no saved operation */ }
+      }
 
       if (
         request.status >= 200 &&
@@ -167,24 +184,28 @@ export function PdfFileSelector() {
       finishWithError(
         typeof response.message === "string"
           ? response.message
-          : "No se pudo confirmar la carga. Revisa Mis documentos antes de reintentar.",
+          : request.status === 413
+            ? "El servidor rechazó el tamaño del archivo. Selecciona un PDF más pequeño; no se confirmó la carga."
+            : "No se pudo confirmar la carga. Reintenta con el archivo seleccionado para recuperar el mismo proyecto.",
       );
     };
 
     request.onerror = () => {
       finishWithError(
-        "Se perdió la conexión. Revisa Mis documentos antes de reintentar la carga.",
+        "Se perdió la conexión. Reintenta con el archivo seleccionado; si se guardó, recuperarás el mismo proyecto.",
       );
     };
 
     request.onabort = () => {
       finishWithError(
-        "La transferencia se interrumpió. Revisa Mis documentos antes de reintentar.",
+        "La transferencia se interrumpió. Reintenta con el archivo seleccionado para recuperar la misma carga.",
       );
     };
 
     try {
       request.open("POST", "/api/documents/upload");
+      request.timeout = 120000;
+      request.ontimeout = () => finishWithError("La carga tardó demasiado. Reintenta con el archivo seleccionado; no se creará otro proyecto para esta operación.");
       request.send(formData);
     } catch {
       finishWithError(
@@ -311,6 +332,11 @@ export function PdfFileSelector() {
               Abrir proyecto
             </Link>
           )}
+          <button type="button" className="mt-4 block rounded-lg border border-green-700 px-4 py-2 text-sm text-green-800" onClick={() => {
+            try { clearUploadOperation(ownerId, window.sessionStorage); } catch { /* no saved operation */ }
+            operationRef.current = null; setSelectedFile(null); setCreatedProjectId(null); setUploadStatus("idle"); setUploadMessage("");
+            if (inputRef.current) inputRef.current.value = "";
+          }}>Preparar una nueva carga</button>
         </div>
       )}
 
@@ -331,7 +357,7 @@ export function PdfFileSelector() {
 
           <button
             type="button"
-            onClick={() => inputRef.current?.click()}
+            onClick={() => { if (inputRef.current) { inputRef.current.value = ""; inputRef.current.click(); } }}
             disabled={isBusy}
             className="mt-4 rounded-lg border border-red-300 bg-white px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-60"
           >

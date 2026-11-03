@@ -59,7 +59,7 @@ export function QuizPanel({ projectId, documentId, requestId, sourceVersionId, a
           const job = quizJobSchema.parse(body.job); version = job.result_version;
           if (version) { setConfirmedState(previous => ({ ...previous, version: Math.max(previous.version, version!), terminal: null }));
             setMessageScope({ version, choice: view.head?.choice_version ?? 0, decision: "pending" }); }
-          setMessage(job.status === "ready" ? `Quiz versión ${version} guardado como borrador privado. Revisa cada pregunta y respuesta antes de aprobar.` : QUIZ_MESSAGES[job.error_code ?? "invalid_quiz"]);
+          setMessage(job.status === "ready" ? `Quiz versión ${version} guardado como borrador privado. Revisa cada pregunta y respuesta antes de aprobar.` : `${QUIZ_MESSAGES[job.error_code ?? "invalid_quiz"]}${typeof body.reference === "string" ? ` Referencia: ${body.reference}.` : ""}`);
           operation.current = null;
         }
       } else {
