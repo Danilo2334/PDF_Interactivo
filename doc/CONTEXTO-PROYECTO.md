@@ -6425,3 +6425,50 @@ navegadores N/N−1 y la supervisión/notificación operativa con umbrales acord
 SCRUM-233 depende de dominio/SMTP para acreditar recuperación por correo.
 Los fixtures de 20 MiB acreditan transferencia e integridad, no complejidad
 gráfica del PDF. No se declara terminado todo el proyecto por esta regresión.
+
+### 2026-11-02 — SCRUM-232: registro de series de supervisión
+
+Continuación autorizada de pendientes; rama codex/scrum-232-hu046-supervision
+desde d867526, preservando el stash d6406e0. Commit funcional9366d7f75fe6eb39093047a0f3be077a493b7173;
+PR #58 en borrador sobre #57. No se reescribieron ni mezclaron las ramas anteriores.
+
+monitor-operations.mjs conserva muestras, incidentes y recuperaciones por ID;
+umbral de contrato existente: primera comprobación incorrecta abre un incidente
+por operación, primera correcta posterior lo recupera. No se incorporó un SLO
+de latencia o disponibilidad. Cada serie es finita e independiente; exige SHA
+constante, no se solapa ni reintenta HTTP automáticamente. Mantiene el fallo
+acumulado y señala los registros interrumpidos como incompletos. Solo persiste
+campos sanitizados, sin cuerpos, mensajes arbitrarios, cookies o credenciales.
+El workflow manual prepara resumen y artifact7d con upload-artifact v4 fijado
+a SHA oficial. No se activó un cron, canal de mensajes ni servicio de pago.
+
+Prueba real contra QA c4508f2:3 sondeos,15 contratos correctos,0 incidentes,
+p50 HTTP310,17ms,p95 y máximo2206ms. Son observaciones de contrato, no tiempos
+de renderizado ni disponibilidad mensual. Una ejecución separada con SHA esperado
+000…000 produjo un incidente liveness_revision/CONTRACT_MISMATCH y salida1.
+No se alteraron el deployment o sus respuestas. Recuperación y deduplicación de
+incidentes verificadas en pruebas automatizadas, no como notificaciones recibidas.
+451/451 pruebas y lint aprobados; YAML validado. No se repitió build del frontend:
+este incremento cambia scripts, workflow y documentación, no el código de la app.
+Resultados sanitizados fuera de Git en HU046-SUPERVISION-20261102:serie-real-qa,
+comparador-sha-incorrecto y tests.txt. No se sustituyen por capturas reconstruidas.
+
+Bloqueo preciso del workflow: repositorio público, rama por defecto main;
+operations-qa.yml no está en main (GET404). GitHub exige su presencia allí para
+workflow_dispatch; publicar la rama no lo activa. No se modificó main ni se
+hizo merge.232 y HU046 conservan En curso por vigilancia continua, notificación
+comprobada y objetivos de degradación pendientes. Se actualizó comentario10240
+sin duplicarlo ni tocar sus dos imágenes anteriores.
+
+Fuentes oficiales de la matriz contrastadas al02/11:Chrome156.0.8078.80/155.0.8059.85,
+Edge156.0.4314.58/155.0.4283.62,Firefox159.0/158.0.1,Safari27.2/26.6.
+Inventario actual Windows11 Home Single Language10.0.26200,64bits; ProductVersion
+Chrome156.0.8078.74,Edge156.0.4314.58,Firefox88.0. No son resultados de ejecución.
+Computer Use detectó una ventana nativa de Chrome minimizada. Al restaurarla,
+la revisión automática detuvo el control porque no pudo determinar con certeza
+la URL; no se volvió a automatizar UI en ese turno ni se declaró una prueba
+de Chrome ejecutada.149/231 permanecen En curso. Siguen137 táctil ySMTP233.
+
+El usuario señaló además que los gráficos generados le parecen ambiguos.
+Se prioriza revisar los ejemplos guardados, sus etiquetas y relaciones, el
+prompt y los criterios de calidad antes de declarar cerrada la parte visual IA.

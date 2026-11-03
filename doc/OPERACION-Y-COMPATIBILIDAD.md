@@ -1,7 +1,7 @@
 # HU046 — operación y compatibilidad
 
 Proyecto Danilo2334/PDF_Interactivo; SCRUM-58, Sprint7 activo. Corte de consulta:
-01/11/2026, America/Bogota. Esta matriz registra objetivos y cobertura; una fila
+02/11/2026, America/Bogota. Esta matriz registra objetivos y cobertura; una fila
 pendiente no constituye compatibilidad aprobada ni evidencia de ejecución.
 
 Equipo disponible: Microsoft Windows11 Home Single Language,10.0.26200,
@@ -18,13 +18,14 @@ de ejecución real; la política no cambia un resultado no ejecutado en aprobado
 
 | Navegador | Versiones concretas consultadas | Sistema de prueba | Estado real |
 | --- | --- | --- | --- |
-| Chrome | 156.0.8078.80 y155.0.8059.85 | Windows del equipo local | Pendiente en esas versiones exactas; instalado156.0.8078.48. |
+| Chrome | 156.0.8078.80 y155.0.8059.85 | Windows del equipo local | Pendiente en esas versiones exactas; ProductVersion instalado156.0.8078.74 al02/11. No acredita la versión activa ni una prueba ejecutada. |
 | Edge | 156.0.4314.58 y155.0.4283.62 | Windows del equipo local | .58 instalado, recorrido formal pendiente;155 no disponible en la sesión. |
 | Firefox | 159.0 y158.0.1 | Windows del equipo local | Pendiente; instalado88.0, que no satisface la matriz. |
 | Safari | 27.2(20625.2.8) y26.6(20624.4.5) | macOS/iOS compatible, equipo real por registrar | No hay dispositivo Apple ni sesión de Safari disponible. Pendiente. |
 | Navegador integrado | UA reducido Chrome156.0.0.0,Win32 | Windows del equipo local | Recorridos reales anteriores en HU038–HU045; cobertura complementaria. No sustituye las cuatro marcas/versiones. |
 
-Fuentes oficiales consultadas, conservadas también fuera de Git en HU046-REAL:
+Fuentes oficiales consultadas el01/11 y contrastadas de nuevo el02/11; se
+conservan también fuera de Git en HU046-REAL y HU046-SUPERVISION-20261102:
 
 - [Chrome Stable de29/10](https://chromereleases.googleblog.com/2026/10/stable-channel-update-for-desktop_02107719452.html)
   y[rama155 de15/10](https://chromereleases.googleblog.com/2026/10/stable-channel-update-for-desktop_01886704284.html).
@@ -90,6 +91,71 @@ No copia cuerpos, cookies, nombres ni textos privados. El workflow manual
 un incidente. No se ha instalado un servicio externo ni un cron de pago; un
 workflow manual no constituye vigilancia continua ni entrega de notificaciones
 comprobada. SCRUM-232 sigue pendiente de esa configuración y de SLO explícitos.
+
+### Registro por series y alertas de contrato — 02/11/2026
+
+`web/scripts/monitor-operations.mjs` reutiliza esos cinco contratos. Cada
+ejecución crea un directorio nuevo y conserva `samples.jsonl`, `events.jsonl`,
+`summary.json` y `summary.md`. No sobrescribe resultados anteriores. Registra
+fechas, revisión esperada, tiempos HTTP, estados y referencias de diagnóstico;
+no guarda cuerpos, cookies, claves ni mensajes arbitrarios del proveedor.
+Solo consulta el QA nombrado y exige un SHA completo constante durante la serie.
+
+La primera violación de contrato abre un incidente por operación; las siguientes
+no duplican el aviso. El primer resultado correcto posterior lo recupera con el
+mismo ID. Un fallo anterior sigue invalidando el resultado acumulado aunque el
+último sondeo sea correcto. Esta política deriva del bloqueo de liberación ya
+implementado en86dec12/check-operations.mjs; no redefine los límites RNF de interfaz
+ni incorpora un SLO de latencia, disponibilidad o tasa de errores.
+
+La serie es finita: 1–1440 sondeos, espera de15–3600s entre el fin de uno y el
+inicio del siguiente, sin solapamientos ni reintentos HTTP automáticos. Valores
+de operación, no umbrales de aceptación RNF. Cada ejecución mantiene sus propios
+incidentes: no se promete deduplicación global entre procesos. Antes de cada
+espera se escribe un resumen incompleto; una interrupción o fallo de persistencia
+no puede dejar una serie parcial presentada como aprobada. Salida0 exige todos
+los sondeos correctos y finalización;1 indica una comprobación fallida;2 indica
+configuración, persistencia o ejecución incompleta.
+
+Ejemplo de ejecución manual, con destino nuevo fuera de Git:
+
+```powershell
+$env:QA_EXPECTED_REVISION='<SHA completo del código que ya está en QA>'
+$env:QA_MONITOR_DIR='<directorio nuevo dentro de una carpeta de evidencias existente>'
+$env:QA_MONITOR_SAMPLES='3'
+$env:QA_MONITOR_INTERVAL_SECONDS='15'
+node web/scripts/monitor-operations.mjs
+```
+
+El workflow manual permite1/3/6 sondeos, publica el resumen de job y conserva
+los archivos como artifact durante7d incluso si el sondeo falla. upload-artifact
+v4 fijado a ea165f8d65b6e75b540449e92b4886f43607fa02, verificado en el repositorio
+oficial. No se configura un cron ni se da por comprobada una notificación humana.
+El repositorio es público; el artifact contiene únicamente los datos sanitizados
+descritos, nunca una sesión o contenido de usuarios.
+
+Bloqueo concreto del workflow remoto: la rama por defecto es main y el archivo
+operations-qa.yml no está allí (GET oficial404 al02/11). GitHub exige ese archivo
+en la rama por defecto para habilitar workflow_dispatch; no basta con subirlo a
+esta rama. No se hizo merge ni se cambió main para sortear ese requisito.
+Fuentes: [evento workflow_dispatch](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#workflow_dispatch)
+y [resúmenes de job](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-commands#adding-a-job-summary).
+
+Prueba real del02/11, QA con revisiónc4508f2:3 sondeos/15 contratos correctos,
+0 incidentes, p50 HTTP310,17ms, p95 y máximo2206ms. Son15 observaciones de contrato,
+no disponibilidad de un mes ni tiempos de renderizado. La prueba separada con
+SHA esperado000…000 llamó al QA real, registró un incidente liveness_revision
+CONTRACT_MISMATCH y salida1. Ese20% de comprobaciones fallidas fue deliberado
+(1de5); no fue una caída del servicio. No se modificaron respuestas o despliegues.
+La deduplicación, recuperación, interrupción y saneamiento de datos se verifican
+en pruebas automatizadas, sin presentarlas como una alerta real recibida.
+
+El02/11 se detectó una ventana nativa de Chrome y se intentó restaurarla para
+ampliar SCRUM-231. La revisión automática de Computer Use detuvo el control al
+no poder determinar con certeza su URL. No se continuó la automatización UI,
+no se ejecutó el recorrido y no hay captura nueva de aceptación de navegador.
+Se preservan las evidencias anteriores. SCRUM-149/231/232 y HU046 siguen En curso
+por la cobertura, vigilancia continua, notificación y SLO aún pendientes.
 
 ## Verificación y reversión del QA
 

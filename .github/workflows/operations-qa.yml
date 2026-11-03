@@ -7,6 +7,15 @@ on:
         description: Full SHA of the already deployed QA candidate
         required: true
         type: string
+      sample_count:
+        description: Number of bounded QA probes (not continuous monitoring)
+        required: true
+        default: '1'
+        type: choice
+        options:
+          - '1'
+          - '3'
+          - '6'
 
 permissions:
   contents: read
@@ -15,7 +24,7 @@ jobs:
   verify:
     if: github.repository == 'Danilo2334/PDF_Interactivo'
     runs-on: ubuntu-24.04
-    timeout-minutes: 5
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
@@ -26,4 +35,15 @@ jobs:
       - name: Verify the existing Danilo QA deployment
         env:
           QA_EXPECTED_REVISION: ${{ inputs.expected_revision }}
-        run: node web/scripts/check-operations.mjs
+          QA_MONITOR_SAMPLES: ${{ inputs.sample_count }}
+          QA_MONITOR_INTERVAL_SECONDS: '15'
+          QA_MONITOR_DIR: ${{ runner.temp }}/qa-operations-${{ github.run_id }}-${{ github.run_attempt }}
+        run: node web/scripts/monitor-operations.mjs
+      - name: Preserve measured samples and diagnostic events
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: qa-operations-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/qa-operations-${{ github.run_id }}-${{ github.run_attempt }}/
+          retention-days: 7
+          if-no-files-found: error
