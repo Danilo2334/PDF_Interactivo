@@ -6901,3 +6901,69 @@ seguimiento10136 de HU022 se actualizó conservando su HTML y estado Finalizado.
 PR #63 agrupa el cierre documental; sin nuevos merges ni cambios de aplicación,
 SQL, dependencias o secretos. Stashd6406e0 conservado sin aplicar ni eliminar.
 Evidencias y reportes fuera deGit en CIERRE-PENDIENTES-20261102.
+
+### 2026-11-02 — SCRUM-236 verificado en móvil y conciliación del cierre funcional
+
+El propietario pidió revisar cuánto falta y avanzar en lo resoluble. Árbol
+limpio al comenzar en codex/cierre-entregas-verificadas, origen actualizado y
+stashd6406e0 conservado. Inventario Jira completo:233 actividades,46 historias,
+175 subtareas,8 epics y4 tareas. Antes de este cierre había44 historias y170
+subtareas Finalizado; una de las cinco subtareas abiertas es SCRUM-4, heredada,
+sin requisitos funcionales. No se borró ni se dio por satisfecha.
+
+Se resolvió la captura móvil pendiente de236. El navegador medía390×844CSS
+frente a488×1055 en la captura con escala Windows125%. Se mantuvo el diseño
+estrecho y se aplicó scale0,8 al view image mediante CDP, según documentación
+oficial; captura directa del navegador, sin modificar la aplicación ni editar
+imágenes. Tras esperar la disposición estrecha estable, las dos ilustraciones
+y sus explicaciones se ven completas. Detalle y fuente en
+doc/OPERACION-Y-COMPATIBILIDAD.md. Overrides restaurados al terminar.
+
+Prueba real pública con el mismo QA baf41be: se reutilizó la publicación QA de
+agua v1 y su visual aprobado v2, sin nueva versión, IA o despliegue. El enlace
+anterior retirado siguió rechazado; se utilizó el vigente entregado por el flujo.
+Se comprobaron evaporación/condensación, anotaciones, foco, ampliación y retorno
+al ancho (región276px/contenido960px; flechas80px), zoom125%, cerrar/reabrir y
+recarga con las dos escenas aprobadas. Consola final sin errores. Retirada final
+confirmada: lector/PDF404, ninguna publicación pública actual, ilustraciones,
+aprobación y SHA-256 del original idénticos. No se utilizó la sesión personal.
+
+Jira236 pasó a Finalizado. Comentario10242 actualizado sin perder su HTML ni
+sus9 adjuntos previos. Se añadieron solamente tres capturas móviles reales de
+390×844:03-lector-movil-explicaciones.jpg,04-lector-movil-condensacion.jpg y
+06-lector-movil-retirado.jpg. Las tres cargan en el visor Jira; ahora12 adjuntos
+y un único comentario. La observación previa sobre capturas incompletas queda
+como historial, resuelta por esta ejecución. Seguimiento10136 de HU022 actualizado
+sin duplicar capturas ni cambiar el cierre histórico de la historia.
+
+Se concilió el estado de los epics con su alcance y resultados documentados,
+sin presentar pruebas anteriores como reejecutadas:
+
+| Epic Finalizado | Historias/subtareas acreditadas | Corrección relacionada |
+| --- | --- | --- |
+| EP02/SCRUM-7, documentos |6/27 |235 Finalizado, PDF20MiB e integridad. |
+| EP03/SCRUM-8, selección y solicitudes |6/18 |Contexto, persistencia e idempotencia documentados. |
+| EP04/SCRUM-9, asistente IA |7/21 |236 Finalizado, calidad de ilustraciones y lector público. |
+| EP05/SCRUM-10, recursos/quiz |6/24 |HU027 Finalizado, recursos grandes y quiz del lector acreditados. |
+| EP06/SCRUM-11, publicación/lector |6/25 |Recorridos HTTPS, navegación, autorización y retirada acreditados. |
+
+Cada epic recibió un único comentario de cierre breve, con referencia al alcance
+y continuidad; las evidencias permanecen en sus tareas sin copiar imágenes.
+EP01/SCRUM-5 y EP08/SCRUM-13 pasan a En curso para reflejar sus pendientes reales;
+EP07/SCRUM-12 ya estaba En curso. No se cerró ningún sprint ni se tocaron fechas.
+
+Estado final:44/46 historias,170/175 subtareas,5/8 epics y3/4 tareas Finalizado.
+Quedan11 actividades abiertas, incluidas las tres agrupaciones epic, las dos
+historias, cuatro subtareas funcionales, SCRUM-233 y la heredada SCRUM-4.
+Los frentes pendientes son cuatro:137 táctil físico;149/231 sistemas y ocho
+versiones de navegadores;232 ejecutor continuo, avisos y SLO/umbrales;233
+dominio/remitente SMTP verificado y recuperación por correo. El cambio de clave
+con sesión activa no sustituye la recuperación. No se inventaron umbrales,
+compatibilidad o pruebas táctiles, ni se activaron servicios de pago.
+
+Esta entrega modifica solo continuidad/operación. Se conserva la verificación
+465/465, lint y build del mismo código integrado; no se repitió sin cambios.
+PR #63 actualizado y preparado para revisión, sin nuevo merge ni despliegue;
+main, secretos, configuración, datos personales y stash intactos. Evidencia
+nueva fuera deGit en CIERRE-FUNCIONAL-20261102; retiro y controles backend
+conservados también en CIERRE-PENDIENTES-20261102.

@@ -262,10 +262,9 @@ notificaciones recibidas ni objetivos de degradación aún no acordados.
 - SCRUM-233: dominio/remitente de correo autorizado y verificado en el proveedor
   SMTP, configuración privada en Supabase y prueba de recuperación real. No
   solicitar claves por chat ni reducir la seguridad para sortear el bloqueo.
-- SCRUM-236: lector público de escritorio comprobado con baf41be, según la
-  ejecución posterior documentada abajo. Falta acreditar visualmente el lector
-  público en viewport móvil; el DOM y el teclado no sustituyen esa observación.
-  Se conservan las capturas móviles locales y todas las versiones aprobadas.
+- SCRUM-236: Finalizado tras completar también la comprobación visual pública
+  móvil, según la ejecución posterior documentada abajo. Se conservan las
+  capturas locales, públicas de escritorio/móvil y todas las versiones aprobadas.
 
 El candidato de código revisado esbaf41bec85b0ea42394d2b2230ca3197a0ce28a4,
 develop después de #62. Inicialmente se preparó sin desplegar. Posteriormente
@@ -323,3 +322,49 @@ contenido y PDF1334B, SHA-256
 0c9af69fde08b476c25801b079ffd456466afe0f55116869d7b37f3e4913f909.
 La sesión personal no se utilizó ni se invalidó; el cliente backend QA usó una
 cuenta sintética y cookies solo en memoria. No se publica el enlace-capacidad.
+
+## Cierre visual móvil del02/11/2026 — SCRUM-236
+
+Se identificó una diferencia de escala en la captura: Page.getLayoutMetrics
+reportaba390×844 en cssLayoutViewport y488×1055 en layoutViewport. El recorte
+provenía de la captura con escala de Windows125%, no de un desborde del panel.
+Emulation.setDeviceMetricsOverride mantuvo el diseño390×844 con deviceScaleFactor1
+y scale0,8 únicamente para la imagen del navegador. Se esperó el diseño estrecho
+estable y se capturó directamente Page.captureScreenshot; sin recomponer,
+agrandar o modificar imágenes ni código. Referencia del parámetro:
+[CDP Emulation](https://chromedevtools.github.io/devtools-protocol/tot/Emulation/#method-setDeviceMetricsOverride).
+El override se retiró al terminar. No se modificó la escala global de Windows.
+
+Mismo QA baf41be, sin otro despliegue. Se republicó temporalmente la misma
+publicación QA v1 y el mismo visual aprobado v2. El enlace retirado anterior
+siguió rechazado; el flujo normal entregó el enlace vigente, omitido de informes.
+Evaporación, condensación, anotaciones y explicaciones visibles, título completo
+y panel dentro del ancho disponible. Ampliar habilitó región de276px con960px
+de contenido; foco y flechas movieron80px. Volver al ancho, zoom125%, cerrar y
+reabrir conservaron el estado esperado; tras recargar se recuperaron las dos
+ilustraciones aprobadas. Consola final sin errores.
+
+Las capturas móviles03-lector-movil-explicaciones.jpg,
+04-lector-movil-condensacion.jpg y06-lector-movil-retirado.jpg son390×844,
+reales de la aplicación. Se inspeccionaron y cargan en el visor de Jira.
+Se conservan las capturas defectuosas fuera de Git, excluidas de aceptación.
+Esta prueba acredita diseño estrecho y teclado; la pantalla táctil física137
+y las marcas/versiones149/231 siguen pendientes.
+
+Retirada final mediante el flujo normal: lector/PDF404, ninguna publicación
+pública actual, mismo SHA-256, contenido y aprobación. SCRUM-236 Finalizado;
+comentario10242 único con12 adjuntos, incluidos los9 anteriores intactos.
+La frase editorial del fixture aprobado se conserva sin reescribir su historial.
+
+## Pendientes reales después del cierre visual
+
+| Frente | Tareas | Requisito aún no acreditado |
+| --- | --- | --- |
+| Claridad táctil | HU040/SCRUM-52,137 | Selección y envío desde pantalla táctil física. |
+| Compatibilidad | HU046/SCRUM-58,149/231 | Sistemas/versiones concretos de la matriz y recorridos completos en ocho versiones de marca, incluido Safari real. |
+| Supervisión | HU046/SCRUM-58,232 | Ejecutor continuo, destino autorizado de avisos y SLO/ventana/umbrales documentados antes de configurar alertas. |
+| Recuperación por correo | SCRUM-233,EP01/SCRUM-5 | Dominio/remitente SMTP autorizado y verificado, configuración privada y recorrido real de recuperación. |
+
+La matriz documental y el inventario se conservan. No se declara probada una
+marca por el resultado del IAB, ni se define un umbral nuevo como si estuviera
+acordado. El workflow manual sigue en develop y no se modificó main.
