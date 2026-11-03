@@ -3,7 +3,7 @@ import { createHash } from "node:crypto";
 import { z } from "zod";
 import { authorizeRequest, readSmallJson, reply } from "@/lib/reinforcements/request-service";
 import { isSameOriginMutation } from "@/lib/documents/mutation-request";
-import { allowedMediaUrl, MEDIA_BUCKET, mediaInputSchema, mediaRecordSchema, VIDEO_LIMIT } from "@/lib/validations/reinforcement-media";
+import { allowedMediaUrl, MEDIA_BUCKET, mediaFileMetadata, mediaInputSchema, mediaRecordSchema, mediaTransferSchema, VIDEO_LIMIT } from "@/lib/validations/reinforcement-media";
 import { validateMediaFile } from "@/lib/reinforcements/media-file";
 import { signMediaProof } from "@/lib/reinforcements/media-proof";
 
@@ -30,9 +30,51 @@ export async function getMedia(request: Request, projectId: string, requestId: s
   if (access.response) return access.response;
   const reinforcementId = query.get("reinforcementId"); if (!z.string().uuid().safeParse(reinforcementId).success) return reply({ message: "Refuerzo no válido." }, 400);
   const rows = await access.db.from("reinforcement_media").select(fields).eq("request_id", requestId).eq("reinforcement_id", reinforcementId)
-    .eq("status", "approved").order("created_at");
+    .in("status", ["uploading", "approved"]).order("created_at");
   const parsed = z.array(mediaRecordSchema).safeParse(rows.data);
-  return !rows.error && parsed.success ? reply({ items: parsed.data }) : reply({ message: "No fue posible consultar los recursos. Reintenta." }, 503);
+  return !rows.error && parsed.success ? reply({ items: parsed.data.filter(item => item.status === "approved"),
+    pendingItems: parsed.data.filter(item => item.status === "uploading") })
+    : reply({ message: "No fue posible consultar los recursos. Reintenta." }, 503);
+}
+
+// Only metadata crosses the hosting function. Storage still evaluates the
+// authenticated user's existing INSERT policy against the private reservation.
+// A reservation is not an approval: complete-file validates the stored bytes.
+async function directFile(body: unknown, access: Awaited<ReturnType<typeof authorizeRequest>>, requestId: string) {
+  if (access.response) return access.response;
+  const parsed = mediaTransferSchema.safeParse(body);
+  if (!parsed.success) return reply({ message: "Revisa el archivo, su tamaño y la aprobación del recurso." }, 400);
+  const { metadata: input, file, action } = parsed.data;
+  if (input.documentId !== access.row.document_id || input.kind === "link" || input.url !== undefined)
+    return reply({ message: "El archivo no corresponde al documento o tipo elegido." }, 400);
+  const checked = mediaFileMetadata(file);
+  if (checked.error !== undefined || checked.kind !== input.kind)
+    return reply({ message: checked.error ?? "El archivo no corresponde al tipo elegido." }, 415);
+  const storagePath = `${access.userId}/${input.assetId}.${checked.extension}`;
+  const metadata = { userId: access.userId, requestId, documentId: input.documentId, reinforcementId: input.reinforcementId,
+    approvedVersionId: input.approvedVersionId, assetId: input.assetId, kind: input.kind, title: input.title,
+    fileName: file.name, mime: checked.mime, size: file.size, storagePath, url: null, fileHash: file.sha256 };
+  const proof = { ...metadata, inputHash: sha(JSON.stringify(metadata)) };
+  const prepared = await access.db.rpc("change_reinforcement_media", signMediaProof({ ...proof, action: "prepare" }));
+  if (prepared.error) return failure(prepared.error.code);
+  const previous = mediaRecordSchema.safeParse(prepared.data);
+  if (!previous.success || previous.data.id !== input.assetId) return failure();
+  if (previous.data.status === "approved") return reply({ item: previous.data });
+  if (previous.data.status !== "uploading") return failure("PT409");
+  if (action === "prepare-file") return reply({ pendingItem: previous.data, upload: { bucket: MEDIA_BUCKET, path: storagePath } });
+
+  const stored = await access.db.storage.from(MEDIA_BUCKET).download(storagePath);
+  if (stored.error || !stored.data) return reply({ message: "La transferencia no está confirmada. Conserva el archivo y reintenta el mismo envío." }, 503);
+  if (stored.data.size !== file.size || stored.data.type !== checked.mime)
+    return reply({ message: "El archivo transferido no coincide con el seleccionado. Retira la transferencia pendiente y selecciona el archivo nuevamente." }, 409);
+  const validated = await validateMediaFile(new File([stored.data], file.name, { type: checked.mime }));
+  if ("error" in validated) return reply({ message: validated.error }, 415);
+  if (validated.kind !== input.kind || sha(validated.bytes) !== file.sha256)
+    return reply({ message: "El contenido transferido no coincide con el archivo seleccionado. Retira la transferencia pendiente antes de repetir." }, 409);
+  const saved = await access.db.rpc("change_reinforcement_media", signMediaProof({ ...proof, action: "approve" }));
+  if (saved.error) return failure(saved.error.code);
+  const result = mediaRecordSchema.safeParse(saved.data);
+  return result.success && result.data.status === "approved" ? reply({ item: result.data }) : failure();
 }
 export async function postMedia(request: Request, projectId: string, requestId: string) {
   if (!isSameOriginMutation(request)) return reply({ message: "Origen de la solicitud no permitido." }, 403);
@@ -40,7 +82,8 @@ export async function postMedia(request: Request, projectId: string, requestId: 
   if (access.response) return access.response;
   try {
     if (request.headers.get("Content-Type")?.startsWith("application/json")) {
-      const input = await readSmallJson(request, 1000); if (input.response) return input.response;
+      const input = await readSmallJson(request, 4096); if (input.response) return input.response;
+      if (mediaTransferSchema.safeParse(input.body).success) return await directFile(input.body, access, requestId);
       const parsed = z.object({ action: z.literal("remove"), documentId: z.string().uuid(), reinforcementId: z.string().uuid(), assetId: z.string().uuid() }).strict().safeParse(input.body);
       if (!parsed.success || parsed.data.documentId !== access.row.document_id) return reply({ message: "Recurso no válido." }, 400);
       const saved = await access.db.rpc("change_reinforcement_media", signMediaProof({ ...parsed.data, userId: access.userId, requestId }));

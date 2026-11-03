@@ -30,6 +30,12 @@ export function mediaFileMetadata(file: { name: string; type: string; size: numb
 export const mediaInputSchema = z.object({ documentId: z.string().uuid(), reinforcementId: z.string().uuid(),
   approvedVersionId: z.string().uuid(), assetId: z.string().uuid(), title: z.string().trim().min(3).max(160),
   approved: z.literal(true), kind: z.enum(["image", "video", "link"]), url: z.string().max(2000).optional() }).strict();
+export const mediaTransferSchema = z.object({
+  action: z.enum(["prepare-file", "complete-file"]),
+  metadata: mediaInputSchema,
+  file: z.object({ name: z.string().min(1).max(120), type: z.enum(["image/png", "image/jpeg", "video/mp4"]),
+    size: z.number().int().positive().max(VIDEO_LIMIT), sha256: z.string().regex(/^[a-f0-9]{64}$/) }).strict(),
+}).strict();
 export const mediaRecordSchema = z.object({ id: z.string().uuid(), reinforcement_id: z.string().uuid(),
   approved_version_id: z.string().uuid(), kind: z.enum(["image", "video", "link"]), title: z.string().min(3).max(160),
   file_name: z.string().nullable(), mime_type: z.string().nullable(), size_bytes: z.number().int().nonnegative(),

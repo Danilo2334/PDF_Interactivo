@@ -5993,3 +5993,318 @@ Madre58 comentario10236 actualizado;149=10238,231=10239,232=10240, únicos ysin
 imágenes duplicadas.58/149/231/232 siguenEncurso. El estado final delQA es
 86dec12 (incluyeHU045), no e3dfd023; la nota anterior sin despliegue HU045 queda
 superada por este ensayo. No se hizo merge de54/55 ni se cerróSprint7.
+
+### 2026-11-01 — Pausa solicitada y preparación para conservar Jira
+
+El usuario pidió pausar el desarrollo y preparar el cambio de cuenta porque
+su prueba está próxima a terminar. Después priorizó conservar toda la información
+y pidió una recomendación. No hay todavía correo o sitio de destino confirmado.
+Se recomienda conservar `danilocarlosama96.atlassian.net` y comprobar primero
+si Jira Free cubre las necesidades; cambiar la cuenta de acceso no cambia por sí
+solo la suscripción del sitio. No se cambió el plan, invitó a usuarios, concedió
+permisos, trasladó información, desplegó ni hizo merge durante esta preparación.
+
+Punto de pausa: rama `codex/scrum-39-hu027-transferencias`, HEAD
+`5d273e404071523e386b4791caf36a7d8953a562`, sobre HU046. Se había generado
+por CLI `supabase/migrations/20261102012539_bounded_file_transfers.sql`, vacío,
+sin seguimiento y SIN aplicar. La solución de cargas grandes aún no está
+implementada. SCRUM-39/111/112 están En curso; no se cerraron ni se alteraron
+las evidencias anteriores. Stash `d6406e0cdbc464c1c0301c058024b10dd27c4515`
+conservado, sin aplicar ni eliminar. QA mantiene el despliegue verificado
+`86dec12` descrito arriba; no se continuó el desarrollo después de la pausa.
+
+Lectura completa de las tres páginas JQL de SCRUM: 231 claves únicas,
+208 comentarios incluidos (conteo por tarea comprobado), 560 metadatos de
+adjuntos que suman 49.620.879 bytes. Tablero 1 y sus 7 sprints leídos mediante
+las operaciones específicas, sin inferirlos de las tareas ni cambiar su estado.
+Inventario complementario HTML/JSON guardado y releído fuera de Git en la
+carpeta de evidencias habitual, subcarpeta `PRESERVACION-JIRA-20261101`.
+`inventario-jira.json`: 1.452.769 bytes, SHA-256
+`89d4bdae79ede45fe211b00511b2afc1f1a69c50b45eee71614dc1e5464577da`.
+No se añadieron tokens de carga; los metadatos omiten URL privadas de descarga.
+NO es un respaldo nativo restaurable: no se descargaron los 560 binarios,
+el historial completo ni todas las configuraciones/campos personalizados.
+
+El conector tiene acceso de lectura/escritura al sitio correcto de Danilo,
+pero no expone gestión del plan ni respaldo del sitio. La consulta del Backup
+Manager en navegador llegó al inicio de sesión de Atlassian. Se dejó esa pestaña
+abierta y se pidió al usuario ingresar personalmente; no se usaron credenciales
+personales compartidas antes. La fecha real de vencimiento, los usuarios con
+licencia y el uso total del sitio siguen sin comprobar. Los 49,6 MB corresponden
+solo a adjuntos de SCRUM, no al almacenamiento total de Jira.
+
+Antes de cambiar plan o cuenta: descargar y validar el respaldo oficial con
+archivos, revisar/exportar automatizaciones y configuraciones de integraciones
+que no cubre ese respaldo, y conservar los registros de auditoría necesarios.
+Jira Free admite hasta 10 usuarios y 2 GB; limita permisos configurables y acceso
+a auditoría. No prometer que se conserva cada función de Premium. No borrar el
+sitio original ni recrear manualmente las tareas. Si se elige otro sitio,
+comprobar previamente compatibilidad de migración y comparar tareas, jerarquía,
+comentarios, adjuntos, sprints, permisos y enlaces antes de retirar el origen.
+
+Fuentes oficiales consultadas el 01/11/2026:
+- https://support.atlassian.com/jira-cloud-administration/docs/export-issues/
+- https://support.atlassian.com/jira-cloud-administration/docs/explore-jira-cloud-plans
+- https://support.atlassian.com/jira-cloud-administration/docs/what-is-the-free-jira-cloud-plan/
+
+### 2026-11-01 — Respaldo nativo de Jira descargado y verificado
+
+El usuario inició sesión en Atlassian y pidió resolver el error observado.
+El enlace inicial `BackupExport.jspa` era incorrecto: mostraba «dead link».
+Se accedió desde Configuración → Sistema → Gestor de copias de seguridad al
+enlace real `https://danilocarlosama96.atlassian.net/secure/admin/CloudExport.jspa`.
+No era un bloqueo de las tareas ni se requirió cambiar credenciales/permisos.
+
+Se creó la copia oficial Cloud con la opción de archivos adicionales marcada,
+se esperó su terminación y se descargó el ZIP al directorio privado
+`PRESERVACION-JIRA-20261101` indicado arriba. Archivo
+`jira-cloud-con-adjuntos-20261101.zip`, 43.577.070 bytes, SHA-256
+`563ab429cb1b9ab66cab21c9a81302f45fb372ea9aff25ffa5a06c1d69d1095d`.
+Su integridad CRC pasó para todas las entradas. Contiene `entities.xml`,
+`activeobjects.xml` y los 560 binarios. La comparación con el inventario comprobó
+231 IDs de tareas, 208 IDs de comentarios asociados a su tarea, 560 IDs/nombres/
+tamaños de adjuntos y sus 560 archivos, sin faltantes ni diferencias.
+Los adjuntos suman 49.620.879 bytes. Se calcularon SHA-256 de todos ellos y se
+compararon las 13 capturas recientes de HU045/HU046 con los originales locales:
+13/13 idénticas. El XML conserva 2.047 grupos y 3.561 ítems de cambios; la tabla
+de sprints contiene 7 filas. No se importó el respaldo a otro sitio, por lo que
+no se afirma una restauración funcional ensayada. Informe detallado
+`verificacion-respaldo-nativo.json` y huellas `adjuntos-sha256.json`, fuera de Git.
+
+Se exportó aparte la totalidad de los 162 eventos de auditoría disponibles.
+La descarga era un ZIP, no un CSV plano: `auditoria-jira.zip`, 5.018 bytes,
+CRC correcto; contiene el CSV original de 40.347 bytes y 162 registros,
+conservado también como `auditoria-eventos.csv`. No se modificó la codificación
+ni se ejecutó el contenido. Automatización Global, alcance Todos los flujos,
+sin texto de búsqueda: «Aún no se ha creado ningún flujo». Estudio tampoco
+mostró flujos accesibles tras retirar el filtro de propietario. Son observaciones
+de esos listados, no una afirmación sobre datos de todas las apps de Atlassian.
+
+Administración del sitio de Danilo comprobada: Jira STANDARD, no Premium,
+prueba de 62 días que termina el 2 de noviembre de 2026; 1 usuario con licencia,
+sin método de pago y estimación de renovación USD 9,70. La consola avisa que
+sin pago la suscripción se desactivará. No se esperará un descenso automático
+de plan sin comprobarlo. Almacenamiento real del sitio: 49,6 MB de 250 GB.
+La pestaña de suscripciones Marketplace no muestra suscripciones instaladas;
+esto no equivale a exportar los datos de todas las integraciones gratuitas.
+
+Comparación real de planes abierta: Free $0, hasta 10 usuarios y 2 GB. El sitio
+encaja en esos límites. Se recomendó conservarlo y pasar a Free, sin trasladar
+el proyecto ni cambiar claves/enlaces. Falta la elección expresa del usuario:
+se preguntó conservar y cambiar a Free o preparar otro sitio. No se pulsó
+«Seleccionar Free» ni se aceptó una suscripción o términos. Free limita permisos
+configurables y acceso a auditoría; no se presenta como idéntico a Standard.
+No se añadieron pagos, usuarios, permisos, cambios en el proyecto, merges,
+despliegues ni llamadas IA. El desarrollo sigue pausado.
+
+La copia nativa reemplaza el pendiente de descarga señalado en el apartado
+anterior; el inventario inicial se conserva inmutable con su alcance y huella.
+Los respaldos remotos del gestor caducan en 14 días según la UI. La documentación
+oficial indica que la importación de Backup Manager admite copias de hasta
+30 días de antigüedad desde el 22/01/2026. La copia local no se borra por ello,
+pero no debe prometerse importación nativa indefinida ni retirar el sitio origen.
+
+También se preparó una copia accesible fuera del repositorio en
+`C:\Users\Danilo Carlosama\Music\PDF_interactivo\Respaldos\Jira-2026-11-01`.
+Se compararon las huellas de los archivos copiados. Ambas carpetas están en el
+mismo PC; no se presenta como un respaldo externo frente a pérdida del equipo.
+LEEME y manifest distinguen la verificación del ZIP de una restauración todavía
+no ensayada. La continuidad queda modificada localmente, con patch y copia fuera
+de Git; no se creó un commit de implementación ni se publicó la migración vacía.
+
+Consulta posterior del usuario: pidió explicar los riesgos de Free antes de
+elegir, para conservar la forma de trabajar y registrar evidencias. Esta respuesta
+NO autoriza todavía el cambio. La documentación oficial mantiene las funciones
+centrales de Jira y los adjuntos en Free (2 GB), y conserva los esquemas de
+permisos existentes al bajar de plan, aunque no permite editarlos. La auditoría
+administrativa no está disponible en Free; no confundirla con los comentarios
+ni con el historial de una tarea. La documentación de créditos Rovo distingue
+consultas/escrituras básicas de un único producto (gratuitas) de búsquedas
+unificadas y contexto enriquecido (consumen créditos). No se ha probado el
+conector con ESTE sitio en Free: no garantizar que toda búsqueda avanzada siga
+idéntica. Si se autoriza, validar lectura, edición, estados, adjuntos reales y
+enlaces antes de dar por comprobada la continuidad del trabajo. No se necesita
+modificar la IA de PDF Interactivo por cambiar el plan de Jira.
+Fuentes adicionales consultadas:
+- https://www.atlassian.com/software/jira/guides/more/jira-editions
+- https://support.atlassian.com/jira-software-cloud/docs/add-files-images-and-other-content-to-describe-an-issue/
+- https://support.atlassian.com/jira-cloud-administration/docs/permissions-limitations-in-free-jira-sites/
+- https://support.atlassian.com/rovo/docs/rovo-usage-limits/
+
+### 2026-11-01 — Jira Free aplicado y continuidad del registro comprobada
+
+El usuario autorizó expresamente cambiar Jira a Free en el MISMO sitio y
+comprobar tareas, comentarios y capturas reales, sin pagos. Se recuperó la
+conexión del navegador mediante el reset documentado del runtime, manteniendo
+las pestañas y la sesión de Atlassian. No se solicitaron permisos rutinarios.
+En la cuenta de Danilo se seleccionó Free, se confirmó «Volver a Free» y se
+omitió la encuesta opcional. La UI confirmó «Tu plan ha cambiado. Ahora tienes
+Jira Free». La ficha de suscripción muestra Free, 1 usuario, 150 pasos de
+automatización e Información de pago None. No se añadió método de pago ni se
+activó una prueba o suscripción de pago. El banner comercial posterior menciona
+Premium; no se usó como fuente del plan anterior, que la ficha verificaba Standard.
+
+Prueba REAL desde el conector Atlassian en Free sobre SCRUM-232, sin cambiar
+criterios ni estado: edición de etiquetas a `hu046-refinado` y `jira-free`,
+conservando la anterior. Se actualizó el comentario existente 10240, único,
+manteniendo íntegramente su cuerpo previo y añadiendo un párrafo de continuidad.
+Se asociaron dos JPEG nativos NUEVOS, inspeccionados antes de subir:
+10594 `08-jira-free-activo-sin-pago.jpg` (57.727 bytes) y
+10595 `09-captura-real-aplicacion-qa.jpg` (80.209 bytes). Este último procede
+de PDF Interactivo QA autenticado, con consulta actualizada a las 21:09:55 de
+Bogotá y valores 12/49/13/4. No es una prueba nueva de IA ni de todas las RNF.
+La captura 10595 se abrió en el visor real de Jira; se guardaron screenshots
+nativos del visor y del comentario. También se descargó por el conector:
+80.209 bytes idénticos al original, SHA-256
+`ef4506e1ef8aeb305885c86b62d3add3d90989ec3f61b367af8d09625700291a`.
+No se imprimieron ni documentaron tokens o comandos privados de transferencia.
+
+Comparación posterior completa de las 3 páginas JQL con el inventario previo:
+231 tareas únicas, mismas claves e IDs; 208 comentarios, mismos IDs y ninguno
+eliminado. Único cuerpo modificado: 10240 de SCRUM-232, con prefijo previo
+conservado. Las 560 evidencias anteriores mantienen IDs, nombres y tamaños;
+ahora hay 562 adjuntos por las 2 capturas nuevas. Ningún resumen, descripción
+o estado de tarea cambió. Lectura específica del tablero: los 7 sprints conservan
+sus IDs y estados. SCRUM-232 y HU046 siguen En curso por sus pendientes reales;
+no se completó la historia por esta comprobación administrativa.
+
+El respaldo oficial anterior, con CRC y huella verificados, se conserva intacto.
+No se generó otro respaldo nativo dentro del límite de 48 horas. El cambio,
+comentario final, adjuntos y comparación se guardaron aparte en
+`delta-jira-free.json`, junto con las capturas nativas 07–11. README, manifest,
+patch y copia del documento se actualizan en ambas carpetas de respaldo.
+La validación acredita lectura, edición de la tarea, actualización del comentario,
+subida, asociación, visualización y recuperación de una captura real mediante
+las herramientas utilizadas; no acredita cada herramienta ni búsquedas Rovo
+enriquecidas. El desarrollo de HU027 continúa PAUSADO hasta nueva instrucción.
+Stash d6406e0 conservado y migración vacía sin aplicar; sin merge, despliegue,
+cambios de credenciales ni llamadas IA durante este cambio de plan.
+
+### 2026-11-01 — Reanudación de HU027: transferencia privada de archivos grandes
+
+El usuario pidió continuar después del cambio a Jira Free. Se retomó la rama
+`codex/scrum-39-hu027-transferencias` desde HU046, conservando el stash d6406e0.
+El respaldo/cambio de plan quedó separado en el commit documental c3afdfa.
+No se reimplementó HU027 ni se ampliaron sus formatos o límites.
+
+El navegador envía ahora metadatos pequeños a Next, transfiere el archivo con
+su sesión a Supabase privado y solicita la confirmación al servidor. Se reutiliza
+la reserva de `reinforcement_media`, su firma, idempotencia y RLS existentes.
+El servidor descarga el objeto privado y comprueba tamaño, MIME, estructura y
+SHA-256 antes de aprobar; reservar o terminar de transferir no equivale a aprobar.
+El destino está fijado al origen Supabase configurado y a la ruta del propietario;
+no se expone clave privada ni URL firmada de escritura. El cliente SSR público
+no inicia otro bucle de renovación en segundo plano. Progreso real de subida,
+tiempos limitados, comprobación tras respuesta perdida y pendientes retirables.
+Los enlaces y clientes multipart anteriores mantienen su validación. No hay TUS
+ni promesa de reanudación por fragmentos; el reintento conserva la operación.
+
+No se necesita DDL: la migración vacía generada antes de la pausa nunca se aplicó
+y se preservó fuera del directorio de migraciones, en las evidencias privadas de
+HU027-TRANSFERENCIAS-20261101. No se ejecutó db push ni se cambió RLS.
+Documentación oficial revisada: Supabase Storage standard uploads/access-control,
+SSR creating-a-client y changelog; Next local use-client/route; límite de entrada
+de Vercel Functions de 4,5 MB. No se cambiaron Node ni dependencias.
+
+Verificación inicial de esta corrección: 438/438 pruebas, lint y build de
+producción correctos. En producción local 127.0.0.1:3001, cuenta QA sintética y
+refuerzo aprobado 90b997ec-7e72-4797-be12-39fc9f997f30, se transfirieron:
+- PNG de ruido determinista 1060×1500: 5.034.365 bytes, SHA-256
+  `2c697ad2a3c05db65d0a9458c32d9730517448a3f742560e41af86b7bb3a43bb`.
+- MP4 de 20.971.520 bytes, SHA-256
+  `b5b93b677d274e0dcdd3ab6991009f576f0e4ae770d9e8964571275d973253b9`.
+  Clip técnico existente 960×540, 5,055 s, más caja MP4 `free` válida: acredita
+  volumen y decodificación, no 20 MiB de escenas distintas ni calidad pedagógica.
+Ambos se guardaron y decodificaron desde almacenamiento privado. Consola sin
+errores/avisos durante este recorrido. La comprobación alojada y el registro final
+en Jira se documentarán después de ejecutarlos; no se declaran aprobados aquí.
+Este cambio cubre medios HU027: la carga/reemplazo de PDF de 20 MiB sigue siendo
+otro pendiente del hosting. Sin merge, pagos ni nuevas llamadas de IA.
+
+### 2026-11-02 — HU027 comprobada en QA HTTPS y registro terminado
+
+Las pruebas siguientes se ejecutaron la noche del 01/11 en hora de Bogotá;
+el registro de Jira se terminó el 02/11 después de la interrupción. Código:
+680f226129514e61c94258ec60925cf4e998a5ac y
+a6390afe223e3aad8647aa062cbe7cd1e6789011. PR #56:
+https://github.com/Danilo2334/PDF_Interactivo/pull/56, base HU046 / PR #55.
+La publicación Git se hizo con Danilo2334 por operación, sin cambiar la cuenta
+global de GitHub ni usar los proyectos de otras cuentas. Sin merge.
+
+Se desplegaron candidatos desde archivos limpios de esos commits en el proyecto
+QA Hobby de Danilo. Se comprobó su revisión antes de promoverlos al alias QA.
+Versión final probada: a6390af, deployment
+`dpl_Bjv6sbNHzrHS9PuGJ6YHBkYFwisp`,
+https://pdf-interactivo-ojir55guk-danilo-carlosamas-projects.vercel.app;
+alias https://pdf-interactivo-qa.vercel.app. No se modificaron facturación,
+variables privadas, datos personales ni políticas de acceso. No hubo llamadas IA.
+
+Resultados REALES desde el formulario autenticado del QA:
+- PNG 5.034.365 bytes y MP4 20.971.520 bytes: guardados y recuperados. La traza
+  muestra JSON de 471/472 bytes hacia Next y el binario hacia Supabase; sin 413.
+  Las descargas privadas de ambos coinciden con las huellas documentadas arriba.
+- El video privado se reprodujo a 960×540, duración 5,055 s. Range 0–31 respondió
+  206, 32 bytes, total 20.971.520, private/no-store y nosniff.
+- Se interceptó la respuesta 200 de complete-file DESPUÉS de la aprobación del
+  video `1b2ee849-2bed-45cd-a8ff-2bb7f05086e1` y se abortó únicamente su entrega.
+  El formulario se conservó; el reintento hizo un prepare-file, recuperó el mismo
+  ID y no repitió el binario ni creó otro recurso. No se confundió con desconectar
+  antes de guardar. Se corrigió el mensaje inglés de red y se repitió el corte
+  real con un PNG pequeño en a6390af: mensaje español, reintento con Enter y una
+  sola entrada aprobada (`792d51e0-cbd4-46cb-a53d-fc56c8716d55`).
+- Reserva sin objeto: 503 sin aprobar. PNG real de 68 bytes subido a una reserva
+  con otra huella: complete-file 409 sin aprobar. Cambio de intención 409,
+  documento incoherente 400, imagen mayor de 5 MiB 415, sin sesión 401.
+- Storage con sesión real de otra cuenta y anónimo no entregó bytes. Tampoco
+  aceptó ruta sin reserva, sobrescritura ni subida posterior a retirar la reserva
+  (errores 400 de Storage en estos ensayos; no se presentan como HTTP 403).
+- Pendientes separados de aprobados y retirables en UI. Móvil 390×844, ancho
+  de documento 375 por la barra de desplazamiento, sin desbordamiento horizontal;
+  captura móvil nativa 07 y navegación de controles/reintento con teclado.
+- Se retiraron desde UI solo los cinco medios técnicos aprobados y las dos
+  reservas creadas en esta sesión. Después: 0 aprobados y 0 pendientes en ese
+  refuerzo, también tras recargar; el acceso al video retirado devolvió 404.
+  Los medios previos de otro refuerzo permanecen. No se publicaron esos clips
+  o imágenes técnicos como material pedagógico. La retirada lógica no promete
+  liberar cuota histórica ni eliminar físicamente el almacenamiento.
+- PDF original: 1580 bytes, SHA-256
+  `e7277d66afd7caba47385cfac2f0e55a2eeb4fb7aa7136409fa35300a6347946`,
+  idéntico al anterior. Los abortos y 4xx/503 provocados son parte de las pruebas;
+  no se afirma consola vacía durante esos fallos controlados.
+
+Verificación automática: suite completa 438/438, lint y build de producción.
+Después del ajuste de mensajes: 12/12 pruebas afectadas, lint y build repetidos,
+correctos. No se repitió toda la suite por cada captura.
+
+Jira Free comprobado otra vez: se editaron los comentarios únicos 10155 de
+SCRUM-111 y 10158 de SCRUM-112 preservando íntegramente el HTML anterior y sus
+dos imágenes en cada uno. En esa primera comprobación contenían cuatro imágenes
+cada uno y un único comentario por subtarea. Adjuntos NUEVOS:
+- SCRUM-111: 10596 `01-qa-imagen-transferida.jpg` (49.503 B, progreso real 86 %),
+  10597 `04-qa-video-20mib-reproduccion.jpg` (61.984 B).
+- SCRUM-112: 10599 `06-qa-error-recuperable-corregido.jpg` (50.665 B),
+  10598 `08-qa-recursos-retirados.jpg` (63.132 B).
+Se comprobó su asociación por API y su visualización en Jira. Las cuatro
+evidencias anteriores de estas dos subtareas conservan IDs y tamaños. SCRUM-111
+y SCRUM-112 pasan a Finalizado; SCRUM-193/194 se respetan. El comentario único
+10159 de SCRUM-39 resume el cierre y enlaza PR #56; historia En revisión por
+integración pendiente. No se cerró ningún sprint.
+
+Capturas nativas, descriptores de los fixtures y resultados HTTP/Storage se
+conservan fuera de Git en `HU027-TRANSFERENCIAS-20261101`, junto al respaldo
+anterior de Jira. Los JPEG 02 y 05 documentan un estado previo o una captura
+reducida y no se usaron como evidencia de aceptación en Jira. Stash d6406e0
+intacto; árbol sin secretos. Próximo pendiente de hosting: carga/reemplazo de
+PDF grandes (20 MiB), fuera de este cambio. Siguen los pendientes de HU040
+táctil, matriz de navegadores, supervisión de HU046 y SMTP ya documentados.
+
+Comprobación visual adicional del 02/11: la captura 08 conserva un fotograma
+intermedio, cuando todavía se dibujaba el último recurso antes de retirarlo.
+Se mantuvo por trazabilidad y se añadió el JPEG nativo
+`13-qa-retirada-final-tras-recarga.jpg` (76.739 B), adjunto 10600 en SCRUM-112.
+Se volvió a entrar con la cuenta QA sintética, se recargó el proyecto y se
+observó la lista vacía. La nueva captura muestra ese estado final y concuerda
+con el resultado API anterior 0/0/404. El comentario 10158 se aclaró, sin borrar
+texto ni imágenes; ahora tiene cinco imágenes (dos anteriores y tres nuevas).
+SCRUM-111 conserva cuatro. Total nuevo de esta corrección: cinco capturas en
+Jira. La madre y el PR reflejan ese total. No se repitieron subidas grandes ni IA.

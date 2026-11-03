@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { randomUUID } from 'node:crypto';
+import { randomUUID, createHash } from 'node:crypto';
 import * as React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { load, record } from './summary-test-helpers.mjs';
@@ -24,9 +24,9 @@ test('HU027 checks file bytes, JPEG/PNG structure, pixel limits and MP4 video co
 });
 function fixture(options={}){
   const calls=[],uploads=[],fetches=[];
-  const db={from(){return{select(){return this},eq(){return this},order(){return Promise.resolve({data:[asset],error:null})},maybeSingle:async()=>({data:options.missing?null:{storage_path:'owner/private.png',kind:'image',mime_type:'image/png'},error:null})}},
-    async rpc(name,proof){const p=JSON.parse(proof.p_payload);calls.push(p);if(options.rpcError)return{error:{code:options.rpcError}};return{data:p.action==='prepare'?{status:options.cached?'approved':'uploading'}:{...asset,status:p.action==='remove'?'removed':'approved'}}},
-    storage:{from(){return{upload:async(...args)=>{uploads.push(args);return{error:options.uploadError?{}:null}},download:async()=>({data:options.sameLostUpload?new Blob([png]):null,error:null}),createSignedUrl:async()=>({data:{signedUrl:'https://storage.example.invalid/private?token=not-real'}})}}}};
+  const db={from(){return{select(){return this},eq(){return this},in(){return this},order(){return Promise.resolve({data:options.pending?[asset,{...asset,id:randomUUID(),status:'uploading'}]:[asset],error:null})},maybeSingle:async()=>({data:options.missing?null:{storage_path:'owner/private.png',kind:'image',mime_type:'image/png'},error:null})}},
+    async rpc(name,proof){const p=JSON.parse(proof.p_payload);calls.push(p);if(options.rpcError)return{error:{code:options.rpcError}};return{data:p.action==='prepare'?{...asset,status:options.cached?'approved':'uploading'}:{...asset,status:p.action==='remove'?'removed':'approved'}}},
+    storage:{from(){return{upload:async(...args)=>{uploads.push(args);return{error:options.uploadError?{}:null}},download:async()=>({data:options.stored??(options.sameLostUpload?new Blob([png],{type:'image/png'}):null),error:null}),createSignedUrl:async()=>({data:{signedUrl:'https://storage.example.invalid/private?token=not-real'}})}}}};
   const service=load('lib/reinforcements/media-service.ts',{
     '@/lib/reinforcements/request-service':{authorizeRequest:async()=>options.denied?{response:new Response('{}',{status:options.denied})}:{db,userId:record.owner_id,row:record},
       readSmallJson:async r=>({body:await r.json()}),reply:(body,status=200)=>Response.json(body,{status})},
@@ -36,8 +36,38 @@ function fixture(options={}){
   },{fetch:async(url,init)=>{fetches.push({url,init});return new Response(png,{status:init.headers.Range?206:200,headers:{'Content-Type':'image/png','Content-Length':String(png.length),...(init.headers.Range?{'Content-Range':`bytes 0-${png.length-1}/${png.length}`}:{})}})}});
   const url='http://localhost/media?documentId='+record.document_id+'&reinforcementId='+input.reinforcementId;
   const post=(metadata=input,file=new File([png],'energy.png',{type:'image/png'}),origin='http://localhost',headers={})=>{const form=new FormData();form.set('metadata',JSON.stringify(metadata));if(file)form.set('file',file);return service.postMedia(new Request(url,{method:'POST',headers:{Origin:origin,...headers},body:form}),record.project_id,record.id)};
-  return{calls,uploads,fetches,post,service,url};
+  const direct=(action='prepare-file',metadata=input,descriptor={name:'energy.png',type:'image/png',size:png.length,sha256:createHash('sha256').update(png).digest('hex')},origin='http://localhost')=>service.postMedia(new Request(url,{method:'POST',headers:{Origin:origin,'Content-Type':'application/json'},body:JSON.stringify({action,metadata,file:descriptor})}),record.project_id,record.id);
+  return{calls,uploads,fetches,post,direct,service,url};
 }
+
+test('HU027 direct preparation authorizes before reserving; completion checks stored bytes before approval',async()=>{
+  const f=fixture({stored:new Blob([png],{type:'image/png'})});
+  const prepared=await f.direct();assert.equal(prepared.status,200);
+  assert.equal((await prepared.json()).pendingItem.status,'uploading');assert.deepEqual(f.calls.map(p=>p.action),['prepare']);assert.equal(f.uploads.length,0);
+  assert.equal((await f.direct('complete-file')).status,200);assert.deepEqual(f.calls.map(p=>p.action),['prepare','prepare','approve']);
+  assert.equal(f.calls[0].inputHash,f.calls[1].inputHash);
+  for(const options of [{denied:401},{denied:403}]){const denied=fixture(options);assert.equal((await denied.direct()).status,options.denied);assert.equal(denied.calls.length,0);}
+  assert.equal((await f.direct('prepare-file',input,undefined,'https://foreign.invalid')).status,403);
+  const cached=fixture({cached:true});assert.equal((await cached.direct()).status,200);assert.equal(cached.calls.length,1);assert.equal(cached.uploads.length,0);
+});
+
+test('HU027 direct completion leaves missing, substituted or invalid files unapproved and rejects conflicting ownership/version proofs',async()=>{
+  const cases=[{options:{},status:503},{options:{stored:new Blob([png])},status:409},
+    {options:{stored:new Blob(['x'.repeat(png.length)],{type:'image/png'})},status:415},
+    {options:{stored:new Blob([png],{type:'image/png'})},hash:'0'.repeat(64),status:409}];
+  for(const c of cases){const f=fixture(c.options),descriptor={name:'energy.png',type:'image/png',size:png.length,sha256:c.hash??createHash('sha256').update(png).digest('hex')};
+    assert.equal((await f.direct('complete-file',input,descriptor)).status,c.status);assert.equal(f.calls.some(p=>p.action==='approve'),false);}
+  for(const [code,status]of[['PT409',409],['42501',403],['P0001',429]])assert.equal((await fixture({rpcError:code}).direct('complete-file')).status,status);
+  const f=fixture();assert.equal((await f.direct('prepare-file',{...input,documentId:randomUUID()})).status,400);
+  assert.equal((await f.direct('prepare-file',{...input,kind:'link',url:'https://es.wikipedia.org/wiki/Energia'})).status,400);
+  assert.equal((await f.direct('prepare-file',input,{name:'fake.png',type:'image/png',size:schemas.IMAGE_LIMIT+1,sha256:'a'.repeat(64)})).status,415);
+  assert.equal(f.calls.length,0);
+});
+
+test('HU027 pending reservations remain distinct from approved previews after reload',async()=>{
+  const f=fixture({pending:true});const result=await (await f.service.getMedia(new Request(f.url),record.project_id,record.id)).json();
+  assert.equal(result.items.length,1);assert.equal(result.pendingItems.length,1);assert.equal(result.pendingItems[0].status,'uploading');
+});
 test('HU027 endpoint requires origin, session, explicit approval and validated file before creating any resource',async()=>{
   const f=fixture();assert.equal((await f.post(input,undefined,'https://foreign.invalid')).status,403);
   assert.equal((await fixture({denied:401}).post()).status,401);
@@ -62,7 +92,7 @@ test('HU027 streams private media with session and Range checks, no exposed sign
   const missing=fixture({missing:true});assert.equal((await missing.service.getMediaFile(new Request(missing.url),record.project_id,record.id,input.assetId)).status,404);assert.equal(missing.fetches.length,0);
 });
 test('HU027 preview requires title, decoding and explicit approval; stored files do not load before an intentional preview',()=>{
-  const {ReinforcementMedia}=load('components/documents/reinforcement-media.tsx',{react:React,'next/image':{default:()=>null},'@/lib/validations/reinforcement-media':schemas});
+  const {ReinforcementMedia}=load('components/documents/reinforcement-media.tsx',{react:React,'next/image':{default:()=>null},'@/lib/reinforcements/media-transfer':{},'@/lib/validations/reinforcement-media':schemas});
   const html=renderToStaticMarkup(React.createElement(ReinforcementMedia,{reinforcement:{id:input.reinforcementId,document_id:record.document_id,source_request_id:record.id,approved_version_id:input.approvedVersionId,media:[asset]},projectId:record.project_id,canManage:true}));
   assert.match(html,/Ver imagen guardada/);assert.doesNotMatch(html,/<img|<video/);assert.match(html,/Revisé la vista previa y apruebo este recurso/);assert.match(html,/disabled=""[^>]*>Guardar recurso aprobado/);assert.match(html,/Retirar recurso del formulario/);
 });
