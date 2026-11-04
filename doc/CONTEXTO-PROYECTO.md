@@ -7114,3 +7114,35 @@ convertir la configuración de prueba en soporte general.
 Solo documentación en PR #64, sin código, despliegue o merge. QA sigue en
 baf41be y stash d6406e0 se conserva. Las 471 pruebas, lint y build previos no se
 presentan como reejecutados; se verifica el diff documental antes del commit.
+
+### 2026-11-04 — Recuperación personal confirmada tras un enlace nuevo
+
+El propietario mostró un rechazo al guardar: «No fue posible actualizar la
+contraseña. Solicita un enlace nuevo». Ese aviso es genérico: tanto el catch
+del cliente como errores del proveedor pueden producirlo. Los registros
+disponibles no demostraron la causa concreta del primer fallo; no atribuirlo
+automáticamente a caducidad ni presentarlo como una corrección de código.
+
+Se solicitó una sola recuperación adicional desde la app, para la misma cuenta
+danilocarlosama96@gmail.com. Resend confirmó Delivered en el registro
+01a1a50e-33cd-73c4-83e9-b631a5a4ddf5. Se comprobó el proyecto y callback
+correctos sin guardar tokens y se abrió el enlace exactamente una vez.
+El propietario introdujo y envió personalmente la contraseña. Se observó
+respuesta HTTP 200 de /reset-password, navegación a /login con
+password-reset=success y el aviso «Contraseña actualizada. Inicia sesión con
+tu nueva contraseña». Captura real 08-contraseña-actualizada-correo-real.jpg,
+recortada al encabezado y aviso para excluir los campos de acceso. No se
+leyeron las contraseñas. Solo se registraron estados HTTP y rutas, sin guardar
+cuerpos, cookies o cabeceras; se desactivó el diagnóstico y se descartaron
+sus eventos temporales tras comprobar el resultado.
+
+El propietario confirmó el nuevo ingreso y se verificó /dashboard, título
+Panel y encabezado Bienvenido a tus proyectos, con sesión activa y panel del
+propietario. Captura real 09-ingreso-qa-tras-recuperacion.jpg. Se conserva esa
+sesión sin abrir de nuevo /login ni ejecutar otra rotación. El recorrido
+correo entregado → enlace válido → guardado personal → ingreso queda probado
+para el titular. SCRUM-233 sigue En curso por la restricción de resend.dev a
+otros destinatarios. Se conserva el único comentario y todas las evidencias;
+las capturas 08 y 09 se añaden sin duplicar las diez anteriores.
+Sin cambios de aplicación, configuración, pagos, merge o despliegue en este
+reintento; el secreto de envío ya configurado no se volvió a crear ni copiar.

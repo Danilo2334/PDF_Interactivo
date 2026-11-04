@@ -543,3 +543,22 @@ SCRUM-233 permanece En curso hasta cubrir el alcance pendiente. Se actualizaron
 el único comentario 10103 y la continuidad, preservando seis adjuntos y
 añadiendo cuatro capturas reales sin secretos del envío, entrega, formulario
 vacío y rechazo de reutilización. Sin pagos, nuevo deploy o cambios de código.
+
+### Reintento personal y guardado confirmado del 04/11/2026
+
+El primer guardado personal devolvió un aviso genérico de error; la causa no
+quedó demostrada en los registros y no se declara que fuera caducidad. Una
+sola solicitud adicional al mismo correo fue Delivered en Resend, registro
+01a1a50e-33cd-73c4-83e9-b631a5a4ddf5. Se abrió el enlace nuevo una vez y
+el propietario completó el cambio. La aplicación confirmó contraseña
+actualizada y redirigió al login con password-reset=success; /reset-password
+respondió 200. Captura 08 excluye todos los campos de acceso.
+
+El monitor temporal observó únicamente estados HTTP y fallos de conexión;
+no se obtuvieron cuerpos de solicitudes/respuestas ni credenciales. Se
+desactivó al comprobar el éxito. El titular ingresó después con su nueva
+contraseña: /dashboard, encabezado Bienvenido a tus proyectos y sesión activa,
+captura real 09. Se conserva su sesión; no se volvió a abrir /login. El flujo
+completo de recuperación por correo queda probado para este titular.
+Se mantiene la restricción del remitente de pruebas a la cuenta del titular.
+No se cambió código, SMTP, credenciales de envío, facturación o despliegue.
