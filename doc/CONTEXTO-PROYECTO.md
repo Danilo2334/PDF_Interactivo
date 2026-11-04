@@ -7031,3 +7031,86 @@ aplicación sigue vigente. No se reiniciaron servidores, desplegó, hizo merge,
 modificó main, activó pagos o llamó IA. No se cerraron historias/subtareas por
 este incremento parcial. Orden de revisión pendiente: #63 → #64; después de
 integrar63, cambiar la base de64 a develop y revisar su diff de nuevo.
+
+### 2026-11-04 — Cuenta Resend confirmada y preparación privada de SMTP233
+
+El propietario comunicó que había ingresado y pidió revisar su cuenta y
+continuar la recuperación, sin pagos. La URL mostraba bad_oauth_state expirado;
+la prueba directa de /domains redirigió a /login. Se renovó el mismo acceso de
+Google con Danilo y se confirmó la cuenta danilocarlosama96@gmail.com, equipo
+danilocarlosama96, sin volver a pedir una autorización para ese mismo inicio.
+La sesión del proveedor quedó abierta. No se registraron parámetros OAuth o
+credenciales en Git, Jira o documentación, ni se utilizó la sesión de la app.
+
+Revisión real: el selector muestra solo ese equipo; Domains y API keys vacíos.
+Transactional/Marketing/Team Free, sin métodos de pago ni facturas. Los extras
+de pago siguen deshabilitados. Usage muestra 0/0, sin prueba de capacidad de
+envío todavía. Vercel CLI autenticada como danilo2334, consultando su equipo
+correcto, devuelve 0 dominios y sin página siguiente. No se compró un dominio,
+cambió DNS o tocó una cuenta de Francisco.
+
+Se dejó preparado Add API Key con nombre PDF Interactivo QA SMTP y permiso
+Sending access; no se pulsó Add ni se creó una credencial. La confirmación
+pendiente identifica la creación persistente y el destino Supabase del proyecto,
+para una prueba gratuita de recuperación a su propio correo. La restricción
+oficial de resend.dev impide extender esa prueba a otros destinatarios sin
+dominio verificado. No se ha demostrado a quién pertenece la clave SMTP
+anterior; la cuenta revisada no tiene una existente que pueda reutilizarse.
+
+SCRUM-233 mantiene En curso. Se actualizó el comentario 10103 conservando su HTML
+y sus tres capturas anteriores; se añadieron tres capturas reales del proveedor:
+01-clave-envio-preparada-sin-crear.jpg, 02-dominios-cuenta-danilo.jpg y
+03-plan-free-cuenta-danilo.jpg. Ninguna muestra una clave generada. No son
+pruebas de recepción ni recuperación funcional; esos resultados siguen
+pendientes de la configuración privada y ejecución posterior. Detalle de
+restricciones y observaciones en doc/OPERACION-Y-COMPATIBILIDAD.md; originales
+fuera de Git en SCRUM-233-RESEND-20261104.
+
+Solo documentación en la rama actual de PR #64; código/app y QA baf41be
+intactos. Stash d6406e0 conservado; sin merge, despliegue, pagos, nuevo envío,
+rotación de contraseñas o modificación de SMTP. No se repitieron las 471 pruebas,
+lint o build de la misma aplicación por esta revisión documental. El paso
+dependiente de la credencial permanece pendiente de respuesta del propietario.
+
+### 2026-11-04 — SMTP233 configurado y correo real entregado al titular
+
+Actualiza el pendiente de la entrada anterior: el propietario confirmó «Sí,
+probar gratis con mi correo». Se creó una única clave Resend PDF Interactivo QA
+SMTP, con Sending access, y se configuró exclusivamente en el SMTP del proyecto
+Supabase zqodybtzssvqozrckfgw. Host smtp.resend.com, puerto 465, usuario resend,
+remitente onboarding@resend.dev y nombre PDF Interactivo QA. La clave se pasó
+privadamente al campo de contraseña; no se imprimió, guardó en archivos o Git.
+Se limpió el portapapeles si aún contenía ese valor y se descartó la variable.
+Tras recargar, los ajustes no secretos persistieron; el proveedor muestra la
+clave con Sending access y Last used. No se activaron pagos ni cambió DNS.
+
+Una única solicitud real desde /forgot-password del QA baf41be produjo la
+confirmación neutra de la aplicación. Resend registra Delivered para Reset your
+password al correo del titular; registro 01a1a4fe-f06b-75f4-aaa1-13c8f647f1b1.
+Se comprobó el destino sin registrar tokens: /auth/v1/verify del Supabase
+correcto, tipo recovery, callback del QA y next=/reset-password. La primera
+apertura abrió Nueva contraseña con ambos campos vacíos. La pestaña tardó en
+aparecer en el inventario; al abrir de nuevo el mismo enlace, la segunda
+apertura fue rechazada como inválida/expirada. Se conservó la primera pestaña
+válida y se cerró la segunda. No se solicitó otro correo ni se atribuyó el
+rechazo de reutilización a una regresión de la aplicación.
+
+Se entregó al propietario el formulario válido para escribir, confirmar y
+guardar personalmente la nueva contraseña y luego iniciar sesión. Al registrar
+esta entrada todavía no se observó ese envío ni el nuevo ingreso; no afirmar
+recuperación completa. El remitente de prueba sigue limitado al correo del
+titular. Falta un dominio verificado para acreditar otros destinatarios.
+
+SCRUM-233 conserva En curso y el único comentario 10103. Se preservaron sus
+seis adjuntos y se añadieron cuatro capturas reales: 04-recuperacion-solicitada-qa,
+05-correo-recuperacion-entregado-resend, 06-formulario-recuperacion-valido-vacio
+y 07-segunda-apertura-enlace-rechazada, todas .jpg en
+SCRUM-233-RESEND-20261104 fuera de Git. Se comprobó en Jira que la captura
+Delivered se abre correctamente y los diez adjuntos permanecen vinculados.
+No contienen contraseñas ni enlaces
+de recuperación. El correo entregado confirma esta prueba concreta, sin
+convertir la configuración de prueba en soporte general.
+
+Solo documentación en PR #64, sin código, despliegue o merge. QA sigue en
+baf41be y stash d6406e0 se conserva. Las 471 pruebas, lint y build previos no se
+presentan como reejecutados; se verifica el diff documental antes del commit.

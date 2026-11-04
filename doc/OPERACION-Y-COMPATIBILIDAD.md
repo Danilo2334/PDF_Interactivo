@@ -464,3 +464,82 @@ Se retiraron listeners y emulaciones, y se cerró la pestaña. La limitación es
 completar el gesto con las herramientas conectadas, no un fallo observado del
 control. Un navegador con soporte táctil completo o un dispositivo permitiría
 continuar; el resultado debería identificar claramente si usa emulación.
+
+## Resend de Danilo: revisión autenticada del 04/11/2026
+
+El enlace comunicado por el propietario terminó en bad_oauth_state expirado;
+la consulta directa a /domains confirmó que no había sesión. Se renovó el mismo
+inicio de Google con danilocarlosama96@gmail.com y se accedió al panel Resend.
+El selector solo muestra el equipo danilocarlosama96. No se copiaron estados
+OAuth ni credenciales a archivos de proyecto, Jira o documentación.
+
+Observación real del equipo: No domains yet y No API keys yet. Transactional,
+Marketing y Team figuran Free. Billing indica que no hay métodos de pago ni
+facturas. Los extras de pago aparecen deshabilitados; no se pulsó Upgrade ni
+se cambió facturación. Usage muestra 0/0 en límites diarios/mensuales, por lo
+que no se da por comprobada una cuota o capacidad de envío. Vercel CLI 65.9.0,
+whoami danilo2334 y equipo team_I5CBYezIIEWl8FIlhW7vqMR4: inventario de dominios
+vacío, count 0 y sin página siguiente. No hubo compras ni modificaciones DNS.
+
+Formulario preparado y sin enviar: nombre PDF Interactivo QA SMTP, permiso
+Sending access y All domains, dado que el equipo no tiene dominios. No se
+pulsó Add ni se generó una clave. Se pidió confirmación en el paso de creación
+de una credencial persistente y para su configuración como SMTP del proyecto
+Supabase zqodybtzssvqozrckfgw. No se atribuyó a esta cuenta la clave SMTP
+anterior: la revisión no permite identificar su propietario y el equipo visto
+no dispone de claves existentes.
+
+Ruta gratuita de prueba propuesta: usar el remitente de prueba de Resend y
+el correo del titular danilocarlosama96@gmail.com. El proveedor restringe ese
+remitente a su propio correo; otros destinatarios requieren verificar un
+dominio y cambiar From:
+[restricción oficial de resend.dev](https://resend.com/docs/knowledge-base/403-error-resend-dev-domain).
+Por tanto, una eventual prueba del titular no acreditaría recuperación general.
+Si el propietario dispone de un dominio en otro proveedor, falta identificarlo
+y verificar el acceso DNS antes de preparar sus registros reales.
+
+Capturas originales fuera de Git en SCRUM-233-RESEND-20261104: formulario con
+permiso de envío y sin clave creada, dominios vacíos y plan Free. Se añaden
+al mismo comentario 10103 de SCRUM-233, conservando las tres anteriores. Son
+evidencias del proveedor y de la preparación, no un envío o recuperación
+aprobados. La issue permanece En curso. No se enviaron correos, cambiaron
+contraseñas, modificó SMTP o activaron pagos; la sesión Resend queda conservada.
+
+### Configuración y prueba autorizadas del 04/11/2026
+
+Después de la revisión anterior, el titular autorizó expresamente la creación
+de PDF Interactivo QA SMTP y su uso en Supabase para probar gratis su correo.
+Se creó una sola clave con Sending access; la tabla API keys confirma ese
+permiso y Last used después del envío. El secreto se copió privadamente al
+campo Password del SMTP, se limpió del portapapeles si aún era el mismo y se
+descartó de la variable temporal. No se escribió en .env, capturas, logs o Git.
+
+Configuración efectiva de Supabase zqodybtzssvqozrckfgw: custom SMTP activo,
+smtp.resend.com:465, usuario resend, remitente onboarding@resend.dev y nombre
+PDF Interactivo QA. Se guardó una vez y se recargó para comprobar persistencia.
+Los campos protegidos no se desvelaron. No se cambió facturación, DNS, RLS,
+autoconfirmación, permisos o controles de sesión. No hace falta desplegar la
+aplicación para aplicar esta configuración de Auth.
+
+Prueba real del QA HTTPS existente baf41be: una solicitud desde
+/forgot-password a danilocarlosama96@gmail.com mostró el mensaje neutro y
+Resend confirmó Delivered, asunto Reset your password, registro
+01a1a4fe-f06b-75f4-aaa1-13c8f647f1b1. Se inspeccionaron únicamente origen,
+ruta y destino del enlace: proyecto correcto /auth/v1/verify, tipo recovery,
+callback del QA con next=/reset-password. No se registraron URLs con tokens.
+La primera apertura llegó al formulario Nueva contraseña con campos vacíos.
+Una segunda apertura del mismo enlace fue rechazada como inválida/expirada;
+no hubo segundo envío ni reintentos automáticos. Se cerró esa pestaña negativa.
+
+La primera pestaña válida se dejó visible al titular para completar en privado
+la contraseña, su confirmación y envío, seguido del inicio de sesión. Sigue
+pendiente observar ese resultado. No volver a abrir el enlace consumido:
+si la sesión de recuperación caduca, solicitar un nuevo correo desde la app,
+respetando los límites del proveedor y sin registrar el enlace.
+
+La entrega al titular supera el fallo SMTP de esa prueba, pero resend.dev sigue
+restringido a su correo; un destinatario distinto requiere dominio verificado.
+SCRUM-233 permanece En curso hasta cubrir el alcance pendiente. Se actualizaron
+el único comentario 10103 y la continuidad, preservando seis adjuntos y
+añadiendo cuatro capturas reales sin secretos del envío, entrega, formulario
+vacío y rechazo de reutilización. Sin pagos, nuevo deploy o cambios de código.
