@@ -252,9 +252,11 @@ notificaciones recibidas ni objetivos de degradación aún no acordados.
   con perfiles QA separados y un sistema Apple real para Safari. Registrar
   sistema, versión activa y resultado observado de cada flujo; el IAB no los
   sustituye. No cerrar la compatibilidad ni declarar aprobadas filas pendientes.
-- SCRUM-137: completar la selección y envío de claridad desde una pantalla
-  táctil real. Ratón, teclado y viewport móvil ya documentados no acreditan
-  ese dispositivo; no fabricar el gesto mediante una afirmación de emulación.
+- SCRUM-137: completar la selección y envío de claridad con un gesto táctil.
+  Registrar dispositivo o emulación utilizados; el criterio Jira exige el
+  control táctil, sin fijar un modelo de hardware. Ratón, teclado y viewport
+  móvil por sí solos no acreditan el gesto. No declarar hardware físico si
+  únicamente se ha usado emulación.
 - SCRUM-232: acordar SLO/ventana/umbral para degradación y el destino de avisos,
   y disponer de un ejecutor continuo comprobable. El workflow solo manual y
   presente en develop no acredita vigilancia24/7 ni notificación recibida.
@@ -360,7 +362,7 @@ La frase editorial del fixture aprobado se conserva sin reescribir su historial.
 
 | Frente | Tareas | Requisito aún no acreditado |
 | --- | --- | --- |
-| Claridad táctil | HU040/SCRUM-52,137 | Selección y envío desde pantalla táctil física. |
+| Claridad táctil | HU040/SCRUM-52,137 | Selección y envío con gesto táctil completo; registrar dispositivo o emulación utilizados. |
 | Compatibilidad | HU046/SCRUM-58,149/231 | Sistemas/versiones concretos de la matriz y recorridos completos en ocho versiones de marca, incluido Safari real. |
 | Supervisión | HU046/SCRUM-58,232 | Ejecutor continuo, destino autorizado de avisos y SLO/ventana/umbrales documentados antes de configurar alertas. |
 | Recuperación por correo | SCRUM-233,EP01/SCRUM-5 | Dominio/remitente SMTP autorizado y verificado, configuración privada y recorrido real de recuperación. |
@@ -368,3 +370,235 @@ La frase editorial del fixture aprobado se conserva sin reescribir su historial.
 La matriz documental y el inventario se conservan. No se declara probada una
 marca por el resultado del IAB, ni se define un umbral nuevo como si estuviera
 acordado. El workflow manual sigue en develop y no se modificó main.
+
+## Evaluación de alertas RNF de interfaz — SCRUM-232,02/11/2026
+
+PR #64 incorpora web/scripts/check-view-budgets.mjs. Complementa el sondeo HTTP
+con la evaluación de mediciones de interfaz ya recogidas. No abre navegadores,
+no mide por sí mismo una vista y no activa vigilancia o envío de avisos.
+Las fuentes de presupuesto se consultaron directamente en Jira:
+
+| Perfil | Límite | Fuente y alcance |
+| --- | --- | --- |
+| documents_ready |3000ms |146/comentario10078, recarga hasta listado utilizable. |
+| pdf_first_page_2_02mb |5000ms |146/10078, escenario de referencia2,02MB/15páginas. |
+| pdf_first_page_19mb |10000ms |146/10078, escenario de referencia19MB/19páginas. |
+| reinforcements_ready |3000ms |108, pulsación hasta contenido utilizable, PDF ya abierto, consultas incluidas y sin generar IA. |
+
+Los perfiles PDF deben identificarse expresamente como los escenarios RNF de
+referencia; no se clasifican otros documentos por aproximación de tamaño. No
+se trasladan estos límites al TTFB, latencia API o disponibilidad mensual.
+
+Contrato de entrada: schemaVersion1, kind real/historical/simulation y1–1000
+mediciones. Cada medición aporta metric, elapsedMs y context con production,
+visible, authenticated, usable e includesServerQueries verdaderos,
+includesAiGeneration falso y trigger reload/open-panel. Los PDF identifican
+referencePdf; el panel exige pdfAlreadyOpen. Kind real requiere SHA completo
+de la fuente y observedAt UTC por medición; la procedencia debe comprobarla
+quien recoge la evidencia. Declarar esos campos no autentica por sí solo una
+medición. Una vista de carga o un escenario no aplicable se rechazan.
+
+La primera superación abre view_budget_exceeded; repetirla no duplica el
+incidente. Una medición posterior dentro del presupuesto lo recupera con el
+mismo ID. Cualquier incumplimiento anterior mantiene el resultado acumulado
+no aprobado. Cada evento referencia su muestra, duración, límite y fuente Jira.
+Solo se copian campos permitidos; no URLs de lectura, texto de documentos,
+cookies, nombres o claves recibidos en campos adicionales.
+
+CLI: definir QA_VIEW_INPUT como archivo JSON de mediciones y QA_VIEW_OUTPUT
+como directorio nuevo dentro de la carpeta de evidencias; ejecutar
+`node web/scripts/check-view-budgets.mjs`. Máximo1MiB de entrada. Guarda
+samples.jsonl,events.jsonl ysummary.json; nunca sobrescribe un directorio
+existente. El resumen empieza incompleto y solo se completa después de guardar
+los registros. Salidas0=mediciones dentro del límite,1=incumplimiento,
+2=entrada/ejecución/persistencia inválida o incompleta. El tipo de procedencia
+se conserva también cuando todas las mediciones cumplen.
+
+Ejecución real del evaluador, con datos históricos reales de146/10078:
+
+| Serie histórica leída | Duraciones en ms | Evaluación |
+| --- | --- | --- |
+| Listado |804 /1300 /1295 |3/3 dentro de3000. |
+| Primera página2,02MB |3548 /2853 /3039 |3/3 dentro de5000. |
+| Primera página19MB |3738 /3419 /4144 |3/3 dentro de10000. |
+
+Resultado CLI0,9 muestras,0 incumplimientos, kind historical y revisiónnull
+porque la fuente no identifica el SHA de aquella medición. Son mediciones
+conservadas, no recargas nuevas ni nueva prueba de disponibilidad. Las pruebas
+de degradación/recuperación usan kind simulation y no representan un incidente
+real del QA.471/471 pruebas ylint aprobados;6/6 dirigidas repetidas tras revisar
+la limpieza segura de temporales. No cambió la aplicación servida ni se reinició
+un servidor. Las salidas se conservan fuera deGit en SCRUM-232-RNF-20261102.
+
+232 continúa En curso: falta conectar recogida operativa y comprobar el destino
+de los avisos. La modalidad/cadencia y cualquier SLO API o ventana de errores
+siguen por concretar; no se inventan ni se atribuyen a los límites de interfaz.
+Este incremento no equivale a un servicio permanente o una notificación recibida.
+
+## Acceso necesario para completar SMTP y compatibilidad
+
+Se abrió el panel SMTP del proyecto Supabase correcto, solo lectura: custom
+SMTP activo y host smtp.resend.com. No se leyó ni modificó su contraseña.
+Resend/domains redirigió a Log in to Resend; no se pudo confirmar todavía
+qué dominios/remitentes autorizados hay en la cuenta de Danilo. Inicio de sesión
+personal solicitado en esa pestaña, sin claves por chat. El proveedor exige
+[dominio verificado](https://resend.com/docs/send-with-supabase-smtp), y el SMTP
+predeterminado de Supabase limita destinatarios a miembros del equipo y no
+sustituye una recuperación general de usuarios:
+[SMTP de Supabase](https://supabase.com/docs/guides/auth/auth-smtp).
+No se cambió de proveedor, remitente, controles de seguridad ni facturación.
+
+Inventario actualizado de Browser Use: IAB yMCP Apps. La apertura independiente
+de Edge por la API documentada devolvió Browser is not available: edge. No se
+automatizaron las ventanas personales de Chrome, instaló software o volvió a
+ejecutar un comando antes rechazado. Esto no añade una regresión de marca o un
+gesto táctil físico;149/231/137 conservan sus pendientes y evidencias anteriores.
+
+Revisión de137: su criterio pide verificar ratón, teclado y pantalla táctil;
+no fija hardware físico obligatorio. Para intentar resolver el gesto pendiente
+se probó Input.synthesizeTapGesture, documentado por CDP, en una pantalla404 de
+diagnóstico sin publicación ni datos de usuario. El puente IAB respondió que
+ese método no está soportado; la observación registró cero eventos. No se volvió
+a intentar dispatchTouchEvent ni la conversión ratón→táctil incompleta anterior.
+Se retiraron listeners y emulaciones, y se cerró la pestaña. La limitación es
+completar el gesto con las herramientas conectadas, no un fallo observado del
+control. Un navegador con soporte táctil completo o un dispositivo permitiría
+continuar; el resultado debería identificar claramente si usa emulación.
+
+## Resend de Danilo: revisión autenticada del 04/11/2026
+
+El enlace comunicado por el propietario terminó en bad_oauth_state expirado;
+la consulta directa a /domains confirmó que no había sesión. Se renovó el mismo
+inicio de Google con danilocarlosama96@gmail.com y se accedió al panel Resend.
+El selector solo muestra el equipo danilocarlosama96. No se copiaron estados
+OAuth ni credenciales a archivos de proyecto, Jira o documentación.
+
+Observación real del equipo: No domains yet y No API keys yet. Transactional,
+Marketing y Team figuran Free. Billing indica que no hay métodos de pago ni
+facturas. Los extras de pago aparecen deshabilitados; no se pulsó Upgrade ni
+se cambió facturación. Usage muestra 0/0 en límites diarios/mensuales, por lo
+que no se da por comprobada una cuota o capacidad de envío. Vercel CLI 65.9.0,
+whoami danilo2334 y equipo team_I5CBYezIIEWl8FIlhW7vqMR4: inventario de dominios
+vacío, count 0 y sin página siguiente. No hubo compras ni modificaciones DNS.
+
+Formulario preparado y sin enviar: nombre PDF Interactivo QA SMTP, permiso
+Sending access y All domains, dado que el equipo no tiene dominios. No se
+pulsó Add ni se generó una clave. Se pidió confirmación en el paso de creación
+de una credencial persistente y para su configuración como SMTP del proyecto
+Supabase zqodybtzssvqozrckfgw. No se atribuyó a esta cuenta la clave SMTP
+anterior: la revisión no permite identificar su propietario y el equipo visto
+no dispone de claves existentes.
+
+Ruta gratuita de prueba propuesta: usar el remitente de prueba de Resend y
+el correo del titular danilocarlosama96@gmail.com. El proveedor restringe ese
+remitente a su propio correo; otros destinatarios requieren verificar un
+dominio y cambiar From:
+[restricción oficial de resend.dev](https://resend.com/docs/knowledge-base/403-error-resend-dev-domain).
+Por tanto, una eventual prueba del titular no acreditaría recuperación general.
+Si el propietario dispone de un dominio en otro proveedor, falta identificarlo
+y verificar el acceso DNS antes de preparar sus registros reales.
+
+Capturas originales fuera de Git en SCRUM-233-RESEND-20261104: formulario con
+permiso de envío y sin clave creada, dominios vacíos y plan Free. Se añaden
+al mismo comentario 10103 de SCRUM-233, conservando las tres anteriores. Son
+evidencias del proveedor y de la preparación, no un envío o recuperación
+aprobados. La issue permanece En curso. No se enviaron correos, cambiaron
+contraseñas, modificó SMTP o activaron pagos; la sesión Resend queda conservada.
+
+### Configuración y prueba autorizadas del 04/11/2026
+
+Después de la revisión anterior, el titular autorizó expresamente la creación
+de PDF Interactivo QA SMTP y su uso en Supabase para probar gratis su correo.
+Se creó una sola clave con Sending access; la tabla API keys confirma ese
+permiso y Last used después del envío. El secreto se copió privadamente al
+campo Password del SMTP, se limpió del portapapeles si aún era el mismo y se
+descartó de la variable temporal. No se escribió en .env, capturas, logs o Git.
+
+Configuración efectiva de Supabase zqodybtzssvqozrckfgw: custom SMTP activo,
+smtp.resend.com:465, usuario resend, remitente onboarding@resend.dev y nombre
+PDF Interactivo QA. Se guardó una vez y se recargó para comprobar persistencia.
+Los campos protegidos no se desvelaron. No se cambió facturación, DNS, RLS,
+autoconfirmación, permisos o controles de sesión. No hace falta desplegar la
+aplicación para aplicar esta configuración de Auth.
+
+Prueba real del QA HTTPS existente baf41be: una solicitud desde
+/forgot-password a danilocarlosama96@gmail.com mostró el mensaje neutro y
+Resend confirmó Delivered, asunto Reset your password, registro
+01a1a4fe-f06b-75f4-aaa1-13c8f647f1b1. Se inspeccionaron únicamente origen,
+ruta y destino del enlace: proyecto correcto /auth/v1/verify, tipo recovery,
+callback del QA con next=/reset-password. No se registraron URLs con tokens.
+La primera apertura llegó al formulario Nueva contraseña con campos vacíos.
+Una segunda apertura del mismo enlace fue rechazada como inválida/expirada;
+no hubo segundo envío ni reintentos automáticos. Se cerró esa pestaña negativa.
+
+La primera pestaña válida se dejó visible al titular para completar en privado
+la contraseña, su confirmación y envío, seguido del inicio de sesión. Sigue
+pendiente observar ese resultado. No volver a abrir el enlace consumido:
+si la sesión de recuperación caduca, solicitar un nuevo correo desde la app,
+respetando los límites del proveedor y sin registrar el enlace.
+
+La entrega al titular supera el fallo SMTP de esa prueba, pero resend.dev sigue
+restringido a su correo; un destinatario distinto requiere dominio verificado.
+SCRUM-233 permanece En curso hasta cubrir el alcance pendiente. Se actualizaron
+el único comentario 10103 y la continuidad, preservando seis adjuntos y
+añadiendo cuatro capturas reales sin secretos del envío, entrega, formulario
+vacío y rechazo de reutilización. Sin pagos, nuevo deploy o cambios de código.
+
+### Reintento personal y guardado confirmado del 04/11/2026
+
+El primer guardado personal devolvió un aviso genérico de error; la causa no
+quedó demostrada en los registros y no se declara que fuera caducidad. Una
+sola solicitud adicional al mismo correo fue Delivered en Resend, registro
+01a1a50e-33cd-73c4-83e9-b631a5a4ddf5. Se abrió el enlace nuevo una vez y
+el propietario completó el cambio. La aplicación confirmó contraseña
+actualizada y redirigió al login con password-reset=success; /reset-password
+respondió 200. Captura 08 excluye todos los campos de acceso.
+
+El monitor temporal observó únicamente estados HTTP y fallos de conexión;
+no se obtuvieron cuerpos de solicitudes/respuestas ni credenciales. Se
+desactivó al comprobar el éxito. El titular ingresó después con su nueva
+contraseña: /dashboard, encabezado Bienvenido a tus proyectos y sesión activa,
+captura real 09. Se conserva su sesión; no se volvió a abrir /login. El flujo
+completo de recuperación por correo queda probado para este titular.
+Se mantiene la restricción del remitente de pruebas a la cuenta del titular.
+No se cambió código, SMTP, credenciales de envío, facturación o despliegue.
+
+## QA con GPT y corrección de revisión del 06/11/2026
+
+El target Production del proyecto QA de Danilo incorpora la clave existente
+OPENAI_API_KEY como Secret, AI_PROVIDER=openai, OPENAI_ANALYSIS_MODEL=gpt-6.1-sol
+y AI_USAGE_LOG=1. No se copió el archivo local ni se modificaron las ocho
+variables previas. También se conserva APP_BUILD_REVISION como Config: son
+trece variables. Cambiar una variable no actualiza un deployment ya construido.
+
+Fuente confirmada en metadatos: baf41bec85b0ea42394d2b2230ca3197a0ce28a4.
+El primer redeploy dpl_8p16mEV2PYYPcfCDonfGk6DAZYqp perdió la build-env de
+revisión: cuatro contratos correctos y health con revision=null. No se aceptó
+como aprobado. Tras verificar sourceRevision y originalDeploymentId, se guardó
+APP_BUILD_REVISION con ese SHA en Production y se reconstruyó la misma fuente.
+Estado final READY: dpl_8RfyR166jMbd1aYenj92SE6L1oZi, alias público QA correcto,
+cinco contratos aprobados y revisión exacta. El deployment original queda
+conservado; no se ejecutó una reversión en esta sesión ni se alteraron datos.
+
+Actualizar el procedimiento anterior de despliegue: además de pasar la revisión
+al construir, persistirla en la configuración QA para redeploys de esa fuente.
+Cada cambio posterior de código debe actualizarla al SHA realmente exportado.
+Un health vivo con SHA ausente o distinto sigue bloqueando la aceptación.
+
+471/471 pruebas, lint y build/TypeScript correctos. Audit --omit=dev reporta cero
+vulnerabilidades en producción; no se ejecutó audit fix ni se cambió el lockfile.
+Reportes01 y02 en CIERRE-QA-IA-20261106 conservan fallo y comprobación corregida.
+
+Una llamada GPT real iniciada en IAB para el PDF QA de energía terminó en
+contexto insuficiente, persistido con modelo gpt-6.1-sol y un único intento.
+El servicio explica qué definiciones/relaciones faltan; no fabricó contenido.
+Log real:483 tokens de entrada y119 de salida, caché0; coste estándar estimado
+USD0,002156. Tarifa consultada: https://developers.openai.com/api/docs/models/gpt-6.1-sol.
+Es una estimación a partir del uso, no lectura de facturación o saldo.
+
+La revisión automática detuvo Computer Use al intentar inspeccionar Chrome por
+no poder determinar su URL. No hubo más entradas de UI ni nueva captura de
+aceptación. Resultado del diagnóstico comprobado en BD/logs; recomendaciones,
+contenido, quiz y lector con generación nueva siguen sin verificar en pantalla.
+Mantener esas limitaciones junto a los resultados, sin trasladar pruebas locales
+anteriores al despliegue nuevo. No se cerraron HU046 ni sus pendientes.
