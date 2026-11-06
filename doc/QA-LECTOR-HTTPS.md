@@ -4,8 +4,8 @@
 
 Origen vigente: https://pdf-interactivo-qa.vercel.app, proyecto de Danilo
 prj_pRui4rYL9DnbERflhyhplv2mIoJ3. Deployment READY
-dpl_8RfyR166jMbd1aYenj92SE6L1oZi, fuente
-baf41bec85b0ea42394d2b2230ca3197a0ce28a4. GPT configurado en servidor con la
+dpl_DCmgu6yKWuuh86PA7rPFAs2Abocv, fuente
+e0152fb23a194ad587973f628afd5b37b50fd8b7. GPT configurado en servidor con la
 clave existente como Secret y modelo gpt-6.1-sol. Hay trece variables en
 Production: las ocho anteriores, cuatro de IA y APP_BUILD_REVISION.
 
@@ -14,9 +14,16 @@ en la configuración QA además de pasarse al construir, siempre igual al SHA
 real de la fuente. Sondeo final5/5 correcto, después de conservar el fallo
 inicial de revisión ausente. La sesión del propietario siguió funcionando.
 
-Una llamada GPT real terminó en contexto insuficiente con explicación
-persistida; no se generó contenido inventado. El flujo positivo nuevo y sus
-capturas quedan pendientes tras la parada automática del control de navegador.
+Se completó el flujo positivo real: análisis suficiente, recomendaciones,
+elección persistida, explicación Intermedio, revisión y aprobación explícita,
+quiz de tres preguntas y publicación QA v3. Lector visual: 2/3 con explicaciones,
+recarga y reintento bloqueado; cliente HTTP sin propietario: 3/3, idempotencia
+y nuevo envío 409. La proyección inicial no incluye soluciones. Tras retirar
+la publicación sintética, lectura/PDF/consulta/envío de intentos devuelven404.
+Se conservan sus resultados y el PDF original (SHA-256 de referencia intacto).
+Se verificó también contexto insuficiente desde una solicitud nueva del
+escaneado: sin llamada IA ni aviso contradictorio de reintento. Suite472/472,
+lint y build correctos; IAB en escritorio/móvil sin errores de consola.
 El correo de recuperación del titular se verificó el04/11 hasta su nuevo
 ingreso; para otros destinatarios todavía falta dominio verificado.
 Detalles y referencias en CONTEXTO-PROYECTO.md y OPERACION-Y-COMPATIBILIDAD.md.

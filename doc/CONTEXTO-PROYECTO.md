@@ -7216,3 +7216,113 @@ flujo positivo hasta el lector y el quiz. No editar la solicitud ya enviada ni
 inventar estados con SQL. Chrome/Safari, gesto táctil, alertas operativas y
 dominio de correo conservan sus pendientes. Guía de estudio en
 doc/GUIA-PARA-ESTUDIAR-EL-PROYECTO.md, con límites reales de esta entrega.
+
+## 06/11/2026 — Flujo GPT completo en QA, aviso insuficiente y matriz vigente
+
+Continuación del encargo de terminar bien el proyecto. Se recuperó IAB sin
+operar ventanas nativas de Chrome. Rama nueva codex/scrum-94-aviso-contexto-qa
+desde962cebc, conservando la rama de operación, trabajo local y stash
+d6406e0cdbc464c1c0301c058024b10dd27c4515. No se modificó main ni se hizo merge.
+
+Fallo observado en pantalla: un análisis insufficient con referencia de
+diagnóstico mostraba también «La operación no se completó…reintenta», aunque
+la solicitud enviada es inmutable y el reintento está bloqueado. Corrección
+e0152fb23a194ad587973f628afd5b37b50fd8b7 en contextual-analysis-panel.tsx:
+solo un análisis error añade su referencia de soporte; insufficient conserva
+el aviso específico de ampliar el contexto en una solicitud nueva. Los fallos
+HTTP/transporte conservan su tratamiento. Regresión 16/16 dirigida y 472/472
+acumuladas, lint y build/TypeScript aprobados. No se cambiaron APIs, permisos,
+firmas, migraciones, dependencias ni contratos de estado.
+
+Deployment candidato construido de git archive limpio, sin archivos de entorno,
+en fuente-e0152fb fuera de Git. Se actualizó APP_BUILD_REVISION a ese SHA y
+se verificaron metadatos/health del candidato antes de promover únicamente QA.
+Deployment final dpl_DCmgu6yKWuuh86PA7rPFAs2Abocv READY, origen
+https://pdf-interactivo-qa.vercel.app. Se conservó el epoch y la sesión del
+propietario. Cinco contratos públicos correctos con revisión exacta: login200,
+dashboard privado 307, PDF sin sesión 401, origen ajeno 403 y health 200.
+El deployment anterior8RfyR166jMbd1aYenj92SE6L1oZi se conserva, sin reversión.
+
+Flujo positivo real desde la aplicación, PDF sintético QA-HU015-019-digital,
+proyecto5feb6c07-68da-4b93-bc37-416fb4fcc65b. Solicitud nueva
+c48bd2e3-b0f5-40f7-a395-d760d11caf1c, página1 completa y categoría Relación
+entre ideas. Dificultad: distinguir «no se crea ni se destruye» de «se transforma».
+gpt-6.1-sol produjo diagnóstico suficiente con tema/conceptos/alcance y tres
+citas correctas; ignoró el distractor de fusión. Recomendó Explicación, Ejemplo
+e Imagen con justificaciones, sin preselección. Elección Explicación persistió
+tras recarga antes de generar. Se guardó nivel Intermedio y se generó una vez.
+La explicación distingue cantidad/formas, conserva sistema aislado/sin
+rozamiento y usa el péndulo para explicarlo; no inventa valores numéricos.
+Análisis/recomendaciones/explicación ready, modeloSol y un intento cada uno.
+
+Antes de aprobar, Refuerzos estaba vacío. Tras revisar el contenido se preparó
+y aprobó explícitamente versión 1; no hubo aprobación automática. Se eligió
+generar el mini quiz opcional, tres preguntas con dos opciones, claves y
+razones coherentes con el refuerzo. Se revisaron y aprobaron explícitamente.
+No se hizo otra generación para tomar capturas. Las soluciones solo están en
+el editor del propietario o en el recibo después de responder.
+
+Publicación QA v3 ebc7dd8f-452f-4fca-a497-cddf7d74e56a preparada privada con
+1 refuerzo, 0 recursos y 1 quiz aprobado. Se publicó temporalmente ese fixture.
+En IAB, con la sesión de propietario presente (no se presenta como anónima),
+se abrió el enlace público y respondió con una opción incorrecta:2/3,
+explicación por pregunta, resultado recuperado tras recarga y reintento bloqueado.
+Móvil 390×844: ancho útil 375=scrollWidth 375, resultado legible, cierre con Enter;
+escritorio 1280×900 y consolas de propietario/lector/escaneado sin errores.
+La emulación de tamaño no acredita un gesto táctil ni otra marca de navegador.
+
+Cliente HTTP independiente sin autenticación de propietario: lectura200,
+proyección inicial sin correctIndex/respuestas/explicaciones, envío3/3,
+misma operación 200 y mismo ID, otra operación 409, consulta conserva 1 intento.
+Opinión useful real persistida y recuperada mediante esa sesión de lector.
+La clave privada solo se utilizó para lecturas QA de verificación; las
+operaciones de lector pasaron por la API pública normal, sin saltar controles.
+Al terminar se retiró solo v3 mediante la aplicación: lectura/PDF/consulta/envío
+de intentos 404. BD conserva dos intentos de esta versión (2/3 y 3/3). La versión 2
+anterior sigue retirada, sin borrados ni cambios a documentos reales.
+SHA-256 del PDF descargado coincide con
+e7277d66afd7caba47385cfac2f0e55a2eeb4fb7aa7136409fa35300a6347946.
+
+Regresión nueva del arreglo, posterior a la promoción: se cargó el fixture
+escaneado en proyectoQA0856f9c5-100f-448b-b875-d804a2d85ef4. Solicitud
+a186c5fb-9331-4690-8ef1-d9c430455d64 con transcripción «A». Extracción advirtió
+que no hay texto digital; entrada manual confirmada y solicitud persistida.
+Análisis insufficient_context, enough=false, modelo nulo y sin llamada IA.
+Aviso específico visible, sin alerta genérica de reintento; recomendaciones
+y reintento deshabilitados. SHA escaneado conservado:
+b0bc1809351f249bd352032fbcdd193846e4c44e4199cf4bfbfec24326b71302.
+
+Evidencia auténtica en CIERRE-QA-IA-20261106 fuera de Git; sin tokens ni cookies.
+Capturas 04–10, 12–13, 15–16, 18–19 y 21–23; reportes 11/14/17/20/24/25
+y verificacion-suite.log. Los números 14/17/20 son reportes, no capturas.
+Adjuntos nuevos Jira:10634→94,10635→182,10636→95,10637→98,
+10638→117,10639→118 y10640→149. Editados sus comentarios existentes
+10114/10115/10116/10127/10186/10189/10238; uno por tarea.
+Contrastados 29 adjuntos de esas siete tareas, incluidos 22 anteriores: IDs,
+nombres y tamaños conservados. La captura nueva de 94 abrió correctamente
+en el visor de Jira; prueba local 23. No se subieron logs ni informes extensos.
+
+Matriz actualizada en efcee8b: fuentes oficiales 06/11, Chrome 157/156,
+Edge 157/156, Firefox 159.0.1/158.0.1 y Safari 27.2/26.6, parches y sistemas
+objetivo registrados; Beta excluida. Inventario real Windows11/26200/64bits:
+Chrome156.0.8078.74, Edge156.0.4314.58, Firefox88.0. SCRUM-149 Finalizado por
+mantener matriz/flujos/protocolo, según sus criterios. Ejecutar los navegadores
+es SCRUM-231: sigue En curso. No se declara compatibilidad por actualizar documentación.
+
+Consulta Jira actual: quedan abiertas HU040 y HU046,
+sus epics relacionados y el de acceso. Pendientes concretos: 137 gesto táctil
+soportado; 231 ocho versiones de marca y dispositivos Apple; 232 recogida continua,
+destino/entrega de avisos y SLO API acordados; 233 dominio de correo verificado
+para destinatarios distintos al titular. SCRUM-4 no tiene descripción/criterios:
+no se inventó una implementación ni se cerró como hecha. El correo del titular
+sí conserva el recorrido completo comprobado 04/11. El proyecto no está cerrado
+formalmente mientras queden estos requisitos. Guía de estudio yQA-LECTOR-HTTPS
+actualizados con el flujo positivo; los apartados anteriores son históricos.
+
+Entrega para revisión: https://github.com/Danilo2334/PDF_Interactivo/pull/65,
+borrador con base codex/scrum-232-alertas-rnf. Cadena pendiente #63→#64→#65,
+sin integración automática. Comentarios 232/10240 y58/10236 actualizados con
+resumen y enlace, conservando sus medios. El sondeo de esta fuente registró
+p50 HTTP351,99ms y p95/máximo593,27ms,0/5 contratos fallidos; no es una medición
+de renderizado ni disponibilidad histórica. Los commits posteriores a e0152fb
+solo documentan resultados y matriz, por lo que no se redesplegaron.
