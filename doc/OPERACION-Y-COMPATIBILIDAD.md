@@ -562,3 +562,43 @@ captura real 09. Se conserva su sesión; no se volvió a abrir /login. El flujo
 completo de recuperación por correo queda probado para este titular.
 Se mantiene la restricción del remitente de pruebas a la cuenta del titular.
 No se cambió código, SMTP, credenciales de envío, facturación o despliegue.
+
+## QA con GPT y corrección de revisión del 06/11/2026
+
+El target Production del proyecto QA de Danilo incorpora la clave existente
+OPENAI_API_KEY como Secret, AI_PROVIDER=openai, OPENAI_ANALYSIS_MODEL=gpt-6.1-sol
+y AI_USAGE_LOG=1. No se copió el archivo local ni se modificaron las ocho
+variables previas. También se conserva APP_BUILD_REVISION como Config: son
+trece variables. Cambiar una variable no actualiza un deployment ya construido.
+
+Fuente confirmada en metadatos: baf41bec85b0ea42394d2b2230ca3197a0ce28a4.
+El primer redeploy dpl_8p16mEV2PYYPcfCDonfGk6DAZYqp perdió la build-env de
+revisión: cuatro contratos correctos y health con revision=null. No se aceptó
+como aprobado. Tras verificar sourceRevision y originalDeploymentId, se guardó
+APP_BUILD_REVISION con ese SHA en Production y se reconstruyó la misma fuente.
+Estado final READY: dpl_8RfyR166jMbd1aYenj92SE6L1oZi, alias público QA correcto,
+cinco contratos aprobados y revisión exacta. El deployment original queda
+conservado; no se ejecutó una reversión en esta sesión ni se alteraron datos.
+
+Actualizar el procedimiento anterior de despliegue: además de pasar la revisión
+al construir, persistirla en la configuración QA para redeploys de esa fuente.
+Cada cambio posterior de código debe actualizarla al SHA realmente exportado.
+Un health vivo con SHA ausente o distinto sigue bloqueando la aceptación.
+
+471/471 pruebas, lint y build/TypeScript correctos. Audit --omit=dev reporta cero
+vulnerabilidades en producción; no se ejecutó audit fix ni se cambió el lockfile.
+Reportes01 y02 en CIERRE-QA-IA-20261106 conservan fallo y comprobación corregida.
+
+Una llamada GPT real iniciada en IAB para el PDF QA de energía terminó en
+contexto insuficiente, persistido con modelo gpt-6.1-sol y un único intento.
+El servicio explica qué definiciones/relaciones faltan; no fabricó contenido.
+Log real:483 tokens de entrada y119 de salida, caché0; coste estándar estimado
+USD0,002156. Tarifa consultada: https://developers.openai.com/api/docs/models/gpt-6.1-sol.
+Es una estimación a partir del uso, no lectura de facturación o saldo.
+
+La revisión automática detuvo Computer Use al intentar inspeccionar Chrome por
+no poder determinar su URL. No hubo más entradas de UI ni nueva captura de
+aceptación. Resultado del diagnóstico comprobado en BD/logs; recomendaciones,
+contenido, quiz y lector con generación nueva siguen sin verificar en pantalla.
+Mantener esas limitaciones junto a los resultados, sin trasladar pruebas locales
+anteriores al despliegue nuevo. No se cerraron HU046 ni sus pendientes.

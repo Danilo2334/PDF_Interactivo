@@ -7146,3 +7146,73 @@ otros destinatarios. Se conserva el único comentario y todas las evidencias;
 las capturas 08 y 09 se añaden sin duplicar las diez anteriores.
 Sin cambios de aplicación, configuración, pagos, merge o despliegue en este
 reintento; el secreto de envío ya configurado no se volvió a crear ni copiar.
+
+### 2026-11-06 — GPT habilitado en QA y comprobación real de contexto insuficiente
+
+El propietario pidió continuar hasta completar el proyecto para poder estudiarlo.
+Árbol limpio en codex/scrum-232-alertas-rnf, HEAD 4aea1b2; fetch sin cambios de
+fuente que recuperar. Stash d6406e0 intacto. Jira conserva abiertas HU040/137,
+HU046/149/231/232, SMTP233 y la subtarea heredada4 sin criterios. No se cerró
+ninguna por esta continuación. No se hicieron merges ni se modificó main.
+
+Se reutilizó la clave de PDF Interactivo ya autorizada y guardada localmente,
+sin crear otra ni copiar .env.local completo. Consulta mínima al catálogo API:
+200 para gpt-6.1-sol. Configuración local: AI_PROVIDER=openai y ese modelo.
+En el proyecto QA de Danilo se añadieron solo al target Production:
+OPENAI_API_KEY como Secret y AI_PROVIDER, OPENAI_ANALYSIS_MODEL y AI_USAGE_LOG
+como Config. Se conservaron las ocho variables existentes y el epoch de sesión.
+El secreto se pasó por stdin y no apareció en argumentos, salida o archivos.
+No se activó facturación, cambió el proveedor a un intermediario o migró la BD.
+
+Redeploy de la misma fuente baf41be desde dpl_5P2Cy4EMS9hpKAKXqvTg3RFV9TzZ:
+dpl_8p16mEV2PYYPcfCDonfGk6DAZYqp READY. El primer sondeo real falló únicamente
+en liveness_revision: /api/health devolvía revision=null. APP_BUILD_REVISION
+solo había sido pasada como build-env en el despliegue original y no sobrevivió
+a este redeploy. Se verificaron meta.sourceRevision=baf41be completo y
+meta.originalDeploymentId antes de guardar esa revisión como Config de Production.
+El segundo redeploy dpl_8RfyR166jMbd1aYenj92SE6L1oZi quedó READY y el alias
+pdf-interactivo-qa.vercel.app apunta a él; health devuelve el SHA correcto.
+URL técnica: pdf-interactivo-1rt2q334u-danilo-carlosamas-projects.vercel.app.
+Son trece variables QA ahora. Antes de futuros cambios de fuente, actualizar
+APP_BUILD_REVISION al SHA realmente exportado; nunca reutilizarlo para otra fuente.
+
+Se repitieron 471/471 pruebas, lint y build local/TypeScript: correctos.
+Audit de dependencias de producción: cero vulnerabilidades reportadas; los
+ocho avisos moderados del build completo no pertenecen a ese subconjunto.
+Sondeo corregido 5/5: login200, ruta privada307, PDF anónimo401, origen ajeno403
+y health200 con revisión exacta. Reportes nuevos fuera de Git en
+CIERRE-QA-IA-20261106: 01-contratos-qa.json conserva el fallo y
+02-contratos-qa-corregido.json conserva el resultado posterior. No sobrescribirlos.
+
+Sesión del propietario conservada. En IAB se abrió solo QA-HU015-019-digital
+(proyecto5feb6c07-68da-4b93-bc37-416fb4fcc65b), se extrajo el texto real de la
+página1, se confirmó una dificultad sobre la relación potencial/cinética y se
+creó la solicitud5c4bf9ab-695f-4b31-a11e-c55bf22acc76. Se revisó el contexto y
+se pulsó Analizar selección una vez. Lectura posterior, sin escrituras SQL:
+analysis_status=insufficient, modelo gpt-6.1-sol, attempts=1. La razón explica
+que el párrafo no define las energías ni cómo cambian con posición/velocidad;
+no inventó esas relaciones. Request error/failed es el contrato actual para
+ese contexto insuficiente, no un fallo de conexión. SHA del original en el
+contexto: e7277d66afd7caba47385cfac2f0e55a2eeb4fb7aa7136409fa35300a6347946,
+coincidente con la referencia anterior del fixture. No se alteró su PDF.
+
+Un evento real reinforcement_ai_usage en Vercel:483 tokens de entrada,
+119 de salida,0 de caché. Estimación USD0,002156 según tarifa pública estándar
+USD2/1M entrada y USD10/1M salida; no es una factura. Resultado saneado en
+03-analisis-gpt-real.json, fuera de Git. No se hizo otra llamada ni un reintento.
+
+El intento de inspeccionar una ventana nativa de Chrome fue rechazado por la
+revisión automática: no pudo verificar su URL con suficiente certeza y detuvo
+Computer Use para el turno. Se respetó la parada; no se usó otra vía para
+operar esa ventana ni se reutilizaron índices de UI. El resultado final en
+pantalla, sus capturas y el flujo positivo recomendaciones/contenido/quiz
+siguen pendientes. El diagnóstico se verificó en BD y logs, no visualmente.
+No presentar ese registro como captura o como aprobación integral del QA.
+
+Siguiente paso: retomar IAB en el proyecto de prueba sin abrir /login; actualizar
+el detalle y capturar el aviso real. Preparar otra solicitud con una necesidad
+que pueda resolverse con el párrafo, o un PDF QA más completo, para acreditar el
+flujo positivo hasta el lector y el quiz. No editar la solicitud ya enviada ni
+inventar estados con SQL. Chrome/Safari, gesto táctil, alertas operativas y
+dominio de correo conservan sus pendientes. Guía de estudio en
+doc/GUIA-PARA-ESTUDIAR-EL-PROYECTO.md, con límites reales de esta entrega.
