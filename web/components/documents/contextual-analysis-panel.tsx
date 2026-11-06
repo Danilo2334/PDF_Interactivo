@@ -8,6 +8,11 @@ import type { RequestRecord } from "@/lib/validations/request-list";
 const parseView = (value: unknown) => analysisViewSchema.parse(value);
 const buttonClass = "rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-800 disabled:cursor-not-allowed disabled:opacity-50";
 
+export function analysisReferenceMessage(analysis: AnalysisRecord, reference: unknown): string {
+  return analysis.status === "error" && typeof reference === "string"
+    ? `Referencia de la operación: ${reference}.` : "";
+}
+
 export function AnalysisResult({ analysis }: { analysis: AnalysisRecord }) {
   if (analysis.status === "processing") return <p role="status">Analizando el contexto. Puedes seguir consultando el PDF.</p>;
   if (analysis.status === "error" || analysis.status === "insufficient") return <div role="alert" className="space-y-2 text-sm text-red-700">
@@ -48,11 +53,13 @@ export function ContextualAnalysisPanel({ request, active, onChanged }: {
       const response = await fetch(endpoint, { method: "POST", credentials: "same-origin", cache: "no-store",
         headers: { "Content-Type": "application/json" }, body: JSON.stringify({ documentId: request.document_id, action }), signal: controller.signal });
       const body = await response.json();
-      if (response.ok && typeof body.reference === "string") setError(`La operación no se completó. Revisa el aviso y reintenta cuando corresponda. Referencia: ${body.reference}.`);
       if (!response.ok) throw Error(typeof body.message === "string" ? body.message : "No fue posible completar la operación.");
       if (controller.signal.aborted) return;
       if (action === "prepare") setPreview(analysisContextSchema.parse(body.context));
-      else { analysisRecordSchema.parse(body.analysis); }
+      else {
+        const analysis = analysisRecordSchema.parse(body.analysis);
+        setError(analysisReferenceMessage(analysis, body.reference));
+      }
     } catch (cause) {
       if (!controller.signal.aborted) setError(cause instanceof Error && cause.name === "Error" ? cause.message : "No se pudo confirmar la operación. Se conserva lo guardado. Actualiza antes de reintentar con los mismos datos.");
     } finally {
