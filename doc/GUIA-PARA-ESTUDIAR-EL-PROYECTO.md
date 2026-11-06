@@ -125,16 +125,26 @@ cuentas requiere un dominio de envío verificado.
 
 ## Estado que puedes defender con evidencia
 
-Corte: 6 de noviembre de 2026. El QA tiene GPT configurado, y se comprobó una
-llamada real desde la aplicación. Para una dificultad que pedía relaciones no
-explicadas por el breve PDF de prueba, devolvió contexto insuficiente y conservó
-el motivo. Ese resultado acredita conexión y ese rechazo; el flujo positivo
-completo de generación nueva en este despliegue sigue pendiente.
+Corte: 6 de noviembre de 2026. El QA ejecutó con gpt-6.1-sol el recorrido real
+de diagnóstico suficiente, tres recomendaciones pertinentes sin preselección,
+explicación Intermedio y mini quiz de tres preguntas. El caso de energía
+distingue cantidad total y cambio de forma, conserva las condiciones del PDF
+y no incorpora su línea distractora. Una aprobación editorial explícita fue
+necesaria antes de publicar; generar no publicó ni aprobó automáticamente.
 
-La suite actual aprobó 471 pruebas, lint y build. El QA aprobó cinco contratos
-HTTP después de corregir la revisión ausente de su chequeo de salud. También
-hay pruebas reales anteriores de publicación, lector, quizzes y recuperación
-de contraseña, conservadas en Jira.
+El lector HTTPS mostró la explicación y calificó 2/3, con corrección y razones
+por pregunta. Recargar conservó el resultado y bloqueó reintentos. Otro cliente
+HTTP, sin sesión de propietario, obtuvo 3/3; repetir la misma operación devolvió
+el mismo intento y otro envío recibió 409. Las soluciones no estaban en la
+respuesta inicial del lector. Se retiró después únicamente la publicación QA:
+lectura, PDF e intentos pasaron a 404, conservando contenido y resultados.
+
+La suite actual aprobó 472 pruebas, lint y build. El QA aprobó cinco contratos
+HTTP con revisión exacta e0152fb. Se corrigió un aviso que sugería reintentar
+una solicitud insuficiente inmutable: ahora exige una nueva solicitud más
+completa. El escaneado con transcripción mínima se rechazó antes de llamar a
+IA. Ambos PDF mantienen sus SHA-256. Las capturas auténticas y las evidencias
+anteriores se conservan en Jira; no se sustituyeron por resultados esperados.
 
 Quedan verificaciones formales de navegadores, gesto táctil y avisos operativos.
 No afirmar compatibilidad completa con Safari ni vigilancia continua mientras

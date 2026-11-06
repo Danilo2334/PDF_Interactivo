@@ -623,3 +623,32 @@ aceptación. Resultado del diagnóstico comprobado en BD/logs; recomendaciones,
 contenido, quiz y lector con generación nueva siguen sin verificar en pantalla.
 Mantener esas limitaciones junto a los resultados, sin trasladar pruebas locales
 anteriores al despliegue nuevo. No se cerraron HU046 ni sus pendientes.
+
+### Continuación verificada del 06/11/2026
+
+El registro anterior describe el primer ensayo de esta fecha. Se completó
+después el flujo GPT positivo en QA: diagnóstico, recomendaciones sin marcar,
+explicación Intermedio, quiz de tres preguntas, revisiones explícitas y lector.
+Deployment dpl_DCmgu6yKWuuh86PA7rPFAs2Abocv, fuente
+e0152fb23a194ad587973f628afd5b37b50fd8b7, revisión de health y cinco contratos
+correctos. Sondeo puntual; no constituye vigilancia continua.
+
+La corrección de SCRUM-94 elimina el aviso genérico de reintentar cuando el
+contexto es insuficiente. Nueva solicitud con escaneado mínimo: rechazo sin
+consumo de IA, reintento/recomendaciones bloqueados y original intacto.
+472/472 pruebas, lint y build aprobados. Lector visual con sesión de propietario:
+2/3, recarga y razones conservadas; cliente HTTP sin propietario: 3/3,
+idempotencia, nuevo envío 409, opinión persistida y PDF con SHA original.
+Publicación sintética retirada al terminar: cuatro rutas rechazan 404.
+
+Siete capturas nuevas en 94/182/95/98/117/118/149; 29 adjuntos y un comentario
+por tarea comprobados, incluidos los 22 adjuntos anteriores. La imagen nueva
+de 94 abrió en el visor de Jira. Fuente, resultados y archivos de prueba
+detallados en la última entrada de CONTEXTO-PROYECTO.md.
+
+SCRUM-149 finalizada por matriz, fuentes, sistemas objetivo y flujos mantenidos.
+SCRUM-231 sigue pendiente de ejecución N/N−1 de marcas, incluida Safari;
+SCRUM-137 necesita un gesto táctil realmente soportado, no solo viewport móvil.
+SCRUM-232 conserva los pendientes de operación/avisos/SLO descritos arriba.
+SCRUM-233 conserva la limitación del remitente de pruebas a su titular.
+No se modificó main ni se integraron PR en esta continuación.
