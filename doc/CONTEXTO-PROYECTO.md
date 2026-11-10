@@ -7538,3 +7538,18 @@ relajaron validaciones/RLS. No hay reparación o ensayo móvil aprobado todavía
 Captura original del usuario añadida al comentario existente deSCRUM-235,
 conservando medios y resultados anteriores; seguimiento de compatibilidad231.
 No se modificaron sprints cerrados. No hubo cambios de código o despliegue.
+
+### Continuación23:04 — Misma carga correcta con datos móviles
+
+El propietario respondió «Con datos móviles sí cargó». Storage confirma para
+el mismo objeto/operación e5bbbc17-a98e-479a-9876-bb74b82afa02:POST200 a
+04:03:58.886UTC yGET200 a04:03:59.995/04:04:00.191, posteriores alNoSuchKey.
+Se mantuvieron archivo, identidad y aplicación; no fue necesario aumentar el
+límite, cambiar RLS o modificar código. El éxito visual lo comunica el usuario;
+la transferencia y disponibilidad sí están corroboradas por registros reales.
+
+El resultado apunta a la ruta Wi-Fi hacia el almacenamiento, sin identificar
+todavía DNS, router, operador o navegador como causa. Datos móviles desbloquea
+este ensayo; no equivale a reparar ni probar esa red Wi-Fi. Usar conexión probada
+para la presentación y comprobar la red del lugar. Comentarios235/231 actualizados,
+conservando medios y estados anteriores; no hay captura nueva de éxito.
