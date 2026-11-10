@@ -49,6 +49,10 @@ export function ProjectWorkspace({
     useState<"pdf" | "requests" | "reinforcements">("pdf");
 
   const workspaceId = useId();
+  const guideRef = useRef<HTMLHeadingElement>(null);
+  const requestsPanelRef = useRef<HTMLElement>(null);
+  const [guideTarget, setGuideTarget] = useState<{ section: typeof activeSection; visit: number } | null>(null);
+  const followedGuideTarget = useRef<typeof guideTarget>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [publicationDocument, setPublicationDocument] = useState<string | null>(null);
   const [previewPage, setPreviewPage] = useState(1);
@@ -111,6 +115,17 @@ export function ProjectWorkspace({
   }, [activeSection, documentId]);
   const reportReadingPage = useCallback((number: number) => setReadingPage(previous =>
     previous?.documentId === documentId && previous.number === number ? previous : { documentId, number }), [documentId]);
+  useLayoutEffect(() => {
+    if (!guideTarget || guideTarget === followedGuideTarget.current || guideTarget.section !== activeSection) return;
+    followedGuideTarget.current = guideTarget;
+    const panel = activeSection === "pdf" ? pdfPanelRef.current : activeSection === "requests" ? requestsPanelRef.current : reinforcementPanelRef.current;
+    panel?.focus({ preventScroll: true });
+    panel?.scrollIntoView({ block: "start", behavior: "instant" });
+  }, [guideTarget, activeSection]);
+  function followGuide(section: typeof activeSection, openedAt: number) {
+    changeSection(section, openedAt);
+    setGuideTarget(previous => ({ section, visit: (previous?.visit ?? 0) + 1 }));
+  }
   const pageReinforcements = reinforcements.filter(item => item.document_id === documentId && item.page_number === activePage);
   function openPreview() {
     previewPosition.current = { x: window.scrollX, y: window.scrollY }; setPreviewPage(activePage); setPreviewOpen(true);
@@ -210,12 +225,21 @@ export function ProjectWorkspace({
       <div hidden={previewOpen}>
       {editorHeader}
       {canRequestReinforcement && <aside aria-label="Ruta para crear un refuerzo" className="mt-6 rounded-xl border border-blue-200 bg-blue-50 p-4 text-blue-950">
-        <h2 className="text-lg font-semibold">Aprende con tu PDF, paso a paso</h2>
+        <h2 ref={guideRef} tabIndex={-1} className="text-lg font-semibold">Aprende con tu PDF, paso a paso</h2>
         <p className="mt-1 text-sm">Un refuerzo es una explicación, ejemplo, gráfico o actividad que te ayuda a entender un fragmento.</p>
         <ol className="mt-3 grid gap-2 text-sm sm:grid-cols-3">
-          <li aria-current={activeSection === "pdf" ? "step" : undefined}><strong>1. Elige qué entender.</strong> Marca texto en el PDF y abre la solicitud. Confirma el texto y explica tu dificultad.</li>
-          <li aria-current={activeSection === "requests" ? "step" : undefined}><strong>2. Trabaja con la IA.</strong> Analiza tu solicitud, elige una recomendación y genera el contenido.</li>
-          <li aria-current={activeSection === "reinforcements" ? "step" : undefined}><strong>3. Revisa y utiliza.</strong> Revisa el borrador antes de aprobarlo. Los aprobados aparecen en Refuerzos.</li>
+          {([
+            { section: "pdf", title: "1. Elige qué entender", text: "Marca texto en el PDF y abre la solicitud. Confirma el texto y explica tu dificultad.", action: "Ir al PDF" },
+            { section: "requests", title: "2. Trabaja con la IA", text: "Abre tu solicitud, analízala, elige un formato y genera. Revisa el borrador antes de aprobarlo.", action: "Ir a mis solicitudes" },
+            { section: "reinforcements", title: "3. Utiliza tu refuerzo", text: "Consulta los aprobados de esta página. Si tienen mini quiz, elige tus respuestas y envíalas para ver tu puntaje.", action: "Ir a mis refuerzos" },
+          ] as const).map(step => <li key={step.section} aria-current={activeSection === step.section ? "step" : undefined}
+            className={`flex flex-col gap-2 rounded-lg border p-3 ${activeSection === step.section ? "border-blue-400 bg-white" : "border-blue-100"}`}>
+            <strong>{step.title}</strong><p>{step.text}</p>
+            <button type="button" aria-controls={`${workspaceId}-${step.section}`} onClick={() => followGuide(step.section, performance.now())}
+              className="mt-auto flex min-h-11 items-center justify-between gap-2 rounded-lg bg-blue-700 px-3 py-2 text-left font-semibold text-white hover:bg-blue-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700">
+              {step.action}<span aria-hidden="true">→</span>
+            </button>
+          </li>)}
         </ol>
         <p role="status" className="mt-3 font-medium">{activeSection === "pdf" ? "Empieza aquí: busca abajo el fragmento que no entiendes y selecciónalo." : activeSection === "requests" ? "Continúa aquí: abre una solicitud para analizarla y crear tu refuerzo." : "Aquí consultas los refuerzos aprobados de la página actual."}</p>
       </aside>}
@@ -253,9 +277,13 @@ export function ProjectWorkspace({
         ))}
       </div>
 
+      {canRequestReinforcement && <button type="button" onClick={() => { guideRef.current?.focus({ preventScroll: true }); guideRef.current?.scrollIntoView({ block: "start", behavior: "instant" }); }}
+        className="mt-2 min-h-11 rounded-lg px-3 py-2 text-sm font-semibold text-blue-800 underline underline-offset-4"><span aria-hidden="true">↑ </span>Volver a la guía de pasos</button>}
+
       <div
         id={`${workspaceId}-pdf`}
         ref={pdfPanelRef}
+        tabIndex={-1}
         hidden={activeSection !== "pdf"}
       >
         {activeSection === "pdf" && openedRequest?.document_id === documentId && <aside className="mt-4 space-y-2 rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm text-slate-800">
@@ -287,7 +315,7 @@ export function ProjectWorkspace({
         )}
       </div>
 
-      {canRequestReinforcement && <section id={`${workspaceId}-requests`} hidden={activeSection !== "requests"}>
+      {canRequestReinforcement && <section ref={requestsPanelRef} tabIndex={-1} id={`${workspaceId}-requests`} hidden={activeSection !== "requests"}>
         <RequestListPanel key={`${projectId}-${documentId}-${continueRequestId ?? "list"}-${continueRequestId ? continuation?.version : 0}`} projectId={projectId} documentId={documentId} initialRequestId={continueRequestId}
           active={activeSection === "requests" && !previewOpen} onOpen={openRequest} />
       </section>}
@@ -295,6 +323,7 @@ export function ProjectWorkspace({
       <section
         id={`${workspaceId}-reinforcements`}
         ref={reinforcementPanelRef}
+        tabIndex={-1}
         aria-labelledby={`${workspaceId}-reinforcement-title`}
         hidden={activeSection !== "reinforcements"}
         data-document-id={documentId}
