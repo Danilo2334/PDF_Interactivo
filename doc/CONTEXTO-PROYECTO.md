@@ -7362,3 +7362,80 @@ La guía de estudio incorpora acceso por HTTPS desde celular y acceso directo
 a pantalla de inicio. No hay APK, manifiesto PWA ni service worker en el código;
 no se promete instalación nativa ni funcionamiento sin conexión. Una prueba
 en tamaño móvil de PC tampoco acredita el teléfono personal del propietario.
+
+## 09/11/2026 — Ensayo autenticado y GPT real completado
+
+El propietario confirmó su ingreso. Las pestañas originales seguían en login,
+pero un inventario mostró las sesiones nuevas en 3 (dashboard) y 5 (Usage).
+Se reutilizaron esas pestañas, sin pedir otro login ni tocar credenciales.
+
+Cuotas reales del equipo Danilo Carlosama's projects en Usage, Last 30 Days,
+ventana visible «Oct 10, 9 p.m.–Nov 9, 8 p.m.»: transferencia 150,28 MB/100 GB,
+origen 26,53 MB/10 GB, CDN 6.237/1.000.000, funciones 4.898/1.000.000,
+memoria Fluid 0,67/360 GB-h y CPU Fluid 5m41s/4h. Esas cuotas tienen amplio margen;
+no se promete disponibilidad futura ni se confunde con crédito OpenAI.
+La limitación del API de métricas no impidió leer el consumo desde el panel.
+Capturas 03/11 y ratios visibles 05 conservados fuera de Git. La captura 04
+quedó desalineada al desplazarse y no se adjuntó como evidencia de Functions.
+
+Proyecto nuevo 7155218d-eca7-4b89-a309-ea6fa9d74125, renombrado mediante UI a
+QA-PRESENTACION-20261109. Se cargó el fixture digital conservando documentos
+previos; navegación a página 2 y zoom 125→100% conservaron la página, retorno a 1.
+Texto extraído del PDF abierto, dificultad Relación entre ideas confirmada y
+solicitud 16215629-d928-4c8a-9a91-90d79e74e723 persistida. Necesidad concreta:
+distinguir «no se crea ni se destruye» de «se transforma».
+
+Diagnóstico real nuevo de gpt-6.1-sol: ready, un intento, conceptos de cantidad
+total/formas, sistema aislado/sin rozamiento y tres citas correctas; no usa el
+distractor del hielo. Recomendaciones: Explicación/Ejemplo/Imagen justificadas,
+sin opción premarcada y con consejo de quiz opcional separado. Se guardó
+Explicación y nivel Intermedio; resultado nuevo coherente, pendiente de revisión.
+Refuerzos seguía vacío antes de aprobar. Se revisó y aprobó explícitamente v1.
+Se eligió crear un quiz de 3 preguntas; GPT generó opciones, claves y razones
+coherentes con citas del refuerzo. Revisado y aprobado explícitamente v1.
+BD confirmó ready/modelo Sol para diagnóstico, recomendaciones, explicación y
+quiz. No se hicieron llamadas directas que sustituyan este recorrido de UI.
+
+Publicación 6b8499ec-4b81-475b-b99f-b8e5384e2497, v1, preparada privada con
+un refuerzo y un quiz aprobados. Publicación temporal: lector visual con sesión
+del propietario (no anónima) respondió 2/3 con razones y conservó la nota tras
+recarga; no ofreció reintento. Cliente HTTP separado, sin auth del propietario,
+obtuvo 3/3; la misma operación devolvió el mismo ID, otra recibió 409 y consulta
+conservó un intento. La proyección inicial no entrega soluciones/explicaciones.
+SHA-256 del PDF descargado:
+e7277d66afd7caba47385cfac2f0e55a2eeb4fb7aa7136409fa35300a6347946, intacto.
+
+Se retiró la publicación mediante UI: lectura/PDF/consulta/envío devolvieron 404,
+conservando datos. Se republicó solo este fixture sintético para dejar la
+demostración disponible: público, cambio 3, enlace nuevo 200 y anterior 404.
+No se conserva el token en Git, Jira o los reportes. Original e intentos intactos.
+Móvil emulado 390×844: ancho útil 375=scrollWidth375, resultado legible, cierre
+con Enter mantiene página 1/100%. Escritorio útil 1265px. Consolas de propietario
+y lector sin errores observados. No equivale a probar el teléfono físico,
+Safari, otras marcas o un gesto táctil. No se presenta como cierre de 137/231.
+
+Evidencias nuevas en ENSAYO-PRESENTACION-20261109: 01 contratos, 02 regresiones,
+05 cuotas, 13 modelos (quiz aún procesando), 15 lector HTTP, 18 retirada, 20 estado final
+(cuatro etapas ready), capturas 06–12/14/16/17/19 y 21 visor Jira. Un título de
+archivo provisional 10 se corrigió: el panel sí se actualizó al terminar la
+consulta; no se declaró un fallo de aplicación por capturar un estado transitorio.
+No se observó un fallo funcional que requiriese cambios de código.
+
+Siete capturas nuevas vinculadas a 232/182/98/196/117/118/95, comentarios
+10240/10115/10127/10162/10186/10189/10116. Verificados 40 medios en esos siete
+comentarios, incluidos 33 previos conservados y uno solo por tarea. La imagen 17
+abrió correctamente en el visor de Jira; captura 21. No se adjuntaron logs largos.
+El primer intento de actualizar 232 no quedó aplicado; una lectura fresca lo
+confirmó y el reintento se verificó, sin comentario o imagen duplicados.
+
+Se actualizaron guía de estudio, guion y QA-LECTOR-HTTPS. La aplicación sigue
+en e0152fb, sin cambios en web desde las 472/472, lint y build aprobadas; hoy
+20/20 regresiones críticas y 5/5 contratos públicos nuevos. No se repitió un
+build ni se desplegaron documentos. No hubo merge o cambio de main; PR #65
+conserva su cadena #63→#64→#65 para revisión.
+
+El ensayo principal de la presentación está comprobado y guardado. El proyecto
+conserva pendientes formales: 137 táctil, 231 matriz ejecutada, 232 operación/
+avisos/SLO, 233 remitente general y 4 sin criterios. El acceso móvil es web por
+HTTPS con acceso directo a pantalla de inicio; no se produjo un APK ni se
+declaró funcionamiento offline o validación del celular personal.

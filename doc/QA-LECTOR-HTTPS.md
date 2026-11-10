@@ -1,6 +1,22 @@
 # QA del lector HTTPS
 
-## Estado operativo al 06/11/2026
+## Estado operativo al 09/11/2026
+
+Ensayo nuevo completado desde carga de PDF hasta lector/quiz, con GPT real:
+proyecto 7155218d-eca7-4b89-a309-ea6fa9d74125, solicitud 16215629-d928-4c8a-9a91-90d79e74e723.
+Explicación y quiz revisados/aprobados; lector 2/3 persistido, cliente HTTP sin
+propietario 3/3, idempotencia y nuevo envío 409. Publicación QA
+6b8499ec-4b81-475b-b99f-b8e5384e2497 retirada y republicada: el enlace anterior
+devuelve 404 y el actual 200; visibilidad final pública, cambio 3. Solo contiene
+el fixture sintético QA-PRESENTACION-20261109, un refuerzo y un quiz.
+Se conservan original e intentos. No se comparten tokens en esta documentación.
+
+Uso del equipo visto en Vercel: 4.898/1.000.000 funciones, 150,28 MB/100 GB de
+transferencia y CPU 5m41s/4h; ventana Last30Days visible. Margen amplio en esas
+cuotas; no equivale a garantía de disponibilidad ni a saldo OpenAI. Contratos
+públicos nuevos 5/5, regresiones críticas 20/20. Consolas sin errores observados.
+No se cambió código ni se redesplegó. El registro de 06/11 que sigue conserva
+los resultados anteriores, distinguidos de este ensayo nuevo.
 
 Origen vigente: https://pdf-interactivo-qa.vercel.app, proyecto de Danilo
 prj_pRui4rYL9DnbERflhyhplv2mIoJ3. Deployment READY

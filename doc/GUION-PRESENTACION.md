@@ -3,6 +3,14 @@
 Preparación del 9 de noviembre de 2026. Este documento explica qué mostrar;
 no sustituye el registro de resultados reales de Jira y la continuidad.
 
+Ensayo realizado: [QA-PRESENTACION-20261109](https://pdf-interactivo-qa.vercel.app/projects/7155218d-eca7-4b89-a309-ea6fa9d74125).
+Contiene una explicación y un quiz de tres preguntas generados con Sol y
+aprobados tras revisión. Su publicación v1 está pública con enlace renovado,
+solo para este material sintético. El enlace se consulta en Revisar publicación;
+no se copia su token al repositorio. El ensayo completo y sus límites están en
+la última entrada de CONTEXTO-PROYECTO.md. Las instrucciones siguientes describen
+el recorrido; no hace falta repetir la generación para consultar lo guardado.
+
 ## Abrir la aplicación
 
 Usar https://pdf-interactivo-qa.vercel.app/dashboard desde el PC o el celular.
