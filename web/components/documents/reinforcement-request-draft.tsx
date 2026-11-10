@@ -12,7 +12,7 @@ export type PageSelection = { documentId: string; pageNumber: number };
 
 export function ReinforcementRequestDraft({ documentId, documentName, selection, fragment, onClearSelection,
   difficultyInput = EMPTY_DIFFICULTY_INPUT, difficultyDraft, onDifficultyChange, onConfirmDifficulty,
-  selectionText, onExtractText, onTextChange, onConfirmText, submission, missing, onSend, onResetRequest }: {
+  selectionText, onExtractText, onTextChange, onConfirmText, submission, missing, onSend, onResetRequest, onContinue }: {
   documentId: string; documentName: string; selection: PageSelection | null;
   fragment?: DocumentFragmentSelection | null; onClearSelection?: () => void;
   difficultyInput?: DifficultyInput; difficultyDraft?: DifficultyDraft | null;
@@ -20,6 +20,7 @@ export function ReinforcementRequestDraft({ documentId, documentName, selection,
   selectionText?: SelectionTextDraft | null; onExtractText?: () => void;
   onTextChange?: (text: string) => void; onConfirmText?: () => void;
   submission?: SubmissionState; missing?: string[]; onSend?: () => void; onResetRequest?: () => void;
+  onContinue?: (requestId: string) => void;
 }) {
   const id = useId();
   const [open, setOpen] = useState(false);
@@ -31,11 +32,13 @@ export function ReinforcementRequestDraft({ documentId, documentName, selection,
   const validation = validateDifficulty(difficultyInput);
   const errors = attemptedContext === contextKey && !validation.success ? validation.errors : {};
   const confirmed = difficultyDraft?.documentId === documentId && difficultyDraft.pageNumber === page ? difficultyDraft : null;
+  const step = submission?.status === "success" ? 4 : !selectionText?.confirmed ? 1 : !confirmed ? 2 : 3;
   useEffect(() => {
     const dialog = dialogRef.current;
     if (open && dialog && !dialog.open) dialog.showModal();
     else if (!open && dialog?.open) dialog.close();
-  }, [open]);
+    if (open) dialog?.querySelector<HTMLElement>("h3")?.focus();
+  }, [open, step]);
 
   return <section aria-label="Página a reforzar" data-document-id={documentId}
     className="mt-3 rounded-xl border border-blue-200 bg-blue-50 p-4">
@@ -43,8 +46,11 @@ export function ReinforcementRequestDraft({ documentId, documentName, selection,
       {page ? `Página seleccionada para reforzar: ${page}` : "Abre el PDF y elige la página que quieres reforzar."}
     </p>
     <p className="min-h-5 text-sm text-blue-900">{currentFragment ? currentFragment.kind === "text" ? "Fragmento de texto seleccionado." : "Zona rectangular seleccionada." : "Sin fragmento marcado."}</p>
-    <button type="button" disabled={!page || open} onClick={() => setOpen(true)}
-      className="mt-3 rounded-lg bg-blue-700 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">Abrir solicitud de refuerzo</button>
+    <div className={currentFragment && !open ? "fixed inset-x-4 bottom-4 z-20 mx-auto flex max-w-lg flex-wrap items-center justify-between gap-2 rounded-xl border border-blue-300 bg-white p-3 shadow-lg" : "mt-3"}>
+      {currentFragment && !open && <span className="text-sm font-medium text-blue-950">Fragmento seleccionado · Página {page}</span>}
+      <button type="button" disabled={!page || open} onClick={() => setOpen(true)}
+        className="rounded-lg bg-blue-700 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">Abrir solicitud de refuerzo</button>
+    </div>
     <dialog ref={dialogRef} aria-labelledby={`${id}-title`} onCancel={() => setOpen(false)} onClose={() => setOpen(false)}
       className="m-auto max-h-[90dvh] w-[calc(100%-2rem)] max-w-lg overflow-y-auto rounded-xl border border-slate-200 bg-white p-6 shadow-xl backdrop:bg-slate-900/50">
     {open && <form aria-label="Borrador de solicitud de refuerzo" noValidate onSubmit={event => {
@@ -52,7 +58,8 @@ export function ReinforcementRequestDraft({ documentId, documentName, selection,
       if (page && validation.success) onConfirmDifficulty?.();
     }}
       className="mt-4 space-y-3" data-document-id={documentId} data-page-number={page ?? ""}>
-      <h3 id={`${id}-title`} className="text-lg font-semibold text-slate-900">Solicitud de refuerzo</h3>
+      <h3 id={`${id}-title`} tabIndex={-1} className="text-lg font-semibold text-slate-900">Solicitud de refuerzo</h3>
+      <p role="status" className="rounded-lg bg-blue-50 p-3 text-sm font-semibold text-blue-900">{submission?.status === "success" ? "Solicitud guardada. Continúa con el análisis de la IA." : !selectionText?.confirmed ? "Paso 1 de 3: revisa y confirma el texto que quieres entender." : !confirmed ? "Paso 2 de 3: explica qué necesitas entender." : "Paso 3 de 3: envía tu solicitud para continuar con la IA."}</p>
       <input type="hidden" name="documentId" value={documentId} />
       <input type="hidden" name="fragment" value={currentFragment ? JSON.stringify(currentFragment) : ""} />
       <input type="hidden" name="difficulty" value={confirmed ? JSON.stringify(confirmed) : ""} />
@@ -65,7 +72,14 @@ export function ReinforcementRequestDraft({ documentId, documentName, selection,
         {currentFragment.kind === "text" && <blockquote className="mt-2 max-h-40 overflow-y-auto whitespace-pre-wrap break-words text-sm text-slate-800">{currentFragment.text}</blockquote>}
         <button type="button" onClick={onClearSelection} className="mt-3 rounded border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800">Limpiar fragmento</button>
       </section>}
-      <fieldset className="space-y-3 border-t border-slate-200 pt-3">
+      {onExtractText && onTextChange && onConfirmText && <details open={!selectionText?.confirmed} className="rounded-lg border border-slate-200 p-3">
+        <summary className="cursor-pointer font-semibold text-slate-900">1. Texto para entender {selectionText?.confirmed ? "· Confirmado (ver o editar)" : ""}</summary>
+        <SelectionTextEditor draft={selectionText ?? null} hasPage={Boolean(page)} onExtract={onExtractText} onChange={onTextChange} onConfirm={onConfirmText} />
+      </details>}
+      <div hidden={!selectionText?.confirmed}>
+      <details open={!confirmed} className="rounded-lg border border-slate-200 p-3">
+      <summary className="cursor-pointer font-semibold text-slate-900">2. Tu dificultad {confirmed ? "· Guardada (ver o editar)" : ""}</summary>
+      <fieldset className="mt-3 space-y-3 border-t border-slate-200 pt-3">
         <legend className="font-semibold text-slate-900">Dificultad de comprensión</legend>
         <div>
           <label htmlFor={`${id}-category`} className="block text-sm font-medium text-slate-800">Categoría principal</label>
@@ -89,18 +103,21 @@ export function ReinforcementRequestDraft({ documentId, documentName, selection,
         </div>
         <button type="submit" disabled={!page} className="rounded-lg bg-blue-700 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">Guardar dificultad en borrador</button>
       </fieldset>
-      {onExtractText && onTextChange && onConfirmText && <SelectionTextEditor
-        draft={selectionText ?? null} hasPage={Boolean(page)}
-        onExtract={onExtractText} onChange={onTextChange} onConfirm={onConfirmText}
-      />}
+      </details>
+      </div>
       {confirmed && <section aria-label="Dificultad vinculada" data-difficulty={JSON.stringify(confirmed)} role="status" className="rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-900">
         <p className="font-semibold">Dificultad guardada en este borrador.</p>
         <p>Página {confirmed.pageNumber} · {DIFFICULTY_CATEGORIES.find(item => item.value === confirmed.category)?.label} · {confirmed.fragment ? confirmed.fragment.kind === "text" ? "Texto seleccionado" : "Zona seleccionada" : "Página completa"}</p>
         <p className="mt-1 whitespace-pre-wrap break-words">{confirmed.observation}</p>
       </section>}
+      <div hidden={!selectionText?.confirmed || !confirmed}>
       {submission && onSend && onResetRequest && <ReinforcementSubmit state={submission} missing={missing ?? []} onSend={onSend} onReset={onResetRequest} />}
+      </div>
+      {submission?.status === "success" && submission.receipt && onContinue && <button type="button" onClick={() => {
+        setOpen(false); onContinue(submission.receipt!.id);
+      }} className="w-full rounded-lg bg-blue-700 px-4 py-3 font-semibold text-white">Continuar al análisis de mi solicitud</button>}
       <p className="text-sm text-slate-700">Los cambios sin enviar son temporales: se conservan al cerrar el formulario y se descartan al recargar o salir del proyecto. Una solicitud confirmada queda guardada.</p>
-      <button type="button" autoFocus onClick={() => setOpen(false)}
+      <button type="button" onClick={() => setOpen(false)}
         className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-800">Cerrar borrador</button>
     </form>}
     </dialog>

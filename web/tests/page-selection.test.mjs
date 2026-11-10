@@ -402,3 +402,16 @@ test('the real text editor disables empty confirmation and serializes only a con
   assert.equal(saved.text, 'Texto manual.'); assert.equal(saved.source, 'manual');
   assert.equal(saved.documentId, context.documentId); assert.equal(saved.pageNumber, 2);
 });
+
+
+test('SCRUM-237 continues directly to the submitted request without leaking its identity into another document', () => {
+  const f = fixture('components/documents/project-workspace.tsx','ProjectWorkspace',props);
+  f.find(n => n.type === draftForm).props.onContinue('saved-request'); f.render();
+  const panel = f.find(n => n.type === requestPanel);
+  assert.equal(panel.props.active, true); assert.equal(panel.props.initialRequestId, 'saved-request');
+  f.find(n => n.type === draftForm).props.onContinue('saved-request'); f.render();
+  assert.notEqual(f.find(n => n.type === requestPanel).key, panel.key);
+  assert.equal(f.find(n => n.type === requestPanel).props.initialRequestId, 'saved-request');
+  f.render({ ...props, documentId: 'another-document' });
+  assert.equal(f.find(n => n.type === requestPanel).props.initialRequestId, null);
+});

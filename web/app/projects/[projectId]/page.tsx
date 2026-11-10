@@ -78,8 +78,8 @@ export default async function ProjectPage({
   })) as unknown as Reinforcement[];
 
   return (
-    <main className="min-h-screen bg-slate-50 px-6 py-12">
-      <div className="mx-auto max-w-4xl rounded-xl border border-slate-200 bg-white p-8">
+    <main className="min-h-screen bg-slate-50 px-3 py-6 sm:px-6 sm:py-12">
+      <div className="mx-auto max-w-4xl rounded-xl border border-slate-200 bg-white p-4 sm:p-8">
         <ProjectWorkspace
           editorHeader={<>
         <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">
@@ -92,6 +92,8 @@ export default async function ProjectPage({
         >
           {project.name}
         </h1>
+        <details className="mt-3 rounded-lg border border-slate-200 p-3">
+        <summary className="cursor-pointer font-semibold text-slate-700">Información y administración del documento</summary>
         {canRename && (
           <RenameDocumentForm projectId={project.id} currentName={project.name} />
         )}
@@ -126,6 +128,7 @@ export default async function ProjectPage({
             </dd>
           </div>
         </dl>
+        </details>
           </>}
           projectId={project.id}
           documentId={project.document_id}

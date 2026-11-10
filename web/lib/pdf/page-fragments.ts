@@ -41,13 +41,19 @@ export function createPageFragments(TextLayer: typeof PdfTextLayer, onSelect: (v
     const selection = window.getSelection();
     for (const [number, page] of pages) {
       const value = readTextFragment(page.layer, page.surface, number, selection);
-      if (value) { emit(value); break; }
+      if (value) {
+        if (JSON.stringify(value) !== JSON.stringify(selected)) emit(value);
+        break;
+      }
     }
   }
   document.addEventListener("pointerup", captureText);
   document.addEventListener("keyup", captureText);
+  // Android selection handles can change the range after pointerup.
+  document.addEventListener("selectionchange", captureText);
   return {
     clear,
+    getSelectedPage: () => selected?.pageNumber ?? null,
     restore(value: FragmentSelection | null) {
       if (disposed) return false;
       if (!value) { clear(); return true; }
@@ -125,7 +131,7 @@ export function createPageFragments(TextLayer: typeof PdfTextLayer, onSelect: (v
       };
       return () => { if (drag?.page === page.pageNumber) drag = null; pages.delete(page.pageNumber); if (textLayer) { textLayer.cancel(); layers.delete(textLayer); } layer.remove(); surface.remove(); };
     },
-    dispose() { disposed = true; document.removeEventListener("pointerup", captureText); document.removeEventListener("keyup", captureText); for (const layer of layers) layer.cancel(); layers.clear(); pages.clear(); drag = null; selected = null; },
+    dispose() { disposed = true; document.removeEventListener("pointerup", captureText); document.removeEventListener("keyup", captureText); document.removeEventListener("selectionchange", captureText); for (const layer of layers) layer.cancel(); layers.clear(); pages.clear(); drag = null; selected = null; },
   };
 }
 export type PageFragments = ReturnType<typeof createPageFragments>;

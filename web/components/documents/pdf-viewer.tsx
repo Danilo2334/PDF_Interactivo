@@ -147,6 +147,8 @@ function PdfPages({
       return;
     }
     if (status !== "ready" || !rendererRef.current?.goToPage(number)) return;
+    fragmentsRef.current?.clearOtherPage(number);
+    onPageSelect?.(number);
     onReadingNavigate?.(number);
     setPageInput(String(number));
     setPageInputError("");
@@ -240,7 +242,9 @@ function PdfPages({
           if (!active) return;
           setHasFragment(value !== null);
           if (value) setSelectionMode(value.kind);
-          if (value) renderer?.goToPage(value.pageNumber);
+          // Capturing a range must not scroll or recycle its text layer.
+          // The selected page and the page visible while scrolling are distinct.
+          if (value) onPageSelect?.(value.pageNumber);
           onFragmentSelect(value);
         }) : null;
         fragmentsRef.current = fragments;
@@ -288,8 +292,7 @@ function PdfPages({
             setCurrentPage(number);
             setPageInput(String(number));
             setPageInputError("");
-            fragments?.clearOtherPage(number);
-            onPageSelect?.(number);
+            if (fragments?.getSelectedPage() == null) onPageSelect?.(number);
             onVisiblePageChange?.(number);
           },
           () => {
@@ -390,7 +393,7 @@ function PdfPages({
           ref={navigationRef}
           role="group"
           aria-label="Navegación por páginas del PDF"
-          className="z-10 mt-4 rounded-lg border border-slate-200 bg-white p-3 shadow-sm lg:sticky lg:top-0"
+          className="mt-4 rounded-lg border border-slate-200 bg-white p-3 shadow-sm"
         >
           <div className="flex flex-wrap items-center gap-3">
             <p role="status" aria-live="polite" aria-atomic="true" className="text-sm font-semibold text-slate-900">
@@ -412,6 +415,9 @@ function PdfPages({
             >
               Siguiente
             </button>
+            <details className="rounded-lg border border-slate-200 px-3 py-2">
+            <summary className="cursor-pointer text-sm font-medium text-slate-700">Ir a página, zoom y vista previa</summary>
+            <div className="mt-3 flex flex-wrap items-center gap-3">
             <form onSubmit={submitPage} noValidate className="flex flex-wrap items-center gap-2">
               <label htmlFor={pageInputId} className="text-sm text-slate-700">
                 Ir a página
@@ -474,6 +480,8 @@ function PdfPages({
             </div>
             {onOpenPreview && <button ref={previewTriggerRef} type="button" disabled={status !== "ready"} onClick={onOpenPreview}
               className="rounded-lg border border-blue-300 bg-blue-50 px-3 py-2 text-sm font-semibold text-blue-900 disabled:opacity-50">Vista previa de la experiencia</button>}
+            </div>
+            </details>
             {onOpenReinforcements && <button type="button" data-open-reinforcements disabled={status !== "ready"} onClick={() => onOpenReinforcements(currentPage, performance.now())}
               className="hidden rounded-lg bg-blue-700 px-3 py-2 text-sm font-semibold text-white disabled:opacity-50 lg:inline-flex">Ver refuerzos de página {currentPage}</button>}
           </div>

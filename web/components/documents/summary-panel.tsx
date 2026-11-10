@@ -33,6 +33,8 @@ export function SummaryPanel({request,active,onChanged}:{request:RequestRecord;a
     finally{if(controllerRef.current===controller){controllerRef.current=null;setBusy(false);if(success){resource.refresh();onChanged()}}}
     return success?version:null;
   }
+  if (view && !view.summaryChosen) return null;
+
   return <section aria-label="Resumen y conceptos clave" className="min-w-0 space-y-3 rounded-lg border border-slate-200 bg-white p-4">
     <h4 className="font-semibold">Resumen y conceptos clave</h4><p className="text-sm">Guarda una extensión y genera las ideas esenciales. Revisa el resumen y las citas de sus conceptos antes de aprobar.</p>
     {!view&&!resource.result?.error&&<p role="status">Consultando resumen…</p>}
@@ -40,7 +42,7 @@ export function SummaryPanel({request,active,onChanged}:{request:RequestRecord;a
     {view?.summaryChosen&&!view.review&&<><form onSubmit={event=>{event.preventDefault();void execute("configure")}}><fieldset disabled={!active||busy||!view.canConfigure} className="space-y-2"><legend className="font-medium">Extensión del resumen</legend>
       {SUMMARY_MODES.map(value=><label key={value} className="flex items-start gap-2 rounded-lg border border-slate-200 p-3 text-sm"><input type="radio" name={name} checked={selected===value} onChange={()=>setMode(value)}/><span>{SUMMARY_LABELS[value]}</span></label>)}
       <button type="submit" className={buttonClass} disabled={!selected||saved}>Guardar extensión</button></fieldset></form>
-      <button type="button" className={buttonClass} disabled={!active||busy||!view.canGenerate||!saved} onClick={()=>void execute("generate")}>{generation?.status==="error"||generation?.status==="processing"?"Reintentar resumen":"Generar resumen"}</button></>}
+      <button data-primary-action type="button" className={buttonClass} disabled={!active||busy||!view.canGenerate||!saved} onClick={()=>void execute("generate")}>{generation?.status==="error"||generation?.status==="processing"?"Reintentar resumen":"Generar resumen"}</button></>}
     {generation&&<p className="text-sm font-medium">Extensión guardada: {SUMMARY_LABELS[generation.mode]}</p>}
     {view?.summaryChosen&&!view.providerAvailable&&<p className="text-sm">El servicio de IA no está configurado. Guardar o revisar no consume IA.</p>}
     <button type="button" className={buttonClass} disabled={!active||busy} onClick={()=>{setError("");resource.refresh();onChanged()}}>Actualizar resumen</button>

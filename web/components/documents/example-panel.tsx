@@ -39,6 +39,8 @@ export function ExamplePanel({ request, active, onChanged }: { request: RequestR
     finally { if (controllerRef.current === controller) { controllerRef.current = null; setBusy(false); if (success) { resource.refresh(); onChanged(); } } }
     return success ? reviewedVersion : null;
   }
+  if (view && !view.exampleChosen) return null;
+
   return <section aria-label="Ejemplo o analogía" className="space-y-3 rounded-lg border border-slate-200 bg-white p-4">
     <h4 className="font-semibold text-slate-900">Ejemplo o analogía</h4>
     <p className="text-sm text-slate-700">Elige una modalidad y guárdala antes de generar. Revisa el resultado: solo tu aprobación permite mostrarlo en Refuerzos.</p>
@@ -54,7 +56,7 @@ export function ExamplePanel({ request, active, onChanged }: { request: RequestR
       </fieldset></form>
       {saved && <p role="status" className="text-sm text-green-900">Modalidad guardada: {EXAMPLE_LABELS[generation!.mode]}</p>}
       {!view.providerAvailable && <p className="text-sm">El servicio de IA no está configurado. Puedes guardar la modalidad sin consumir IA.</p>}
-      <button type="button" className={buttonClass} disabled={!active || busy || !view.canGenerate || !saved} onClick={() => void execute("generate")}>{generation?.status === "error" || generation?.status === "processing" ? "Reintentar ejemplo" : "Generar ejemplo o analogía"}</button>
+      <button data-primary-action type="button" className={buttonClass} disabled={!active || busy || !view.canGenerate || !saved} onClick={() => void execute("generate")}>{generation?.status === "error" || generation?.status === "processing" ? "Reintentar ejemplo" : "Generar ejemplo o analogía"}</button>
     </>}
     <button type="button" className={buttonClass} disabled={!active || busy} onClick={() => { setError(""); resource.refresh(); onChanged(); }}>Actualizar ejemplo</button>
     {busy && <p role="status" className="text-sm">Guardando o generando el resultado… Puedes seguir consultando el PDF.</p>}

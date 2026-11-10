@@ -103,3 +103,16 @@ pasaron y cualquier aviso exacto. Capturar solo pantallas de PDF/refuerzo/nota,
 sin campos de contraseñas ni URL que muestre el token de lectura. Un resultado
 comunicado por el propietario se identifica como tal; no como observación del
 agente. Solo después se evalúa cerrar el caso táctil aplicable de SCRUM-137.
+
+
+## Recorrido guiado disponible en QA — SCRUM-237 (09/11/2026)
+
+QA actualizado con autorización a a1e930f y comprobado en navegador integrado a390×844. La mejora organiza las funciones existentes, sin cambiar el alcance de las historias. PR#66 sigue sin merge; la comprobación táctil de esta versión en Android real permanece pendiente. Recarga la página en Chrome del celular para cargar el recorrido nuevo.
+
+1. En el proyecto, lee «Aprende con tu PDF, paso a paso». Abre el PDF y marca el fragmento que no entiendes. Para saltar de página o cambiar zoom, abre «Ir a página, zoom y vista previa».
+2. Pulsa «Abrir solicitud de refuerzo»: extrae/revisa el texto y confírmalo. Después elige categoría, describe tu dificultad y guárdala. El tercer paso permite enviar. Cerrar el formulario conserva el borrador durante esta visita; recargar/salir descarta lo no enviado.
+3. Pulsa «Continuar al análisis de mi solicitud». En «1. Analizar el fragmento», revisa el contexto si lo necesitas y ejecuta el análisis. Si falta contexto, prepara una selección suficiente; no inventes un resultado.
+4. En «2. Elegir cómo entenderlo», obtén recomendaciones, lee la justificación y guarda una opción. En «3. Generar y revisar el refuerzo», configura ese formato, genera y revisa. Aprobar es una decisión separada; el mini quiz es opcional después de generar.
+5. Consulta los aprobados en «Refuerzos». Publicación y estadísticas permanecen en «Compartir y consultar resultados (opcional)». Historial y regeneración siguen en «Más opciones».
+
+Antes de exponer, comprobar en Android real: selección en página posterior a la segunda, regreso al formulario sin pérdida, controles con teclado móvil y diagrama con sus números/explicaciones legibles.

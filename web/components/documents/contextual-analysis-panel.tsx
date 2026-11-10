@@ -77,7 +77,7 @@ export function ContextualAnalysisPanel({ request, active, onChanged }: {
     <p className="text-sm text-slate-700">Al analizar, se envían a la IA la selección, texto de esta página y tu dificultad. Puedes revisar ese contexto primero.</p>
     <div className="flex flex-wrap gap-2">
       <button type="button" className={buttonClass} disabled={!active || !!busy} onClick={() => void execute("prepare")}>Revisar contexto</button>
-      <button type="button" className={buttonClass} disabled={!active || !!busy || !view?.available || !view.retryable || !!resource.result?.error} onClick={() => void execute("analyze")}>
+      <button data-primary-action type="button" className={buttonClass} disabled={!active || !!busy || !view?.available || !view.retryable || !!resource.result?.error} onClick={() => void execute("analyze")}>
         {view?.analysis ? "Reintentar análisis" : "Analizar selección"}
       </button>
       <button type="button" className={buttonClass} disabled={!!busy} onClick={() => { resource.refresh(); onChanged(); }}>Actualizar análisis</button>
