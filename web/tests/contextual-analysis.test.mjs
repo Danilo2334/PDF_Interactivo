@@ -98,3 +98,15 @@ test('result UI distinguishes processing, insufficient context and a grounded di
   const ready = markup({ ...analysis, status: 'ready', diagnosis: { ...diagnosis, topic: '<script>alert(1)</script>' } });
   assert.match(ready, /&lt;script&gt;/); assert.doesNotMatch(ready, /<script>/); assert.match(ready, /PDF original permanece intacto/);
 });
+
+test('an insufficient diagnosis never adds a contradictory retry warning, while a provider error keeps its support reference', () => {
+  const { analysisReferenceMessage } = load('components/documents/contextual-analysis-panel.tsx', {
+    react: React, '@/lib/validations/contextual-analysis': schemas, '@/lib/reinforcements/use-request-resource': {},
+  });
+  const reference = '56e0d669-a718-4feb-8188-5c2cd8d6e0df';
+  assert.equal(analysisReferenceMessage({ ...analysis, status: 'insufficient', error_code: 'insufficient_context' }, reference), '');
+  assert.equal(analysisReferenceMessage({ ...analysis, status: 'ready', diagnosis }, reference), '');
+  assert.equal(analysisReferenceMessage(analysis, reference), '');
+  assert.equal(analysisReferenceMessage({ ...analysis, status: 'error', error_code: 'provider_unavailable' }, reference), `Referencia de la operación: ${reference}.`);
+  assert.equal(analysisReferenceMessage({ ...analysis, status: 'error' }, undefined), '');
+});

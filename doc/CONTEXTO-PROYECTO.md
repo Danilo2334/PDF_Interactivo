@@ -7216,3 +7216,340 @@ flujo positivo hasta el lector y el quiz. No editar la solicitud ya enviada ni
 inventar estados con SQL. Chrome/Safari, gesto táctil, alertas operativas y
 dominio de correo conservan sus pendientes. Guía de estudio en
 doc/GUIA-PARA-ESTUDIAR-EL-PROYECTO.md, con límites reales de esta entrega.
+
+## 06/11/2026 — Flujo GPT completo en QA, aviso insuficiente y matriz vigente
+
+Continuación del encargo de terminar bien el proyecto. Se recuperó IAB sin
+operar ventanas nativas de Chrome. Rama nueva codex/scrum-94-aviso-contexto-qa
+desde962cebc, conservando la rama de operación, trabajo local y stash
+d6406e0cdbc464c1c0301c058024b10dd27c4515. No se modificó main ni se hizo merge.
+
+Fallo observado en pantalla: un análisis insufficient con referencia de
+diagnóstico mostraba también «La operación no se completó…reintenta», aunque
+la solicitud enviada es inmutable y el reintento está bloqueado. Corrección
+e0152fb23a194ad587973f628afd5b37b50fd8b7 en contextual-analysis-panel.tsx:
+solo un análisis error añade su referencia de soporte; insufficient conserva
+el aviso específico de ampliar el contexto en una solicitud nueva. Los fallos
+HTTP/transporte conservan su tratamiento. Regresión 16/16 dirigida y 472/472
+acumuladas, lint y build/TypeScript aprobados. No se cambiaron APIs, permisos,
+firmas, migraciones, dependencias ni contratos de estado.
+
+Deployment candidato construido de git archive limpio, sin archivos de entorno,
+en fuente-e0152fb fuera de Git. Se actualizó APP_BUILD_REVISION a ese SHA y
+se verificaron metadatos/health del candidato antes de promover únicamente QA.
+Deployment final dpl_DCmgu6yKWuuh86PA7rPFAs2Abocv READY, origen
+https://pdf-interactivo-qa.vercel.app. Se conservó el epoch y la sesión del
+propietario. Cinco contratos públicos correctos con revisión exacta: login200,
+dashboard privado 307, PDF sin sesión 401, origen ajeno 403 y health 200.
+El deployment anterior8RfyR166jMbd1aYenj92SE6L1oZi se conserva, sin reversión.
+
+Flujo positivo real desde la aplicación, PDF sintético QA-HU015-019-digital,
+proyecto5feb6c07-68da-4b93-bc37-416fb4fcc65b. Solicitud nueva
+c48bd2e3-b0f5-40f7-a395-d760d11caf1c, página1 completa y categoría Relación
+entre ideas. Dificultad: distinguir «no se crea ni se destruye» de «se transforma».
+gpt-6.1-sol produjo diagnóstico suficiente con tema/conceptos/alcance y tres
+citas correctas; ignoró el distractor de fusión. Recomendó Explicación, Ejemplo
+e Imagen con justificaciones, sin preselección. Elección Explicación persistió
+tras recarga antes de generar. Se guardó nivel Intermedio y se generó una vez.
+La explicación distingue cantidad/formas, conserva sistema aislado/sin
+rozamiento y usa el péndulo para explicarlo; no inventa valores numéricos.
+Análisis/recomendaciones/explicación ready, modeloSol y un intento cada uno.
+
+Antes de aprobar, Refuerzos estaba vacío. Tras revisar el contenido se preparó
+y aprobó explícitamente versión 1; no hubo aprobación automática. Se eligió
+generar el mini quiz opcional, tres preguntas con dos opciones, claves y
+razones coherentes con el refuerzo. Se revisaron y aprobaron explícitamente.
+No se hizo otra generación para tomar capturas. Las soluciones solo están en
+el editor del propietario o en el recibo después de responder.
+
+Publicación QA v3 ebc7dd8f-452f-4fca-a497-cddf7d74e56a preparada privada con
+1 refuerzo, 0 recursos y 1 quiz aprobado. Se publicó temporalmente ese fixture.
+En IAB, con la sesión de propietario presente (no se presenta como anónima),
+se abrió el enlace público y respondió con una opción incorrecta:2/3,
+explicación por pregunta, resultado recuperado tras recarga y reintento bloqueado.
+Móvil 390×844: ancho útil 375=scrollWidth 375, resultado legible, cierre con Enter;
+escritorio 1280×900 y consolas de propietario/lector/escaneado sin errores.
+La emulación de tamaño no acredita un gesto táctil ni otra marca de navegador.
+
+Cliente HTTP independiente sin autenticación de propietario: lectura200,
+proyección inicial sin correctIndex/respuestas/explicaciones, envío3/3,
+misma operación 200 y mismo ID, otra operación 409, consulta conserva 1 intento.
+Opinión useful real persistida y recuperada mediante esa sesión de lector.
+La clave privada solo se utilizó para lecturas QA de verificación; las
+operaciones de lector pasaron por la API pública normal, sin saltar controles.
+Al terminar se retiró solo v3 mediante la aplicación: lectura/PDF/consulta/envío
+de intentos 404. BD conserva dos intentos de esta versión (2/3 y 3/3). La versión 2
+anterior sigue retirada, sin borrados ni cambios a documentos reales.
+SHA-256 del PDF descargado coincide con
+e7277d66afd7caba47385cfac2f0e55a2eeb4fb7aa7136409fa35300a6347946.
+
+Regresión nueva del arreglo, posterior a la promoción: se cargó el fixture
+escaneado en proyectoQA0856f9c5-100f-448b-b875-d804a2d85ef4. Solicitud
+a186c5fb-9331-4690-8ef1-d9c430455d64 con transcripción «A». Extracción advirtió
+que no hay texto digital; entrada manual confirmada y solicitud persistida.
+Análisis insufficient_context, enough=false, modelo nulo y sin llamada IA.
+Aviso específico visible, sin alerta genérica de reintento; recomendaciones
+y reintento deshabilitados. SHA escaneado conservado:
+b0bc1809351f249bd352032fbcdd193846e4c44e4199cf4bfbfec24326b71302.
+
+Evidencia auténtica en CIERRE-QA-IA-20261106 fuera de Git; sin tokens ni cookies.
+Capturas 04–10, 12–13, 15–16, 18–19 y 21–23; reportes 11/14/17/20/24/25
+y verificacion-suite.log. Los números 14/17/20 son reportes, no capturas.
+Adjuntos nuevos Jira:10634→94,10635→182,10636→95,10637→98,
+10638→117,10639→118 y10640→149. Editados sus comentarios existentes
+10114/10115/10116/10127/10186/10189/10238; uno por tarea.
+Contrastados 29 adjuntos de esas siete tareas, incluidos 22 anteriores: IDs,
+nombres y tamaños conservados. La captura nueva de 94 abrió correctamente
+en el visor de Jira; prueba local 23. No se subieron logs ni informes extensos.
+
+Matriz actualizada en efcee8b: fuentes oficiales 06/11, Chrome 157/156,
+Edge 157/156, Firefox 159.0.1/158.0.1 y Safari 27.2/26.6, parches y sistemas
+objetivo registrados; Beta excluida. Inventario real Windows11/26200/64bits:
+Chrome156.0.8078.74, Edge156.0.4314.58, Firefox88.0. SCRUM-149 Finalizado por
+mantener matriz/flujos/protocolo, según sus criterios. Ejecutar los navegadores
+es SCRUM-231: sigue En curso. No se declara compatibilidad por actualizar documentación.
+
+Consulta Jira actual: quedan abiertas HU040 y HU046,
+sus epics relacionados y el de acceso. Pendientes concretos: 137 gesto táctil
+soportado; 231 ocho versiones de marca y dispositivos Apple; 232 recogida continua,
+destino/entrega de avisos y SLO API acordados; 233 dominio de correo verificado
+para destinatarios distintos al titular. SCRUM-4 no tiene descripción/criterios:
+no se inventó una implementación ni se cerró como hecha. El correo del titular
+sí conserva el recorrido completo comprobado 04/11. El proyecto no está cerrado
+formalmente mientras queden estos requisitos. Guía de estudio yQA-LECTOR-HTTPS
+actualizados con el flujo positivo; los apartados anteriores son históricos.
+
+Entrega para revisión: https://github.com/Danilo2334/PDF_Interactivo/pull/65,
+borrador con base codex/scrum-232-alertas-rnf. Cadena pendiente #63→#64→#65,
+sin integración automática. Comentarios 232/10240 y58/10236 actualizados con
+resumen y enlace, conservando sus medios. El sondeo de esta fuente registró
+p50 HTTP351,99ms y p95/máximo593,27ms,0/5 contratos fallidos; no es una medición
+de renderizado ni disponibilidad histórica. Los commits posteriores a e0152fb
+solo documentan resultados y matriz, por lo que no se redesplegaron.
+
+## 09/11/2026 — Preparación del ensayo para la presentación del 10/11
+
+El propietario decidió continuar en Vercel y pidió comprobar cuotas y ejecutar
+un ensayo nuevo completo con GPT real. La cuenta AWS con crédito no se utilizó.
+Fetch sin cambios remotos; rama codex/scrum-94-aviso-contexto-qa en5aa145e,
+stash d6406e0 intacto. Deployment actual READY, fuente e0152fb, Next.js yNode22.x.
+
+Comprobación pública nueva a las21:55 de Bogotá:5/5 contratos aprobados,
+p50 HTTP267,24ms y p95/máximo996,02ms, sin contratos fallidos. Es un sondeo
+puntual anónimo; no demuestra cuotas restantes, renderizado o disponibilidad
+futura. Reporte fuera de Git: ENSAYO-PRESENTACION-20261109/01-contratos-http.json.
+Regresiones críticas repetidas con registro completo:20/20, sin fallos ni
+omisiones, en02-regresiones-criticas.log. No se hicieron cambios de aplicación.
+
+El conector Vercel reconoce el equipo Danilo Carlosama's projects. CLI usage
+no entregó datos de facturación para noviembre; no se interpreta como uso cero.
+Consulta de métricas acotada devolvió payment_required: Observability Plus,
+no disponible en Hobby. No se compró ni activó otro plan. Falta leer las cuotas
+reales en el panel Usage, que solicita autenticación personal.
+
+IAB sin pestañas antiguas al recuperar el navegador. La ruta del proyecto QA
+redirigió a Iniciar sesión; Vercel también pidió login. Se dejaron abiertas
+ambas páginas y se solicitó entrada personal, sin credenciales por chat.
+El propietario pidió recordar las cuentas y reabrir Vercel: aplicación con
+danilocarlosama96@gmail.com, Vercel con GitHub Danilo2334. Este punto de control
+todavía NO acredita otro recorrido autenticado ni otra generación GPT nueva.
+El flujo positivo del06/11 conserva sus pruebas anteriores, sin atribuirlas
+al ensayo de hoy. Continuar desde estas pestañas tras la confirmación del usuario.
+
+Preparación independiente: doc/GUION-PRESENTACION.md detalla propietario,
+aprobación, publicación, lector, quiz y contingencia sin fingir una generación.
+La guía de estudio incorpora acceso por HTTPS desde celular y acceso directo
+a pantalla de inicio. No hay APK, manifiesto PWA ni service worker en el código;
+no se promete instalación nativa ni funcionamiento sin conexión. Una prueba
+en tamaño móvil de PC tampoco acredita el teléfono personal del propietario.
+
+## 09/11/2026 — Ensayo autenticado y GPT real completado
+
+El propietario confirmó su ingreso. Las pestañas originales seguían en login,
+pero un inventario mostró las sesiones nuevas en 3 (dashboard) y 5 (Usage).
+Se reutilizaron esas pestañas, sin pedir otro login ni tocar credenciales.
+
+Cuotas reales del equipo Danilo Carlosama's projects en Usage, Last 30 Days,
+ventana visible «Oct 10, 9 p.m.–Nov 9, 8 p.m.»: transferencia 150,28 MB/100 GB,
+origen 26,53 MB/10 GB, CDN 6.237/1.000.000, funciones 4.898/1.000.000,
+memoria Fluid 0,67/360 GB-h y CPU Fluid 5m41s/4h. Esas cuotas tienen amplio margen;
+no se promete disponibilidad futura ni se confunde con crédito OpenAI.
+La limitación del API de métricas no impidió leer el consumo desde el panel.
+Capturas 03/11 y ratios visibles 05 conservados fuera de Git. La captura 04
+quedó desalineada al desplazarse y no se adjuntó como evidencia de Functions.
+
+Proyecto nuevo 7155218d-eca7-4b89-a309-ea6fa9d74125, renombrado mediante UI a
+QA-PRESENTACION-20261109. Se cargó el fixture digital conservando documentos
+previos; navegación a página 2 y zoom 125→100% conservaron la página, retorno a 1.
+Texto extraído del PDF abierto, dificultad Relación entre ideas confirmada y
+solicitud 16215629-d928-4c8a-9a91-90d79e74e723 persistida. Necesidad concreta:
+distinguir «no se crea ni se destruye» de «se transforma».
+
+Diagnóstico real nuevo de gpt-6.1-sol: ready, un intento, conceptos de cantidad
+total/formas, sistema aislado/sin rozamiento y tres citas correctas; no usa el
+distractor del hielo. Recomendaciones: Explicación/Ejemplo/Imagen justificadas,
+sin opción premarcada y con consejo de quiz opcional separado. Se guardó
+Explicación y nivel Intermedio; resultado nuevo coherente, pendiente de revisión.
+Refuerzos seguía vacío antes de aprobar. Se revisó y aprobó explícitamente v1.
+Se eligió crear un quiz de 3 preguntas; GPT generó opciones, claves y razones
+coherentes con citas del refuerzo. Revisado y aprobado explícitamente v1.
+BD confirmó ready/modelo Sol para diagnóstico, recomendaciones, explicación y
+quiz. No se hicieron llamadas directas que sustituyan este recorrido de UI.
+
+Publicación 6b8499ec-4b81-475b-b99f-b8e5384e2497, v1, preparada privada con
+un refuerzo y un quiz aprobados. Publicación temporal: lector visual con sesión
+del propietario (no anónima) respondió 2/3 con razones y conservó la nota tras
+recarga; no ofreció reintento. Cliente HTTP separado, sin auth del propietario,
+obtuvo 3/3; la misma operación devolvió el mismo ID, otra recibió 409 y consulta
+conservó un intento. La proyección inicial no entrega soluciones/explicaciones.
+SHA-256 del PDF descargado:
+e7277d66afd7caba47385cfac2f0e55a2eeb4fb7aa7136409fa35300a6347946, intacto.
+
+Se retiró la publicación mediante UI: lectura/PDF/consulta/envío devolvieron 404,
+conservando datos. Se republicó solo este fixture sintético para dejar la
+demostración disponible: público, cambio 3, enlace nuevo 200 y anterior 404.
+No se conserva el token en Git, Jira o los reportes. Original e intentos intactos.
+Móvil emulado 390×844: ancho útil 375=scrollWidth375, resultado legible, cierre
+con Enter mantiene página 1/100%. Escritorio útil 1265px. Consolas de propietario
+y lector sin errores observados. No equivale a probar el teléfono físico,
+Safari, otras marcas o un gesto táctil. No se presenta como cierre de 137/231.
+
+Evidencias nuevas en ENSAYO-PRESENTACION-20261109: 01 contratos, 02 regresiones,
+05 cuotas, 13 modelos (quiz aún procesando), 15 lector HTTP, 18 retirada, 20 estado final
+(cuatro etapas ready), capturas 06–12/14/16/17/19 y 21 visor Jira. Un título de
+archivo provisional 10 se corrigió: el panel sí se actualizó al terminar la
+consulta; no se declaró un fallo de aplicación por capturar un estado transitorio.
+No se observó un fallo funcional que requiriese cambios de código.
+
+Siete capturas nuevas vinculadas a 232/182/98/196/117/118/95, comentarios
+10240/10115/10127/10162/10186/10189/10116. Verificados 40 medios en esos siete
+comentarios, incluidos 33 previos conservados y uno solo por tarea. La imagen 17
+abrió correctamente en el visor de Jira; captura 21. No se adjuntaron logs largos.
+El primer intento de actualizar 232 no quedó aplicado; una lectura fresca lo
+confirmó y el reintento se verificó, sin comentario o imagen duplicados.
+
+Se actualizaron guía de estudio, guion y QA-LECTOR-HTTPS. La aplicación sigue
+en e0152fb, sin cambios en web desde las 472/472, lint y build aprobadas; hoy
+20/20 regresiones críticas y 5/5 contratos públicos nuevos. No se repitió un
+build ni se desplegaron documentos. No hubo merge o cambio de main; PR #65
+conserva su cadena #63→#64→#65 para revisión.
+
+El ensayo principal de la presentación está comprobado y guardado. El proyecto
+conserva pendientes formales: 137 táctil, 231 matriz ejecutada, 232 operación/
+avisos/SLO, 233 remitente general y 4 sin criterios. El acceso móvil es web por
+HTTPS con acceso directo a pantalla de inicio; no se produjo un APK ni se
+declaró funcionamiento offline o validación del celular personal.
+
+## 09/11/2026 — Aviso real entregado, compatibilidad y correo pendientes
+
+El propietario pidió continuar compatibilidad, alertas y correo antes de la
+presentación. Confirmó Android, eligió su Gmail como destino y autorizó crear
+«PDF Interactivo QA Alertas» con Sending access. Se creó una sola clave nueva,
+independiente de «PDF Interactivo QA SMTP». Configuración privada en
+web/.env.alerts.local, ignorada por Git, ACL usuario actual/SYSTEM; no se
+imprimió el secreto ni se guardó en capturas. Portapapeles limpiado. SMTP de
+Supabase permanece activo y sin cambios; la clave previa sigue protegida.
+
+Implementado operation-notifications.mjs y conectado opcionalmente al monitor.
+Eventos sanitizados, destino limitado al titular, timeout10s, sin reenvíos
+automáticos, deduplicación por transición e Idempotency-Key del proveedor.
+Límite10 peticiones por proceso; no equivale a control global de cuota diaria.
+notifications.jsonl registra aceptación/fallo; los errores de envío no ocultan
+los sondeos y hacen finalizar la CLI con salida2. Aceptado no equivale a entregado.
+No se añadió dependencia, ruta de aplicación, migración ni cambio de permisos.
+
+477/477 pruebas completas, lint y build/TypeScript aprobados. Cinco pruebas
+nuevas verifican saneamiento, rechazo de destino ajeno, timeout/cuota/respuesta
+inválida, deduplicación y continuidad diagnóstica. Tres sondeos reales con SHA
+correcto:15/15 contratos, p50 HTTP236,07ms, p95/máximo2974,73ms. Luego un ensayo
+controlado con SHA esperado000…000 detectó liveness_revision, sin cambiar el QA.
+Se envió UN correo PRUEBA CONTROLADA a danilocarlosama96@gmail.com: Resend lo
+registra Delivered,09/11 a22:35Bogotá, ID01a1c386-5b16-748f-a7a9-d7f7ffcd1f87,
+incidente0f977a4c-119e-4610-b373-d24187968b48. Repetir el mismo evento se suprimió
+localmente. No fue una caída del servicio, ni se demuestra lectura humana del
+correo. Sondeo posterior con canal habilitado y SHA correcto:5/5, cero avisos,
+p50 HTTP183,44ms, p95/máximo542,81ms.
+
+Se conserva evidencia fuera de Git en CIERRE-OPERACION-20261109:01 pruebas,
+02 serie sana,03 dominio vacío,04 refuerzo360px,05 formulario de clave antes
+de crearla,06 ensayo de aviso,07 canal configurado,08 Delivered,09 visor Jira.
+El auxiliar externo ensayo-alerta.mjs contiene solo el procedimiento y toma la
+clave del entorno; no debe relanzarse para duplicar la prueba. El primer intento
+de importarlo en el runtime auxiliar falló por process no disponible antes de
+enviar; la ejecución real se hizo una vez con Node del proyecto.
+
+Resend Domains de Danilo sigue vacío, comprobado hoy. La recuperación del titular
+ya aprobada el04/11 se conserva; no se repitió un cambio de contraseña. La alerta
+nueva prueba su canal de envío, no recuperación para otros destinatarios.
+SCRUM-233 sigue En curso hasta disponer de un dominio/remitente verificado.
+
+Inventario de navegadores conectado: solo IAB/MCP Apps. Sin repetir vías
+rechazadas, se probó el propietario en360×800: página2, zoom100→125 sin perderla,
+retorno a1/100, Refuerzos y expansión por Enter. Ancho útil345=scrollWidth345;
+en800×360 mantiene expansión y785=scrollWidth785. Consola sin errores observados.
+Es emulación de tamaño; no Android físico, gesto táctil ni marca/versiones N/N−1.
+Viewport restaurado y sesión conservada. Guion Android detallado en
+GUION-PRESENTACION.md: propietario normal y lector de incógnito, navegación,
+valoración táctil, quiz, nota tras recarga y red del lugar. No hay APK/offline.
+
+Jira actualizado conservando un comentario por tarea:232/10240 con captura08,
+233/10103 con03,231/10239 con04 y137/10222 con pendiente Android explícito.
+Lectura fresca confirma4/13/1/2 medios respectivamente (20 en total), incluidos
+los17 anteriores. La nueva captura08 abrió en el visor de Jira. Sin duplicar
+imágenes ni dar una prueba pendiente por aprobada; las cuatro tareas En curso.
+
+SCRUM-232 ya tiene destino y entrega comprobados, pero continúa pendiente de
+colector permanente y SLO/ventanas de degradación API. No se instaló vigilancia
+24/7 ni se modificó main para habilitar el workflow. Los sondeos no miden RNF de
+renderizado; sus límites existentes se conservan. SCRUM-137 requiere el gesto
+en dispositivo/herramienta compatible y231 la matriz ejecutada. Se conserva
+también SCRUM-4 sin criterios, sin inventar su cierre.
+
+Cambios de operación y documentación en la rama de PR #65, cadena #63→#64→#65.
+Sin merge ni despliegue: el QA conserva fuentee0152fb y el material de ensayo
+publicado. Stashd6406e0 intacto; ninguna credencial se incluye en el commit.
+
+## 09/11/2026,22:59 — Carga Android0,79MB sin confirmar, investigación abierta
+
+Durante el ensayo personal desde Android, el propietario aportó una captura
+con PDF0,79MB (16 páginas según su mensaje), error de transferencia y referencia
+28e1a6ca-4257-4c49-8846-a2651b09cbdc. No es el límite20MiB y no hay máximo de
+páginas configurado. No se recibió el PDF binario; no se declara inspeccionado.
+
+Correlación Vercel por CLI, con equipo/proyecto de Danilo:03:59:09.403UTC,
+POST/api/documents/upload503,UPLOAD_UNAVAILABLE,523ms, deploymente0152fb.
+El conector de logs respondió403 y la primera consulta CLI de1h excedía la
+retención Hobby; una consulta acotada20min recuperó la referencia real.
+StorageNoSuchKey de la operación e5bbbc17-a98e-479a-9876-bb74b82afa02 a03:59:09;
+los edge_logs de03:58–04:00UTC muestranGET400 de verificación, sinPOST de carga.
+Esta ausencia en los registros consultados no prueba por sí sola la causa.
+
+El cliente actual captura un fallo XHR y consulta al servidor para recuperar
+una transferencia ambigua; el mensaje observado corresponde a objeto ausente
+en esa verificación. OPTIONS desde el equipo responde200, origen*, métodosPOST
+y cabecerasapikey/authorization/content-type/x-upsert permitidos. No se
+confunde esa prueba del equipo con acceso desde la red del celular.
+
+Se pidió un único reintento con datos móviles, conservando archivo y operación;
+respuesta todavía pendiente. No se ha atribuido el fallo a Wi-Fi, CORS, formato,
+sesión o permisos sin evidencia. No se añadió una ruta alternativa ni se
+relajaron validaciones/RLS. No hay reparación o ensayo móvil aprobado todavía.
+
+Captura original del usuario añadida al comentario existente deSCRUM-235,
+conservando medios y resultados anteriores; seguimiento de compatibilidad231.
+No se modificaron sprints cerrados. No hubo cambios de código o despliegue.
+
+### Continuación23:04 — Misma carga correcta con datos móviles
+
+El propietario respondió «Con datos móviles sí cargó». Storage confirma para
+el mismo objeto/operación e5bbbc17-a98e-479a-9876-bb74b82afa02:POST200 a
+04:03:58.886UTC yGET200 a04:03:59.995/04:04:00.191, posteriores alNoSuchKey.
+Se mantuvieron archivo, identidad y aplicación; no fue necesario aumentar el
+límite, cambiar RLS o modificar código. El éxito visual lo comunica el usuario;
+la transferencia y disponibilidad sí están corroboradas por registros reales.
+
+El resultado apunta a la ruta Wi-Fi hacia el almacenamiento, sin identificar
+todavía DNS, router, operador o navegador como causa. Datos móviles desbloquea
+este ensayo; no equivale a reparar ni probar esa red Wi-Fi. Usar conexión probada
+para la presentación y comprobar la red del lugar. Comentarios235/231 actualizados,
+conservando medios y estados anteriores; no hay captura nueva de éxito.

@@ -4,6 +4,7 @@ import {randomUUID} from 'node:crypto';
 import {setTimeout as delay} from 'node:timers/promises';
 import {fileURLToPath} from 'node:url';
 import {checkOperations} from './check-operations.mjs';
+import {createOperationNotifier} from './operation-notifications.mjs';
 
 const operations = ['login', 'private_page', 'private_pdf', 'foreign_mutation', 'liveness_revision'];
 const codes = ['NETWORK_FAILURE', 'CONTRACT_MISMATCH', 'HTTP_MISMATCH'];
@@ -84,13 +85,18 @@ export function operationSummaryMarkdown(summary) {
     `| Muestras completamente correctas | ${summary.metrics.healthySamplesPercent ?? 'sin datos'} % |`,
     `| p50 / p95 / máximo HTTP | ${summary.metrics.p50HttpMs ?? '-'} / ${summary.metrics.p95HttpMs ?? '-'} / ${summary.metrics.maxHttpMs ?? '-'} ms |`,
     `| Alertas / recuperaciones / incidentes abiertos | ${summary.alertsOpened} / ${summary.recoveries} / ${summary.openIncidents.length} |`,
+    ...(summary.notifications ? [
+      `| Canal de correo configurado | ${summary.notifications.configured ? 'sí' : 'no'} |`,
+      `| Avisos aceptados por proveedor / fallidos | ${summary.notifications.accepted} / ${summary.notifications.failed} |`,
+      '', 'La aceptación del proveedor no prueba entrega al buzón. Consultar notifications.jsonl y confirmar la entrega en el proveedor.',
+    ] : []),
     '', scope, '',
     'Diagnóstico: samples.jsonl conserva cada contrato, estado HTTP y referencia; events.jsonl correlaciona la apertura y recuperación por ID. Un fallo previo sigue invalidando la serie aunque el último sondeo sea correcto.',
     'Umbral de contrato: la primera comprobación incorrecta abre un incidente por operación; la primera comprobación correcta posterior lo recupera. No configura alertas de latencia o tasa de errores sin un umbral RNF acordado.', ''].join('\n');
 }
 
 export async function monitorOperations({expectedRevision, samples = 1, intervalMs = 60000, outputDirectory,
-  probe = checkOperations, wait = delay, onEvent = () => {}}) {
+  probe = checkOperations, wait = delay, onEvent = () => {}, notify}) {
   if (!Number.isInteger(samples) || samples < 1 || samples > 1440 ||
       !Number.isInteger(intervalMs) || intervalMs < 15000 || intervalMs > 3600000 || !outputDirectory)
     throw Error('Invalid bounded monitor configuration');
@@ -100,8 +106,13 @@ export async function monitorOperations({expectedRevision, samples = 1, interval
   await mkdir(directory, {mode: 0o700});
   await writeFile(join(directory, 'samples.jsonl'), '', {flag: 'wx'});
   await writeFile(join(directory, 'events.jsonl'), '', {flag: 'wx'});
+  await writeFile(join(directory, 'notifications.jsonl'), '', {flag: 'wx'});
+  let notificationFailures = 0, notificationAccepted = 0;
   async function saveSummary(complete) {
-    const summary = history.summary({complete});
+    const summary = {...history.summary({complete}), notifications: {
+      configured: Boolean(notify), accepted: notificationAccepted, failed: notificationFailures,
+      deliveryVerified: false,
+    }};
     for (const [name, contents] of [['summary.json', JSON.stringify(summary, null, 2) + '\n'], ['summary.md', operationSummaryMarkdown(summary)]]) {
       const temporary = join(directory, name + '.tmp');
       await writeFile(temporary, contents, {mode: 0o600});
@@ -116,7 +127,15 @@ export async function monitorOperations({expectedRevision, samples = 1, interval
     await appendFile(join(directory, 'samples.jsonl'), JSON.stringify(recorded.sample) + '\n');
     for (const event of recorded.events) await appendFile(join(directory, 'events.jsonl'), JSON.stringify(event) + '\n');
     await saveSummary(false); // An interrupted run remains explicitly incomplete.
-    for (const event of recorded.events) await onEvent(event);
+    for (const event of recorded.events) {
+      await onEvent(event);
+      if (notify) {
+        const receipt = await notify(event);
+        await appendFile(join(directory, 'notifications.jsonl'), JSON.stringify(receipt) + '\n');
+        if (receipt.accepted) notificationAccepted++; else notificationFailures++;
+        await saveSummary(false);
+      }
+    }
   }
   return saveSummary(true);
 }
@@ -124,14 +143,20 @@ export async function monitorOperations({expectedRevision, samples = 1, interval
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   try {
     if (process.argv.length !== 2) throw Error('Unsupported argument');
+    const alertMode = process.env.QA_ALERT_MODE ?? 'off';
+    if (!['off', 'resend'].includes(alertMode)) throw Error('Invalid alert mode');
+    const notify = alertMode === 'resend' ? createOperationNotifier({
+      apiKey: process.env.QA_ALERT_RESEND_KEY, recipient: process.env.QA_ALERT_RECIPIENT,
+      expectedRevision: process.env.QA_EXPECTED_REVISION,
+    }) : undefined;
     const summary = await monitorOperations({expectedRevision: process.env.QA_EXPECTED_REVISION,
       outputDirectory: process.env.QA_MONITOR_DIR,
       samples: Number(process.env.QA_MONITOR_SAMPLES ?? '1'),
       intervalMs: Number(process.env.QA_MONITOR_INTERVAL_SECONDS ?? '60') * 1000,
-      onEvent: event => console.log(JSON.stringify(event))});
+      onEvent: event => console.log(JSON.stringify(event)), notify});
     console.log(JSON.stringify(summary, null, 2));
     if (process.env.GITHUB_STEP_SUMMARY) await appendFile(process.env.GITHUB_STEP_SUMMARY, operationSummaryMarkdown(summary));
-    process.exitCode = summary.passed ? 0 : 1;
+    process.exitCode = summary.notifications.failed ? 2 : summary.passed ? 0 : 1;
   } catch {
     console.error('No se pudo completar la supervisión. Conserva los registros parciales; una serie incompleta no acredita salud ni entrega de alertas.');
     process.exitCode = 2;

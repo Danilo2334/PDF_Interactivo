@@ -1,7 +1,7 @@
 # HU046 — operación y compatibilidad
 
 Proyecto Danilo2334/PDF_Interactivo; SCRUM-58, Sprint7 activo. Corte de consulta:
-02/11/2026, America/Bogota. Esta matriz registra objetivos y cobertura; una fila
+06/11/2026, America/Bogota. Esta matriz registra objetivos y cobertura; una fila
 pendiente no constituye compatibilidad aprobada ni evidencia de ejecución.
 
 Equipo disponible: Microsoft Windows11 Home Single Language,10.0.26200,
@@ -28,10 +28,10 @@ no añade una regresión ejecutada a149/231 ni una prueba táctil física a137.
 
 | Navegador | Versiones concretas consultadas | Sistema de prueba | Estado real |
 | --- | --- | --- | --- |
-| Chrome | 156.0.8078.80 y155.0.8059.85 | Windows del equipo local | Pendiente en esas versiones exactas; ProductVersion instalado156.0.8078.74 al02/11. No acredita la versión activa ni una prueba ejecutada. |
-| Edge | 156.0.4314.58 y155.0.4283.62 | Windows del equipo local | .58 instalado, recorrido formal pendiente;155 no disponible en la sesión. |
-| Firefox | 159.0 y158.0.1 | Windows del equipo local | Pendiente; instalado88.0, que no satisface la matriz. |
-| Safari | 27.2(20625.2.8) y26.6(20624.4.5) | macOS/iOS compatible, equipo real por registrar | No hay dispositivo Apple ni sesión de Safari disponible. Pendiente. |
+| Chrome | 157.0.8103.38/.39 y156.0.8078.79/.80 | Windows11 10.0.26200,64bits | Objetivos actualizados06/11; instalado156.0.8078.74. Registrar parche activo en cada ejecución. Ambas ramas pendientes de regresión formal. |
+| Edge | 157.0.4341.42 y156.0.4314.58 | Windows11 10.0.26200,64bits | Objetivos actualizados06/11; instalado156.0.4314.58. Ambas ramas pendientes de regresión formal. |
+| Firefox | 159.0.1 y158.0.1 | Windows11 10.0.26200,64bits | Objetivos actualizados06/11; instalado88.0. Ambas ramas pendientes de regresión formal. |
+| Safari | 27.2(20625.2.8) y26.6(20624.4.5) | Objetivos macOS27.2 ymacOS26.6; equipos reales no disponibles | Fuente Apple contrastada06/11. No hay ejecución en Apple; no se declara compatibilidad. |
 | Navegador integrado | UA reducido Chrome156.0.0.0,Win32 | Windows del equipo local | Recorridos reales anteriores en HU038–HU045; cobertura complementaria. No sustituye las cuatro marcas/versiones. |
 
 Fuentes oficiales consultadas el01/11 y contrastadas de nuevo el02/11; se
@@ -54,6 +54,27 @@ conservan también fuera de Git en HU046-REAL y HU046-SUPERVISION-20261102:
   27.2 publicado26/10 y26.6 publicado27/07. La actualización27.1 es de23/10 dentro
   de la rama27. La página indexada por el buscador
   conservaba contenido anterior; se consultó directamente la fuente actual.
+
+Actualización06/11/2026: Chrome157 pasó a Stable general el03/11, Edge157 el05/11
+yFirefox159.0.1 está en Release. Se sustituyeron los objetivos antiguos de la
+tabla sin alterar sus resultados históricos. Safari27.3 sigue en Beta y queda
+fuera; se mantienen27.2/26.6. Inventario ProductVersion releído hoy: Chrome
+156.0.8078.74, Edge156.0.4314.58 yFirefox88.0; Windows11 Home Single Language,
+10.0.26200/64bits. No se confunde instalado con probado.
+
+Fuentes actuales: [Chrome157 Stable de03/11](https://chromereleases.googleblog.com/2026/11/stable-channel-update-for-desktop.html),
+[Edge Stable de05/11](https://learn.microsoft.com/en-us/deployedge/microsoft-edge-relnotes-security),
+[catálogo Firefox](https://product-details.mozilla.org/1.0/firefox_versions.json),
+[Firefox159.0.1](https://www.firefox.com/en-US/firefox/159.0.1/releasenotes/),
+[Firefox158.0.1](https://www.firefox.com/en-US/firefox/158.0.1/releasenotes/),
+[Safari27.2](https://developer.apple.com/documentation/safari-release-notes/safari-27_2-release-notes)
+y[Safari26.6](https://developer.apple.com/documentation/safari-release-notes/safari-26_6-release-notes).
+Apple identifica macOS27.2 y26.6 entre los sistemas correspondientes. Esos son
+objetivos de cobertura; los equipos y resultados pendientes pertenecen aSCRUM-231.
+
+La matriz, sus fuentes, fecha, sistemas objetivo y flujos están mantenidos en
+SCRUM-149. Ejecutar y aprobar esos recorridos es SCRUM-231: actualizar esta
+matriz no acredita haberlos ejecutado ni desbloquea la liberación definitiva.
 
 Actualizar antes de cada liberación y cuando el proveedor publique un estable:
 registrar fecha/fuente, versión completa, arquitectura y sistema operativo real;
@@ -602,3 +623,108 @@ aceptación. Resultado del diagnóstico comprobado en BD/logs; recomendaciones,
 contenido, quiz y lector con generación nueva siguen sin verificar en pantalla.
 Mantener esas limitaciones junto a los resultados, sin trasladar pruebas locales
 anteriores al despliegue nuevo. No se cerraron HU046 ni sus pendientes.
+
+### Continuación verificada del 06/11/2026
+
+El registro anterior describe el primer ensayo de esta fecha. Se completó
+después el flujo GPT positivo en QA: diagnóstico, recomendaciones sin marcar,
+explicación Intermedio, quiz de tres preguntas, revisiones explícitas y lector.
+Deployment dpl_DCmgu6yKWuuh86PA7rPFAs2Abocv, fuente
+e0152fb23a194ad587973f628afd5b37b50fd8b7, revisión de health y cinco contratos
+correctos. Sondeo puntual; no constituye vigilancia continua.
+
+La corrección de SCRUM-94 elimina el aviso genérico de reintentar cuando el
+contexto es insuficiente. Nueva solicitud con escaneado mínimo: rechazo sin
+consumo de IA, reintento/recomendaciones bloqueados y original intacto.
+472/472 pruebas, lint y build aprobados. Lector visual con sesión de propietario:
+2/3, recarga y razones conservadas; cliente HTTP sin propietario: 3/3,
+idempotencia, nuevo envío 409, opinión persistida y PDF con SHA original.
+Publicación sintética retirada al terminar: cuatro rutas rechazan 404.
+
+Siete capturas nuevas en 94/182/95/98/117/118/149; 29 adjuntos y un comentario
+por tarea comprobados, incluidos los 22 adjuntos anteriores. La imagen nueva
+de 94 abrió en el visor de Jira. Fuente, resultados y archivos de prueba
+detallados en la última entrada de CONTEXTO-PROYECTO.md.
+
+SCRUM-149 finalizada por matriz, fuentes, sistemas objetivo y flujos mantenidos.
+SCRUM-231 sigue pendiente de ejecución N/N−1 de marcas, incluida Safari;
+SCRUM-137 necesita un gesto táctil realmente soportado, no solo viewport móvil.
+SCRUM-232 conserva los pendientes de operación/avisos/SLO descritos arriba.
+SCRUM-233 conserva la limitación del remitente de pruebas a su titular.
+No se modificó main ni se integraron PR en esta continuación.
+
+## 09/11/2026 — Canal de avisos probado y preparación Android
+
+El propietario eligió danilocarlosama96@gmail.com como destino y autorizó una
+clave nueva «PDF Interactivo QA Alertas», solo Sending access. La anterior
+«PDF Interactivo QA SMTP» y la configuración Auth permanecen intactas. El secreto
+se conserva únicamente en web/.env.alerts.local, ignorado por Git y con ACL de
+usuario actual/SYSTEM; portapapeles limpiado. No copiar ese archivo a artifacts,
+comentarios, documentación, compilaciones o al navegador cliente.
+
+`operation-notifications.mjs` conecta los eventos del monitor a Resend. Solo
+admite el destinatario autorizado y el remitente de pruebas onboarding@resend.dev.
+Los mensajes contienen operación, código, incidente, fecha, revisión y referencia
+validada; nunca cuerpos HTTP, cookies o datos del PDF. Timeout10s sin reintento
+automático, redirecciones rechazadas y máximo10 solicitudes por proceso. Se
+deduplica cada transición localmente y se envía Idempotency-Key, que Resend
+conserva24h. Este límite por proceso no constituye una cuota global diaria.
+
+`notifications.jsonl` registra aceptación o fallo con códigos acotados. Un429,
+timeout o respuesta inválida no se presenta como entrega; la serie continúa
+recogiendo contratos y termina con salida2 si falló alguna notificación. Salida1
+mantiene un incumplimiento de contrato; salida0 exige serie completa sana. La
+entrega al buzón requiere comprobación adicional en el proveedor. El resumen
+incluye canal configurado, aceptados/fallidos y deliveryVerified=false; el monitor
+por sí solo no tiene permisos de lectura para declarar Delivered.
+
+Pruebas:477/477, lint y build/TypeScript correctos, incluidas cinco nuevas para
+idempotencia, saneamiento, cuota, timeout y conservación del diagnóstico tras un
+fallo de envío. QA real e0152fb: tres sondeos/15 contratos correctos, p50 HTTP
+236,07ms y p95/máximo2974,73ms. No son tiempos de render ni un SLO aprobado.
+
+Ensayo real del canal: comparador deliberadamente configurado con SHA000…000
+detectó liveness_revision/CONTRACT_MISMATCH. La aplicación no se modificó ni
+estuvo caída. Un correo con prefijo PRUEBA CONTROLADA fue aceptado y después
+observado Delivered en Resend a las22:35 de Bogotá del09/11. ID del correo:
+01a1c386-5b16-748f-a7a9-d7f7ffcd1f87; incidente0f977a4c-119e-4610-b373-d24187968b48.
+Segunda llamada al mismo evento suprimida, sin segundo envío. Sondeo posterior
+con revisión correcta y canal configurado:5/5,0 avisos, p50 HTTP183,44ms,
+p95/máximo542,81ms. Se conserva captura real08 y reporte06 fuera de Git en
+CIERRE-OPERACION-20261109. El ensayo usa un comparador negativo, no una incidencia
+real ni una respuesta del proveedor simulada.
+
+Uso manual desde la raíz (directorio de evidencia nuevo en cada ejecución):
+
+```powershell
+$env:QA_MONITOR_DIR='<carpeta nueva dentro de la carpeta de evidencias>'
+$env:QA_MONITOR_SAMPLES='3'
+$env:QA_MONITOR_INTERVAL_SECONDS='15'
+node --env-file=web/.env.alerts.local web/scripts/monitor-operations.mjs
+```
+
+El archivo privado debe mantener QA_ALERT_MODE=resend, QA_ALERT_RECIPIENT,
+QA_ALERT_RESEND_KEY y QA_EXPECTED_REVISION de la fuente realmente desplegada.
+Nunca reemplazar el SHA por HEAD si solo cambiaron scripts/documentos locales.
+No hay colector permanente instalado: el workflow sigue sin habilitarse en main.
+SCRUM-232 permanece En curso por ejecución continua y SLO/ventanas API; el canal
+de correo sí tiene entrega comprobada. No se afirma vigilancia24/7.
+
+Correo general: Resend Domains sigue vacío, comprobado en la cuenta de Danilo.
+SMTP Supabase activo en smtp.resend.com:465; password almacenado oculto y sin
+modificar. Se conservan las pruebas completas del titular del04/11. La nueva
+alerta no acredita recuperación para otros correos: sigue faltando dominio y
+remitente verificados (SCRUM-233).
+
+Compatibilidad: inventario solo IAB/MCP Apps; no se repitieron vías de control
+previamente rechazadas. QA a360×800: página2, zoom100→125 conservado, retorno a1
+y100%, panel y tarjeta por Enter. Ancho útil345=scrollWidth345; a800×360 mantiene
+la expansión y785=scrollWidth785. Consola del propietario sin errores observados.
+Captura04 real complementaria en231; no equivale a Chrome/Safari o gesto táctil.
+Android confirmado por el usuario; guion físico en GUION-PRESENTACION.md.
+SCRUM-137 y231 conservan sus pendientes y evidencias.
+
+Fuentes consultadas09/11: [API de envío Resend](https://resend.com/docs/api-reference/emails/send-email),
+[idempotencia](https://resend.com/docs/dashboard/emails/idempotency-keys),
+[restricción del remitente de pruebas](https://resend.com/docs/knowledge-base/403-error-resend-dev-domain)
+y[SMTP Supabase](https://supabase.com/docs/guides/auth/auth-smtp).

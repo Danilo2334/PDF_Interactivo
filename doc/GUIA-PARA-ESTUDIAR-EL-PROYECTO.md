@@ -125,22 +125,70 @@ cuentas requiere un dominio de envío verificado.
 
 ## Estado que puedes defender con evidencia
 
-Corte: 6 de noviembre de 2026. El QA tiene GPT configurado, y se comprobó una
-llamada real desde la aplicación. Para una dificultad que pedía relaciones no
-explicadas por el breve PDF de prueba, devolvió contexto insuficiente y conservó
-el motivo. Ese resultado acredita conexión y ese rechazo; el flujo positivo
-completo de generación nueva en este despliegue sigue pendiente.
+Corte actualizado: 9 de noviembre de 2026. El QA ejecutó con gpt-6.1-sol el recorrido real
+de diagnóstico suficiente, tres recomendaciones pertinentes sin preselección,
+explicación Intermedio y mini quiz de tres preguntas. El caso de energía
+distingue cantidad total y cambio de forma, conserva las condiciones del PDF
+y no incorpora su línea distractora. Una aprobación editorial explícita fue
+necesaria antes de publicar; generar no publicó ni aprobó automáticamente.
 
-La suite actual aprobó 471 pruebas, lint y build. El QA aprobó cinco contratos
-HTTP después de corregir la revisión ausente de su chequeo de salud. También
-hay pruebas reales anteriores de publicación, lector, quizzes y recuperación
-de contraseña, conservadas en Jira.
+El lector HTTPS mostró la explicación y calificó 2/3, con corrección y razones
+por pregunta. Recargar conservó el resultado y bloqueó reintentos. Otro cliente
+HTTP, sin sesión de propietario, obtuvo 3/3; repetir la misma operación devolvió
+el mismo intento y otro envío recibió 409. Las soluciones no estaban en la
+respuesta inicial del lector. Se retiró después únicamente la publicación QA:
+lectura, PDF e intentos pasaron a 404, conservando contenido y resultados.
+
+La suite actual aprobó 472 pruebas, lint y build. El QA aprobó cinco contratos
+HTTP con revisión exacta e0152fb. Se corrigió un aviso que sugería reintentar
+una solicitud insuficiente inmutable: ahora exige una nueva solicitud más
+completa. El escaneado con transcripción mínima se rechazó antes de llamar a
+IA. Ambos PDF mantienen sus SHA-256. Las capturas auténticas y las evidencias
+anteriores se conservan en Jira; no se sustituyeron por resultados esperados.
+
+El 09/11 se repitió el recorrido desde una carga nueva en
+[QA-PRESENTACION-20261109](https://pdf-interactivo-qa.vercel.app/projects/7155218d-eca7-4b89-a309-ea6fa9d74125),
+con diagnóstico, recomendaciones, explicación y quiz nuevos de Sol. Hubo
+revisión explícita, lector 2/3 persistido y cliente HTTP independiente 3/3.
+Retirar bloqueó cuatro rutas; republicar creó un enlace nuevo válido y dejó
+el anterior invalidado. El documento sintético queda disponible para demostrar
+la lectura. Su contenido guardado se consulta sin otra generación de IA.
+
+Usage del equipo mostró margen: funciones 4.898/1.000.000, transferencia
+150,28 MB/100 GB y CPU 5m41s/4h en la ventana de 30d visible. Esto no garantiza
+disponibilidad futura ni acredita el saldo OpenAI. Se repitieron 20/20 regresiones
+críticas y 5/5 contratos públicos, sin cambios de código o nuevo despliegue.
 
 Quedan verificaciones formales de navegadores, gesto táctil y avisos operativos.
 No afirmar compatibilidad completa con Safari ni vigilancia continua mientras
 esas comprobaciones no estén realizadas. El detalle vigente y los bloqueos
 están en [la continuidad](CONTEXTO-PROYECTO.md) y
 [operación y compatibilidad](OPERACION-Y-COMPATIBILIDAD.md).
+
+## Acceso desde el celular para la presentación
+
+Dirección del QA: https://pdf-interactivo-qa.vercel.app/dashboard.
+Abrirla desde el teléfono e iniciar sesión personalmente. La sesión del PC no
+se transfiere al celular. Se necesita conexión a Internet para consultar el
+servidor y generar contenido con IA. No hay APK, manifiesto PWA ni service
+worker en esta versión; no se promete instalación nativa o uso sin conexión.
+
+En Android/Chrome, abrir el sitio y usar el menú de opciones para añadirlo a la
+pantalla de inicio; el nombre del control puede variar según la versión.
+En iPhone/Safari, abrir Compartir y Añadir a la pantalla de inicio. Ese acceso
+abre el sitio y no descarga el proyecto ni cambia los permisos de los datos.
+Fuentes de los controles: [Motorola/Chrome](https://help.motorola.com/hc/3184/11/na/es-es/CGjcb110912808.html)
+y [Apple/Safari](https://support.apple.com/es-us/guide/iphone/iph42ab2f3a7/27/ios/27).
+
+El tamaño móvil emulado en el PC no acredita una instalación ni una prueba en
+un teléfono real. La verificación del dispositivo debe registrarse por separado.
+
+El propietario confirmó que usará Android. El recorrido concreto de seis pasos,
+incluida valoración táctil como lector y persistencia de la nota, está en
+[el guion](GUION-PRESENTACION.md#ensayo-final-en-el-android-del-propietario).
+El menú actual de Chrome agrupa las opciones bajo «Instalar y crear acceso
+directo»; elegir crear acceso directo para este sitio, sin prometer APK o modo
+offline. [Ayuda oficial de Chrome](https://support.google.com/chrome/answer/9658361?hl=es&co=GENIE.Platform%3DAndroid).
 
 ## Preguntas que conviene practicar
 
