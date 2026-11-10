@@ -116,3 +116,13 @@ QA actualizado con autorización a a1e930f y comprobado en navegador integrado a
 5. Consulta los aprobados en «Refuerzos». Publicación y estadísticas permanecen en «Compartir y consultar resultados (opcional)». Historial y regeneración siguen en «Más opciones».
 
 Antes de exponer, comprobar en Android real: selección en página posterior a la segunda, regreso al formulario sin pérdida, controles con teclado móvil y diagrama con sus números/explicaciones legibles.
+
+## Actualización 10/11/2026 — Flechas y quiz ABCD
+
+QA usa f2b1490. En la guía, pulsa las flechas «Ir al PDF», «Ir a mis solicitudes» o «Ir a mis refuerzos». «Volver a la guía de pasos» devuelve al recorrido. Las funciones de las historias se conservan.
+
+Para demostrar la actividad: genera un mini quiz desde un refuerzo, revisa sus preguntas y apruébalo. Los nuevos quizzes de IA tienen cuatro alternativas A–D. En la lectura, marca una opción por pregunta y pulsa «Enviar respuestas y ver puntaje». Verás aciertos, porcentaje y explicación; recargar conserva el intento del lector. La política de reintentos depende de la configuración del quiz. La vista previa privada es un ensayo y no cuenta como resultado de un lector.
+
+Ensayo real del agente: tres preguntas GPT, lector anónimo 3/3 (100 %), persistencia tras recarga y bloqueo de reintento; ensayo privado 2/3 (67 %). Capturas en SCRUM-238. Los quizzes antiguos no se convierten automáticamente: mantienen sus opciones guardadas. En tu Android falta confirmar físicamente esta versión: recarga QA, prueba flechas, selección de página posterior a la segunda, legibilidad de la figura y envío del quiz. Si la red Wi-Fi vuelve a bloquear la transferencia del PDF, usa la conexión móvil que ya funcionó; no se ha demostrado reparación de esa red.
+
+Para seguir todos los botones desde cero, usar [Recorrido completo del estudiante](RECORRIDO-COMPLETO-ESTUDIANTE.md). Incluye guardar frente a enviar, revisión de IA, aprobación separada del quiz, vista previa, publicación y resultados. Ensayo Agua. Vapor del10/11: refuerzo/quiz guardados y2/2 en vista previa; detalle real y primer fallo recuperado en continuidad.

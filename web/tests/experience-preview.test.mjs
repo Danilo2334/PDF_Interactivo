@@ -69,5 +69,5 @@ test('HU031 preview and evaluation enforce session/ownership/current document an
 test('HU031 shared quiz player initially exposes options but no reserved feedback, and requires a selection before submission',()=>{
   const {QuizPlayer}=load('components/documents/quiz-player.tsx',{react:React});
   const html=renderToStaticMarkup(React.createElement(QuizPlayer,{quiz:model.projectQuiz(quizId,2,content),onSubmit:async()=>model.gradeQuiz(content,[0])}));
-  assert.match(html,/type="radio"/);assert.match(html,/disabled=""[^>]*>Comprobar respuestas/);assert.doesNotMatch(html,/EXPLICACION_RESERVADA|Respuesta correcta:|Resultado:/);
+  assert.match(html,/type="radio"/);assert.match(html,/disabled=""[^>]*>Enviar respuestas y ver puntaje/);assert.doesNotMatch(html,/EXPLICACION_RESERVADA|Respuesta correcta:|Resultado:/);
 });

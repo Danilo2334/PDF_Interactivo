@@ -91,6 +91,7 @@ export function QuizPanel({ projectId, documentId, requestId, sourceVersionId, a
         <p role="status">{view.head?.choice === "omit" ? "Elección guardada: continuar sin mini quiz. El refuerzo conserva su aprobación y el historial del quiz no se borra."
           : view.head?.choice === "generate" ? "Elección guardada: generar mini quiz." : "Todavía no has elegido crear u omitir el quiz."}</p>
         {view.head?.choice === "generate" && <div className="space-y-2"><label className="block text-sm" htmlFor={`${id}-count`}>Cantidad de preguntas</label>
+          <p className="text-sm text-slate-600">Las nuevas preguntas tienen cuatro opciones (A, B, C y D) y una sola respuesta correcta. Revisa los distractores antes de aprobar. Los quizzes anteriores conservan sus opciones.</p>
           <select id={`${id}-count`} value={count} disabled={disabled} onChange={event => setCount(Number(event.target.value))} className="rounded-lg border border-slate-300 p-2">{[1,2,3].map(n => <option key={n} value={n}>{n}</option>)}</select>
           <button type="button" className={button} disabled={disabled || !view.providerAvailable || view.head.current_version >= 99 || view.head.target_source_version_id !== sourceVersionId}
             onClick={() => void execute("generate")}>{current ? "Generar otra versión del quiz" : "Generar preguntas"}</button>

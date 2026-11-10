@@ -481,3 +481,7 @@ HTTP externo: [público PASS9](https://github.com/Danilo2334/PDF_Interactivo/act
 y [mismo enlace7 retirado PASS4](https://github.com/Danilo2334/PDF_Interactivo/actions/runs/41282261536).
 No pagos, IA nueva ni SQL de escritura de eventos. Sesión personal restaurada
 y viewport/bloqueos retirados. PR48 pendiente de revisión e integración.
+
+## QA vigente 10/11/2026
+
+Fuente f2b149043db2c6a10ed728226b3c099da83a3d2d; deployment dpl_4FvQWTGHwr99pvAcnFiEDNNFp9Md READY, mismo alias de Danilo. Flechas de SCRUM-237 y quiz ABCD de SCRUM-238 disponibles. Cinco contratos HTTP aprobados, incluida revisión exacta. Lector anónimo real: tres preguntas, resultado3/3 (100 %), mismo intento tras recarga, sin reintento permitido. Publicación sintética ab4d4ca6-7305-4512-aa33-e58492edf38e devuelta a Privada al finalizar. No se alteró la publicación de presentación del propietario. Capturas y límites en continuidad. Sin merge, pagos ni nuevas migraciones.

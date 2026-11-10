@@ -23,9 +23,10 @@ function revealHeading(heading: HTMLHeadingElement | null) {
 }
 
 export function RequestState({ request }: { request: RequestSummary }) {
+  const needsContext = request.status === "error" && request.error_message?.startsWith("Falta contexto");
   return <div className="space-y-1 text-sm">
-    <p className="font-semibold text-blue-900">{REQUEST_STATUS_LABELS[request.status]}</p>
-    <p className="text-slate-700">{REQUEST_STAGE_LABELS[request.stage]}</p>
+    <p className="font-semibold text-blue-900">{needsContext ? "Necesitamos más contexto" : REQUEST_STATUS_LABELS[request.status]}</p>
+    <p className="text-slate-700">{needsContext ? "El fragmento necesita una revisión; no es una caída del servicio." : REQUEST_STAGE_LABELS[request.stage]}</p>
     {request.status === "processing" && <p role="status" className="flex items-center gap-2 text-slate-700">
       <span aria-hidden="true" className="h-4 w-4 animate-spin rounded-full border-2 border-blue-700 border-t-transparent motion-reduce:animate-none" />
       La operación continúa. Puedes seguir consultando el documento.
