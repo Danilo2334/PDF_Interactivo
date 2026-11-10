@@ -23,6 +23,7 @@ export function VisualResource({ value, title, description }: { value: unknown; 
   const id = useId().replace(/[^a-zA-Z0-9_-]/g, ""), parsed = visualContentSchema.safeParse(value);
   if (!parsed.success) return <p role="alert">El recurso visual no pudo verificarse.</p>;
   const content = parsed.data, image = content.scene.kind === "image";
+  const ConceptDetails = content.scene.artwork ? "details" : "div";
   const compositionTargets = new Set(content.scene.edges.filter(edge => edge.relationType==="part_of").map(edge => edge.to));
   const parts = content.scene.nodes.filter(node => !compositionTargets.has(node.id)), wholes = content.scene.nodes.filter(node => compositionTargets.has(node.id));
   const groups = !image && parts.length && wholes.length ? [parts, wholes] : [content.scene.nodes];
@@ -83,7 +84,9 @@ export function VisualResource({ value, title, description }: { value: unknown; 
     </svg>}
     </div>
     <figcaption className="whitespace-pre-wrap break-words text-sm text-slate-800">{description ?? content.text}</figcaption>
-    <div className="text-sm"><h4 className="font-semibold">Descripción de los elementos</h4>
+    <ConceptDetails className="rounded-lg border border-slate-200 p-3">
+    {content.scene.artwork && <summary className="cursor-pointer text-sm font-semibold">Consultar conceptos, relaciones y citas</summary>}
+    <div className="mt-2 text-sm"><h4 className="font-semibold">Descripción de los elementos</h4>
       <dl className="mt-2 grid gap-3 sm:grid-cols-2">{content.scene.nodes.map(node => <div key={node.id} className="rounded-lg border border-slate-300 bg-white p-3"><dt className="font-semibold">{node.label}</dt><dd className="mt-1 whitespace-pre-wrap break-words">{node.detail}</dd></div>)}</dl>
     </div>
     {content.scene.edges.length > 0 && <div className="space-y-2 text-sm"><h4 className="font-semibold">Relaciones del gráfico</h4>
@@ -94,5 +97,6 @@ export function VisualResource({ value, title, description }: { value: unknown; 
         {edge.evidence && <blockquote className="mt-1 border-l-2 border-slate-400 pl-3 text-slate-700">Cita del PDF: «{edge.evidence}»</blockquote>}
       </li>)}</ol>
     </div>}
+    </ConceptDetails>
   </figure>;
 }

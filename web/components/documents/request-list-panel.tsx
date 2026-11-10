@@ -46,7 +46,7 @@ function RequestDetailPanel({ projectId, documentId, requestId, active, focusVer
   const resource = useRequestResource(url, active, parseDetail, true);
   const detail = resource.result?.value;
   // Reserve space while loading so the heading can reach the top of the viewport.
-  return <section aria-label="Detalle de solicitud" className="mt-5 min-h-dvh space-y-3 rounded-xl border border-blue-200 bg-blue-50 p-4">
+  return <section aria-label="Detalle de solicitud" className="mt-5 min-h-dvh space-y-3 rounded-xl border border-blue-200 bg-blue-50 p-2 sm:p-4">
     <div className="flex flex-wrap items-center justify-between gap-2">
       <h3 ref={headingRef} tabIndex={-1} className="scroll-mt-4 rounded-sm font-semibold text-slate-900 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-blue-700">Detalle e historial</h3>
       <div className="flex flex-wrap gap-2">
@@ -57,23 +57,38 @@ function RequestDetailPanel({ projectId, documentId, requestId, active, focusVer
     {!resource.result && <p role="status">Cargando solicitud…</p>}
     {resource.result?.error && <p role="alert" className="text-red-700">{resource.result.error}</p>}
     {detail && <>
-      <p className="break-all text-sm text-slate-700">Identificador: {detail.request.id}</p>
       <RequestState request={detail.request} />
+      <details className="rounded-lg border border-slate-200 bg-white p-2 sm:p-3">
+      <summary className="cursor-pointer font-medium text-slate-800">Ver fragmento y dificultad · Página {detail.request.page_number}</summary>
+      <p className="break-all text-sm text-slate-700">Identificador: {detail.request.id}</p>
       <p className="text-sm text-slate-700">Página {detail.request.page_number} · Propietario: tú · Actualizada: {date(detail.request.updated_at)}</p>
       <p className="font-medium text-slate-900">Contenido solicitado</p>
-      <blockquote className="max-h-52 overflow-y-auto whitespace-pre-wrap break-words rounded-lg bg-white p-3 text-sm text-slate-800">{detail.request.selected_text}</blockquote>
+      <blockquote className="max-h-52 overflow-y-auto whitespace-pre-wrap break-words rounded-lg bg-white p-2 sm:p-3 text-sm text-slate-800">{detail.request.selected_text}</blockquote>
       <p className="text-sm text-slate-800"><strong>Necesidad: </strong>{detail.request.need}</p>
       <button type="button" onClick={() => onOpen(detail.request)} className={buttonClass}>Ver selección en el PDF</button>
-      <ContextualAnalysisPanel key={`${documentId}:${requestId}`} request={detail.request} active={active} onChanged={resource.refresh} />
-      <RecommendationPanel key={`recommendations:${documentId}:${requestId}`} request={detail.request} active={active} onChanged={resource.refresh} />
-      <ExplanationPanel key={`explanation:${documentId}:${requestId}`} request={detail.request} active={active} onChanged={resource.refresh} />
-      <ExamplePanel key={`example:${documentId}:${requestId}`} request={detail.request} active={active} onChanged={resource.refresh} />
-      <VisualPanel key={`visual:${documentId}:${requestId}`} request={detail.request} active={active} onChanged={resource.refresh} />
+      </details>
+      <p className="rounded-lg bg-white p-2 sm:p-3 text-sm text-blue-950"><strong>Sigue los pasos en orden.</strong> Abre cada paso para revisar lo anterior. Crear contenido con IA y aprobarlo son acciones separadas.</p>
+      <details open={detail.request.stage === "queued" || detail.request.stage === "analyzing" || detail.request.stage === "failed"} className="rounded-lg border border-slate-200 bg-white p-2 sm:p-3">
+        <summary className="cursor-pointer font-semibold text-slate-900">1. Analizar el fragmento</summary>
+        <ContextualAnalysisPanel key={`${documentId}:${requestId}`} request={detail.request} active={active} onChanged={resource.refresh} />
+      </details>
+      <details open={detail.request.stage === "choosing"} className="rounded-lg border border-slate-200 bg-white p-2 sm:p-3">
+        <summary className="cursor-pointer font-semibold text-slate-900">2. Elegir cómo entenderlo</summary>
+        <RecommendationPanel key={`recommendations:${documentId}:${requestId}`} request={detail.request} active={active} onChanged={resource.refresh} />
+      </details>
+      <details open={!["queued", "analyzing"].includes(detail.request.stage)} className="rounded-lg border border-slate-200 bg-white p-2 sm:p-3">
+        <summary className="cursor-pointer font-semibold text-slate-900">3. Generar y revisar el refuerzo</summary>
+        <p className="my-2 text-sm text-slate-700">Aquí aparece el formato que hayas guardado en el paso 2. Generar produce un borrador; aprobarlo lo incorpora a tus refuerzos.</p>
+        <ExplanationPanel key={`explanation:${documentId}:${requestId}`} request={detail.request} active={active} onChanged={resource.refresh} />
+        <ExamplePanel key={`example:${documentId}:${requestId}`} request={detail.request} active={active} onChanged={resource.refresh} />
+        <VisualPanel key={`visual:${documentId}:${requestId}`} request={detail.request} active={active} onChanged={resource.refresh} />
+        <SummaryPanel key={`summary:${documentId}:${requestId}`} request={detail.request} active={active} onChanged={resource.refresh} />
+      </details>
+      <details className="rounded-lg border border-slate-200 bg-white p-2 sm:p-3"><summary className="cursor-pointer font-semibold text-slate-800">Más opciones: ajustar contenido e historial</summary>
       <RegenerationPanel key={`regeneration:${documentId}:${requestId}`} request={detail.request} active={active} onChanged={resource.refresh} />
-      <SummaryPanel key={`summary:${documentId}:${requestId}`} request={detail.request} active={active} onChanged={resource.refresh} />
       <h4 className="font-semibold text-slate-900">Cambios registrados</h4>
       {detail.events.length === 0 ? <p className="text-sm">No hay eventos en esta página del historial.</p> : <ol className="space-y-3">
-        {detail.events.map(event => <li key={event.id} className="rounded-lg bg-white p-3 text-sm text-slate-800">
+        {detail.events.map(event => <li key={event.id} className="rounded-lg bg-white p-2 sm:p-3 text-sm text-slate-800">
           <p>{event.previous_status ? `${REQUEST_STATUS_LABELS[event.previous_status]} → ` : ""}{REQUEST_STATUS_LABELS[event.status]} · {REQUEST_STAGE_LABELS[event.stage]}</p>
           {event.previous_stage && event.previous_stage !== event.stage && <p>Etapa anterior: {REQUEST_STAGE_LABELS[event.previous_stage]}</p>}
           <p>{event.actor_kind === "owner" ? "Responsable: propietario" : event.actor_kind === "system" ? "Responsable: sistema" : "Registro inicial al habilitar el historial"}</p>
@@ -86,25 +101,30 @@ function RequestDetailPanel({ projectId, documentId, requestId, active, focusVer
         <span className="text-sm">Página {page}</span>
         <button type="button" disabled={page * detail.pageSize >= detail.historyTotal} onClick={() => setPage(value => value + 1)} className={buttonClass}>Más historial</button>
       </div>
+      </details>
     </>}
   </section>;
 }
 
-export function RequestListPanel({ projectId, documentId, active, onOpen }: {
-  projectId: string; documentId: string; active: boolean; onOpen: (request: RequestRecord) => void;
+export function RequestListPanel({ projectId, documentId, active, onOpen, initialRequestId = null }: {
+  projectId: string; documentId: string; active: boolean; onOpen: (request: RequestRecord) => void; initialRequestId?: string | null;
 }) {
   const filterId = useId();
   const [filter, setFilter] = useState<RequestFilter>("all");
   const [page, setPage] = useState(1);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(initialRequestId);
   const [detailFocusVersion, setDetailFocusVersion] = useState(0);
   const listHeadingRef = useRef<HTMLHeadingElement>(null);
+  useEffect(() => {
+    if (active && selectedId === null && detailFocusVersion > 0) revealHeading(listHeadingRef.current);
+  }, [active, selectedId, detailFocusVersion]);
   const url = `/api/projects/${projectId}/reinforcement-requests?documentId=${documentId}&status=${filter}&page=${page}`;
   const resource = useRequestResource(url, active, parseList);
   const list = resource.result?.value;
   function changeFilter(value: RequestFilter) { setFilter(value); setPage(1); setSelectedId(null); }
   function openDetail(requestId: string) { setSelectedId(requestId); setDetailFocusVersion(value => value + 1); }
   return <div className="mt-6 space-y-4" data-document-id={documentId}>
+    <div hidden={selectedId !== null} className="space-y-4">
     <h2 ref={listHeadingRef} tabIndex={-1} className="scroll-mt-4 rounded-sm text-xl font-semibold text-slate-900 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-blue-700">Solicitudes del documento</h2>
     <p className="text-sm text-slate-600">Consulta el avance y vuelve a la selección original. Los estados se actualizan mientras esta sección está visible.</p>
     <div className="flex flex-wrap items-end gap-3">
@@ -123,7 +143,7 @@ export function RequestListPanel({ projectId, documentId, active, onOpen }: {
       <p className="text-sm text-slate-700">{list.total} solicitudes · Página {page}</p>
       {list.items.length === 0 ? <p role="status" className="rounded-lg border border-slate-200 bg-slate-50 p-4">
         {filter === "all" && page === 1 ? "Este documento todavía no tiene solicitudes." : "No hay solicitudes para este filtro y página."}
-      </p> : <ul className="space-y-3">{list.items.map(request => <li key={request.id} className="space-y-2 rounded-xl border border-slate-200 bg-white p-4">
+      </p> : <ul className="space-y-3">{list.items.map(request => <li key={request.id} className="space-y-2 rounded-xl border border-slate-200 bg-white p-2 sm:p-4">
         <p className="font-semibold text-slate-900">Página {request.page_number}</p>
         <p className="text-sm text-slate-600">Propietario: tú · Creada: <time dateTime={request.created_at}>{date(request.created_at)}</time></p>
         <RequestState request={request} />
@@ -134,7 +154,8 @@ export function RequestListPanel({ projectId, documentId, active, onOpen }: {
         <button type="button" disabled={page * list.pageSize >= list.total} onClick={() => setPage(value => value + 1)} className={buttonClass}>Más solicitudes</button>
       </div>
     </>}
+    </div>
     {selectedId && <RequestDetailPanel key={selectedId} projectId={projectId} documentId={documentId} requestId={selectedId} active={active}
-      focusVersion={detailFocusVersion} onBack={() => revealHeading(listHeadingRef.current)} onOpen={onOpen} />}
+      focusVersion={detailFocusVersion} onBack={() => { setSelectedId(null); setDetailFocusVersion(value => value + 1); }} onOpen={onOpen} />}
   </div>;
 }

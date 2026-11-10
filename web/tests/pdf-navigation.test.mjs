@@ -353,6 +353,7 @@ function viewerFixture(total = 20, initialPage = 1, initialFragment = null, mark
   const states = [], refs = [], effects = [], layouts = [], calls = [], requests = [], zooms = [], selections = [];
   let cursor = 0, refCursor = 0, effectStarted = false, callbacks, tree;
   const restored = [];
+  let selectedFragment = null, fragmentChanged;
   const dependencies = {
     react: {
       useId: () => "page-number",
@@ -376,7 +377,7 @@ function viewerFixture(total = 20, initialPage = 1, initialFragment = null, mark
     },
     "@/components/diagnostics/view-timing": { ViewTiming: () => null },
     "@/components/documents/pdf-thumbnails": { PdfThumbnails: () => null },
-    "@/lib/pdf/page-fragments": { createPageFragments: () => ({ clear() {}, clearOtherPage() {}, setMode() {}, dispose() {}, restore(value) { restored.push(value); return true; } }) },
+    "@/lib/pdf/page-fragments": { createPageFragments: (_layer, changed) => { fragmentChanged = changed; return { getSelectedPage: () => selectedFragment?.pageNumber ?? null, clear() { selectedFragment = null; changed(null); }, clearOtherPage(number) { if (selectedFragment && selectedFragment.pageNumber !== number) { selectedFragment = null; changed(null); } }, setMode() {}, dispose() {}, restore(value) { selectedFragment = value; restored.push(value); changed(value); return true; } }; } },
     "@/lib/pdf/reinforcement-markers": loadModule("lib/pdf/reinforcement-markers.ts"),
     "@/lib/pdf/readable-page-text": { decorateReadablePageText: async () => () => {} },
     "@/lib/pdf/render-visible-pages": {
@@ -418,6 +419,7 @@ function viewerFixture(total = 20, initialPage = 1, initialFragment = null, mark
   render(); const cleanups = effects.map((effect) => effect()); effectStarted = true;
   return {
     calls, requests, zooms, selections, restored, render, activated,
+    selectFragment(value) { selectedFragment = value; fragmentChanged(value); },
     nodes: () => nodes(tree),
     get callbacks() { return callbacks; },
     button(label) { return nodes(tree).find((node) => node.type === "button" && node.props.children === label); },
@@ -586,4 +588,20 @@ test('HU035 an intentional wheel movement cancels the temporary zoom anchor',asy
   const f=rendererFixture({count:3,decorate:async page=>{if(hold&&page.pageNumber===2)await new Promise(resolve=>{finish=resolve;});return()=>{};}});t.after(()=>f.renderer.dispose());
   await settle();f.renderer.goToPage(2);await settle();f.flush();hold=true;f.renderer.setZoom(125);await settle();
   f.listeners.get('wheel')();f.scrollToPage(1);f.flush();assert.equal(f.changes.at(-1),1);finish();await settle();f.flush();assert.equal(f.changes.at(-1),1);
+});
+
+
+test('SCRUM-237 selecting page 12 does not scroll; returning to the toolbar keeps its context until explicit navigation', async t => {
+  const fragments = [];
+  const f = viewerFixture(16, 1, null, undefined, { onFragmentSelect: value => fragments.push(value) });
+  t.after(() => f.dispose()); await settle(); f.render();
+  f.callbacks.changed(12); f.render();
+  const selected = { kind: 'text', pageNumber: 12, text: 'Contenido de la página doce', range: { start: 0, end: 26 }, rects: [{ x: .1, y: .2, width: .5, height: .04 }] };
+  f.selectFragment(selected); f.render();
+  assert.deepEqual(f.calls, []); assert.equal(f.selections.at(-1), 12);
+  f.callbacks.changed(2); f.callbacks.changed(1); f.render();
+  assert.equal(f.counter(), 'Página 1 de 16');
+  assert.equal(f.selections.at(-1), 12); assert.equal(fragments.at(-1), selected);
+  f.enter('8'); assert.equal(f.selections.at(-1), 8); assert.equal(fragments.at(-1), null);
+  assert.equal(f.requests.length, 1);
 });

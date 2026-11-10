@@ -7553,3 +7553,19 @@ todavía DNS, router, operador o navegador como causa. Datos móviles desbloquea
 este ensayo; no equivale a reparar ni probar esa red Wi-Fi. Usar conexión probada
 para la presentación y comprobar la red del lugar. Comentarios235/231 actualizados,
 conservando medios y estados anteriores; no hay captura nueva de éxito.
+
+
+## 2026-11-09 — SCRUM-237: recorrido del estudiante y selección en páginas posteriores
+
+Mejora de usabilidad solicitada por Danilo durante el ensayo en Android, adicional a las historias: conservar sus funciones y evidencias, pero evitar que el estudiante tenga que adivinar el recorrido. Rama `codex/scrum-237-recorrido-estudiante`, dependiente del avance de PR #65. No se ha hecho merge ni desplegado esta versión.
+
+- Inicio con ruta explícita: elegir fragmento y dificultad → analizar y elegir formato → generar, revisar y aprobar. Administración del documento, publicación y estadísticas se mantienen agrupadas; navegación avanzada, zoom y vista previa siguen disponibles. Acciones principales de IA destacadas y controles táctiles de al menos 44 px.
+- Formulario progresivo: texto confirmado → dificultad guardada → envío. Después del envío, «Continuar al análisis de mi solicitud» abre el registro concreto. El detalle oculta el listado mientras se trabaja; conserva filtros, historial y regeneración. Solo muestra el formato elegido una vez consultado el servidor.
+- Selección: el desplazamiento ya no borra el fragmento al regresar al formulario. Se distinguen página visible y página seleccionada; la captura no fuerza saltos del visor. Una navegación explícita a otra página sí invalida el contexto anterior. Se escucha `selectionchange` para los ajustes del rango nativo sin volver a emitir selecciones idénticas. Se retiró la barra grande superpuesta al texto; el fragmento seleccionado ofrece un acceso compacto al formulario.
+- Gráficos: ilustración con más ancho útil, llamadas numeradas y explicaciones en HTML legible debajo, objetivo y conclusión identificados. Conceptos, relaciones y citas siguen disponibles. No se alteraron los contenidos aprobados, contratos de IA, permisos ni el PDF. Esta mejora de presentación no equivale a demostrar calidad universal de generaciones nuevas.
+
+Verificación real local, cuenta sintética existente, sin usar la contraseña personal: PDF QA-SCRUM235-reemplazo-20MiB.pdf de tres páginas. Selección nativa de texto en página 3, regreso a controles, extracción coincidente, confirmación y envío persistido `344f0cf6-0497-4102-8dc1-7ffdef4bec70`, acceso directo al detalle y consulta de contexto de página 3. Tras recarga limpia de desarrollo, selección conservada al cambiar Solicitudes/PDF; navegación explícita a página 2 dejó el fragmento vacío. La prueba automatizada adicional cubre página 12 de un documento de 16 páginas sin descargar de nuevo.
+
+Vista 390×844 en navegador integrado: sin desbordamiento horizontal del documento; ruta, diálogo y controles plegables operados también por teclado. Ilustración real ya guardada de péndulo (proyecto QA-SCRUM236-pendulo), con dibujo de 229,6 px de ancho útil y explicaciones completas. No se hizo una nueva generación GPT ni se atribuye la prueba a un Android físico. Consola del gráfico sin errores; el aviso de hooks observado durante Fast Refresh anterior a la recarga no volvió a aparecer en el recorrido limpio.
+
+Validación: 479/479 pruebas de la suite; 73/73 casos afectados tras los últimos ajustes de presentación; lint y build de producción con TypeScript aprobados. Evidencias locales en `SCRUM-237-RECORRIDO` dentro de la carpeta externa de visualizaciones. Jira SCRUM-237 permanece En curso hasta integrar/desplegar lo autorizado y comprobar Android real. QA público sigue en e0152fb; no presentar los cambios locales como ya disponibles en el celular. Stash d6406e0 conservado.

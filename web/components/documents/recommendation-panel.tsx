@@ -28,7 +28,7 @@ export function RecommendationOptions({ view, disabled, onChoose }: { view: Reco
           onChange={() => setDraft(option.type)} /><span className="font-semibold">{index + 1}. {REINFORCEMENT_LABELS[option.type]}</span></span>
         <span className="mt-2 block break-words">{option.justification}</span>
       </label>)}
-      <button type="submit" className={buttonClass} disabled={!selected || disabled || !view.canChoose || selected === view.choice?.type}>Guardar elección</button>
+      <button data-primary-action type="submit" className={buttonClass} disabled={!selected || disabled || !view.canChoose || selected === view.choice?.type}>Guardar elección</button>
     </fieldset>
     {interactive && <aside className="mt-3 rounded-lg bg-blue-50 p-3 text-sm text-slate-800">
       <p className="font-semibold">Elemento interactivo · Mini quiz opcional</p>
@@ -59,11 +59,14 @@ export function RecommendationPanel({ request, active, onChanged }: { request: R
       if (response.ok && typeof body.reference === "string") setError(`La operación no se completó. Revisa el aviso y reintenta cuando corresponda. Referencia: ${body.reference}.`);
       if (!response.ok) throw Error(typeof body.message === "string" ? body.message : "No fue posible completar la operación.");
       if (controller.signal.aborted) return;
-      if (action === "choose") choiceReceiptSchema.parse(body); else recommendationRecordSchema.parse(body.recommendations);
+      if (action === "choose") {
+        choiceReceiptSchema.parse(body);
+        window.dispatchEvent(new CustomEvent("reinforcement-review-updated", { detail: request.id }));
+      } else recommendationRecordSchema.parse(body.recommendations);
     } catch (cause) {
       if (!controller.signal.aborted) setError(cause instanceof Error && cause.name === "Error" ? cause.message : "No se pudo confirmar la operación. Se conserva lo guardado. Actualiza antes de reintentar con los mismos datos.");
     } finally {
-      if (controllerRef.current === controller) { controllerRef.current = null; setBusy(null); resource.refresh(); }
+      if (controllerRef.current === controller) { controllerRef.current = null; setBusy(null); resource.refresh(); onChanged(); }
     }
   }
 
@@ -71,7 +74,7 @@ export function RecommendationPanel({ request, active, onChanged }: { request: R
     <h4 className="font-semibold text-slate-900">Tipo de refuerzo</h4>
     <p className="text-sm text-slate-700">Recibe opciones basadas en el análisis y elige cómo aclarar tu dificultad. Guardar la elección no genera ni aprueba contenido.</p>
     <div className="flex flex-wrap gap-2">
-      <button type="button" className={buttonClass} disabled={!active || !!busy || !view?.canRecommend || !!resource.result?.error} onClick={() => void execute("recommend")}>
+      <button data-primary-action type="button" className={buttonClass} disabled={!active || !!busy || !view?.canRecommend || !!resource.result?.error} onClick={() => void execute("recommend")}>
         {current?.status === "error" || current?.status === "processing" ? "Reintentar recomendaciones" : "Obtener recomendaciones"}
       </button>
       <button type="button" className={buttonClass} disabled={!!busy || !active} onClick={() => { resource.refresh(); onChanged(); }}>Actualizar opciones</button>

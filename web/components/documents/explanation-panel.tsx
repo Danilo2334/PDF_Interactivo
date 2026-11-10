@@ -38,6 +38,8 @@ export function ExplanationPanel({ request, active, onChanged }: { request: Requ
     }
   }
 
+  if (view && !view.explanationChosen) return null;
+
   return <section aria-label="Explicación ampliada" className="space-y-3 rounded-lg border border-slate-200 bg-white p-4">
     <h4 className="font-semibold text-slate-900">Explicación ampliada</h4>
     <p className="text-sm text-slate-700">Elige y guarda el nivel de detalle antes de generar. El resultado quedará pendiente de aprobación y conservará la referencia al fragmento.</p>
@@ -57,7 +59,7 @@ export function ExplanationPanel({ request, active, onChanged }: { request: Requ
       </form>
       {levelSaved && <p role="status" className="text-sm text-green-900">Nivel guardado: {DETAIL_LABELS[generation!.detail_level]}</p>}
       {!view.providerAvailable && <p className="text-sm text-slate-700">El servicio de IA no está configurado. Puedes guardar el nivel sin consumir IA.</p>}
-      <button type="button" className={buttonClass} disabled={!active || !!busy || !view.canGenerate || !levelSaved || !!resource.result?.error} onClick={() => void execute("generate")}>
+      <button data-primary-action type="button" className={buttonClass} disabled={!active || !!busy || !view.canGenerate || !levelSaved || !!resource.result?.error} onClick={() => void execute("generate")}>
         {generation?.status === "error" || generation?.status === "processing" ? "Reintentar explicación" : "Generar explicación"}
       </button>
     </>}

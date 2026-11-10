@@ -39,7 +39,9 @@ export function VisualPanel({ request, active, onChanged }: { request: RequestRe
     finally { if (controllerRef.current === controller) { controllerRef.current = null; setBusy(false); if (success) { resource.refresh(); onChanged(); } } }
     return success ? reviewedVersion : null;
   }
-  return <section aria-label="Imagen o diagrama" className="min-w-0 space-y-3 rounded-lg border border-slate-200 bg-white p-4">
+  if (view && !view.visualChosen) return null;
+
+  return <section aria-label="Imagen o diagrama" className="min-w-0 space-y-3 rounded-lg border border-slate-200 bg-white p-2 sm:p-4">
     <h4 className="font-semibold text-slate-900">Imagen o diagrama</h4>
     <p className="text-sm text-slate-700">Elige el tipo de representación y revisa su descripción antes de generar. Solo tu aprobación lo mostrará en Refuerzos.</p>
     {!view && !resource.result?.error && <p role="status">Consultando recurso visual…</p>}
@@ -52,7 +54,7 @@ export function VisualPanel({ request, active, onChanged }: { request: RequestRe
           <span className="mt-1 block">{value === "image" ? "Una ilustración con elementos visuales del concepto." : "Conceptos conectados mediante relaciones y flechas."}</span></label>)}
         <button type="submit" className={buttonClass} disabled={!selected || saved}>Guardar tipo visual</button>
       </fieldset></form>
-      <button type="button" className={buttonClass} disabled={!active || busy || !view.canGenerate || !saved} onClick={() => void execute("generate")}>{generation?.status === "error" || generation?.status === "processing" ? "Reintentar recurso visual" : "Generar recurso visual"}</button>
+      <button data-primary-action type="button" className={buttonClass} disabled={!active || busy || !view.canGenerate || !saved} onClick={() => void execute("generate")}>{generation?.status === "error" || generation?.status === "processing" ? "Reintentar recurso visual" : "Generar recurso visual"}</button>
     </>}
     {generation && <div className="space-y-1 rounded-lg bg-slate-50 p-3 text-sm"><p className="font-medium">Tipo guardado: {VISUAL_LABELS[generation.mode]}</p><p>Descripción visual solicitada</p><p className="whitespace-pre-wrap break-words">{generation.visual_brief}</p></div>}
     {view?.visualChosen && !view.providerAvailable && <p className="text-sm">El servicio de IA no está configurado. Puedes guardar el tipo sin consumir IA.</p>}
@@ -61,7 +63,7 @@ export function VisualPanel({ request, active, onChanged }: { request: RequestRe
     {!busy && generation?.status === "processing" && <p role="status" className="text-sm">Generación en proceso. El resultado anterior se conserva; actualiza para consultar el nuevo.</p>}
     {(error || resource.result?.error) && <p role="alert" className="break-words text-sm text-red-700">{error || resource.result?.error}</p>}
     {generation?.status === "error" && <p role="alert" className="text-sm text-red-700">{VISUAL_MESSAGES[generation.error_code ?? "invalid_visual"]}</p>}
-    {current?.visual_content && view?.review?.decision !== "discarded" && <article className="min-w-0 space-y-3 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm">
+    {current?.visual_content && view?.review?.decision !== "discarded" && <article className="min-w-0 space-y-3 rounded-lg border border-amber-300 bg-amber-50 p-2 sm:p-3 text-sm">
       <p className="font-semibold">Contenido generado por IA · {view?.review?.decision === "approved" ? "Aprobado por ti" : "Pendiente de aprobación"}</p>
       <p>Página {request.page_number} · {VISUAL_LABELS[current.visual_content.scene.kind]} · Versión {current.version}</p>
       <h5 className="font-semibold">{current.title}</h5><VisualResource value={current.visual_content} title={current.title} description={current.text} />

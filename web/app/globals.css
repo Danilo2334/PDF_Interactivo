@@ -44,6 +44,9 @@ input {
 .pdf-reinforcement-marker:focus-visible { outline: 3px solid #0f172a; outline-offset: 2px; }
 
 .reader-experience { overflow-wrap: anywhere; }
+.student-workspace :where(button, a, input, select, textarea, summary, [tabindex]):focus-visible { outline: 3px solid #1d4ed8; outline-offset: 3px; }
+.student-workspace :where(button, input:not([type="radio"]), select, summary) { min-height: 44px; }
+.student-workspace [data-primary-action] { background-color: #1d4ed8; border-color: #1d4ed8; color: white; font-weight: 600; }
 .reader-experience :where(button, a, input, select, textarea, summary, [tabindex]):focus-visible { outline: 3px solid #1d4ed8; outline-offset: 3px; }
 .reader-experience :where(button, input:not([type="radio"]), select, summary) { min-height: 44px; }
 .reader-experience label:has(input[type="radio"]) { min-height: 44px; padding-block: .5rem; }
