@@ -152,6 +152,24 @@ esas comprobaciones no estén realizadas. El detalle vigente y los bloqueos
 están en [la continuidad](CONTEXTO-PROYECTO.md) y
 [operación y compatibilidad](OPERACION-Y-COMPATIBILIDAD.md).
 
+## Acceso desde el celular para la presentación
+
+Dirección del QA: https://pdf-interactivo-qa.vercel.app/dashboard.
+Abrirla desde el teléfono e iniciar sesión personalmente. La sesión del PC no
+se transfiere al celular. Se necesita conexión a Internet para consultar el
+servidor y generar contenido con IA. No hay APK, manifiesto PWA ni service
+worker en esta versión; no se promete instalación nativa o uso sin conexión.
+
+En Android/Chrome, abrir el sitio y usar el menú de opciones para añadirlo a la
+pantalla de inicio; el nombre del control puede variar según la versión.
+En iPhone/Safari, abrir Compartir y Añadir a la pantalla de inicio. Ese acceso
+abre el sitio y no descarga el proyecto ni cambia los permisos de los datos.
+Fuentes de los controles: [Motorola/Chrome](https://help.motorola.com/hc/3184/11/na/es-es/CGjcb110912808.html)
+y [Apple/Safari](https://support.apple.com/es-us/guide/iphone/iph42ab2f3a7/27/ios/27).
+
+El tamaño móvil emulado en el PC no acredita una instalación ni una prueba en
+un teléfono real. La verificación del dispositivo debe registrarse por separado.
+
 ## Preguntas que conviene practicar
 
 1. ¿Por qué se guardan los refuerzos separados del PDF original?

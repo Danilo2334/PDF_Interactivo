@@ -7326,3 +7326,39 @@ resumen y enlace, conservando sus medios. El sondeo de esta fuente registró
 p50 HTTP351,99ms y p95/máximo593,27ms,0/5 contratos fallidos; no es una medición
 de renderizado ni disponibilidad histórica. Los commits posteriores a e0152fb
 solo documentan resultados y matriz, por lo que no se redesplegaron.
+
+## 09/11/2026 — Preparación del ensayo para la presentación del 10/11
+
+El propietario decidió continuar en Vercel y pidió comprobar cuotas y ejecutar
+un ensayo nuevo completo con GPT real. La cuenta AWS con crédito no se utilizó.
+Fetch sin cambios remotos; rama codex/scrum-94-aviso-contexto-qa en5aa145e,
+stash d6406e0 intacto. Deployment actual READY, fuente e0152fb, Next.js yNode22.x.
+
+Comprobación pública nueva a las21:55 de Bogotá:5/5 contratos aprobados,
+p50 HTTP267,24ms y p95/máximo996,02ms, sin contratos fallidos. Es un sondeo
+puntual anónimo; no demuestra cuotas restantes, renderizado o disponibilidad
+futura. Reporte fuera de Git: ENSAYO-PRESENTACION-20261109/01-contratos-http.json.
+Regresiones críticas repetidas con registro completo:20/20, sin fallos ni
+omisiones, en02-regresiones-criticas.log. No se hicieron cambios de aplicación.
+
+El conector Vercel reconoce el equipo Danilo Carlosama's projects. CLI usage
+no entregó datos de facturación para noviembre; no se interpreta como uso cero.
+Consulta de métricas acotada devolvió payment_required: Observability Plus,
+no disponible en Hobby. No se compró ni activó otro plan. Falta leer las cuotas
+reales en el panel Usage, que solicita autenticación personal.
+
+IAB sin pestañas antiguas al recuperar el navegador. La ruta del proyecto QA
+redirigió a Iniciar sesión; Vercel también pidió login. Se dejaron abiertas
+ambas páginas y se solicitó entrada personal, sin credenciales por chat.
+El propietario pidió recordar las cuentas y reabrir Vercel: aplicación con
+danilocarlosama96@gmail.com, Vercel con GitHub Danilo2334. Este punto de control
+todavía NO acredita otro recorrido autenticado ni otra generación GPT nueva.
+El flujo positivo del06/11 conserva sus pruebas anteriores, sin atribuirlas
+al ensayo de hoy. Continuar desde estas pestañas tras la confirmación del usuario.
+
+Preparación independiente: doc/GUION-PRESENTACION.md detalla propietario,
+aprobación, publicación, lector, quiz y contingencia sin fingir una generación.
+La guía de estudio incorpora acceso por HTTPS desde celular y acceso directo
+a pantalla de inicio. No hay APK, manifiesto PWA ni service worker en el código;
+no se promete instalación nativa ni funcionamiento sin conexión. Una prueba
+en tamaño móvil de PC tampoco acredita el teléfono personal del propietario.
