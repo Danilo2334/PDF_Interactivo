@@ -183,6 +183,13 @@ y [Apple/Safari](https://support.apple.com/es-us/guide/iphone/iph42ab2f3a7/27/io
 El tamaño móvil emulado en el PC no acredita una instalación ni una prueba en
 un teléfono real. La verificación del dispositivo debe registrarse por separado.
 
+El propietario confirmó que usará Android. El recorrido concreto de seis pasos,
+incluida valoración táctil como lector y persistencia de la nota, está en
+[el guion](GUION-PRESENTACION.md#ensayo-final-en-el-android-del-propietario).
+El menú actual de Chrome agrupa las opciones bajo «Instalar y crear acceso
+directo»; elegir crear acceso directo para este sitio, sin prometer APK o modo
+offline. [Ayuda oficial de Chrome](https://support.google.com/chrome/answer/9658361?hl=es&co=GENIE.Platform%3DAndroid).
+
 ## Preguntas que conviene practicar
 
 1. ¿Por qué se guardan los refuerzos separados del PDF original?

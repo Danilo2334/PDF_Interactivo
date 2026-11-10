@@ -71,3 +71,35 @@ Los pendientes formales siguen en Jira; el guion no declara el proyecto cerrado.
 
 Para añadir el acceso en el celular, consultar la sección correspondiente de
 [la guía de estudio](GUIA-PARA-ESTUDIAR-EL-PROYECTO.md). No hay un APK en esta versión.
+
+## Ensayo final en el Android del propietario
+
+El propietario confirmó Android el09/11. Esta lista sigue pendiente de ejecución
+en su teléfono: los resultados IAB de360×800 y800×360 no la sustituyen.
+
+1. Abrir Chrome y el enlace del proyecto QA-PRESENTACION-20261109 de arriba.
+   Iniciar sesión personalmente. Anotar modelo del teléfono, versión de Android
+   y versión de Chrome (menú → Configuración → Información de Chrome).
+2. Pasar de página1 a2, usar los botones +/− del visor y comprobar que no vuelve
+   a otra página. Volver a1; abrir Refuerzos y expandir el título de energía.
+   Girar el teléfono y desplazar el contenido: texto y botones deben poder leerse
+   y pulsarse. Cerrar el panel y comprobar página/zoom conservados.
+3. En Revisar publicación, copiar el enlace vigente. Abrirlo en una pestaña de
+   incógnito de Chrome para probar como lector sin la cuenta del propietario.
+   No retirar ni republicar mientras se utiliza ese enlace en la presentación.
+4. Tocar con el dedo el indicador1 o Refuerzos, expandir la tarjeta y consultar
+   la explicación. En la valoración elegir Útil, cambiar a Sigue sin ser claro
+   y volver a Útil: debe quedar una sola opción. Enviar una vez y comprobar la
+   confirmación. No usar el modo propietario para acreditar esta valoración.
+5. Responder las tres preguntas del quiz y enviar una vez. Deben aparecer nota
+   y razones. Recargar esa misma pestaña: conservar el resultado y respetar el
+   bloqueo de reintentos. No cerrar la sesión de incógnito entre ambos pasos.
+6. Probar la red del lugar de exposición y, si hace falta, datos móviles. No hay
+   modo offline. Añadir el dashboard a la pantalla de inicio desde Chrome normal,
+   menú → Instalar y crear acceso directo → Crear acceso directo (según versión).
+
+Para registrar el resultado: indicar dispositivo/versiones, red, pasos que
+pasaron y cualquier aviso exacto. Capturar solo pantallas de PDF/refuerzo/nota,
+sin campos de contraseñas ni URL que muestre el token de lectura. Un resultado
+comunicado por el propietario se identifica como tal; no como observación del
+agente. Solo después se evalúa cerrar el caso táctil aplicable de SCRUM-137.

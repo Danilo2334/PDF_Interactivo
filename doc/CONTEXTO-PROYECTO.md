@@ -7439,3 +7439,72 @@ conserva pendientes formales: 137 táctil, 231 matriz ejecutada, 232 operación/
 avisos/SLO, 233 remitente general y 4 sin criterios. El acceso móvil es web por
 HTTPS con acceso directo a pantalla de inicio; no se produjo un APK ni se
 declaró funcionamiento offline o validación del celular personal.
+
+## 09/11/2026 — Aviso real entregado, compatibilidad y correo pendientes
+
+El propietario pidió continuar compatibilidad, alertas y correo antes de la
+presentación. Confirmó Android, eligió su Gmail como destino y autorizó crear
+«PDF Interactivo QA Alertas» con Sending access. Se creó una sola clave nueva,
+independiente de «PDF Interactivo QA SMTP». Configuración privada en
+web/.env.alerts.local, ignorada por Git, ACL usuario actual/SYSTEM; no se
+imprimió el secreto ni se guardó en capturas. Portapapeles limpiado. SMTP de
+Supabase permanece activo y sin cambios; la clave previa sigue protegida.
+
+Implementado operation-notifications.mjs y conectado opcionalmente al monitor.
+Eventos sanitizados, destino limitado al titular, timeout10s, sin reenvíos
+automáticos, deduplicación por transición e Idempotency-Key del proveedor.
+Límite10 peticiones por proceso; no equivale a control global de cuota diaria.
+notifications.jsonl registra aceptación/fallo; los errores de envío no ocultan
+los sondeos y hacen finalizar la CLI con salida2. Aceptado no equivale a entregado.
+No se añadió dependencia, ruta de aplicación, migración ni cambio de permisos.
+
+477/477 pruebas completas, lint y build/TypeScript aprobados. Cinco pruebas
+nuevas verifican saneamiento, rechazo de destino ajeno, timeout/cuota/respuesta
+inválida, deduplicación y continuidad diagnóstica. Tres sondeos reales con SHA
+correcto:15/15 contratos, p50 HTTP236,07ms, p95/máximo2974,73ms. Luego un ensayo
+controlado con SHA esperado000…000 detectó liveness_revision, sin cambiar el QA.
+Se envió UN correo PRUEBA CONTROLADA a danilocarlosama96@gmail.com: Resend lo
+registra Delivered,09/11 a22:35Bogotá, ID01a1c386-5b16-748f-a7a9-d7f7ffcd1f87,
+incidente0f977a4c-119e-4610-b373-d24187968b48. Repetir el mismo evento se suprimió
+localmente. No fue una caída del servicio, ni se demuestra lectura humana del
+correo. Sondeo posterior con canal habilitado y SHA correcto:5/5, cero avisos,
+p50 HTTP183,44ms, p95/máximo542,81ms.
+
+Se conserva evidencia fuera de Git en CIERRE-OPERACION-20261109:01 pruebas,
+02 serie sana,03 dominio vacío,04 refuerzo360px,05 formulario de clave antes
+de crearla,06 ensayo de aviso,07 canal configurado,08 Delivered,09 visor Jira.
+El auxiliar externo ensayo-alerta.mjs contiene solo el procedimiento y toma la
+clave del entorno; no debe relanzarse para duplicar la prueba. El primer intento
+de importarlo en el runtime auxiliar falló por process no disponible antes de
+enviar; la ejecución real se hizo una vez con Node del proyecto.
+
+Resend Domains de Danilo sigue vacío, comprobado hoy. La recuperación del titular
+ya aprobada el04/11 se conserva; no se repitió un cambio de contraseña. La alerta
+nueva prueba su canal de envío, no recuperación para otros destinatarios.
+SCRUM-233 sigue En curso hasta disponer de un dominio/remitente verificado.
+
+Inventario de navegadores conectado: solo IAB/MCP Apps. Sin repetir vías
+rechazadas, se probó el propietario en360×800: página2, zoom100→125 sin perderla,
+retorno a1/100, Refuerzos y expansión por Enter. Ancho útil345=scrollWidth345;
+en800×360 mantiene expansión y785=scrollWidth785. Consola sin errores observados.
+Es emulación de tamaño; no Android físico, gesto táctil ni marca/versiones N/N−1.
+Viewport restaurado y sesión conservada. Guion Android detallado en
+GUION-PRESENTACION.md: propietario normal y lector de incógnito, navegación,
+valoración táctil, quiz, nota tras recarga y red del lugar. No hay APK/offline.
+
+Jira actualizado conservando un comentario por tarea:232/10240 con captura08,
+233/10103 con03,231/10239 con04 y137/10222 con pendiente Android explícito.
+Lectura fresca confirma4/13/1/2 medios respectivamente (20 en total), incluidos
+los17 anteriores. La nueva captura08 abrió en el visor de Jira. Sin duplicar
+imágenes ni dar una prueba pendiente por aprobada; las cuatro tareas En curso.
+
+SCRUM-232 ya tiene destino y entrega comprobados, pero continúa pendiente de
+colector permanente y SLO/ventanas de degradación API. No se instaló vigilancia
+24/7 ni se modificó main para habilitar el workflow. Los sondeos no miden RNF de
+renderizado; sus límites existentes se conservan. SCRUM-137 requiere el gesto
+en dispositivo/herramienta compatible y231 la matriz ejecutada. Se conserva
+también SCRUM-4 sin criterios, sin inventar su cierre.
+
+Cambios de operación y documentación en la rama de PR #65, cadena #63→#64→#65.
+Sin merge ni despliegue: el QA conserva fuentee0152fb y el material de ensayo
+publicado. Stashd6406e0 intacto; ninguna credencial se incluye en el commit.

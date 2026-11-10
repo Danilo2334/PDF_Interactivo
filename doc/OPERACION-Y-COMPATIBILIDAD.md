@@ -652,3 +652,79 @@ SCRUM-137 necesita un gesto táctil realmente soportado, no solo viewport móvil
 SCRUM-232 conserva los pendientes de operación/avisos/SLO descritos arriba.
 SCRUM-233 conserva la limitación del remitente de pruebas a su titular.
 No se modificó main ni se integraron PR en esta continuación.
+
+## 09/11/2026 — Canal de avisos probado y preparación Android
+
+El propietario eligió danilocarlosama96@gmail.com como destino y autorizó una
+clave nueva «PDF Interactivo QA Alertas», solo Sending access. La anterior
+«PDF Interactivo QA SMTP» y la configuración Auth permanecen intactas. El secreto
+se conserva únicamente en web/.env.alerts.local, ignorado por Git y con ACL de
+usuario actual/SYSTEM; portapapeles limpiado. No copiar ese archivo a artifacts,
+comentarios, documentación, compilaciones o al navegador cliente.
+
+`operation-notifications.mjs` conecta los eventos del monitor a Resend. Solo
+admite el destinatario autorizado y el remitente de pruebas onboarding@resend.dev.
+Los mensajes contienen operación, código, incidente, fecha, revisión y referencia
+validada; nunca cuerpos HTTP, cookies o datos del PDF. Timeout10s sin reintento
+automático, redirecciones rechazadas y máximo10 solicitudes por proceso. Se
+deduplica cada transición localmente y se envía Idempotency-Key, que Resend
+conserva24h. Este límite por proceso no constituye una cuota global diaria.
+
+`notifications.jsonl` registra aceptación o fallo con códigos acotados. Un429,
+timeout o respuesta inválida no se presenta como entrega; la serie continúa
+recogiendo contratos y termina con salida2 si falló alguna notificación. Salida1
+mantiene un incumplimiento de contrato; salida0 exige serie completa sana. La
+entrega al buzón requiere comprobación adicional en el proveedor. El resumen
+incluye canal configurado, aceptados/fallidos y deliveryVerified=false; el monitor
+por sí solo no tiene permisos de lectura para declarar Delivered.
+
+Pruebas:477/477, lint y build/TypeScript correctos, incluidas cinco nuevas para
+idempotencia, saneamiento, cuota, timeout y conservación del diagnóstico tras un
+fallo de envío. QA real e0152fb: tres sondeos/15 contratos correctos, p50 HTTP
+236,07ms y p95/máximo2974,73ms. No son tiempos de render ni un SLO aprobado.
+
+Ensayo real del canal: comparador deliberadamente configurado con SHA000…000
+detectó liveness_revision/CONTRACT_MISMATCH. La aplicación no se modificó ni
+estuvo caída. Un correo con prefijo PRUEBA CONTROLADA fue aceptado y después
+observado Delivered en Resend a las22:35 de Bogotá del09/11. ID del correo:
+01a1c386-5b16-748f-a7a9-d7f7ffcd1f87; incidente0f977a4c-119e-4610-b373-d24187968b48.
+Segunda llamada al mismo evento suprimida, sin segundo envío. Sondeo posterior
+con revisión correcta y canal configurado:5/5,0 avisos, p50 HTTP183,44ms,
+p95/máximo542,81ms. Se conserva captura real08 y reporte06 fuera de Git en
+CIERRE-OPERACION-20261109. El ensayo usa un comparador negativo, no una incidencia
+real ni una respuesta del proveedor simulada.
+
+Uso manual desde la raíz (directorio de evidencia nuevo en cada ejecución):
+
+```powershell
+$env:QA_MONITOR_DIR='<carpeta nueva dentro de la carpeta de evidencias>'
+$env:QA_MONITOR_SAMPLES='3'
+$env:QA_MONITOR_INTERVAL_SECONDS='15'
+node --env-file=web/.env.alerts.local web/scripts/monitor-operations.mjs
+```
+
+El archivo privado debe mantener QA_ALERT_MODE=resend, QA_ALERT_RECIPIENT,
+QA_ALERT_RESEND_KEY y QA_EXPECTED_REVISION de la fuente realmente desplegada.
+Nunca reemplazar el SHA por HEAD si solo cambiaron scripts/documentos locales.
+No hay colector permanente instalado: el workflow sigue sin habilitarse en main.
+SCRUM-232 permanece En curso por ejecución continua y SLO/ventanas API; el canal
+de correo sí tiene entrega comprobada. No se afirma vigilancia24/7.
+
+Correo general: Resend Domains sigue vacío, comprobado en la cuenta de Danilo.
+SMTP Supabase activo en smtp.resend.com:465; password almacenado oculto y sin
+modificar. Se conservan las pruebas completas del titular del04/11. La nueva
+alerta no acredita recuperación para otros correos: sigue faltando dominio y
+remitente verificados (SCRUM-233).
+
+Compatibilidad: inventario solo IAB/MCP Apps; no se repitieron vías de control
+previamente rechazadas. QA a360×800: página2, zoom100→125 conservado, retorno a1
+y100%, panel y tarjeta por Enter. Ancho útil345=scrollWidth345; a800×360 mantiene
+la expansión y785=scrollWidth785. Consola del propietario sin errores observados.
+Captura04 real complementaria en231; no equivale a Chrome/Safari o gesto táctil.
+Android confirmado por el usuario; guion físico en GUION-PRESENTACION.md.
+SCRUM-137 y231 conservan sus pendientes y evidencias.
+
+Fuentes consultadas09/11: [API de envío Resend](https://resend.com/docs/api-reference/emails/send-email),
+[idempotencia](https://resend.com/docs/dashboard/emails/idempotency-keys),
+[restricción del remitente de pruebas](https://resend.com/docs/knowledge-base/403-error-resend-dev-domain)
+y[SMTP Supabase](https://supabase.com/docs/guides/auth/auth-smtp).
