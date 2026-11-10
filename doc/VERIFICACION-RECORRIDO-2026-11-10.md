@@ -50,3 +50,7 @@ y navegadores reales; SCRUM-232 operación continua; SCRUM-233 dominio para corr
 externo. No se cierran tareas vacías heredadas ni sprints por inferencia. PR y
 despliegue se registran por separado con su revisión exacta. Resultados visuales
 y de IA real se incorporan a la continuidad y a los comentarios de Jira.
+
+## Resultado visual y proveedor real
+
+Verificado el10/11 en local y QA f2b1490: flechas y foco por teclado, quiz nuevo GPT de tres preguntas/cuatro opciones, envío incompleto bloqueado, resultado privado2/3 (67 %) y lector anónimo3/3 (100 %) persistente tras recarga. Sin reintentos según su configuración; consola sin errores observados y viewport390×844 sin desbordamiento. Análisis de contexto técnico insuficiente rechazado por GPT. SCRUM-238 Finalizado; SCRUM-237 conserva pendiente Android físico/integración. Las capturas reales y el detalle están en Jira y continuidad. No se atribuyen pruebas físicas ni garantía de calidad universal.
