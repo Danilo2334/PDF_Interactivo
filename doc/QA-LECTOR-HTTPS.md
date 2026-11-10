@@ -1,5 +1,16 @@
 # QA del lector HTTPS
 
+## Actualización autorizada del recorrido — 09/11/2026, 23:53 Bogotá
+
+QA vigente: `a1e930fd028d350f86c85a6e95a78cb6981f1939`, deployment
+`dpl_7kx5PjgQJfqjQNYC1HthZRPXFX1q` READY, mismo proyecto de Danilo y alias
+`https://pdf-interactivo-qa.vercel.app`. Build y cinco contratos HTTP aprobados,
+incluida revisión exacta. Recorrido guiado, selección de página3, extracción,
+detalle por etapas, ilustración existente y lector con explicación/quiz
+comprobados en el navegador integrado. Sin llamadas IA nuevas, cambios de
+publicación ni merge. Android físico pendiente. Detalle en SCRUM-237 y en la
+continuidad; el estado e0152fb que sigue describe el ensayo anterior.
+
 ## Estado operativo al 09/11/2026
 
 Ensayo nuevo completado desde carga de PDF hasta lector/quiz, con GPT real:

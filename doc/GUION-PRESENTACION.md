@@ -105,9 +105,9 @@ comunicado por el propietario se identifica como tal; no como observación del
 agente. Solo después se evalúa cerrar el caso táctil aplicable de SCRUM-137.
 
 
-## Recorrido guiado preparado localmente — SCRUM-237 (09/11/2026)
+## Recorrido guiado disponible en QA — SCRUM-237 (09/11/2026)
 
-Pendiente de integrar y actualizar QA; no usar estos rótulos como prueba de despliegue. La mejora organiza las funciones existentes, sin cambiar el alcance de las historias.
+QA actualizado con autorización a a1e930f y comprobado en navegador integrado a390×844. La mejora organiza las funciones existentes, sin cambiar el alcance de las historias. PR#66 sigue sin merge; la comprobación táctil de esta versión en Android real permanece pendiente. Recarga la página en Chrome del celular para cargar el recorrido nuevo.
 
 1. En el proyecto, lee «Aprende con tu PDF, paso a paso». Abre el PDF y marca el fragmento que no entiendes. Para saltar de página o cambiar zoom, abre «Ir a página, zoom y vista previa».
 2. Pulsa «Abrir solicitud de refuerzo»: extrae/revisa el texto y confírmalo. Después elige categoría, describe tu dificultad y guárdala. El tercer paso permite enviar. Cerrar el formulario conserva el borrador durante esta visita; recargar/salir descarta lo no enviado.
