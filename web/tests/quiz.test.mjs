@@ -8,12 +8,12 @@ const provider=load('lib/reinforcements/quiz-provider.ts',{'@/lib/reinforcements
 const source={versionId:record.id,requestId:record.id,documentId:record.document_id,pageNumber:1,title:'Conservación de la energía',
   text:'En un sistema aislado la energía total se conserva. La energía no desaparece cuando cambia de forma; se transforma entre energía potencial y cinética.',concepts:['energía'],hash:'a'.repeat(64)};
 const content=count=>({title:'Comprueba la conservación de la energía',allowRetries:false,questions:Array.from({length:count},(_,i)=>({
-  prompt:`Pregunta ${i+1}: ¿qué ocurre con la energía total de un sistema aislado?`,options:['Se conserva.','No se conserva.','La energía desaparece.'],correctIndex:0,
+  prompt:`Pregunta ${i+1}: ¿qué ocurre con la energía total de un sistema aislado?`,options:['Se conserva.','No se conserva.','La energía desaparece.','Se conserva solo la energía potencial.'],correctIndex:0,
   explanation:'El refuerzo indica que la energía total del sistema aislado se conserva.',sourceQuote:'En un sistema aislado la energía total se conserva.'}))});
 test('HU028 validates one to three distinct questions, one correct index, non-empty distinct options and literal evidence from this reinforcement',()=>{
   for(const count of [1,2,3])assert.equal(schemas.validateQuiz(content(count),source,count).questions.length,count);
   for(const count of [0,4])assert.throws(()=>schemas.validateQuiz(content(count),source));
-  for(const mutate of [c=>c.questions[0].options=['','Otro'],c=>c.questions[0].options=['Igual',' igual '],c=>c.questions[0].correctIndex=3,c=>c.questions[0].sourceQuote='Texto de otro refuerzo diferente',c=>c.questions[1]={...c.questions[0]}]){
+  for(const mutate of [c=>c.questions[0].options=['','Otro'],c=>c.questions[0].options=['Igual',' igual '],c=>c.questions[0].correctIndex=4,c=>c.questions[0].sourceQuote='Texto de otro refuerzo diferente',c=>c.questions[1]={...c.questions[0]}]){
     const value=content(2);mutate(value);assert.throws(()=>schemas.validateQuiz(value,source));
   }
   assert.equal(schemas.quizInputSchema.safeParse({action:'approve',documentId:record.document_id,sourceVersionId:record.id,operationId:record.id,expectedVersion:1,confirmed:false}).success,false);
@@ -23,6 +23,7 @@ test('HU028 sends only the selected reinforcement context and requests the exact
     const result=await provider.generateQuiz(source,count,{provider:'gemini',key:'isolated-key',model:'gemini-test'},transport);assert.equal(result.content.questions.length,count);assert.equal(calls.length,2);
     const body=JSON.parse(calls[0].init.body),data=JSON.parse(body.contents[0].parts[0].text);assert.deepEqual(data,{source:{title:source.title,text:source.text,concepts:source.concepts}});
     assert.equal(body.generationConfig.responseFormat.text.schema.properties.quiz.anyOf[0].properties.questions.minItems,count);assert.equal(body.generationConfig.responseFormat.text.schema.properties.quiz.anyOf[0].properties.questions.maxItems,count);
+    const options=body.generationConfig.responseFormat.text.schema.properties.quiz.anyOf[0].properties.questions.items.properties.options;assert.equal(options.minItems,4);assert.equal(options.maxItems,4);
     assert.match(body.systemInstruction.parts[0].text,/Nunca|nunca/);assert.equal('tools' in body,false);
   }
 });
@@ -32,6 +33,18 @@ test('HU028 invalid outputs, quota and timeout fail once and never invent a fall
   const invalid=content(1);invalid.questions[0].sourceQuote='Una cita ajena al refuerzo';
   await assert.rejects(provider.generateQuiz(source,1,{provider:'gemini',key:'isolated-key',model:'gemini-test'},async()=>Response.json({candidates:[{finishReason:'STOP',content:{parts:[{text:JSON.stringify({sufficient:true,reason:'',quiz:invalid})}]}}]})),e=>e.code==='invalid_quiz');
   await assert.rejects(provider.generateQuiz(source,3,{provider:'gemini',key:'isolated-key',model:'gemini-test'},async()=>Response.json({candidates:[{finishReason:'STOP',content:{parts:[{text:JSON.stringify({sufficient:false,reason:'No hay datos suficientes para tres preguntas distintas.',quiz:null})}]}}]})),e=>e.code==='insufficient_quiz');
+});
+
+test('ABCD applies to new AI generations without invalidating saved two-option quizzes',async()=>{
+  for(const length of [2,3,5]) {
+    const value=content(1);value.questions[0].options=length===5?[...value.questions[0].options,'Se transforma.']:value.questions[0].options.slice(0,length);
+    assert.doesNotThrow(()=>schemas.validateQuiz(value,source));
+    let calls=0;
+    await assert.rejects(provider.generateQuiz(source,1,{provider:'gemini',key:'isolated-key',model:'gemini-test'},async()=>{
+      calls++;return Response.json({candidates:[{finishReason:'STOP',content:{parts:[{text:JSON.stringify({sufficient:true,reason:'',quiz:value})}]}}]});
+    }),e=>e.code==='invalid_quiz');
+    assert.equal(calls,1);
+  }
 });
 
 test('HU028 rejects AI distractors that introduce external vocabulary even with a correct answer and a valid literal quote',async()=>{

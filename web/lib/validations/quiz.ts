@@ -7,7 +7,7 @@ export const QUIZ_MESSAGES: Record<QuizFailureCode, string> = {
   provider_unavailable: "El servicio de IA no está disponible o se agotó su cuota. Espera antes de reintentar; no se cambiará de proveedor automáticamente.",
   provider_refused: "No fue posible formular preguntas con este refuerzo. Revisa su contenido antes de reintentar.",
   invalid_quiz: "Las preguntas, opciones o citas no pudieron validarse con el refuerzo. No se guardó esa versión; revisa la fuente antes de reintentar.",
-  insufficient_quiz: "El refuerzo no contiene información suficiente para esa cantidad de preguntas claras. Prueba con menos preguntas o revisa el refuerzo; no se forzó un quiz.",
+  insufficient_quiz: "El refuerzo no permite esa cantidad de preguntas claras con cuatro opciones distintas. Prueba con menos preguntas o amplía el refuerzo; no se forzó un quiz.",
   timeout: "La generación tardó demasiado. Puedes reintentar; la versión aprobada anterior se conserva.",
   source_changed: "El refuerzo cambió durante la generación. Actualiza y revisa la fuente antes de reintentar.",
 };
