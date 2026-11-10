@@ -7619,3 +7619,9 @@ Evidencias externas AGUA-VAPOR: fuente, diagnóstico del proveedor y capturas01/
 ## 2026-11-10 01:50 Bogotá — Alineación final de QA y Jira
 
 QA confirmó ce569975706eb18910f698c921e4aee8d5848227. Diferencia local posterior: solo documentos. Regresión completa481/481 aprobada en55,1s; cinco contratos HTTP correctos, revisión exacta, sin alertas del sondeo. No hubo llamadas de IA, cambios de código, despliegue ni merge. Jira238 actualizado en el comentario único, conservando imágenes y distinguiendo f2b1490 histórico de ce56997 vigente. El ensayo visual agua/vapor anterior sigue siendo la evidencia funcional; no se afirma haber repetido todas las pantallas ni garantía de disponibilidad. Pendientes137/231/232/233 conservados. No cambiar la integración de IA para la exposición.
+
+## 2026-11-10 — PDF final de práctica y auditoría de cierre
+
+Se creó output/pdf/Agua-y-energia-guia-de-dos-paginas.pdf y se verificó visualmente y por extracción:2 páginas A4,4414bytes. Ensayo real en QA sin cambiar IA: carga, extracción de página1, solicitud, análisis, recomendaciones, explicación intermedia y quiz de1 pregunta aprobados; vista previa1/1 (100 %). Detalle, hash, proyecto y límites en doc/ENSAYO-PDF-DOS-PAGINAS.md.55/55 regresiones acotadas y5/5 HTTP; suite completa481/481 previa en idéntico código. Jira238 actualizado con captura real conservando anteriores.
+
+No se cerraron artificialmente los10 elementos En curso: faltan pruebas físicas/matriz de navegadores, monitor continuo y dominio/remitente externo; SCRUM-4 carece de definición. La sesión actual recibió acceso restringido a /admin: evidencia de autorización, no validación administrativa completa. Se mantiene ce56997 en QA sin nuevo despliegue. El archivo entregado es el mismo cargado y probado; no se declara probado cada PDF privado de todas las cuentas. Stash d6406e0 intacto.
