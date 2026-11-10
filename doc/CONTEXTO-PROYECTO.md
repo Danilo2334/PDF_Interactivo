@@ -7508,3 +7508,33 @@ también SCRUM-4 sin criterios, sin inventar su cierre.
 Cambios de operación y documentación en la rama de PR #65, cadena #63→#64→#65.
 Sin merge ni despliegue: el QA conserva fuentee0152fb y el material de ensayo
 publicado. Stashd6406e0 intacto; ninguna credencial se incluye en el commit.
+
+## 09/11/2026,22:59 — Carga Android0,79MB sin confirmar, investigación abierta
+
+Durante el ensayo personal desde Android, el propietario aportó una captura
+con PDF0,79MB (16 páginas según su mensaje), error de transferencia y referencia
+28e1a6ca-4257-4c49-8846-a2651b09cbdc. No es el límite20MiB y no hay máximo de
+páginas configurado. No se recibió el PDF binario; no se declara inspeccionado.
+
+Correlación Vercel por CLI, con equipo/proyecto de Danilo:03:59:09.403UTC,
+POST/api/documents/upload503,UPLOAD_UNAVAILABLE,523ms, deploymente0152fb.
+El conector de logs respondió403 y la primera consulta CLI de1h excedía la
+retención Hobby; una consulta acotada20min recuperó la referencia real.
+StorageNoSuchKey de la operación e5bbbc17-a98e-479a-9876-bb74b82afa02 a03:59:09;
+los edge_logs de03:58–04:00UTC muestranGET400 de verificación, sinPOST de carga.
+Esta ausencia en los registros consultados no prueba por sí sola la causa.
+
+El cliente actual captura un fallo XHR y consulta al servidor para recuperar
+una transferencia ambigua; el mensaje observado corresponde a objeto ausente
+en esa verificación. OPTIONS desde el equipo responde200, origen*, métodosPOST
+y cabecerasapikey/authorization/content-type/x-upsert permitidos. No se
+confunde esa prueba del equipo con acceso desde la red del celular.
+
+Se pidió un único reintento con datos móviles, conservando archivo y operación;
+respuesta todavía pendiente. No se ha atribuido el fallo a Wi-Fi, CORS, formato,
+sesión o permisos sin evidencia. No se añadió una ruta alternativa ni se
+relajaron validaciones/RLS. No hay reparación o ensayo móvil aprobado todavía.
+
+Captura original del usuario añadida al comentario existente deSCRUM-235,
+conservando medios y resultados anteriores; seguimiento de compatibilidad231.
+No se modificaron sprints cerrados. No hubo cambios de código o despliegue.
