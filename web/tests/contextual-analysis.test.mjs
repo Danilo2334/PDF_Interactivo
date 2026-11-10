@@ -13,6 +13,8 @@ test('context contains the saved selection, difficulty and only nearby page text
   assert.equal(value.nearbySource, 'selection'); assert.equal(value.enough, true); assert.equal('owner_id' in value, false);
   const manual = contextModule.buildAnalysisContext({ ...record, selected_text: 'x', text_source: 'manual' }, '', '', 'a'.repeat(64));
   assert.equal(manual.enough, false); assert.equal(manual.nearbySource, 'none'); assert.equal(manual.textSource, 'manual');
+  const brief = contextModule.buildAnalysisContext({ ...record, selected_text: 'Agua. Vapor' }, 'QA', '', 'a'.repeat(64));
+  assert.equal(brief.enough, true);
   const bounded = contextModule.buildAnalysisContext(record, 'contexto '.repeat(2000), '', 'a'.repeat(64));
   assert.equal(bounded.nearbyText.length, 6000); assert.equal(bounded.truncated, true); assert.equal(bounded.nearbySource, 'page');
 });
